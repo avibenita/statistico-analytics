@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dialog - Statistico Analytics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 60px;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .success-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.3em;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .info-box strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .checklist {
+            list-style: none;
+            text-align: left;
+            margin: 30px 0;
+        }
+
+        .checklist li {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 1.1em;
+        }
+
+        .checklist li:before {
+            content: "✅ ";
+            margin-right: 10px;
+        }
+
+        .next-steps {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .next-steps h2 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">🎉</div>
+        <h1>GitHub Pages is Live!</h1>
+        
+        <p>Your <strong>statistico-analytics</strong> add-in is successfully deployed and accessible.</p>
+
+        <div class="info-box">
+            <strong>🌐 Deployment Status:</strong>
+            <ul class="checklist">
+                <li>GitHub Pages hosting: <strong>Active</strong></li>
+                <li>Custom domain: <strong>www.statistico.live</strong></li>
+                <li>HTTPS: <strong>Enabled</strong></li>
+                <li>Repository: <strong>avibenita/statistico-analytics</strong></li>
+            </ul>
+        </div>
+
+        <div class="next-steps">
+            <h2>📋 Next Steps</h2>
+            <ol style="text-align: left; padding-left: 20px; line-height: 2;">
+                <li>Generate a unique GUID for your manifest.xml</li>
+                <li>Create icons (16x16, 32x32, 64x64, 80x80 PNG)</li>
+                <li>Commit and push all changes to GitHub</li>
+                <li>Sideload the add-in in Excel</li>
+                <li>Test the taskpane functionality</li>
+            </ol>
+        </div>
+
+        <p style="margin-top: 30px; font-size: 1em; color: #888;">
+            This test page confirms your GitHub Pages deployment is working correctly.
+        </p>
+    </div>
+</body>
+</html>
