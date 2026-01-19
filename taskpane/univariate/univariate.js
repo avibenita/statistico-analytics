@@ -429,14 +429,19 @@ function calculateKurtosis(data, mean, stdDev) {
  * Open results in Office Dialog
  */
 function openResultsDialog(results) {
-    const dialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/univariate-results.html?data=${encodeURIComponent(JSON.stringify(results))}`;
+    // Store results in localStorage for the dialog
+    localStorage.setItem('univariateResults', JSON.stringify(results));
+    
+    const dialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/univariate-results.html`;
     
     Office.context.ui.displayDialogAsync(
         dialogUrl,
-        { height: 80, width: 60, displayInIframe: false },
+        { height: 90, width: 95, displayInIframe: false },
         (asyncResult) => {
             if (asyncResult.status === Office.AsyncResultStatus.Failed) {
                 showStatus('error', 'Failed to open results dialog: ' + asyncResult.error.message);
+            } else {
+                console.log('✅ Results dialog opened successfully');
             }
         }
     );
