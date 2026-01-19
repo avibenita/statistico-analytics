@@ -1,14 +1,35 @@
-/* global Office */
+/* global Office, Excel, initDataInputPanel, getCurrentRangeData */
 
-let selectedData = null;
-let selectedDataSource = null;
+/**
+ * ================================================================
+ * UNIVARIATE ANALYSIS MODULE
+ * ================================================================
+ * Uses shared Data Input Panel component
+ * ================================================================
+ */
 
-// Initialize Office.js
-Office.onReady((info) => {
+// Initialize when Office is ready
+Office.onReady(async (info) => {
     if (info.host === Office.HostType.Excel) {
-        console.log('Univariate Analysis module loaded in Excel');
+        console.log('Univariate Analysis module loaded');
+        await loadDataInputPanel();
+        await initDataInputPanel();
     }
 });
+
+/**
+ * Load the shared data input panel HTML
+ */
+async function loadDataInputPanel() {
+    try {
+        const container = document.getElementById('dataInputContainer');
+        const response = await fetch('../../src/shared/components/data-input-panel.html');
+        const html = await response.text();
+        container.innerHTML = html;
+    } catch (error) {
+        showStatus('error', 'Failed to load data input panel: ' + error.message);
+    }
+}
 
 /**
  * Navigate back to hub
@@ -18,71 +39,28 @@ function goBack() {
 }
 
 /**
- * Select data source option
+ * Handle data loading from the shared component
+ * This function is called automatically by DataInputPanel.js
  */
-function selectDataOption(option) {
-    selectedDataSource = option;
+function onRangeDataLoaded(values, address) {
+    console.log('Data loaded:', { 
+        rows: values.length, 
+        cols: values[0]?.length || 0,
+        address: address 
+    });
     
-    // Update radio buttons
-    document.querySelectorAll('.data-option').forEach(el => el.classList.remove('selected'));
-    document.querySelector(`#${option}Source`).closest('.data-option').classList.add('selected');
-    document.querySelector(`#${option}Source`).checked = true;
-    
-    // Show/hide range selector
-    const rangeSelector = document.getElementById('excelRangeSelector');
-    if (option === 'excel') {
-        rangeSelector.classList.add('active');
-    } else {
-        rangeSelector.classList.remove('active');
-    }
-    
-    // Enable run button if data source is selected
-    updateRunButton();
+    showStatus('success', `Data loaded from ${address}`);
 }
 
 /**
- * Select range from Excel
- */
-async function selectRange() {
-    try {
-        await Excel.run(async (context) => {
-            const range = context.workbook.getSelectedRange();
-            range.load('address, values');
-            
-            await context.sync();
-            
-            document.getElementById('rangeInput').value = range.address;
-            selectedData = range.values.flat().filter(v => v !== '' && v !== null);
-            
-            showMessage(`Selected ${selectedData.length} values from ${range.address}`, 'success');
-            updateRunButton();
-        });
-    } catch (error) {
-        showError('Failed to select range: ' + error.message);
-    }
-}
-
-/**
- * Update run button state
- */
-function updateRunButton() {
-    const runButton = document.getElementById('runButton');
-    const hasDataSource = selectedDataSource !== null;
-    const hasData = selectedDataSource === 'excel' ? (selectedData !== null && selectedData.length > 0) : true;
-    
-    runButton.disabled = !(hasDataSource && hasData);
-}
-
-/**
- * Run the analysis
+ * Run the univariate analysis
  */
 async function runAnalysis() {
     const runButton = document.getElementById('runButton');
-    const loading = document.getElementById('loading');
-    const errorMsg = document.getElementById('errorMessage');
+    const statusMsg = document.getElementById('statusMessage');
     
-    // Hide previous errors
-    errorMsg.classList.remove('show');
+    // Hide previous messages
+    statusMsg.classList.remove('show');
     
     // Get selected options
     const options = {
@@ -93,61 +71,51 @@ async function runAnalysis() {
         qqplot: document.getElementById('qqplot').checked
     };
     
+    // Get data from shared component
+    const { values, address } = getCurrentRangeData();
+    
     // Validate
-    if (!selectedDataSource) {
-        showError('Please select a data source');
+    if (!values || values.length === 0) {
+        showStatus('error', 'Please select data first using one of the three options above');
         return;
     }
     
-    if (selectedDataSource === 'excel' && (!selectedData || selectedData.length === 0)) {
-        showError('Please select a data range from Excel');
-        return;
-    }
-    
-    // Show loading
+    // Disable button
     runButton.disabled = true;
-    loading.classList.add('show');
+    runButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Running...</span>';
     
     try {
-        // Get data based on source
-        let data = [];
-        
-        if (selectedDataSource === 'excel') {
-            data = selectedData;
-        } else if (selectedDataSource === 'manual') {
-            showError('Manual entry not yet implemented');
-            return;
-        } else if (selectedDataSource === 'file') {
-            showError('File upload not yet implemented');
-            return;
-        }
-        
-        // Validate data
-        const numericData = data.filter(v => !isNaN(parseFloat(v))).map(v => parseFloat(v));
+        // Flatten and filter numeric values
+        const flatData = values.flat();
+        const numericData = flatData
+            .filter(v => v !== '' && v !== null && !isNaN(parseFloat(v)))
+            .map(v => parseFloat(v));
         
         if (numericData.length === 0) {
-            showError('No valid numeric data found');
+            showStatus('error', 'No valid numeric data found in the selected range');
             return;
         }
         
         // Calculate statistics
-        const results = calculateStatistics(numericData, options);
+        const results = calculateStatistics(numericData, options, address);
         
-        // Open results in dialog
+        // Open results in Office Dialog
         openResultsDialog(results);
         
+        showStatus('success', 'Analysis complete! Results opened in new window.');
+        
     } catch (error) {
-        showError('Analysis failed: ' + error.message);
+        showStatus('error', 'Analysis failed: ' + error.message);
     } finally {
         runButton.disabled = false;
-        loading.classList.remove('show');
+        runButton.innerHTML = '<i class="fa-solid fa-play"></i><span>Run Analysis</span>';
     }
 }
 
 /**
  * Calculate descriptive statistics
  */
-function calculateStatistics(data, options) {
+function calculateStatistics(data, options, address) {
     const n = data.length;
     const sorted = [...data].sort((a, b) => a - b);
     
@@ -171,7 +139,7 @@ function calculateStatistics(data, options) {
     const kurtosis = calculateKurtosis(data, mean, stdDev);
     
     const results = {
-        dataSource: selectedDataSource,
+        dataSource: address,
         n: n,
         descriptive: {
             mean: mean.toFixed(4),
@@ -242,7 +210,7 @@ function openResultsDialog(results) {
         { height: 80, width: 60, displayInIframe: false },
         (asyncResult) => {
             if (asyncResult.status === Office.AsyncResultStatus.Failed) {
-                showError('Failed to open results dialog: ' + asyncResult.error.message);
+                showStatus('error', 'Failed to open results dialog: ' + asyncResult.error.message);
             } else {
                 console.log('Results dialog opened successfully');
             }
@@ -251,21 +219,22 @@ function openResultsDialog(results) {
 }
 
 /**
- * Show error message
+ * Show status message
  */
-function showError(message) {
-    const errorMsg = document.getElementById('errorMessage');
-    errorMsg.textContent = message;
-    errorMsg.classList.add('show');
+function showStatus(type, message) {
+    const statusMsg = document.getElementById('statusMessage');
+    statusMsg.textContent = message;
+    statusMsg.className = `status-message ${type} show`;
     
+    // Auto-hide after 5 seconds
     setTimeout(() => {
-        errorMsg.classList.remove('show');
+        statusMsg.classList.remove('show');
     }, 5000);
 }
 
 /**
- * Show success message
+ * Alternative: Use showError function if called from shared component
  */
-function showMessage(message, type) {
-    console.log(`${type}: ${message}`);
+function showError(message) {
+    showStatus('error', message);
 }
