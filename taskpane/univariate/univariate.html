@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Univariate Analysis - Statistico Analytics</title>
+    
+    <!-- Office.js -->
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    
+    <!-- Shared Styles -->
+    <link rel="stylesheet" href="../../src/shared/css/main.css">
+    <link rel="stylesheet" href="../../src/shared/css/input-panel.css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 400px;
+        }
+
+        .input-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .input-section h3 {
+            margin-top: 0;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .data-option {
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .data-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .data-option.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .data-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+        }
+
+        .range-selector {
+            margin: 15px 0;
+            display: none;
+        }
+
+        .range-selector.active {
+            display: block;
+        }
+
+        .range-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        .select-range-btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+
+        .select-range-btn:hover {
+            background: #5568d3;
+        }
+
+        .options-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .checkbox-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .run-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .run-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .run-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Univariate Analysis</h1>
+        <button class="back-button" onclick="goBack()">← Back to Hub</button>
+    </div>
+
+    <div class="container">
+        <!-- Data Input Section -->
+        <div class="input-section">
+            <h3>Select Data Source</h3>
+            
+            <div class="data-option" onclick="selectDataOption('excel')">
+                <input type="radio" name="dataSource" id="excelSource" value="excel">
+                <label for="excelSource" style="cursor: pointer; flex: 1;">
+                    <strong>📊 From Excel Selection</strong><br>
+                    <small>Select a range of cells</small>
+                </label>
+            </div>
+
+            <div class="range-selector" id="excelRangeSelector">
+                <input type="text" class="range-input" id="rangeInput" placeholder="e.g., A1:A100">
+                <button class="select-range-btn" onclick="selectRange()">Select Range from Excel</button>
+            </div>
+
+            <div class="data-option" onclick="selectDataOption('manual')">
+                <input type="radio" name="dataSource" id="manualSource" value="manual">
+                <label for="manualSource" style="cursor: pointer; flex: 1;">
+                    <strong>📋 Manual Entry</strong><br>
+                    <small>Enter values manually</small>
+                </label>
+            </div>
+
+            <div class="data-option" onclick="selectDataOption('file')">
+                <input type="radio" name="dataSource" id="fileSource" value="file">
+                <label for="fileSource" style="cursor: pointer; flex: 1;">
+                    <strong>📁 From File</strong><br>
+                    <small>Upload CSV or Excel file</small>
+                </label>
+            </div>
+        </div>
+
+        <!-- Analysis Options -->
+        <div class="options-section">
+            <h3>Analysis Options</h3>
+            
+            <div class="checkbox-option">
+                <input type="checkbox" id="descriptiveStats" checked>
+                <label for="descriptiveStats">Descriptive Statistics</label>
+            </div>
+
+            <div class="checkbox-option">
+                <input type="checkbox" id="normalityTests" checked>
+                <label for="normalityTests">Normality Tests</label>
+            </div>
+
+            <div class="checkbox-option">
+                <input type="checkbox" id="histogram">
+                <label for="histogram">Histogram</label>
+            </div>
+
+            <div class="checkbox-option">
+                <input type="checkbox" id="boxplot">
+                <label for="boxplot">Box Plot</label>
+            </div>
+
+            <div class="checkbox-option">
+                <input type="checkbox" id="qqplot">
+                <label for="qqplot">Q-Q Plot</label>
+            </div>
+        </div>
+
+        <!-- Run Button -->
+        <button class="run-button" id="runButton" onclick="runAnalysis()">
+            Run Analysis
+        </button>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="loading" id="loading">
+            <p>Running analysis...</p>
+        </div>
+    </div>
+
+    <script src="univariate.js"></script>
+</body>
+</html>

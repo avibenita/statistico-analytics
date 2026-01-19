@@ -6,7 +6,7 @@
            xsi:type="TaskPaneApp">
 
   <!-- Manifest ID - Generate a new GUID for your add-in -->
-  <Id>6d00d4be-fad5-4797-87fd-f30eef1a443c</Id>
+  <Id>c627acf3-c606-4652-ac9f-b25a9c8b71e1</Id>
 
   <!-- Version -->
   <Version>1.0.0.0</Version>
