@@ -189,7 +189,30 @@
   }
 }
 
+/* Data Range Buttons Container */
+.data-range-buttons {
+  display: flex;
+  gap: 8px;
+  position: relative;
+}
+
 /* ===== RESPONSIVE DESIGN FOR DATA INPUT PANEL ===== */
+
+/* Stack buttons vertically on narrow screens */
+@media (max-width: 400px) {
+  .data-range-buttons {
+    flex-direction: column;
+  }
+  
+  .data-range-buttons > * {
+    width: 100% !important;
+    flex: none !important;
+  }
+  
+  .range-btn {
+    width: 100%;
+  }
+}
 
 /* Extra small screens */
 @media (max-width: 280px) {
