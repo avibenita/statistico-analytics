@@ -1,0 +1,279 @@
+/**
+ * Kernel Density Estimation View - Shared Analysis Component
+ * 
+ * Can be used by: Univariate, Regression (residuals), any module needing smooth density visualization
+ * 
+ * Requirements:
+ * - Global variable: resultsData { rawData, descriptive, column, n }
+ * - Highcharts library must be loaded
+ * 
+ * Exports:
+ * - displayKernelView() - Main display function
+ * - initializeKernelDensity() - Initialize controls and chart
+ * - calculateKDE() - Core KDE calculation
+ * - Kernel functions: gaussian, epanechnikov, triangular, uniform
+ */
+
+let kernelChart = null;
+let currentKernelType = 'gaussian';
+let currentBandwidth = null;
+
+/**
+ * Display kernel density estimation view
+ */
+function displayKernelView() {
+  const { column, n, descriptive } = resultsData;
+  
+  document.getElementById('variableName').textContent = column || 'Variable';
+  document.getElementById('sampleSize').textContent = `(n=${n})`;
+  
+  const content = document.getElementById('resultsContent');
+  content.innerHTML = `
+    <div class="kernel-container">
+      <div class="kernel-controls">
+        <div class="control-row">
+          <div class="control-group">
+            <label for="kernelType">Kernel:</label>
+            <select id="kernelType" onchange="updateKernelDensity()">
+              <option value="gaussian" selected>Gaussian</option>
+              <option value="epanechnikov">Epanechnikov</option>
+              <option value="triangular">Triangular</option>
+              <option value="uniform">Uniform</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="bandwidth">Bandwidth:</label>
+            <span id="bandwidthValue">Auto</span>
+            <input type="range" id="bandwidth" min="0.1" max="3" step="0.1" value="1" oninput="updateKernelDensity()">
+            <button class="reset-button" onclick="resetBandwidth()" style="margin-left: 8px; padding: 4px 12px; font-size: 11px;">Reset</button>
+          </div>
+        </div>
+      </div>
+      
+      <div id="kernelChart"></div>
+      
+      <div class="kernel-info">
+        <div class="info-row">
+          <span class="info-label">Mean:</span>
+          <span class="info-value">${descriptive.mean.toFixed(3)}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Std Dev:</span>
+          <span class="info-value">${descriptive.stdDev.toFixed(3)}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Range:</span>
+          <span class="info-value">[${descriptive.min.toFixed(2)}, ${descriptive.max.toFixed(2)}]</span>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  setTimeout(() => {
+    initializeKernelDensity();
+  }, 100);
+}
+
+/**
+ * Kernel functions
+ */
+function gaussianKernel(u) {
+  return (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * u * u);
+}
+
+function epanechnikovKernel(u) {
+  return Math.abs(u) <= 1 ? 0.75 * (1 - u * u) : 0;
+}
+
+function triangularKernel(u) {
+  return Math.abs(u) <= 1 ? 1 - Math.abs(u) : 0;
+}
+
+function uniformKernel(u) {
+  return Math.abs(u) <= 1 ? 0.5 : 0;
+}
+
+function getKernelFunction(type) {
+  switch(type) {
+    case 'gaussian': return gaussianKernel;
+    case 'epanechnikov': return epanechnikovKernel;
+    case 'triangular': return triangularKernel;
+    case 'uniform': return uniformKernel;
+    default: return gaussianKernel;
+  }
+}
+
+/**
+ * Calculate optimal bandwidth using Scott's rule
+ */
+function calculateOptimalBandwidth(data) {
+  const n = data.length;
+  const mean = data.reduce((a, b) => a + b, 0) / n;
+  const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n;
+  const stdDev = Math.sqrt(variance);
+  
+  return 1.06 * stdDev * Math.pow(n, -1/5);
+}
+
+/**
+ * Calculate kernel density estimation
+ */
+function calculateKDE(data, kernelType, bandwidthMultiplier = 1) {
+  const sortedData = [...data].sort((a, b) => a - b);
+  const min = sortedData[0];
+  const max = sortedData[sortedData.length - 1];
+  const range = max - min;
+  
+  const h = calculateOptimalBandwidth(sortedData) * bandwidthMultiplier;
+  currentBandwidth = h;
+  
+  const kernel = getKernelFunction(kernelType);
+  
+  const points = 200;
+  const start = min - range * 0.2;
+  const end = max + range * 0.2;
+  const step = (end - start) / points;
+  
+  const densityData = [];
+  
+  for (let i = 0; i <= points; i++) {
+    const x = start + i * step;
+    let density = 0;
+    
+    for (let j = 0; j < sortedData.length; j++) {
+      const u = (x - sortedData[j]) / h;
+      density += kernel(u);
+    }
+    
+    density = density / (sortedData.length * h);
+    densityData.push([x, density]);
+  }
+  
+  return { densityData, bandwidth: h };
+}
+
+/**
+ * Initialize kernel density visualization
+ */
+function initializeKernelDensity() {
+  if (!resultsData || !resultsData.rawData) return;
+  
+  currentKernelType = 'gaussian';
+  const bandwidthSlider = document.getElementById('bandwidth');
+  if (bandwidthSlider) bandwidthSlider.value = 1;
+  
+  updateKernelChart();
+}
+
+/**
+ * Update kernel density chart
+ */
+function updateKernelChart() {
+  if (!resultsData || !resultsData.rawData) return;
+  
+  const kernelTypeEl = document.getElementById('kernelType');
+  const bandwidthSliderEl = document.getElementById('bandwidth');
+  const bandwidthValueEl = document.getElementById('bandwidthValue');
+  
+  if (!kernelTypeEl || !bandwidthSliderEl || !bandwidthValueEl) return;
+  
+  currentKernelType = kernelTypeEl.value;
+  const bandwidthMultiplier = parseFloat(bandwidthSliderEl.value);
+  
+  const { densityData, bandwidth } = calculateKDE(resultsData.rawData, currentKernelType, bandwidthMultiplier);
+  
+  bandwidthValueEl.textContent = bandwidth.toFixed(4);
+  
+  const rawDataPoints = resultsData.rawData.map(val => [val, 0]);
+  
+  const textColor = document.body.classList.contains('theme-dark') ? '#ffffff' : '#1e293b';
+  const gridColor = document.body.classList.contains('theme-dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  
+  if (kernelChart) {
+    kernelChart.destroy();
+  }
+  
+  kernelChart = Highcharts.chart('kernelChart', {
+    chart: {
+      backgroundColor: 'transparent',
+      height: null,
+      reflow: true
+    },
+    title: {
+      text: `Kernel Density Estimation (${currentKernelType.charAt(0).toUpperCase() + currentKernelType.slice(1)})`,
+      style: { color: textColor, fontSize: '14px', fontWeight: 600 }
+    },
+    xAxis: {
+      title: { text: 'Value', style: { color: textColor } },
+      labels: { style: { color: textColor } },
+      gridLineColor: gridColor
+    },
+    yAxis: {
+      title: { text: 'Density', style: { color: textColor } },
+      labels: { style: { color: textColor } },
+      gridLineColor: gridColor
+    },
+    legend: {
+      enabled: true,
+      itemStyle: { color: textColor }
+    },
+    tooltip: {
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      style: { color: '#ffffff' },
+      shared: false
+    },
+    plotOptions: {
+      area: {
+        fillOpacity: 0.3,
+        lineWidth: 2,
+        marker: { enabled: false }
+      },
+      scatter: {
+        marker: { radius: 3 }
+      }
+    },
+    series: [
+      {
+        name: 'Density',
+        type: 'area',
+        data: densityData,
+        color: '#3b82f6',
+        fillColor: {
+          linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+          stops: [
+            [0, 'rgba(59, 130, 246, 0.3)'],
+            [1, 'rgba(59, 130, 246, 0.05)']
+          ]
+        }
+      },
+      {
+        name: 'Data Points (Rug)',
+        type: 'scatter',
+        data: rawDataPoints,
+        color: '#e74c3c',
+        marker: { radius: 2, symbol: 'circle' },
+        tooltip: {
+          pointFormat: 'Value: {point.x:.3f}'
+        }
+      }
+    ]
+  });
+}
+
+/**
+ * Update kernel density when controls change
+ */
+function updateKernelDensity() {
+  updateKernelChart();
+}
+
+/**
+ * Reset bandwidth to default (Scott's rule)
+ */
+function resetBandwidth() {
+  const bandwidthSlider = document.getElementById('bandwidth');
+  if (bandwidthSlider) {
+    bandwidthSlider.value = 1;
+    updateKernelChart();
+  }
+}
