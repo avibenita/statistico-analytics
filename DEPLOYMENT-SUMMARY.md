@@ -9,7 +9,7 @@ Location: `C:\OfficeAddins\statistico-analytics`
 
 ## 📊 Project Statistics
 
-- **Total Files Created**: 21 files
+- **Total Files Creted**: 21 files
 - **Total Directories**: 20 folders
 - **Lines of Code**: ~3,500+ lines
 - **Components**: 6 shared components
