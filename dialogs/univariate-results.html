@@ -733,11 +733,11 @@
       setTimeout(() => {
         initializeRangeSliders();
         updateDecimals(); // Apply initial decimal formatting
-        createHistogram();
+        createHistogram(true); // Animate on initial load
       }, 100);
     }
 
-    function createHistogram() {
+    function createHistogram(animate = false) {
       if (!resultsData || !resultsData.rawData) {
         console.error('No data available for histogram');
         return;
@@ -864,7 +864,8 @@
       histogramChart = Highcharts.chart('histogram-chart', {
         chart: {
           backgroundColor: 'transparent',
-          height: 400
+          height: 400,
+          animation: animate  // Only animate on load and binning method change
         },
         title: { text: null },
         xAxis: {
@@ -903,7 +904,11 @@
           column: {
             pointPadding: 0,
             groupPadding: 0.1,
-            borderWidth: 1
+            borderWidth: 1,
+            animation: animate  // Control animation for columns
+          },
+          line: {
+            animation: animate  // Control animation for normal curve
           }
         },
         series: series,
@@ -914,7 +919,7 @@
     function updateHistogram() {
       const bins = document.getElementById('numBins').value;
       document.getElementById('binsValue').textContent = bins;
-      createHistogram();
+      createHistogram(false); // No animation for slider updates
     }
 
     function updateDecimals() {
@@ -1009,7 +1014,7 @@
       
       if (method === 'manual') {
         numBinsInput.disabled = false;
-        createHistogram();
+        createHistogram(true); // Animate when changing method
       } else {
         const data = getFilteredData();
         let calculatedBins = 5;
@@ -1035,7 +1040,7 @@
         numBinsInput.value = calculatedBins;
         binsValue.textContent = calculatedBins;
         numBinsInput.disabled = true;
-        createHistogram();
+        createHistogram(true); // Animate when changing method
       }
     }
 
@@ -1231,8 +1236,8 @@
         activeRange.style.width = (rightPercent - leftPercent) + '%';
       }
       
-      // Re-create histogram with filtered data
-      createHistogram();
+      // Re-create histogram with filtered data (no animation for smooth slider updates)
+      createHistogram(false);
     }
 
     // Reset range sliders
@@ -1252,7 +1257,7 @@
       }
       
       document.getElementById('remainingN').textContent = resultsData.rawData.length;
-      createHistogram();
+      createHistogram(false); // No animation for reset
     }
 
     function closeDialog() {
