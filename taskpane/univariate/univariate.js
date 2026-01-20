@@ -442,6 +442,8 @@ function calculateKurtosis(data, mean, stdDev) {
 /**
  * Open results in Office Dialog
  */
+let resultsDialog = null;
+
 function openResultsDialog(results) {
     // Store results in localStorage for the dialog
     localStorage.setItem('univariateResults', JSON.stringify(results));
@@ -455,7 +457,28 @@ function openResultsDialog(results) {
             if (asyncResult.status === Office.AsyncResultStatus.Failed) {
                 showStatus('error', 'Failed to open results dialog: ' + asyncResult.error.message);
             } else {
+                resultsDialog = asyncResult.value;
                 console.log('✅ Results dialog opened successfully');
+                
+                // Add message handler for dialog close requests
+                resultsDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
+                    try {
+                        const message = JSON.parse(arg.message);
+                        if (message.action === 'closeDialog') {
+                            console.log('📤 Close dialog message received');
+                            resultsDialog.close();
+                            resultsDialog = null;
+                        }
+                    } catch (e) {
+                        console.error('Error handling dialog message:', e);
+                    }
+                });
+                
+                // Handle dialog closing event
+                resultsDialog.addEventHandler(Office.EventType.DialogEventReceived, (arg) => {
+                    console.log('Dialog event:', arg.error);
+                    resultsDialog = null;
+                });
             }
         }
     );
