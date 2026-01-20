@@ -573,6 +573,22 @@
     function displayHistogramView() {
       const { descriptive, n, column, dataSource } = resultsData;
       
+      // Format all statistics with current decimal places
+      const d = currentDecimals;
+      const stats = {
+        mean: parseFloat(descriptive.mean).toFixed(d),
+        stdDev: parseFloat(descriptive.stdDev).toFixed(d),
+        variance: parseFloat(descriptive.variance).toFixed(d),
+        kurtosis: parseFloat(descriptive.kurtosis).toFixed(d),
+        skewness: parseFloat(descriptive.skewness).toFixed(d),
+        range: parseFloat(descriptive.range).toFixed(d),
+        min: parseFloat(descriptive.min).toFixed(d),
+        q1: parseFloat(descriptive.q1).toFixed(d),
+        median: parseFloat(descriptive.median).toFixed(d),
+        q3: parseFloat(descriptive.q3).toFixed(d),
+        max: parseFloat(descriptive.max).toFixed(d)
+      };
+      
       // Update header with variable info
       document.getElementById('variableName').textContent = column || 'Variable';
       document.getElementById('sampleSize').textContent = `(n=${n})`;
@@ -611,11 +627,11 @@
               <tbody>
                 <tr>
                   <td class="highlight">${n}</td>
-                  <td class="highlight">${descriptive.mean}</td>
-                  <td class="highlight">${descriptive.stdDev}</td>
-                  <td>${descriptive.variance}</td>
-                  <td>${descriptive.kurtosis}</td>
-                  <td>${descriptive.skewness}</td>
+                  <td class="highlight">${stats.mean}</td>
+                  <td class="highlight">${stats.stdDev}</td>
+                  <td>${stats.variance}</td>
+                  <td>${stats.kurtosis}</td>
+                  <td>${stats.skewness}</td>
                 </tr>
               </tbody>
             </table>
@@ -634,12 +650,12 @@
               </thead>
               <tbody>
                 <tr>
-                  <td>${descriptive.range}</td>
-                  <td>${descriptive.min}</td>
-                  <td>${descriptive.q1}</td>
-                  <td class="highlight">${descriptive.median}</td>
-                  <td>${descriptive.q3}</td>
-                  <td>${descriptive.max}</td>
+                  <td>${stats.range}</td>
+                  <td>${stats.min}</td>
+                  <td>${stats.q1}</td>
+                  <td class="highlight">${stats.median}</td>
+                  <td>${stats.q3}</td>
+                  <td>${stats.max}</td>
                 </tr>
               </tbody>
             </table>
@@ -716,6 +732,7 @@
       // Wait for DOM to be ready before initializing
       setTimeout(() => {
         initializeRangeSliders();
+        updateDecimals(); // Apply initial decimal formatting
         createHistogram();
       }, 100);
     }
