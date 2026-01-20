@@ -393,14 +393,7 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
 
-    /* Both sliders start at same level, DOM order determines default */
-    #leftTruncation {
-      z-index: 2;
-    }
-
-    #rightTruncation {
-      z-index: 2;
-    }
+    /* Remove z-index from CSS - will be set inline in HTML */
 
     .reset-button {
       background: var(--surface-0);
@@ -689,8 +682,8 @@
               <div class="slider-container">
                 <div class="slider-track"></div>
                 <div id="activeRangeIndicator" class="active-range"></div>
-                <input type="range" id="rightTruncation" min="0" max="100" value="100" step="1">
-                <input type="range" id="leftTruncation" min="0" max="100" value="0" step="1">
+                <input type="range" id="leftTruncation" min="0" max="100" value="0" step="1" style="position: absolute; width: 100%; background: transparent; z-index: 2;">
+                <input type="range" id="rightTruncation" min="0" max="100" value="100" step="1" style="position: absolute; width: 100%; background: transparent; z-index: 1;">
               </div>
               
               <span id="rightRangeValue" class="value-display">100</span>
@@ -1044,47 +1037,65 @@
       const leftSlider = document.getElementById('leftTruncation');
       const rightSlider = document.getElementById('rightTruncation');
       
+      // Left slider event handlers (VB6 mechanism)
       if (leftSlider) {
-        leftSlider.addEventListener('input', updateRangeSliders);
-        // Bring to front when dragging
-        leftSlider.addEventListener('mousedown', () => {
-          leftSlider.style.zIndex = '3';
+        // Bring left slider to front while dragging; temporarily disable right slider hit-testing
+        const bringLeftFront = () => {
+          if (leftSlider) leftSlider.style.zIndex = '3';
+          if (rightSlider) rightSlider.style.zIndex = '2';
           if (rightSlider) rightSlider.style.pointerEvents = 'none';
-        });
-        leftSlider.addEventListener('mouseup', () => {
-          leftSlider.style.zIndex = '2';
+        };
+        const releaseLeftFront = () => {
           if (rightSlider) rightSlider.style.pointerEvents = '';
-        });
-        // Also handle touch events for mobile
-        leftSlider.addEventListener('touchstart', () => {
-          leftSlider.style.zIndex = '3';
-          if (rightSlider) rightSlider.style.pointerEvents = 'none';
-        });
-        leftSlider.addEventListener('touchend', () => {
-          leftSlider.style.zIndex = '2';
-          if (rightSlider) rightSlider.style.pointerEvents = '';
+          if (leftSlider) leftSlider.style.zIndex = '';
+          if (rightSlider) rightSlider.style.zIndex = '';
+        };
+        
+        leftSlider.addEventListener('mousedown', bringLeftFront);
+        leftSlider.addEventListener('touchstart', bringLeftFront, { passive: true });
+        window.addEventListener('mouseup', releaseLeftFront);
+        window.addEventListener('touchend', releaseLeftFront, { passive: true });
+        
+        leftSlider.addEventListener('input', function() {
+          const leftPercent = +this.value;
+          const rightPercent = rightSlider ? +rightSlider.value : 100;
+          
+          if (leftPercent >= rightPercent - 1 && rightSlider) {
+            rightSlider.value = Math.min(100, leftPercent + 1);
+          }
+          
+          updateRangeSliders();
         });
       }
       
+      // Right slider event handlers (VB6 mechanism)
       if (rightSlider) {
-        rightSlider.addEventListener('input', updateRangeSliders);
-        // Bring to front when dragging
-        rightSlider.addEventListener('mousedown', () => {
-          rightSlider.style.zIndex = '3';
+        // Bring right slider to front while dragging; temporarily disable left slider hit-testing
+        const bringRightFront = () => {
+          if (rightSlider) rightSlider.style.zIndex = '3';
+          if (leftSlider) leftSlider.style.zIndex = '2';
           if (leftSlider) leftSlider.style.pointerEvents = 'none';
-        });
-        rightSlider.addEventListener('mouseup', () => {
-          rightSlider.style.zIndex = '2';
+        };
+        const releaseRightFront = () => {
           if (leftSlider) leftSlider.style.pointerEvents = '';
-        });
-        // Also handle touch events for mobile
-        rightSlider.addEventListener('touchstart', () => {
-          rightSlider.style.zIndex = '3';
-          if (leftSlider) leftSlider.style.pointerEvents = 'none';
-        });
-        rightSlider.addEventListener('touchend', () => {
-          rightSlider.style.zIndex = '2';
-          if (leftSlider) leftSlider.style.pointerEvents = '';
+          if (rightSlider) rightSlider.style.zIndex = '';
+          if (leftSlider) leftSlider.style.zIndex = '';
+        };
+        
+        rightSlider.addEventListener('mousedown', bringRightFront);
+        rightSlider.addEventListener('touchstart', bringRightFront, { passive: true });
+        window.addEventListener('mouseup', releaseRightFront);
+        window.addEventListener('touchend', releaseRightFront, { passive: true });
+        
+        rightSlider.addEventListener('input', function() {
+          const rightPercent = +this.value;
+          const leftPercent = leftSlider ? +leftSlider.value : 0;
+          
+          if (rightPercent <= leftPercent + 1 && leftSlider) {
+            leftSlider.value = Math.max(0, rightPercent - 1);
+          }
+          
+          updateRangeSliders();
         });
       }
     }
