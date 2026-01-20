@@ -486,11 +486,24 @@
       overflow: hidden;
     }
 
+    #plot1,
+    #plot2,
     #qqPlot,
     #ppPlot {
       width: 100%;
-      height: clamp(220px, 28vh, 320px);
+      height: clamp(280px, 35vh, 400px);
       padding: 12px;
+    }
+
+    /* Radio button styling */
+    input[type="radio"] {
+      accent-color: var(--accent-1);
+      cursor: pointer;
+    }
+
+    input[type="radio"]:checked + span {
+      color: var(--accent-1);
+      font-weight: 600;
     }
 
     /* Normality Tests Styles */
@@ -999,9 +1012,11 @@
         grid-template-columns: 1fr;
       }
 
+      #plot1,
+      #plot2,
       #qqPlot,
       #ppPlot {
-        height: clamp(200px, 25vh, 280px);
+        height: clamp(250px, 30vh, 320px);
       }
 
       .tests-grid {
@@ -2137,6 +2152,9 @@
     }
 
     // ===== Q-Q PLOT VIEW =====
+    let currentPlotType = 'qq'; // 'qq' or 'pp'
+    let currentDistribution = 'normal';
+
     function displayQQPlotView() {
       const { descriptive, n, column, dataSource, rawData } = resultsData;
       
@@ -2157,17 +2175,58 @@
       // Render Q-Q Plot view
       const content = document.getElementById('resultsContent');
       content.innerHTML = `
+        <!-- Plot Type Selector -->
+        <div style="background: var(--surface-0); border: 1.5px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; text-align: center;">
+          <label style="font-weight: 600; color: var(--text-secondary); margin-right: 20px;">Plot Type:</label>
+          <label style="margin-right: 20px; cursor: pointer;">
+            <input type="radio" name="plotType" value="qq" checked onchange="switchPlotType('qq')" style="margin-right: 6px;">
+            <span style="color: var(--text-primary);">QQ</span>
+          </label>
+          <label style="cursor: pointer;">
+            <input type="radio" name="plotType" value="pp" onchange="switchPlotType('pp')" style="margin-right: 6px;">
+            <span style="color: var(--text-primary);">PP</span>
+          </label>
+        </div>
+
+        <!-- Charts -->
         <div class="qqpp-container">
-          <!-- Q-Q Plot -->
+          <!-- Regular Plot -->
           <div class="qqpp-panel">
-            <div class="panel-heading">Q-Q Plot (Normal)</div>
-            <div id="qqPlot"></div>
+            <div class="panel-heading" id="plot1Title">QQ Plot (Normal)</div>
+            <div id="plot1"></div>
           </div>
           
-          <!-- P-P Plot -->
+          <!-- Detrended Plot -->
           <div class="qqpp-panel">
-            <div class="panel-heading">P-P Plot (Normal)</div>
-            <div id="ppPlot"></div>
+            <div class="panel-heading" id="plot2Title">QQ Plot - Detrended (Normal)</div>
+            <div id="plot2"></div>
+          </div>
+        </div>
+
+        <!-- Distribution Selector -->
+        <div style="background: var(--surface-0); border: 1.5px solid var(--border); border-radius: 8px; padding: 16px; margin-top: 16px;">
+          <label style="font-weight: 600; color: var(--text-secondary); margin-right: 12px; display: inline-block; margin-bottom: 8px;">Distribution:</label>
+          <div style="display: flex; flex-wrap: wrap; gap: 16px;">
+            <label style="cursor: pointer;">
+              <input type="radio" name="distribution" value="normal" checked onchange="switchDistribution('normal')" style="margin-right: 6px;">
+              <span style="color: var(--text-primary);">Normal</span>
+            </label>
+            <label style="cursor: pointer;">
+              <input type="radio" name="distribution" value="exponential" onchange="switchDistribution('exponential')" style="margin-right: 6px;">
+              <span style="color: var(--text-primary);">Exponential</span>
+            </label>
+            <label style="cursor: pointer;">
+              <input type="radio" name="distribution" value="uniform" onchange="switchDistribution('uniform')" style="margin-right: 6px;">
+              <span style="color: var(--text-primary);">Uniform</span>
+            </label>
+            <label style="cursor: pointer;">
+              <input type="radio" name="distribution" value="lognormal" onchange="switchDistribution('lognormal')" style="margin-right: 6px;">
+              <span style="color: var(--text-primary);">LogNormal</span>
+            </label>
+            <label style="cursor: pointer;">
+              <input type="radio" name="distribution" value="gamma" onchange="switchDistribution('gamma')" style="margin-right: 6px;">
+              <span style="color: var(--text-primary);">Gamma</span>
+            </label>
           </div>
         </div>
       `;
@@ -2177,33 +2236,141 @@
       }, 100);
     }
 
+    function switchPlotType(type) {
+      currentPlotType = type;
+      const { rawData, column } = resultsData;
+      createQQPPPlots(rawData, column || 'Variable');
+    }
+
+    function switchDistribution(dist) {
+      currentDistribution = dist;
+      const { rawData, column } = resultsData;
+      createQQPPPlots(rawData, column || 'Variable');
+    }
+
     function createQQPPPlots(data, variableName) {
       const sortedData = [...data].sort((a, b) => a - b);
       const n = sortedData.length;
+      const mean = jStat.mean(data);
+      const std = jStat.stdev(data, true);
       
-      // Calculate theoretical quantiles (normal distribution)
-      const qqData = [];
-      const ppData = [];
+      // Distribution name for display
+      const distNames = {
+        'normal': 'Normal',
+        'exponential': 'Exponential',
+        'uniform': 'Uniform',
+        'lognormal': 'LogNormal',
+        'gamma': 'Gamma'
+      };
+      const distName = distNames[currentDistribution] || 'Normal';
       
-      for (let i = 0; i < n; i++) {
-        const p = (i + 0.5) / n; // Plotting position
+      // Update titles
+      if (currentPlotType === 'qq') {
+        document.getElementById('plot1Title').textContent = `QQ Plot (${distName})`;
+        document.getElementById('plot2Title').textContent = `QQ Plot - Detrended (${distName})`;
+      } else {
+        document.getElementById('plot1Title').textContent = `PP Plot (${distName})`;
+        document.getElementById('plot2Title').textContent = `PP Plot - Detrended (${distName})`;
+      }
+      
+      let plotData, detrendedData;
+      
+      if (currentPlotType === 'qq') {
+        // Q-Q Plot
+        plotData = [];
+        for (let i = 0; i < n; i++) {
+          const p = (i + 0.5) / n;
+          let theoretical;
+          
+          switch (currentDistribution) {
+            case 'normal':
+              theoretical = jStat.normal.inv(p, 0, 1);
+              break;
+            case 'exponential':
+              theoretical = -Math.log(1 - p);
+              break;
+            case 'uniform':
+              theoretical = p;
+              break;
+            case 'lognormal':
+              theoretical = Math.exp(jStat.normal.inv(p, 0, 1));
+              break;
+            case 'gamma':
+              theoretical = jStat.gamma.inv(p, 2, 1);
+              break;
+            default:
+              theoretical = jStat.normal.inv(p, 0, 1);
+          }
+          
+          plotData.push([theoretical, sortedData[i]]);
+        }
         
-        // Theoretical quantile (inverse normal CDF)
-        const theoreticalQuantile = jStat.normal.inv(p, 0, 1);
-        qqData.push([theoreticalQuantile, sortedData[i]]);
+        // Detrended: deviation from expected linear relationship
+        const minX = Math.min(...plotData.map(p => p[0]));
+        const maxX = Math.max(...plotData.map(p => p[0]));
+        const minY = Math.min(...plotData.map(p => p[1]));
+        const maxY = Math.max(...plotData.map(p => p[1]));
+        const rangeX = maxX - minX || 1;
+        const rangeY = maxY - minY;
         
-        // For P-P plot: empirical CDF vs theoretical CDF
-        const mean = jStat.mean(data);
-        const std = jStat.stdev(data, true);
-        const theoreticalP = jStat.normal.cdf(sortedData[i], mean, std);
-        ppData.push([p, theoreticalP]);
+        detrendedData = plotData.map(p => {
+          const x = p[0];
+          const y = p[1];
+          const expectedY = minY + ((x - minX) / rangeX) * rangeY;
+          return [y, y - expectedY];
+        });
+        
+      } else {
+        // P-P Plot
+        plotData = [];
+        for (let i = 0; i < n; i++) {
+          const empiricalP = (i + 1) / n;
+          let theoreticalP;
+          
+          switch (currentDistribution) {
+            case 'normal':
+              theoreticalP = jStat.normal.cdf(sortedData[i], mean, std);
+              break;
+            case 'exponential':
+              const lambda = 1 / mean;
+              theoreticalP = 1 - Math.exp(-lambda * sortedData[i]);
+              break;
+            case 'uniform':
+              const min = Math.min(...data);
+              const max = Math.max(...data);
+              theoreticalP = (sortedData[i] - min) / (max - min);
+              break;
+            case 'lognormal':
+              if (sortedData[i] > 0) {
+                const logMean = Math.log(mean * mean / Math.sqrt(std * std + mean * mean));
+                const logStd = Math.sqrt(Math.log(1 + (std * std) / (mean * mean)));
+                theoreticalP = jStat.normal.cdf(Math.log(sortedData[i]), logMean, logStd);
+              } else {
+                theoreticalP = 0;
+              }
+              break;
+            case 'gamma':
+              theoreticalP = jStat.gamma.cdf(sortedData[i], 2, mean / 2);
+              break;
+            default:
+              theoreticalP = jStat.normal.cdf(sortedData[i], mean, std);
+          }
+          
+          plotData.push([empiricalP, theoreticalP]);
+        }
+        
+        // Detrended: deviation from diagonal
+        detrendedData = plotData.map(p => [p[0], p[1] - p[0]]);
       }
       
       const textColor = document.body.classList.contains('theme-dark') ? '#ffffff' : '#1e293b';
       const gridColor = document.body.classList.contains('theme-dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
       
-      // Q-Q Plot
-      Highcharts.chart('qqPlot', {
+      // Chart 1: Regular plot
+      const xLabel = currentPlotType === 'qq' ? 'Theoretical Quantiles' : 'Empirical Cumulative Probability';
+      const yLabel = currentPlotType === 'qq' ? 'Sample Quantiles' : 'Theoretical Cumulative Probability';
+      
+      Highcharts.chart('plot1', {
         chart: {
           type: 'scatter',
           backgroundColor: 'transparent',
@@ -2212,42 +2379,43 @@
         },
         title: null,
         xAxis: {
-          title: { text: 'Theoretical Quantiles', style: { color: textColor } },
+          title: { text: xLabel, style: { color: textColor } },
           labels: { style: { color: textColor } },
-          gridLineColor: gridColor
+          gridLineColor: gridColor,
+          ...(currentPlotType === 'pp' && { min: 0, max: 1 })
         },
         yAxis: {
-          title: { text: 'Sample Quantiles', style: { color: textColor } },
+          title: { text: yLabel, style: { color: textColor } },
           labels: { style: { color: textColor } },
-          gridLineColor: gridColor
+          gridLineColor: gridColor,
+          ...(currentPlotType === 'pp' && { min: 0, max: 1 })
         },
         legend: { enabled: false },
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           style: { color: '#ffffff' },
-          pointFormat: 'Theoretical: <b>{point.x:.2f}</b><br/>Sample: <b>{point.y:.2f}</b>'
+          pointFormat: currentPlotType === 'qq' 
+            ? 'Theoretical: <b>{point.x:.2f}</b><br/>Sample: <b>{point.y:.2f}</b>'
+            : 'Empirical: <b>{point.x:.3f}</b><br/>Theoretical: <b>{point.y:.3f}</b>'
         },
         plotOptions: {
-          scatter: {
-            marker: { radius: 3, symbol: 'circle' }
-          },
-          line: {
-            marker: { enabled: false },
-            enableMouseTracking: false
-          }
+          scatter: { marker: { radius: 3, symbol: 'circle' } },
+          line: { marker: { enabled: false }, enableMouseTracking: false }
         },
         series: [
           {
-            name: 'Q-Q Plot',
-            data: qqData,
+            name: currentPlotType === 'qq' ? 'Q-Q Plot' : 'P-P Plot',
+            data: plotData,
             color: '#3b82f6',
             marker: { radius: 3 }
           },
           {
             name: 'Reference Line',
             type: 'line',
-            data: [[Math.min(...qqData.map(p => p[0])), Math.min(...qqData.map(p => p[1]))],
-                   [Math.max(...qqData.map(p => p[0])), Math.max(...qqData.map(p => p[1]))]],
+            data: currentPlotType === 'qq' 
+              ? [[Math.min(...plotData.map(p => p[0])), Math.min(...plotData.map(p => p[1]))],
+                 [Math.max(...plotData.map(p => p[0])), Math.max(...plotData.map(p => p[1]))]]
+              : [[0, 0], [1, 1]],
             color: '#f97316',
             dashStyle: 'Dash',
             lineWidth: 2,
@@ -2256,8 +2424,8 @@
         ]
       });
       
-      // P-P Plot
-      Highcharts.chart('ppPlot', {
+      // Chart 2: Detrended plot
+      Highcharts.chart('plot2', {
         chart: {
           type: 'scatter',
           backgroundColor: 'transparent',
@@ -2266,49 +2434,36 @@
         },
         title: null,
         xAxis: {
-          title: { text: 'Theoretical Cumulative Probability', style: { color: textColor } },
+          title: { text: currentPlotType === 'qq' ? 'Observed Value' : 'Empirical Probability', style: { color: textColor } },
           labels: { style: { color: textColor } },
-          gridLineColor: gridColor,
-          min: 0,
-          max: 1
+          gridLineColor: gridColor
         },
         yAxis: {
-          title: { text: 'Empirical Cumulative Probability', style: { color: textColor } },
+          title: { text: 'Deviation from Expected', style: { color: textColor } },
           labels: { style: { color: textColor } },
           gridLineColor: gridColor,
-          min: 0,
-          max: 1
+          plotLines: [{
+            value: 0,
+            color: '#f97316',
+            dashStyle: 'Dash',
+            width: 2
+          }]
         },
         legend: { enabled: false },
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           style: { color: '#ffffff' },
-          pointFormat: 'Theoretical: <b>{point.y:.3f}</b><br/>Empirical: <b>{point.x:.3f}</b>'
+          pointFormat: 'Value: <b>{point.x:.2f}</b><br/>Deviation: <b>{point.y:.2f}</b>'
         },
         plotOptions: {
-          scatter: {
-            marker: { radius: 3, symbol: 'circle' }
-          },
-          line: {
-            marker: { enabled: false },
-            enableMouseTracking: false
-          }
+          scatter: { marker: { radius: 3, symbol: 'circle' } }
         },
         series: [
           {
-            name: 'P-P Plot',
-            data: ppData,
-            color: '#3b82f6',
-            marker: { radius: 3 }
-          },
-          {
-            name: 'Reference Line',
-            type: 'line',
-            data: [[0, 0], [1, 1]],
+            name: 'Detrended',
+            data: detrendedData,
             color: '#f97316',
-            dashStyle: 'Dash',
-            lineWidth: 2,
-            showInLegend: false
+            marker: { radius: 3 }
           }
         ]
       });
