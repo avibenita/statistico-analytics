@@ -1,46 +1,52 @@
 /*
   ================================================================
-  SHARED DATA INPUT PANEL STYLES
+  SHARED DATA INPUT PANEL STYLES - LIGHT THEME
   ================================================================
-  Matches the regression-unified.html styling exactly
+  Matches the light minimal taskpane styling
+  Clean borders, white backgrounds, minimal fills
   ================================================================
 */
 
+/* Use light theme variables */
 :root {
-  --surface-0: #0c1624;
-  --surface-1: #1a1f2e;
-  --surface-2: #242938;
-  --border: #2d3748;
-  --accent-1: rgb(255,165,120);
-  --accent-2: rgb(120,200,255);
-  --accent-3: rgb(152,195,121);
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255,255,255,0.8);
-  --text-muted: rgba(255,255,255,0.6);
-  --panel-radius: 10px;
-  --panel-shadow: 0px 4px 20px rgba(0, 0, 0, 0.4);
-  --header-color: var(--accent-1);
+  --surface-0: #ffffff;
+  --surface-1: #f8f9fa;
+  --surface-2: #f1f3f5;
+  --border: #e9ecef;
+  --border-dark: #dee2e6;
+  --accent-1: #f97316;
+  --accent-2: #3b82f6;
+  --accent-3: #10b981;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
 }
 
 /* Panel Sections */
 .panel-section {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px;
+  background: var(--surface-0);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .section-title {
-  color: var(--accent-1);
-  font-size: clamp(11px, 2.5vw, 13px);
+  color: var(--text-secondary);
+  font-size: 11px;
   font-weight: 700;
-  margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  padding: 10px 14px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .section-title i {
-  margin-right: 6px;
+  color: var(--accent-1);
+  font-size: 12px;
 }
 
 /* Range Selection Buttons */
@@ -49,25 +55,24 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 10px;
-  background: var(--surface-1);
+  padding: 10px 12px;
+  background: var(--surface-0);
   color: var(--text-secondary);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
-  font-size: clamp(10px, 2.5vw, 12px);
+  font-size: 12px;
   font-weight: 600;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
   white-space: nowrap;
-  position: relative;
-  min-height: 38px;
+  min-height: 40px;
 }
 
 .range-btn:hover {
-  background: var(--surface-2);
-  border-color: var(--accent-2);
+  background: var(--surface-1);
+  border-color: var(--accent-1);
   color: var(--text-primary);
-  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(249, 115, 22, 0.08);
 }
 
 .range-btn:active {
@@ -75,33 +80,32 @@
 }
 
 .range-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
   pointer-events: none;
 }
 
 .range-btn.active {
-  background: linear-gradient(135deg, rgba(120,200,255,0.15), rgba(102,126,234,0.15));
-  border: 1px solid var(--accent-2);
-  color: var(--accent-2);
-  box-shadow: 0 0 12px rgba(120,200,255,0.2);
+  background: var(--surface-0);
+  border: 1.5px solid var(--accent-1);
+  color: var(--accent-1);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
 
 .range-btn.active i:first-child {
-  color: var(--accent-3);
+  color: var(--accent-1);
 }
 
 /* Named Range Dropdown */
 .range-dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   left: 0;
   right: 0;
-  margin-top: 4px;
-  background: var(--surface-1);
-  border: 2px solid var(--accent-2);
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: var(--surface-0);
+  border: 1.5px solid var(--accent-2);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   overflow: hidden;
   max-height: 200px;
@@ -112,10 +116,19 @@
 .range-dropdown select {
   flex: 1;
   overflow-y: auto;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  border: none;
+  padding: 8px;
+  font-size: 12px;
+}
+
+.range-dropdown select option {
+  padding: 8px;
 }
 
 .range-dropdown select option:hover {
-  background: var(--surface-2);
+  background: var(--surface-1);
 }
 
 /* Tooltip */
@@ -126,23 +139,43 @@
 [data-tooltip]:hover::after {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: 100%;
+  bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  background: var(--surface-0);
-  color: var(--text-primary);
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 10px;
+  background: var(--text-primary);
+  color: var(--surface-0);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
   white-space: nowrap;
   z-index: 1000;
-  border: 1px solid var(--border);
-  margin-bottom: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Range Display */
 #rangeDisplay {
   animation: slideIn 0.3s ease;
+  background: var(--surface-1);
+  border: 1.5px solid var(--accent-1);
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+#rangeDisplay i {
+  color: var(--accent-1);
+}
+
+#rangeDisplay #rangeTitle {
+  color: var(--accent-1);
+  font-weight: 600;
+}
+
+#rangeDisplay #rangeDetails {
+  color: var(--text-secondary);
+  font-size: 11px;
+  margin-top: 4px;
 }
 
 @keyframes slideIn {
