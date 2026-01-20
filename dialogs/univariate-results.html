@@ -20,36 +20,14 @@
   <!-- jStat for Statistical Calculations -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.4/jstat.min.js"></script>
   
+  <!-- Shared Results Dialog CSS -->
+  <link rel="stylesheet" href="shared/css/results-dialog.css">
+  
   <style>
-    :root {
-      --surface-0: #ffffff;
-      --surface-1: #f8f9fa;
-      --surface-2: #f1f3f5;
-      --border: #e9ecef;
-      --accent-1: #f97316;
-      --accent-2: #3b82f6;
-      --text-primary: #1e293b;
-      --text-secondary: #475569;
-      --text-muted: #94a3b8;
-    }
+    /* Dialog-specific styles loaded from shared/css/results-dialog.css */
+    /* Add any dialog-specific overrides here if needed */
+  </style>
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
-    html, body {
-      height: 100%;
-      overflow: hidden; /* No scrollbars on body */
-    }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--surface-0);
-      color: var(--text-primary);
-      font-size: 13px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Header - 3 parts layout */
     .header {
       background: var(--surface-1);
       border-bottom: 1px solid var(--border);
