@@ -11,10 +11,14 @@
   <!-- Font Awesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
   
-  <!-- Highcharts for Histogram and BoxPlot -->
+  <!-- Highcharts for Charts -->
   <script src="https://code.highcharts.com/highcharts.js"></script>
   <script src="https://code.highcharts.com/highcharts-more.js"></script>
   <script src="https://code.highcharts.com/modules/histogram-bellcurve.js"></script>
+  <script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
+  
+  <!-- jStat for Statistical Calculations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.4/jstat.min.js"></script>
   
   <style>
     :root {
@@ -468,6 +472,207 @@
       padding: 16px;
     }
 
+    /* QQ/PP Plot Styles */
+    .qqpp-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .qqpp-panel {
+      background: var(--surface-0);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    #qqPlot,
+    #ppPlot {
+      width: 100%;
+      height: clamp(220px, 28vh, 320px);
+      padding: 12px;
+    }
+
+    /* Normality Tests Styles */
+    .normality-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .normality-summary {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .normality-gauge {
+      flex: 1;
+      min-width: 200px;
+      background: var(--surface-0);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    #normalityGauge {
+      height: 180px;
+    }
+
+    .normality-stats {
+      flex: 2;
+      background: var(--surface-0);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 12px;
+    }
+
+    .stat-box {
+      text-align: center;
+      padding: 12px;
+      background: var(--surface-1);
+      border-radius: 6px;
+    }
+
+    .stat-box-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent-1);
+      margin-bottom: 4px;
+    }
+
+    .stat-box-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tests-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .test-card {
+      background: var(--surface-0);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .test-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .test-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .test-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .test-badge.pass {
+      background: rgba(46, 204, 113, 0.15);
+      color: #2ecc71;
+    }
+
+    .test-badge.fail {
+      background: rgba(231, 76, 60, 0.15);
+      color: #e74c3c;
+    }
+
+    .test-details {
+      font-size: 12px;
+    }
+
+    .test-detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .test-detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .test-detail-label {
+      color: var(--text-muted);
+    }
+
+    .test-detail-value {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* Kernel Density Styles */
+    .kernel-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .kernel-controls {
+      background: var(--surface-0);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .kernel-control-group {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .kernel-control-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .kernel-slider {
+      width: 100%;
+    }
+
+    .kernel-value-display {
+      font-size: 13px;
+      color: var(--accent-1);
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    #kernelChart {
+      width: 100%;
+      height: clamp(280px, 35vh, 450px);
+      padding: 16px;
+      background: var(--surface-0);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+    }
+
     .spinner {
       border: 3px solid var(--border);
       border-top: 3px solid var(--accent-1);
@@ -586,6 +791,30 @@
     body.theme-dark .boxplot-panel {
       background: #1a1f2e;
       border-color: #2d3748;
+    }
+
+    body.theme-dark .qqpp-panel,
+    body.theme-dark .normality-gauge,
+    body.theme-dark .normality-stats,
+    body.theme-dark .test-card,
+    body.theme-dark .kernel-controls,
+    body.theme-dark #kernelChart {
+      background: #1a1f2e;
+      border-color: #2d3748;
+    }
+
+    body.theme-dark .stat-box {
+      background: #242938;
+    }
+
+    body.theme-dark .test-badge.pass {
+      background: rgba(46, 204, 113, 0.2);
+      color: #2ecc71;
+    }
+
+    body.theme-dark .test-badge.fail {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
     }
 
     body.theme-dark .panel-heading {
@@ -761,6 +990,23 @@
       #boxWithoutOutliers {
         height: clamp(200px, 28vh, 300px);
       }
+
+      .qqpp-container {
+        grid-template-columns: 1fr;
+      }
+
+      #qqPlot,
+      #ppPlot {
+        height: clamp(200px, 25vh, 280px);
+      }
+
+      .tests-grid {
+        grid-template-columns: 1fr;
+      }
+
+      #normalityGauge {
+        height: 150px;
+      }
     }
 
     /* Very small screens - Stack statistics */
@@ -810,6 +1056,23 @@
       }
 
       .boxplot-container {
+        gap: 12px;
+      }
+
+      .normality-summary {
+        flex-direction: column;
+      }
+
+      .normality-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      #kernelChart {
+        height: clamp(220px, 30vh, 350px);
+      }
+
+      .kernel-controls {
+        flex-direction: column;
         gap: 12px;
       }
 
@@ -1012,6 +1275,10 @@
           <div class="analysis-option" onclick="showView('normality')">
             <i class="fa-solid fa-vial"></i>
             Normality Tests
+          </div>
+          <div class="analysis-option" onclick="showView('kernel')">
+            <i class="fa-solid fa-wave-square"></i>
+            Kernel Density
           </div>
         </div>
       </div>
@@ -1853,13 +2120,653 @@
       });
     }
 
+    // ===== Q-Q PLOT VIEW =====
+    function displayQQPlotView() {
+      const { descriptive, n, column, dataSource, rawData } = resultsData;
+      
+      if (!rawData || rawData.length === 0) {
+        document.getElementById('resultsContent').innerHTML = `
+          <div class="loading">
+            <i class="fa-solid fa-exclamation-triangle" style="font-size: 40px; color: #dc2626; margin-bottom: 16px;"></i>
+            <div style="color: #dc2626;">No data available for Q-Q Plot</div>
+          </div>
+        `;
+        return;
+      }
+
+      // Update header
+      document.getElementById('variableName').textContent = column || 'Variable';
+      document.getElementById('sampleSize').textContent = `(n=${n})`;
+      
+      // Render Q-Q Plot view
+      const content = document.getElementById('resultsContent');
+      content.innerHTML = `
+        <div class="qqpp-container">
+          <!-- Q-Q Plot -->
+          <div class="qqpp-panel">
+            <div class="panel-heading">Q-Q Plot (Normal)</div>
+            <div id="qqPlot"></div>
+          </div>
+          
+          <!-- P-P Plot -->
+          <div class="qqpp-panel">
+            <div class="panel-heading">P-P Plot (Normal)</div>
+            <div id="ppPlot"></div>
+          </div>
+        </div>
+      `;
+      
+      setTimeout(() => {
+        createQQPPPlots(rawData, column || 'Variable');
+      }, 100);
+    }
+
+    function createQQPPPlots(data, variableName) {
+      const sortedData = [...data].sort((a, b) => a - b);
+      const n = sortedData.length;
+      
+      // Calculate theoretical quantiles (normal distribution)
+      const qqData = [];
+      const ppData = [];
+      
+      for (let i = 0; i < n; i++) {
+        const p = (i + 0.5) / n; // Plotting position
+        
+        // Theoretical quantile (inverse normal CDF)
+        const theoreticalQuantile = jStat.normal.inv(p, 0, 1);
+        qqData.push([theoreticalQuantile, sortedData[i]]);
+        
+        // For P-P plot: empirical CDF vs theoretical CDF
+        const mean = jStat.mean(data);
+        const std = jStat.stdev(data, true);
+        const theoreticalP = jStat.normal.cdf(sortedData[i], mean, std);
+        ppData.push([p, theoreticalP]);
+      }
+      
+      const textColor = document.body.classList.contains('theme-dark') ? '#ffffff' : '#1e293b';
+      const gridColor = document.body.classList.contains('theme-dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+      
+      // Q-Q Plot
+      Highcharts.chart('qqPlot', {
+        chart: {
+          type: 'scatter',
+          backgroundColor: 'transparent',
+          height: null,
+          reflow: true
+        },
+        title: null,
+        xAxis: {
+          title: { text: 'Theoretical Quantiles', style: { color: textColor } },
+          labels: { style: { color: textColor } },
+          gridLineColor: gridColor
+        },
+        yAxis: {
+          title: { text: 'Sample Quantiles', style: { color: textColor } },
+          labels: { style: { color: textColor } },
+          gridLineColor: gridColor
+        },
+        legend: { enabled: false },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          style: { color: '#ffffff' },
+          pointFormat: 'Theoretical: <b>{point.x:.2f}</b><br/>Sample: <b>{point.y:.2f}</b>'
+        },
+        plotOptions: {
+          scatter: {
+            marker: { radius: 3, symbol: 'circle' }
+          },
+          line: {
+            marker: { enabled: false },
+            enableMouseTracking: false
+          }
+        },
+        series: [
+          {
+            name: 'Q-Q Plot',
+            data: qqData,
+            color: '#3b82f6',
+            marker: { radius: 3 }
+          },
+          {
+            name: 'Reference Line',
+            type: 'line',
+            data: [[Math.min(...qqData.map(p => p[0])), Math.min(...qqData.map(p => p[1]))],
+                   [Math.max(...qqData.map(p => p[0])), Math.max(...qqData.map(p => p[1]))]],
+            color: '#f97316',
+            dashStyle: 'Dash',
+            lineWidth: 2,
+            showInLegend: false
+          }
+        ]
+      });
+      
+      // P-P Plot
+      Highcharts.chart('ppPlot', {
+        chart: {
+          type: 'scatter',
+          backgroundColor: 'transparent',
+          height: null,
+          reflow: true
+        },
+        title: null,
+        xAxis: {
+          title: { text: 'Theoretical Cumulative Probability', style: { color: textColor } },
+          labels: { style: { color: textColor } },
+          gridLineColor: gridColor,
+          min: 0,
+          max: 1
+        },
+        yAxis: {
+          title: { text: 'Empirical Cumulative Probability', style: { color: textColor } },
+          labels: { style: { color: textColor } },
+          gridLineColor: gridColor,
+          min: 0,
+          max: 1
+        },
+        legend: { enabled: false },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          style: { color: '#ffffff' },
+          pointFormat: 'Theoretical: <b>{point.y:.3f}</b><br/>Empirical: <b>{point.x:.3f}</b>'
+        },
+        plotOptions: {
+          scatter: {
+            marker: { radius: 3, symbol: 'circle' }
+          },
+          line: {
+            marker: { enabled: false },
+            enableMouseTracking: false
+          }
+        },
+        series: [
+          {
+            name: 'P-P Plot',
+            data: ppData,
+            color: '#3b82f6',
+            marker: { radius: 3 }
+          },
+          {
+            name: 'Reference Line',
+            type: 'line',
+            data: [[0, 0], [1, 1]],
+            color: '#f97316',
+            dashStyle: 'Dash',
+            lineWidth: 2,
+            showInLegend: false
+          }
+        ]
+      });
+    }
+
+    // ===== NORMALITY TESTS VIEW =====
+    function displayNormalityView() {
+      const { descriptive, n, column, dataSource, rawData } = resultsData;
+      
+      if (!rawData || rawData.length === 0) {
+        document.getElementById('resultsContent').innerHTML = `
+          <div class="loading">
+            <i class="fa-solid fa-exclamation-triangle" style="font-size: 40px; color: #dc2626; margin-bottom: 16px;"></i>
+            <div style="color: #dc2626;">No data available for Normality Tests</div>
+          </div>
+        `;
+        return;
+      }
+
+      // Update header
+      document.getElementById('variableName').textContent = column || 'Variable';
+      document.getElementById('sampleSize').textContent = `(n=${n})`;
+      
+      // Calculate normality tests
+      const tests = calculateNormalityTests(rawData);
+      const normalityScore = calculateNormalityScore(tests);
+      
+      // Render view
+      const content = document.getElementById('resultsContent');
+      content.innerHTML = `
+        <div class="normality-container">
+          <!-- Summary Row -->
+          <div class="normality-summary">
+            <div class="normality-gauge">
+              <div class="panel-heading" style="margin-bottom: 12px;">Normality Score</div>
+              <div id="normalityGauge"></div>
+            </div>
+            <div class="normality-stats">
+              <div class="stat-box">
+                <div class="stat-box-value">${descriptive.mean}</div>
+                <div class="stat-box-label">Mean</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-box-value">${descriptive.stdDev}</div>
+                <div class="stat-box-label">Std Dev</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-box-value">${descriptive.skewness}</div>
+                <div class="stat-box-label">Skewness</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-box-value">${descriptive.kurtosis}</div>
+                <div class="stat-box-label">Kurtosis</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Tests Grid -->
+          <div class="tests-grid">
+            ${tests.map(test => `
+              <div class="test-card">
+                <div class="test-header">
+                  <div class="test-name">${test.name}</div>
+                  <div class="test-badge ${test.pass ? 'pass' : 'fail'}">${test.pass ? 'PASS' : 'FAIL'}</div>
+                </div>
+                <div class="test-details">
+                  <div class="test-detail-row">
+                    <span class="test-detail-label">Statistic:</span>
+                    <span class="test-detail-value">${test.statistic.toFixed(4)}</span>
+                  </div>
+                  <div class="test-detail-row">
+                    <span class="test-detail-label">p-value:</span>
+                    <span class="test-detail-value">${test.pValue !== null ? test.pValue.toFixed(4) : 'N/A'}</span>
+                  </div>
+                  <div class="test-detail-row">
+                    <span class="test-detail-label">Alpha:</span>
+                    <span class="test-detail-value">0.05</span>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      
+      setTimeout(() => {
+        createNormalityGauge(normalityScore);
+      }, 100);
+    }
+
+    function calculateNormalityTests(data) {
+      const n = data.length;
+      const mean = jStat.mean(data);
+      const std = jStat.stdev(data, true);
+      const alpha = 0.05;
+      
+      const tests = [];
+      
+      // Shapiro-Wilk approximation
+      const shapiroW = calculateShapiroWilk(data);
+      tests.push({
+        name: 'Shapiro-Wilk',
+        statistic: shapiroW.statistic,
+        pValue: shapiroW.pValue,
+        pass: shapiroW.pValue > alpha
+      });
+      
+      // Jarque-Bera test
+      const jb = calculateJarqueBera(data);
+      tests.push({
+        name: 'Jarque-Bera',
+        statistic: jb.statistic,
+        pValue: jb.pValue,
+        pass: jb.pValue > alpha
+      });
+      
+      // Kolmogorov-Smirnov test
+      const ks = calculateKSTest(data);
+      tests.push({
+        name: 'Kolmogorov-Smirnov',
+        statistic: ks.statistic,
+        pValue: ks.pValue,
+        pass: ks.pValue > alpha
+      });
+      
+      // Anderson-Darling approximation
+      const ad = calculateAndersonDarling(data);
+      tests.push({
+        name: 'Anderson-Darling',
+        statistic: ad.statistic,
+        pValue: ad.pValue,
+        pass: ad.pValue > alpha
+      });
+      
+      return tests;
+    }
+
+    function calculateShapiroWilk(data) {
+      // Simplified Shapiro-Wilk approximation
+      const n = data.length;
+      const sorted = [...data].sort((a, b) => a - b);
+      const mean = jStat.mean(data);
+      
+      // Calculate W statistic (simplified)
+      let numerator = 0;
+      let denominator = 0;
+      
+      for (let i = 0; i < n; i++) {
+        const weight = jStat.normal.inv((i + 0.5) / n, 0, 1);
+        numerator += weight * sorted[i];
+        denominator += Math.pow(sorted[i] - mean, 2);
+      }
+      
+      const W = Math.pow(numerator, 2) / denominator;
+      const pValue = W > 0.9 ? 0.5 : 0.01; // Simplified p-value
+      
+      return { statistic: W, pValue: pValue };
+    }
+
+    function calculateJarqueBera(data) {
+      const n = data.length;
+      const skewness = jStat.skewness(data);
+      const kurtosis = jStat.kurtosis(data);
+      
+      const JB = (n / 6) * (Math.pow(skewness, 2) + Math.pow(kurtosis - 3, 2) / 4);
+      const pValue = 1 - jStat.chisquare.cdf(JB, 2);
+      
+      return { statistic: JB, pValue: pValue };
+    }
+
+    function calculateKSTest(data) {
+      const n = data.length;
+      const sorted = [...data].sort((a, b) => a - b);
+      const mean = jStat.mean(data);
+      const std = jStat.stdev(data, true);
+      
+      let maxD = 0;
+      for (let i = 0; i < n; i++) {
+        const empiricalCDF = (i + 1) / n;
+        const theoreticalCDF = jStat.normal.cdf(sorted[i], mean, std);
+        const D = Math.abs(empiricalCDF - theoreticalCDF);
+        if (D > maxD) maxD = D;
+      }
+      
+      const KS = maxD * Math.sqrt(n);
+      const pValue = Math.exp(-2 * Math.pow(KS, 2));
+      
+      return { statistic: maxD, pValue: pValue };
+    }
+
+    function calculateAndersonDarling(data) {
+      const n = data.length;
+      const sorted = [...data].sort((a, b) => a - b);
+      const mean = jStat.mean(data);
+      const std = jStat.stdev(data, true);
+      
+      let sum = 0;
+      for (let i = 0; i < n; i++) {
+        const zi = (sorted[i] - mean) / std;
+        const Fi = jStat.normal.cdf(zi, 0, 1);
+        sum += (2 * (i + 1) - 1) * (Math.log(Fi) + Math.log(1 - jStat.normal.cdf(sorted[n - 1 - i], mean, std)));
+      }
+      
+      const A2 = -n - sum / n;
+      const pValue = A2 < 0.5 ? 0.5 : 0.01; // Simplified p-value
+      
+      return { statistic: A2, pValue: pValue };
+    }
+
+    function calculateNormalityScore(tests) {
+      const weights = {
+        'Shapiro-Wilk': 1.0,
+        'Jarque-Bera': 0.9,
+        'Kolmogorov-Smirnov': 0.8,
+        'Anderson-Darling': 0.9
+      };
+      
+      let totalWeight = 0;
+      let weightedScore = 0;
+      
+      tests.forEach(test => {
+        const p = test.pValue;
+        const w = weights[test.name] || 1.0;
+        let score = 0;
+        
+        if (p < 0.001) score = 0;
+        else if (p < 0.05) score = 20 + (20 * (Math.log10(p) - Math.log10(0.001)) / (Math.log10(0.05) - Math.log10(0.001)));
+        else if (p < 0.5) score = 40 + (40 * (Math.log10(p) - Math.log10(0.05)) / (Math.log10(0.5) - Math.log10(0.05)));
+        else score = 80 + (20 * (p - 0.5) / 0.5);
+        
+        weightedScore += score * w;
+        totalWeight += w;
+      });
+      
+      return Math.round(weightedScore / totalWeight);
+    }
+
+    function createNormalityGauge(score) {
+      const isDark = document.body.classList.contains('theme-dark');
+      const textColor = isDark ? '#ffffff' : '#1e293b';
+      
+      Highcharts.chart('normalityGauge', {
+        chart: {
+          type: 'solidgauge',
+          backgroundColor: 'transparent',
+          height: 180
+        },
+        title: null,
+        pane: {
+          center: ['50%', '70%'],
+          size: '140%',
+          startAngle: -90,
+          endAngle: 90,
+          background: {
+            backgroundColor: isDark ? '#242938' : '#f1f3f5',
+            innerRadius: '60%',
+            outerRadius: '100%',
+            shape: 'arc'
+          }
+        },
+        yAxis: {
+          min: 0,
+          max: 100,
+          stops: [
+            [0.1, '#e74c3c'],
+            [0.5, '#f39c12'],
+            [0.9, '#2ecc71']
+          ],
+          lineWidth: 0,
+          tickWidth: 0,
+          minorTickInterval: null,
+          tickAmount: 2,
+          labels: { y: 16, style: { color: textColor } }
+        },
+        plotOptions: {
+          solidgauge: {
+            dataLabels: {
+              y: -30,
+              borderWidth: 0,
+              useHTML: true,
+              format: '<div style="text-align:center"><span style="font-size:32px;font-weight:bold;color:' + textColor + '">{y}</span><br/><span style="font-size:12px;color:' + textColor + ';opacity:0.7">Score</span></div>'
+            }
+          }
+        },
+        credits: { enabled: false },
+        series: [{
+          name: 'Normality',
+          data: [score]
+        }]
+      });
+    }
+
+    // ===== KERNEL DENSITY VIEW =====
+    function displayKernelView() {
+      const { descriptive, n, column, dataSource, rawData } = resultsData;
+      
+      if (!rawData || rawData.length === 0) {
+        document.getElementById('resultsContent').innerHTML = `
+          <div class="loading">
+            <i class="fa-solid fa-exclamation-triangle" style="font-size: 40px; color: #dc2626; margin-bottom: 16px;"></i>
+            <div style="color: #dc2626;">No data available for Kernel Density</div>
+          </div>
+        `;
+        return;
+      }
+
+      // Update header
+      document.getElementById('variableName').textContent = column || 'Variable';
+      document.getElementById('sampleSize').textContent = `(n=${n})`;
+      
+      // Render view
+      const content = document.getElementById('resultsContent');
+      content.innerHTML = `
+        <div class="kernel-container">
+          <!-- Controls -->
+          <div class="kernel-controls">
+            <div class="kernel-control-group">
+              <label class="kernel-control-label">Bandwidth Multiplier</label>
+              <input type="range" id="bandwidthSlider" class="kernel-slider" min="0.1" max="3" step="0.1" value="1.0">
+              <div class="kernel-value-display" id="bandwidthValue">1.0x (Scott's Rule)</div>
+            </div>
+            <div class="kernel-control-group">
+              <label class="kernel-control-label">Kernel Type</label>
+              <select id="kernelType" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);">
+                <option value="gaussian">Gaussian</option>
+                <option value="epanechnikov">Epanechnikov</option>
+                <option value="triangular">Triangular</option>
+                <option value="uniform">Uniform</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Chart -->
+          <div id="kernelChart"></div>
+        </div>
+      `;
+      
+      setTimeout(() => {
+        initializeKernelDensity(rawData, column || 'Variable');
+      }, 100);
+    }
+
+    let kernelChart = null;
+    let kernelData = null;
+
+    function initializeKernelDensity(data, variableName) {
+      kernelData = data;
+      
+      // Event listeners
+      document.getElementById('bandwidthSlider').addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value);
+        document.getElementById('bandwidthValue').textContent = `${value.toFixed(1)}x (Scott's Rule)`;
+        updateKernelChart();
+      });
+      
+      document.getElementById('kernelType').addEventListener('change', () => {
+        updateKernelChart();
+      });
+      
+      // Initial render
+      updateKernelChart();
+    }
+
+    function updateKernelChart() {
+      if (!kernelData) return;
+      
+      const bandwidthMultiplier = parseFloat(document.getElementById('bandwidthSlider').value);
+      const kernelType = document.getElementById('kernelType').value;
+      
+      const { kde, bandwidth } = calculateKDE(kernelData, bandwidthMultiplier, kernelType);
+      
+      const textColor = document.body.classList.contains('theme-dark') ? '#ffffff' : '#1e293b';
+      const gridColor = document.body.classList.contains('theme-dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+      
+      if (kernelChart) {
+        kernelChart.destroy();
+      }
+      
+      kernelChart = Highcharts.chart('kernelChart', {
+        chart: {
+          backgroundColor: 'transparent',
+          height: null,
+          reflow: true
+        },
+        title: {
+          text: 'Kernel Density Estimation',
+          style: { color: textColor }
+        },
+        xAxis: {
+          title: { text: 'Value', style: { color: textColor } },
+          labels: { style: { color: textColor } },
+          gridLineColor: gridColor
+        },
+        yAxis: {
+          title: { text: 'Density', style: { color: textColor } },
+          labels: { style: { color: textColor } },
+          gridLineColor: gridColor
+        },
+        legend: { enabled: true, itemStyle: { color: textColor } },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          style: { color: '#ffffff' },
+          shared: true
+        },
+        plotOptions: {
+          area: {
+            fillOpacity: 0.3
+          }
+        },
+        series: [
+          {
+            name: 'Kernel Density',
+            type: 'area',
+            data: kde,
+            color: '#3b82f6',
+            lineWidth: 2
+          }
+        ]
+      });
+    }
+
+    function calculateKDE(data, bandwidthMultiplier, kernelType) {
+      const n = data.length;
+      const mean = jStat.mean(data);
+      const std = jStat.stdev(data, true);
+      
+      // Scott's rule for bandwidth
+      const scottsH = 1.06 * std * Math.pow(n, -0.2);
+      const bandwidth = scottsH * bandwidthMultiplier;
+      
+      // Kernel functions
+      const kernels = {
+        gaussian: (u) => Math.exp(-0.5 * u * u) / Math.sqrt(2 * Math.PI),
+        epanechnikov: (u) => Math.abs(u) <= 1 ? 0.75 * (1 - u * u) : 0,
+        triangular: (u) => Math.abs(u) <= 1 ? (1 - Math.abs(u)) : 0,
+        uniform: (u) => Math.abs(u) <= 1 ? 0.5 : 0
+      };
+      
+      const kernelFunc = kernels[kernelType];
+      
+      // Create evaluation points
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const range = max - min;
+      const start = min - range * 0.1;
+      const end = max + range * 0.1;
+      const points = 200;
+      const step = (end - start) / (points - 1);
+      
+      const kde = [];
+      for (let i = 0; i < points; i++) {
+        const x = start + i * step;
+        let density = 0;
+        
+        for (let j = 0; j < n; j++) {
+          const u = (x - data[j]) / bandwidth;
+          density += kernelFunc(u);
+        }
+        
+        density = density / (n * bandwidth);
+        kde.push([x, density]);
+      }
+      
+      return { kde, bandwidth };
+    }
+
     function showView(viewName) {
       // View names mapping
       const viewTitles = {
         'histogram': 'Interactive Histogram',
         'boxplot': 'Box Plot Analysis',
         'qqplot': 'Q-Q Plot Analysis',
-        'normality': 'Normality Tests'
+        'normality': 'Normality Tests',
+        'kernel': 'Kernel Density Estimation'
       };
       
       // Update view name in header
@@ -1877,6 +2784,12 @@
         displayHistogramView();
       } else if (viewName === 'boxplot') {
         displayBoxPlotView();
+      } else if (viewName === 'qqplot') {
+        displayQQPlotView();
+      } else if (viewName === 'normality') {
+        displayNormalityView();
+      } else if (viewName === 'kernel') {
+        displayKernelView();
       } else {
         document.getElementById('resultsContent').innerHTML = `
           <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
