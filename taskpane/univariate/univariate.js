@@ -141,8 +141,10 @@ function onVariableChange() {
     }
     
     // Enable tabs
-    document.getElementById('tab-trim').classList.remove('disabled');
-    document.getElementById('tab-transform').classList.remove('disabled');
+    const trimTab = document.getElementById('tab-trim');
+    const transformTab = document.getElementById('tab-transform');
+    if (trimTab) trimTab.classList.remove('disabled');
+    if (transformTab) transformTab.classList.remove('disabled');
     
     // Reset trim and transform
     resetTrim();
@@ -161,17 +163,23 @@ function onVariableChange() {
  */
 function switchTab(tabName) {
     // Check if tab is disabled
-    if (document.getElementById(`tab-${tabName}`).classList.contains('disabled')) {
+    const btn = document.getElementById(`tab-${tabName}`);
+    if (btn && btn.classList.contains('disabled')) {
         return;
     }
     
     // Update tab buttons
-    document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
-    document.getElementById(`tab-${tabName}`).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
     
     // Update panels
-    document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
-    document.getElementById(`panel-${tabName}`).classList.add('active');
+    document.querySelectorAll('.tab-content > div').forEach(panel => {
+        panel.style.display = 'none';
+    });
+    const panel = document.getElementById(`panel-${tabName}`);
+    if (panel) {
+        panel.style.display = 'block';
+    }
 }
 
 /**
@@ -452,12 +460,14 @@ function openResultsDialog(results) {
  */
 function showStatus(type, message) {
     const statusMsg = document.getElementById('statusMessage');
-    statusMsg.textContent = message;
-    statusMsg.className = `status-message ${type} show`;
-    
-    setTimeout(() => {
-        statusMsg.classList.remove('show');
-    }, 5000);
+    if (statusMsg) {
+        statusMsg.textContent = message;
+        statusMsg.className = `status-msg ${type} show`;
+        
+        setTimeout(() => {
+            statusMsg.classList.remove('show');
+        }, 5000);
+    }
 }
 
 function showError(message) {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Univariate Analysis - Statistico Analytics</title>
+    <title>Univariate Analysis</title>
     
     <!-- Office.js -->
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
@@ -11,465 +11,162 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
     
-    <!-- Shared Data Input Panel CSS -->
-    <link rel="stylesheet" href="../../src/shared/css/data-input-panel.css">
+    <!-- Minimal Taskpane CSS -->
+    <link rel="stylesheet" href="../../src/shared/css/taskpane-minimal.css">
     
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: var(--surface-0);
-            color: var(--text-primary);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            overflow: hidden;
-            height: 100vh;
-        }
-
-        .main-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        /* Header */
-        .card-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: transparent;
-            color: var(--header-color);
-            padding: 10px 14px;
-            font-weight: 600;
-            font-size: 1.15rem;
-            letter-spacing: 0.3px;
-            flex-shrink: 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .card-head i {
-            margin-right: 8px;
-        }
-
-        .back-button {
-            background: rgba(255,165,120,0.2);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            padding: 6px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.8em;
-            transition: all 0.3s;
-        }
-
-        .back-button:hover {
-            background: rgba(255,165,120,0.3);
-            border-color: var(--accent-1);
-            color: var(--text-primary);
-        }
-
-        /* Content Area */
-        .left-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: clamp(8px, 2vw, 12px);
-            display: flex;
-            flex-direction: column;
-            gap: clamp(8px, 2vw, 12px);
-        }
-
-        /* Variable Selection */
-        .variable-section {
-            background: var(--surface-0);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px;
-        }
-
-        .variable-section h5 {
-            color: var(--accent-1);
-            margin: 0 0 8px 0;
-            font-size: 0.85em;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .variable-section select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 2px solid var(--accent-1);
-            border-radius: 6px;
-            background: var(--surface-2);
-            color: var(--text-primary);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(255, 165, 120, 0.2);
-        }
-
-        .variable-section select:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(255,165,120,0.3);
-        }
-
-        /* Divider */
-        .divider {
-            height: 1px;
-            background: var(--border);
-            margin: 8px 0;
-        }
-
-        /* Tabs */
-        .tabset {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .tabs {
-            display: flex;
-            background: var(--surface-0);
-            border-bottom: 1px solid var(--border);
-            overflow: auto;
-        }
-
-        .tabs button {
-            flex: 1;
-            background: transparent;
-            color: var(--text-secondary);
-            border: none;
-            border-right: 1px solid var(--border);
-            padding: 10px 8px;
-            font-weight: 600;
-            font-size: 11px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.3s ease;
-        }
-
-        .tabs button:last-child {
-            border-right: none;
-        }
-
-        .tabs button:hover:not(.disabled) {
-            background: var(--surface-2);
-            color: var(--text-primary);
-        }
-
-        .tabs button.active {
-            background: var(--surface-1);
-            color: var(--accent-1);
-            box-shadow: inset 0 -2px 0 var(--accent-1);
-        }
-
-        .tabs button.disabled {
-            color: var(--text-muted);
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
-        .tab-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px;
-            background: var(--surface-2);
-            min-height: 150px;
-            max-height: 250px;
-        }
-
-        .panel {
-            display: none;
-        }
-
-        .panel.active {
-            display: block;
-        }
-
-        /* Transform options */
-        .radgrid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 6px;
-        }
-
-        .opt {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--surface-1);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 6px;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.3s ease;
-        }
-
-        .opt:hover {
-            background: var(--surface-0);
-            border-color: var(--accent-1);
-        }
-
-        .opt input {
-            accent-color: var(--accent-1);
-        }
-
-        .opt.selected {
-            background: var(--surface-0);
-            border-color: var(--accent-1);
-            box-shadow: 0 0 0 1px rgba(255,165,120,0.3);
-        }
-
-        /* Trim sliders */
-        .trim-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .trim-item {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .trim-item label {
-            color: var(--text-secondary);
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .trim-item input[type="range"] {
-            width: 100%;
-            accent-color: var(--accent-1);
-        }
-
-        .pill {
-            display: inline-block;
-            background: var(--surface-1);
-            color: var(--text-primary);
-            padding: 4px 8px;
-            border-radius: 999px;
-            border: 1px solid var(--border);
-            font-weight: 600;
-            text-align: center;
-            font-size: 10px;
-        }
-
-        /* Stats Grid */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
-            gap: 6px;
-            margin: 8px 0;
-        }
-
-        .stat-item {
-            background: var(--surface-1);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 6px;
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 10px;
-            color: var(--text-muted);
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .stat-value {
-            font-size: 13px;
-            color: var(--text-primary);
-            font-weight: 700;
-        }
-
-        /* Run Button */
-        .btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, var(--accent-1), #e67e22);
-            color: var(--surface-0);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 700;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px rgba(255,165,120,0.3);
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(255,165,120,0.4);
-        }
-
-        .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* Status Messages */
-        .status-message {
-            padding: 10px 12px;
-            border-radius: 6px;
-            margin-top: 10px;
-            font-size: 11px;
-            display: none;
-        }
-
-        .status-message.show {
-            display: block;
-        }
-
-        .status-message.error {
-            background: rgba(220,53,69,0.1);
-            border: 1px solid rgba(220,53,69,0.3);
-            color: #dc3545;
-        }
-
-        .status-message.success {
-            background: rgba(152,195,121,0.1);
-            border: 1px solid rgba(152,195,121,0.3);
-            color: var(--accent-3);
-        }
-
-        .hint {
-            color: var(--text-muted);
-            font-size: 11px;
-            text-align: center;
-            padding: 12px;
-        }
-    </style>
+    <!-- Data Input Panel CSS -->
+    <link rel="stylesheet" href="../../src/shared/css/data-input-panel.css">
 </head>
 <body>
-    <div class="main-container">
+    <div class="taskpane-container">
         <!-- Header -->
-        <div class="card-head">
-            <div>
+        <div class="module-header">
+            <div class="module-header-title">
                 <i class="fa-solid fa-chart-simple"></i>
-                <span>Univariate Analysis</span>
+                Univariate
             </div>
-            <button class="back-button" onclick="goBack()">
-                <i class="fa-solid fa-arrow-left"></i> Back
+            <button class="back-btn" onclick="goBack()">
+                <i class="fa-solid fa-arrow-left"></i>
+                Back
             </button>
         </div>
 
         <!-- Content -->
-        <div class="left-content">
-            <!-- Data Input Panel (loaded dynamically) -->
+        <div class="taskpane-content">
+            <!-- Data Input Panel -->
             <div id="dataInputContainer"></div>
 
             <!-- Variable Selection -->
-            <div class="variable-section">
-                <h5><i class="fa-solid fa-table-columns"></i> ANALYZE COLUMN</h5>
-                <select id="ddlVariable">
-                    <option value="">Select Column</option>
-                </select>
+            <div class="section">
+                <div class="section-header">
+                    <i class="fa-solid fa-table-columns"></i>
+                    <span class="section-title">Column</span>
+                </div>
+                <div class="section-body">
+                    <select id="ddlVariable">
+                        <option value="">Select column to analyze</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="divider"></div>
-
-            <!-- Tabbed Options -->
-            <div class="tabset">
+            <!-- Tabs -->
+            <div class="section">
                 <div class="tabs">
-                    <button id="tab-summary" class="active" onclick="switchTab('summary')">Dataset Summary</button>
-                    <button id="tab-trim" class="disabled" onclick="switchTab('trim')">Trim Range</button>
-                    <button id="tab-transform" class="disabled" onclick="switchTab('transform')">Transform</button>
+                    <button id="tab-summary" class="tab-btn active" onclick="switchTab('summary')">Summary</button>
+                    <button id="tab-trim" class="tab-btn disabled" onclick="switchTab('trim')">Trim</button>
+                    <button id="tab-transform" class="tab-btn disabled" onclick="switchTab('transform')">Transform</button>
                 </div>
                 <div class="tab-content">
-                    <!-- Dataset Summary Panel -->
-                    <div id="panel-summary" class="panel active">
-                        <div id="summaryContent">
-                            <div class="hint">
-                                <i class="fa-solid fa-database" style="font-size:16px; margin-bottom:8px;"></i><br/>
-                                No data loaded yet. Select a range and column to see dataset summary.
-                            </div>
+                    <!-- Summary -->
+                    <div id="panel-summary" class="active">
+                        <div id="summaryContent" class="hint">
+                            <i class="fa-solid fa-info-circle"></i><br>
+                            Select a data range and column
                         </div>
                     </div>
 
-                    <!-- Trim Range Panel -->
-                    <div id="panel-trim" class="panel">
-                        <div class="trim-grid">
-                            <div class="trim-item">
-                                <label>Left Trim</label>
-                                <input id="slMin" type="range" min="0" max="100" value="0" step="1" />
-                                <span id="lblMin" class="pill">—</span>
-                            </div>
-                            <div class="trim-item">
-                                <label>Right Trim</label>
-                                <input id="slMax" type="range" min="0" max="100" value="100" step="1" />
-                                <span id="lblMax" class="pill">—</span>
-                            </div>
+                    <!-- Trim -->
+                    <div id="panel-trim" style="display: none;">
+                        <div class="field-group">
+                            <label class="field-label">Left Trim</label>
+                            <input id="slMin" type="range" min="0" max="100" value="0" step="1" />
+                            <div id="lblMin" class="hint">—</div>
                         </div>
-                        <div style="text-align: center; margin-top: 8px;">
-                            <button class="btn" onclick="resetTrim()" style="padding: 6px 12px; font-size: 0.9em; background: var(--surface-1); border: 1px solid var(--border); color: var(--text-secondary);">
-                                <i class="fa-solid fa-arrow-rotate-left"></i> Reset
-                            </button>
+                        <div class="field-group">
+                            <label class="field-label">Right Trim</label>
+                            <input id="slMax" type="range" min="0" max="100" value="100" step="1" />
+                            <div id="lblMax" class="hint">—</div>
                         </div>
+                        <button class="btn-primary" onclick="resetTrim()" style="margin-top: 8px; padding: 8px; font-size: 11px;">
+                            <i class="fa-solid fa-arrow-rotate-left"></i>
+                            Reset
+                        </button>
                     </div>
 
-                    <!-- Transform Panel -->
-                    <div id="panel-transform" class="panel">
-                        <h4 style="margin:0 0 8px; color:var(--accent-1); font-size: 12px; font-weight: 600;">Select Transformation</h4>
-                        <div class="radgrid" id="radTransforms">
-                            <label class="opt selected"><input type="radio" name="transform" value="none" checked /> None</label>
-                            <label class="opt"><input type="radio" name="transform" value="ln" /> ln(x)</label>
-                            <label class="opt"><input type="radio" name="transform" value="log10" /> log10(x)</label>
-                            <label class="opt"><input type="radio" name="transform" value="sqrt" /> √x</label>
-                            <label class="opt"><input type="radio" name="transform" value="square" /> x²</label>
-                            <label class="opt"><input type="radio" name="transform" value="reciprocal" /> 1/x</label>
-                            <label class="opt"><input type="radio" name="transform" value="z" /> z-score</label>
-                            <label class="opt"><input type="radio" name="transform" value="minmax" /> Min–Max</label>
+                    <!-- Transform -->
+                    <div id="panel-transform" style="display: none;">
+                        <div id="radTransforms" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                            <label class="checkbox-group" style="margin: 0;">
+                                <input type="radio" name="transform" value="none" checked />
+                                <span>None</span>
+                            </label>
+                            <label class="checkbox-group" style="margin: 0;">
+                                <input type="radio" name="transform" value="ln" />
+                                <span>ln(x)</span>
+                            </label>
+                            <label class="checkbox-group" style="margin: 0;">
+                                <input type="radio" name="transform" value="log10" />
+                                <span>log10(x)</span>
+                            </label>
+                            <label class="checkbox-group" style="margin: 0;">
+                                <input type="radio" name="transform" value="sqrt" />
+                                <span>√x</span>
+                            </label>
+                            <label class="checkbox-group" style="margin: 0;">
+                                <input type="radio" name="transform" value="square" />
+                                <span>x²</span>
+                            </label>
+                            <label class="checkbox-group" style="margin: 0;">
+                                <input type="radio" name="transform" value="reciprocal" />
+                                <span>1/x</span>
+                            </label>
+                            <label class="checkbox-group" style="margin: 0;">
+                                <input type="radio" name="transform" value="z" />
+                                <span>z-score</span>
+                            </label>
+                            <label class="checkbox-group" style="margin: 0;">
+                                <input type="radio" name="transform" value="minmax" />
+                                <span>Min-Max</span>
+                            </label>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="divider"></div>
-
-            <!-- Basic Stats -->
-            <div>
-                <h4 style="margin:0 0 8px; color:var(--accent-1); font-size:1rem; font-weight:600;">Basic Stats</h4>
-                <div class="stats" id="miniStats">
-                    <div class="stat-item"><div class="stat-label">n</div><div class="stat-value" id="stat-n">—</div></div>
-                    <div class="stat-item"><div class="stat-label">Mean</div><div class="stat-value" id="stat-mean">—</div></div>
-                    <div class="stat-item"><div class="stat-label">Median</div><div class="stat-value" id="stat-median">—</div></div>
-                    <div class="stat-item"><div class="stat-label">Std Dev</div><div class="stat-value" id="stat-std">—</div></div>
-                    <div class="stat-item"><div class="stat-label">Min</div><div class="stat-value" id="stat-min">—</div></div>
-                    <div class="stat-item"><div class="stat-label">Max</div><div class="stat-value" id="stat-max">—</div></div>
+            <!-- Stats -->
+            <div class="section">
+                <div class="section-header">
+                    <i class="fa-solid fa-calculator"></i>
+                    <span class="section-title">Quick Stats</span>
+                </div>
+                <div class="section-body">
+                    <div class="stats-mini">
+                        <div class="stat-box">
+                            <div class="stat-label">n</div>
+                            <div class="stat-value" id="stat-n">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Mean</div>
+                            <div class="stat-value" id="stat-mean">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Median</div>
+                            <div class="stat-value" id="stat-median">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">SD</div>
+                            <div class="stat-value" id="stat-std">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Min</div>
+                            <div class="stat-value" id="stat-min">—</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Max</div>
+                            <div class="stat-value" id="stat-max">—</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="divider"></div>
 
             <!-- Run Button -->
-            <button class="btn" id="runButton" onclick="runAnalysis()">
+            <button class="btn-primary" id="runButton" onclick="runAnalysis()">
                 <i class="fa-solid fa-play"></i>
-                <span>Run Full Analysis</span>
+                Run Full Analysis
             </button>
 
-            <!-- Status Message -->
-            <div class="status-message" id="statusMessage"></div>
+            <!-- Status -->
+            <div class="status-msg" id="statusMessage"></div>
         </div>
     </div>
 
