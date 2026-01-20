@@ -400,6 +400,7 @@ function calculateStatistics(data, address, transform) {
         transform: transform,
         trim: { min: trimMin, max: trimMax },
         n: n,
+        rawData: data, // Include raw data for histogram
         descriptive: {
             mean: mean.toFixed(4),
             median: median.toFixed(4),

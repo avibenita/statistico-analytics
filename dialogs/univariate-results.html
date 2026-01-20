@@ -536,18 +536,145 @@
     }
 
     function createHistogram() {
-      // For now, create a simple chart - in real implementation, use actual data
+      if (!resultsData || !resultsData.rawData) {
+        console.error('No data available for histogram');
+        return;
+      }
+
+      const data = resultsData.rawData;
+      const numBins = parseInt(document.getElementById('numBins').value);
+      const showNormalCurve = document.getElementById('showNormalCurve').checked;
+      
+      // Calculate statistics for normal curve
+      const n = data.length;
+      const mean = parseFloat(resultsData.descriptive.mean);
+      const stdDev = parseFloat(resultsData.descriptive.stdDev);
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      
+      // Create bins
+      const binWidth = (max - min) / numBins;
+      const bins = [];
+      const binCenters = [];
+      
+      for (let i = 0; i < numBins; i++) {
+        const binStart = min + i * binWidth;
+        const binEnd = binStart + binWidth;
+        const binCenter = (binStart + binEnd) / 2;
+        
+        bins.push({
+          x: binCenter,
+          y: 0,
+          binStart: binStart,
+          binEnd: binEnd
+        });
+        binCenters.push(binCenter);
+      }
+      
+      // Count data points in each bin
+      data.forEach(value => {
+        const binIndex = Math.min(Math.floor((value - min) / binWidth), numBins - 1);
+        bins[binIndex].y++;
+      });
+      
+      // Create series array
+      const series = [{
+        name: 'Frequency',
+        type: 'column',
+        data: bins.map(bin => ({
+          x: bin.x,
+          y: bin.y,
+          custom: {
+            range: `${bin.binStart.toFixed(2)} - ${bin.binEnd.toFixed(2)}`
+          }
+        })),
+        color: '#3b82f6',
+        pointPadding: 0,
+        groupPadding: 0,
+        borderWidth: 1,
+        borderColor: '#2563eb'
+      }];
+      
+      // Add normal curve if checked
+      if (showNormalCurve) {
+        const normalCurveData = [];
+        const totalArea = n * binWidth; // Total area of histogram
+        
+        for (let i = 0; i <= 100; i++) {
+          const x = min + (max - min) * (i / 100);
+          // Normal distribution PDF
+          const z = (x - mean) / stdDev;
+          const pdf = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * z * z);
+          const y = pdf * totalArea; // Scale to match histogram
+          normalCurveData.push([x, y]);
+        }
+        
+        series.push({
+          name: 'Normal Curve',
+          type: 'line',
+          data: normalCurveData,
+          color: '#f97316',
+          lineWidth: 3,
+          marker: { enabled: false },
+          enableMouseTracking: true
+        });
+      }
+      
+      // Create chart
       Highcharts.chart('histogram-chart', {
-        chart: { type: 'column', backgroundColor: 'transparent' },
+        chart: {
+          backgroundColor: 'transparent',
+          height: 400
+        },
         title: { text: null },
-        xAxis: { title: { text: 'Value' } },
-        yAxis: { title: { text: 'Frequency' } },
-        legend: { enabled: false },
-        series: [{
-          name: 'Frequency',
-          data: [2, 5, 8, 15, 20, 18, 12, 8, 5, 2],
-          color: '#3b82f6'
-        }],
+        xAxis: {
+          title: { 
+            text: resultsData.column || 'Value',
+            style: { color: '#475569', fontWeight: '600' }
+          },
+          gridLineWidth: 1,
+          gridLineColor: '#e9ecef'
+        },
+        yAxis: {
+          title: { 
+            text: 'Frequency',
+            style: { color: '#475569', fontWeight: '600' }
+          },
+          gridLineColor: '#e9ecef'
+        },
+        legend: {
+          enabled: showNormalCurve,
+          align: 'right',
+          verticalAlign: 'top',
+          itemStyle: { color: '#475569' }
+        },
+        tooltip: {
+          shared: false,
+          useHTML: true,
+          backgroundColor: '#ffffff',
+          borderColor: '#e9ecef',
+          formatter: function() {
+            if (this.series.name === 'Frequency') {
+              return `<div style="padding: 8px;">
+                <strong>Range:</strong> ${this.point.custom.range}<br/>
+                <strong>Frequency:</strong> ${this.y}
+              </div>`;
+            } else {
+              return `<div style="padding: 8px;">
+                <strong>Value:</strong> ${this.x.toFixed(2)}<br/>
+                <strong>Density:</strong> ${this.y.toFixed(4)}
+              </div>`;
+            }
+          }
+        },
+        plotOptions: {
+          column: {
+            pointPadding: 0,
+            groupPadding: 0,
+            borderWidth: 1
+          }
+        },
+        series: series,
         credits: { enabled: false }
       });
     }
@@ -555,7 +682,6 @@
     function updateHistogram() {
       const bins = document.getElementById('numBins').value;
       document.getElementById('binsValue').textContent = bins;
-      // Update chart with new bins
       createHistogram();
     }
 
