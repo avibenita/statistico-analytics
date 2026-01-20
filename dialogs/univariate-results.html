@@ -1,471 +1,493 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Univariate Analysis Results</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Univariate Analysis Results</title>
+  
+  <!-- Office.js -->
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
+  
+  <!-- Highcharts for Histogram -->
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/histogram-bellcurve.js"></script>
+  
+  <style>
+    :root {
+      --surface-0: #ffffff;
+      --surface-1: #f8f9fa;
+      --surface-2: #f1f3f5;
+      --border: #e9ecef;
+      --accent-1: #f97316;
+      --accent-2: #3b82f6;
+      --text-primary: #1e293b;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     
-    <!-- Office.js -->
-    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-    
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
-    
-    <!-- Shared Results Dialog CSS -->
-    <link rel="stylesheet" href="../src/shared/css/results-dialog.css">
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--surface-0);
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+
+    /* Header */
+    .header {
+      background: var(--surface-1);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dropdown-btn {
+      padding: 8px 16px;
+      background: var(--surface-0);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .dropdown-btn:hover {
+      border-color: var(--accent-1);
+      box-shadow: 0 2px 4px rgba(249, 115, 22, 0.1);
+    }
+
+    .dropdown-content {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--surface-0);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      min-width: 250px;
+      display: none;
+      z-index: 1000;
+    }
+
+    .dropdown-content.show { display: block; }
+
+    .analysis-option {
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .analysis-option:hover {
+      background: var(--surface-1);
+    }
+
+    .analysis-option.active {
+      background: var(--surface-1);
+      color: var(--accent-1);
+      font-weight: 600;
+    }
+
+    .close-btn {
+      padding: 8px 16px;
+      background: var(--surface-0);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .close-btn:hover {
+      border-color: #dc2626;
+      color: #dc2626;
+    }
+
+    /* Content */
+    .content {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Statistics Panel */
+    .stats-panel {
+      background: var(--surface-0);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .panel-heading {
+      background: var(--surface-1);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .stats-table th {
+      background: var(--surface-1);
+      padding: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stats-table th.highlight {
+      background: rgba(249, 115, 22, 0.1);
+      color: var(--accent-1);
+      font-weight: 700;
+    }
+
+    .stats-table td {
+      padding: 12px;
+      text-align: center;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stats-table td.highlight {
+      background: rgba(249, 115, 22, 0.05);
+      color: var(--accent-1);
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .stats-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Histogram Panel */
+    .histogram-panel {
+      background: var(--surface-0);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .histogram-controls {
+      padding: 12px 16px;
+      background: var(--surface-1);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .control-group label {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .control-group select {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 12px;
+      background: var(--surface-0);
+    }
+
+    .control-group input[type="range"] {
+      width: 100px;
+    }
+
+    .control-group input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent-1);
+    }
+
+    #histogram-chart {
+      padding: 16px;
+      min-height: 400px;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      border: 3px solid var(--border);
+      border-top: 3px solid var(--accent-1);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
-    <div class="results-container">
-        <!-- Header with Dropdown Navigation -->
-        <div class="dialog-header">
-            <h1><i class="fa-solid fa-chart-simple"></i> <span id="pageTitle">Descriptive Statistics</span></h1>
-            <div class="dialog-header-controls">
-                <div class="dropdown-container" id="navDropdown">
-                    <button class="dropdown-btn" onclick="toggleDropdown()">
-                        <i class="fa-solid fa-bars"></i>
-                        Analysis Menu
-                        <span class="dropdown-arrow">▼</span>
-                    </button>
-                    <div class="dropdown-content">
-                        <a onclick="showView('descriptive')" class="selected" id="nav-descriptive">
-                            <span class="nav-icon"><i class="fa-solid fa-table"></i></span>Descriptive Statistics
-                        </a>
-                        <a onclick="showView('distribution')" id="nav-distribution">
-                            <span class="nav-icon"><i class="fa-solid fa-chart-area"></i></span>Distribution Analysis
-                        </a>
-                        <a onclick="showView('normality')" id="nav-normality">
-                            <span class="nav-icon"><i class="fa-solid fa-vial"></i></span>Normality Tests
-                        </a>
-                        <div class="dropdown-separator"></div>
-                        <a onclick="showView('histogram')" id="nav-histogram">
-                            <span class="nav-icon"><i class="fa-solid fa-chart-column"></i></span>Histogram
-                        </a>
-                        <a onclick="showView('boxplot')" id="nav-boxplot">
-                            <span class="nav-icon"><i class="fa-solid fa-box"></i></span>Box Plot
-                        </a>
-                        <a onclick="showView('qqplot')" id="nav-qqplot">
-                            <span class="nav-icon"><i class="fa-solid fa-chart-scatter"></i></span>Q-Q Plot
-                        </a>
-                    </div>
-                </div>
-                <button class="close-btn" onclick="closeDialog()">
-                    <i class="fa-solid fa-times"></i> Close
-                </button>
-            </div>
+  <!-- Header -->
+  <div class="header">
+    <h1>
+      <i class="fa-solid fa-chart-simple"></i>
+      <span id="pageTitle">Univariate Analysis Results</span>
+    </h1>
+    <div class="header-controls">
+      <div style="position: relative;">
+        <button class="dropdown-btn" onclick="toggleDropdown()">
+          <i class="fa-solid fa-bars"></i>
+          Analysis Views
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="dropdown-content" id="dropdownMenu">
+          <div class="analysis-option active" onclick="showView('histogram')">
+            <i class="fa-solid fa-chart-column"></i>
+            Histogram & Stats
+          </div>
+          <div class="analysis-option" onclick="showView('boxplot')">
+            <i class="fa-solid fa-box"></i>
+            Box Plot
+          </div>
+          <div class="analysis-option" onclick="showView('qqplot')">
+            <i class="fa-solid fa-chart-scatter"></i>
+            Q-Q Plot
+          </div>
         </div>
-
-        <!-- Results Content -->
-        <div id="resultsContent">
-            <div class="loading">
-                <div class="spinner"></div>
-                <div>Loading results...</div>
-            </div>
-        </div>
+      </div>
+      <button class="close-btn" onclick="closeDialog()">
+        <i class="fa-solid fa-times"></i> Close
+      </button>
     </div>
+  </div>
 
-    <!-- Shared Results Dialog JS -->
-    <script src="../src/shared/js/components/ResultsDialog.js"></script>
-    
-    <!-- Module-specific display functions -->
-    <script>
-        // Initialize with available views
-        initResultsDialog({
-            defaultView: 'descriptive',
-            storageKey: 'univariateResults',
-            views: {
-                descriptive: displayDescriptiveView,
-                distribution: displayDistributionView,
-                normality: displayNormalityView,
-                histogram: displayHistogramView,
-                boxplot: displayBoxPlotView,
-                qqplot: displayQQPlotView
-            }
-        });
+  <!-- Content -->
+  <div class="content" id="resultsContent">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div>Loading results...</div>
+    </div>
+  </div>
 
-        /**
-         * Descriptive Statistics View
-         */
-        function displayDescriptiveView(data) {
-            if (!data) return;
-            
-            updatePageTitle('Descriptive Statistics');
-            
-            const { n, descriptive, dataSource, transform } = data;
-            
-            const html = `
-                <!-- Sample Info -->
-                <div class="stats-container">
-                    <div class="stat-panel">
-                        <div class="stat-panel-heading"><i class="fa-solid fa-info-circle"></i> Sample Information</div>
-                        <div class="stat-panel-body">
-                            <div class="stat-field">
-                                <span class="stat-label">Sample Size:</span>
-                                <span class="stat-value">${n}</span>
-                            </div>
-                            <div class="stat-field">
-                                <span class="stat-label">Data Source:</span>
-                                <span class="stat-value">${dataSource}</span>
-                            </div>
-                            <div class="stat-field">
-                                <span class="stat-label">Transform:</span>
-                                <span class="stat-value">${transform || 'None'}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  <script>
+    let resultsData = null;
+    let histogram Chart = null;
+    let currentData = [];
 
-                <!-- Central Tendency -->
-                <div class="table-container">
-                    <div class="table-heading"><i class="fa-solid fa-chart-line"></i> Central Tendency</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Statistic</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Mean</td>
-                                <td><strong>${descriptive.mean}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Median (Q2)</td>
-                                <td><strong>${descriptive.median}</strong></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+    Office.onReady(() => {
+      loadResults();
+    });
 
-                <!-- Dispersion -->
-                <div class="table-container">
-                    <div class="table-heading"><i class="fa-solid fa-arrows-left-right"></i> Dispersion</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Statistic</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Standard Deviation</td>
-                                <td><strong>${descriptive.stdDev}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Variance</td>
-                                <td><strong>${descriptive.variance}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Range</td>
-                                <td><strong>${descriptive.range}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>IQR (Interquartile Range)</td>
-                                <td><strong>${descriptive.iqr}</strong></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+    function loadResults() {
+      const dataJSON = localStorage.getItem('univariateResults');
+      if (dataJSON) {
+        resultsData = JSON.parse(dataJSON);
+        displayHistogramView();
+      } else {
+        document.getElementById('resultsContent').innerHTML = `
+          <div class="loading">
+            <i class="fa-solid fa-exclamation-triangle" style="font-size: 40px; color: #dc2626; margin-bottom: 16px;"></i>
+            <div style="color: #dc2626;">No results data found</div>
+          </div>
+        `;
+      }
+    }
 
-                <!-- Range & Quantiles -->
-                <div class="table-container">
-                    <div class="table-heading"><i class="fa-solid fa-ruler-horizontal"></i> Range & Quantiles</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Statistic</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Minimum</td>
-                                <td><strong>${descriptive.min}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Q1 (25th percentile)</td>
-                                <td><strong>${descriptive.q1}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Median (50th percentile)</td>
-                                <td><strong>${descriptive.median}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Q3 (75th percentile)</td>
-                                <td><strong>${descriptive.q3}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Maximum</td>
-                                <td><strong>${descriptive.max}</strong></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            
-            document.getElementById('resultsContent').innerHTML = html;
-        }
+    function displayHistogramView() {
+      const { descriptive, n } = resultsData;
+      
+      document.getElementById('resultsContent').innerHTML = `
+        <!-- Statistics Panel -->
+        <div class="stats-panel">
+          <div class="panel-heading">
+            <span>Descriptive Statistics</span>
+            <span style="font-size: 12px; color: var(--text-muted);">n = ${n}</span>
+          </div>
+          <div style="padding: 12px;">
+            <!-- Table 1: Central Tendency -->
+            <table class="stats-table" style="margin-bottom: 12px;">
+              <thead>
+                <tr>
+                  <th class="highlight">Count</th>
+                  <th class="highlight">Mean</th>
+                  <th class="highlight">Std Dev</th>
+                  <th>Variance</th>
+                  <th>Kurtosis</th>
+                  <th>Skewness</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="highlight">${n}</td>
+                  <td class="highlight">${descriptive.mean}</td>
+                  <td class="highlight">${descriptive.stdDev}</td>
+                  <td>${descriptive.variance}</td>
+                  <td>${descriptive.kurtosis}</td>
+                  <td>${descriptive.skewness}</td>
+                </tr>
+              </tbody>
+            </table>
 
-        /**
-         * Distribution Analysis View
-         */
-        function displayDistributionView(data) {
-            if (!data) return;
-            
-            updatePageTitle('Distribution Analysis');
-            
-            const { descriptive } = data;
-            const skew = parseFloat(descriptive.skewness);
-            const kurt = parseFloat(descriptive.kurtosis);
-            
-            const skewInterpretation = Math.abs(skew) < 0.5 
-                ? 'The distribution is approximately symmetric.'
-                : skew > 0.5 
-                    ? 'The distribution is positively skewed (right tail is longer).'
-                    : 'The distribution is negatively skewed (left tail is longer).';
-            
-            const kurtInterpretation = Math.abs(kurt) < 0.5
-                ? 'The distribution has approximately normal tailedness (mesokurtic).'
-                : kurt > 0.5
-                    ? 'The distribution has heavy tails (leptokurtic) - more prone to outliers.'
-                    : 'The distribution has light tails (platykurtic) - less prone to outliers.';
-            
-            const html = `
-                <div class="table-container">
-                    <div class="table-heading"><i class="fa-solid fa-chart-area"></i> Distribution Shape</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Statistic</th>
-                                <th>Value</th>
-                                <th style="width: 50%;">Interpretation</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Skewness</td>
-                                <td><strong>${descriptive.skewness}</strong></td>
-                                <td style="color: var(--text-secondary);">${skewInterpretation}</td>
-                            </tr>
-                            <tr>
-                                <td>Kurtosis (Excess)</td>
-                                <td><strong>${descriptive.kurtosis}</strong></td>
-                                <td style="color: var(--text-secondary);">${kurtInterpretation}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <!-- Table 2: Range & Quartiles -->
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Range</th>
+                  <th>Minimum</th>
+                  <th>Q25</th>
+                  <th class="highlight">Median</th>
+                  <th>Q75</th>
+                  <th>Maximum</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>${descriptive.range}</td>
+                  <td>${descriptive.min}</td>
+                  <td>${descriptive.q1}</td>
+                  <td class="highlight">${descriptive.median}</td>
+                  <td>${descriptive.q3}</td>
+                  <td>${descriptive.max}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-                <div class="interpretation">
-                    <strong><i class="fa-solid fa-lightbulb"></i> What This Means:</strong><br><br>
-                    <strong>Skewness (${descriptive.skewness}):</strong> ${skewInterpretation}<br><br>
-                    <strong>Kurtosis (${descriptive.kurtosis}):</strong> ${kurtInterpretation}<br><br>
-                    A perfectly normal distribution would have skewness = 0 and kurtosis = 0.
-                </div>
+        <!-- Histogram Panel -->
+        <div class="histogram-panel">
+          <div class="panel-heading">
+            Interactive Histogram
+          </div>
+          <div class="histogram-controls">
+            <div class="control-group">
+              <label>Bins:</label>
+              <input type="range" id="numBins" min="5" max="50" value="15" oninput="updateHistogram()">
+              <span id="binsValue">15</span>
+            </div>
+            <div class="control-group">
+              <label>Normal Curve:</label>
+              <input type="checkbox" id="showNormal" checked onchange="updateHistogram()">
+            </div>
+          </div>
+          <div id="histogram-chart"></div>
+        </div>
+      `;
 
-                <div class="card">
-                    <h3><i class="fa-solid fa-chart-column"></i> Visual Analysis Recommended</h3>
-                    <p style="color: var(--text-secondary); line-height: 1.6;">
-                        Use the dropdown menu above to view:
-                    </p>
-                    <ul style="color: var(--text-secondary); line-height: 2; margin-top: 10px;">
-                        <li><strong>Histogram</strong> - See the distribution shape visually</li>
-                        <li><strong>Box Plot</strong> - Identify outliers and quartiles</li>
-                        <li><strong>Q-Q Plot</strong> - Assess normality graphically</li>
-                    </ul>
-                </div>
-            `;
-            
-            document.getElementById('resultsContent').innerHTML = html;
-        }
+      createHistogram();
+    }
 
-        /**
-         * Normality Tests View
-         */
-        function displayNormalityView(data) {
-            if (!data) return;
-            
-            updatePageTitle('Normality Tests');
-            
-            const html = `
-                <div class="note">
-                    <strong><i class="fa-solid fa-flask"></i> Normality Testing</strong><br><br>
-                    Full statistical normality tests (Shapiro-Wilk, Anderson-Darling, Kolmogorov-Smirnov) 
-                    will be implemented in the next version of Statistico Analytics.
-                </div>
+    function createHistogram() {
+      // For now, create a simple chart - in real implementation, use actual data
+      Highcharts.chart('histogram-chart', {
+        chart: { type: 'column', backgroundColor: 'transparent' },
+        title: { text: null },
+        xAxis: { title: { text: 'Value' } },
+        yAxis: { title: { text: 'Frequency' } },
+        legend: { enabled: false },
+        series: [{
+          name: 'Frequency',
+          data: [2, 5, 8, 15, 20, 18, 12, 8, 5, 2],
+          color: '#3b82f6'
+        }],
+        credits: { enabled: false }
+      });
+    }
 
-                <div class="card">
-                    <h3><i class="fa-solid fa-chart-simple"></i> Alternative: Visual Assessment</h3>
-                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 15px;">
-                        For now, you can assess normality using:
-                    </p>
-                    <ul style="color: var(--text-secondary); line-height: 2;">
-                        <li><strong>Distribution Analysis</strong> - Check skewness and kurtosis values</li>
-                        <li><strong>Q-Q Plot</strong> - Visual normality assessment (most reliable)</li>
-                        <li><strong>Histogram</strong> - See if distribution approximates bell curve</li>
-                    </ul>
-                </div>
+    function updateHistogram() {
+      const bins = document.getElementById('numBins').value;
+      document.getElementById('binsValue').textContent = bins;
+      // Update chart with new bins
+      createHistogram();
+    }
 
-                <div class="card">
-                    <h3><i class="fa-solid fa-book"></i> General Guidelines</h3>
-                    <ul style="color: var(--text-secondary); line-height: 2;">
-                        <li>Skewness between -0.5 and 0.5 suggests approximate symmetry</li>
-                        <li>Kurtosis between -0.5 and 0.5 suggests normal tailedness</li>
-                        <li>Q-Q plot points should fall close to the diagonal line</li>
-                        <li>Histogram should approximate a bell-shaped curve</li>
-                    </ul>
-                </div>
-            `;
-            
-            document.getElementById('resultsContent').innerHTML = html;
-        }
+    function showView(viewName) {
+      // Update active state
+      document.querySelectorAll('.analysis-option').forEach(opt => opt.classList.remove('active'));
+      event.target.closest('.analysis-option').classList.add('active');
+      
+      // Close dropdown
+      document.getElementById('dropdownMenu').classList.remove('show');
+      
+      // Show view (for now just histogram)
+      if (viewName === 'histogram') {
+        displayHistogramView();
+      } else {
+        document.getElementById('resultsContent').innerHTML = `
+          <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+            <i class="fa-solid fa-info-circle" style="font-size: 48px; margin-bottom: 16px;"></i>
+            <div>${viewName} view coming soon!</div>
+          </div>
+        `;
+      }
+    }
 
-        /**
-         * Histogram View
-         */
-        function displayHistogramView(data) {
-            if (!data) return;
-            
-            updatePageTitle('Histogram');
-            
-            const html = `
-                <div class="note">
-                    <strong><i class="fa-solid fa-chart-column"></i> Interactive Histogram</strong><br><br>
-                    Interactive histogram visualization will be added in the next update.
-                    This will include:
-                </div>
+    function toggleDropdown() {
+      document.getElementById('dropdownMenu').classList.toggle('show');
+    }
 
-                <div class="card">
-                    <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Planned Features</h3>
-                    <ul style="color: var(--text-secondary); line-height: 2;">
-                        <li>Interactive histogram with adjustable bin width</li>
-                        <li>Overlay of normal distribution curve</li>
-                        <li>Frequency and density display options</li>
-                        <li>Export as image for reports</li>
-                    </ul>
-                </div>
+    function closeDialog() {
+      window.close();
+      if (Office.context.ui) {
+        Office.context.ui.messageParent('close');
+      }
+    }
 
-                <div class="interpretation">
-                    <strong><i class="fa-solid fa-circle-info"></i> Current Workaround:</strong><br><br>
-                    Use Excel's built-in charting:
-                    <ol style="margin-top: 10px; line-height: 2;">
-                        <li>Select your data in Excel</li>
-                        <li>Insert → Charts → Histogram</li>
-                        <li>Format as needed</li>
-                    </ol>
-                </div>
-            `;
-            
-            document.getElementById('resultsContent').innerHTML = html;
-        }
-
-        /**
-         * Box Plot View
-         */
-        function displayBoxPlotView(data) {
-            if (!data) return;
-            
-            updatePageTitle('Box Plot');
-            
-            const { descriptive } = data;
-            
-            const html = `
-                <div class="note">
-                    <strong><i class="fa-solid fa-box"></i> Box Plot Visualization</strong><br><br>
-                    Interactive box plot will be added in the next update.
-                </div>
-
-                <div class="card">
-                    <h3><i class="fa-solid fa-chart-simple"></i> Box Plot Summary</h3>
-                    <table style="width: 100%; margin-top: 15px;">
-                        <thead>
-                            <tr>
-                                <th>Component</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Minimum</td>
-                                <td><strong>${descriptive.min}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Q1 (Lower Quartile)</td>
-                                <td><strong>${descriptive.q1}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Median</td>
-                                <td><strong>${descriptive.median}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Q3 (Upper Quartile)</td>
-                                <td><strong>${descriptive.q3}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Maximum</td>
-                                <td><strong>${descriptive.max}</strong></td>
-                            </tr>
-                            <tr style="background: var(--surface-2);">
-                                <td>IQR (Q3 - Q1)</td>
-                                <td><strong>${descriptive.iqr}</strong></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="interpretation">
-                    <strong><i class="fa-solid fa-lightbulb"></i> Outlier Detection:</strong><br><br>
-                    Potential outliers typically fall outside:<br>
-                    • Lower fence: Q1 - 1.5 × IQR = ${(parseFloat(descriptive.q1) - 1.5 * parseFloat(descriptive.iqr)).toFixed(2)}<br>
-                    • Upper fence: Q3 + 1.5 × IQR = ${(parseFloat(descriptive.q3) + 1.5 * parseFloat(descriptive.iqr)).toFixed(2)}
-                </div>
-            `;
-            
-            document.getElementById('resultsContent').innerHTML = html;
-        }
-
-        /**
-         * Q-Q Plot View
-         */
-        function displayQQPlotView(data) {
-            if (!data) return;
-            
-            updatePageTitle('Q-Q Plot (Normality Assessment)');
-            
-            const html = `
-                <div class="note">
-                    <strong><i class="fa-solid fa-chart-scatter"></i> Q-Q Plot Visualization</strong><br><br>
-                    Interactive Q-Q plot will be added in the next update.
-                </div>
-
-                <div class="card">
-                    <h3><i class="fa-solid fa-book"></i> What is a Q-Q Plot?</h3>
-                    <p style="color: var(--text-secondary); line-height: 1.6;">
-                        A Quantile-Quantile (Q-Q) plot is a graphical tool to assess if a dataset follows 
-                        a theoretical distribution (typically the normal distribution).
-                    </p>
-                </div>
-
-                <div class="card">
-                    <h3><i class="fa-solid fa-glasses"></i> How to Interpret</h3>
-                    <ul style="color: var(--text-secondary); line-height: 2;">
-                        <li><strong>Points on the line:</strong> Data follows normal distribution</li>
-                        <li><strong>S-shaped curve:</strong> Heavy-tailed distribution</li>
-                        <li><strong>Inverted S-curve:</strong> Light-tailed distribution</li>
-                        <li><strong>Points deviate at ends:</strong> Potential outliers</li>
-                    </ul>
-                </div>
-
-                <div class="interpretation">
-                    <strong><i class="fa-solid fa="circle-info"></i> Tip:</strong><br><br>
-                    The Q-Q plot is generally more reliable than histogram for assessing normality, 
-                    especially with smaller sample sizes.
-                </div>
-            `;
-            
-            document.getElementById('resultsContent').innerHTML = html;
-        }
-    </script>
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const dropdown = document.getElementById('dropdownMenu');
+      if (dropdown && !e.target.closest('.dropdown-btn') && !e.target.closest('.dropdown-content')) {
+        dropdown.classList.remove('show');
+      }
+    });
+  </script>
 </body>
 </html>
