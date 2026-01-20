@@ -296,6 +296,134 @@
       accent-color: var(--accent-1);
     }
 
+    .value-display {
+      min-width: 40px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    /* Range Controls for Data Cropping */
+    .range-controls {
+      padding: 16px;
+      background: var(--surface-1);
+      border-top: 1px solid var(--border);
+    }
+
+    .range-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .slider-container {
+      position: relative;
+      flex: 1;
+      height: 30px;
+      display: flex;
+      align-items: center;
+    }
+
+    .slider-track {
+      position: absolute;
+      width: 100%;
+      height: 6px;
+      background: var(--surface-2);
+      border-radius: 3px;
+      pointer-events: none;
+    }
+
+    .active-range {
+      position: absolute;
+      height: 6px;
+      background: var(--accent-1);
+      border-radius: 3px;
+      pointer-events: none;
+      left: 0%;
+      width: 100%;
+      z-index: 0;
+    }
+
+    .slider-container input[type="range"] {
+      position: absolute;
+      width: 100%;
+      background: transparent;
+      pointer-events: all;
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
+    }
+
+    .slider-container input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px;
+      background: transparent;
+      border-radius: 3px;
+    }
+
+    .slider-container input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-2);
+      cursor: pointer;
+      border: 3px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      margin-top: -6px;
+    }
+
+    .slider-container input[type="range"]::-moz-range-track {
+      height: 6px;
+      background: transparent;
+      border-radius: 3px;
+    }
+
+    .slider-container input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-2);
+      cursor: pointer;
+      border: 3px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    #leftTruncation {
+      z-index: 2;
+    }
+
+    #rightTruncation {
+      z-index: 1;
+    }
+
+    .reset-button {
+      background: var(--surface-0);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .reset-button:hover {
+      border-color: var(--accent-1);
+      color: var(--accent-1);
+      background: var(--surface-2);
+    }
+
+    .range-display {
+      margin-top: 8px;
+      text-align: center;
+    }
+
     #histogram-chart {
       padding: 16px;
       min-height: 400px;
@@ -517,23 +645,71 @@
           <div class="panel-heading">
             Interactive Histogram
           </div>
+          <!-- Histogram Controls -->
           <div class="histogram-controls">
+            <!-- Binning Method -->
             <div class="control-group">
-              <label>Bins:</label>
-              <input type="range" id="numBins" min="5" max="50" value="15" oninput="updateHistogram()">
-              <span id="binsValue">15</span>
+              <label for="binningMethod">Method:</label>
+              <select id="binningMethod" onchange="updateBinningMethod()">
+                <option value="manual">Manual (User-defined)</option>
+                <option value="sturges">Sturges (log₂)</option>
+                <option value="scott">Scott (Normal optimal)</option>
+                <option value="fd">Freedman-Diaconis (Robust)</option>
+                <option value="sqrt">Square Root (√n)</option>
+                <option value="rice">Rice (2n^(1/3))</option>
+              </select>
+              <i class="fa-solid fa-info-circle" style="color: var(--accent-2); cursor: help;" title="Binning Methods&#10;• Manual: Choose bins yourself&#10;• Sturges: Good for normal distributions&#10;• Scott: Optimal for minimizing error&#10;• Freedman-Diaconis: Robust to outliers"></i>
             </div>
+
+            <!-- Bins Slider (Manual mode) -->
+            <div class="control-group" id="manualBinsControl">
+              <label for="numBins">Bins:</label>
+              <span id="binsValue">15</span>
+              <input type="range" id="numBins" min="5" max="50" value="15" step="1" oninput="updateHistogram()">
+            </div>
+
+            <!-- Normal Curve Toggle -->
             <div class="control-group">
-              <label>Normal Curve:</label>
+              <label for="showNormalCurve">Normal:</label>
               <input type="checkbox" id="showNormalCurve" checked onchange="updateHistogram()">
             </div>
           </div>
+
+          <!-- Histogram Chart -->
           <div id="histogram-chart"></div>
+
+          <!-- Range Sliders for Cropping Data -->
+          <div class="range-controls">
+            <div class="range-slider-row">
+              <span>Min</span>
+              <span id="leftRangeValue" class="value-display">0</span>
+              
+              <!-- Dual Sliders -->
+              <div class="slider-container">
+                <div class="slider-track"></div>
+                <div id="activeRangeIndicator" class="active-range"></div>
+                <input type="range" id="leftTruncation" min="0" max="100" value="0" step="1">
+                <input type="range" id="rightTruncation" min="0" max="100" value="100" step="1">
+              </div>
+              
+              <span id="rightRangeValue" class="value-display">100</span>
+              <span>Max</span>
+              <button id="resetRanges" class="reset-button" onclick="resetRangeSliders()">Reset</button>
+              <span style="margin-left: 10px; color: var(--text-muted); font-size: 12px;">n: <span id="remainingN">--</span></span>
+            </div>
+            
+            <!-- Data Range Display -->
+            <div class="range-display" style="display: flex; justify-content: center; gap: 20px; margin-top: 8px; font-size: 11px; color: var(--text-muted);">
+              <span id="data-min-value">Min: --</span>
+              <span id="data-max-value">Max: --</span>
+            </div>
+          </div>
         </div>
       `;
 
-      // Wait for DOM to be ready before creating histogram
+      // Wait for DOM to be ready before initializing
       setTimeout(() => {
+        initializeRangeSliders();
         createHistogram();
       }, 100);
     }
@@ -554,20 +730,32 @@
         return;
       }
 
-      const data = resultsData.rawData;
+      // Use filtered data from range sliders
+      const data = getFilteredData();
+      if (data.length === 0) {
+        console.error('No data after filtering');
+        return;
+      }
+
       const numBins = parseInt(numBinsEl.value);
       const showNormalCurve = showNormalCurveEl.checked;
+      const totalCount = data.length;
+      
+      // Update remaining N display
+      const remainingNEl = document.getElementById('remainingN');
+      if (remainingNEl) remainingNEl.textContent = totalCount;
       
       // Calculate statistics for normal curve
-      const n = data.length;
-      const mean = parseFloat(resultsData.descriptive.mean);
-      const stdDev = parseFloat(resultsData.descriptive.stdDev);
+      const mean = data.reduce((a, b) => a + b, 0) / data.length;
+      const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (data.length - 1);
+      const stdDev = Math.sqrt(variance);
       const min = Math.min(...data);
       const max = Math.max(...data);
       
-      // Create bins
+      // Create bins with ranges as categories
       const binWidth = (max - min) / numBins;
-      const bins = [];
+      const counts = [];
+      const categories = [];
       const binCenters = [];
       
       for (let i = 0; i < numBins; i++) {
@@ -575,115 +763,111 @@
         const binEnd = binStart + binWidth;
         const binCenter = (binStart + binEnd) / 2;
         
-        bins.push({
-          x: binCenter,
-          y: 0,
-          binStart: binStart,
-          binEnd: binEnd
-        });
+        // Format bin range for x-axis
+        categories.push(`${binStart.toFixed(1)}-${binEnd.toFixed(1)}`);
         binCenters.push(binCenter);
+        counts.push(0);
       }
       
       // Count data points in each bin
       data.forEach(value => {
         const binIndex = Math.min(Math.floor((value - min) / binWidth), numBins - 1);
-        bins[binIndex].y++;
+        counts[binIndex]++;
       });
       
-      // Create series array
+      // Create series array with dataLabels showing percentages
       const series = [{
         name: 'Frequency',
         type: 'column',
-        data: bins.map(bin => ({
-          x: bin.x,
-          y: bin.y,
-          custom: {
-            range: `${bin.binStart.toFixed(2)} - ${bin.binEnd.toFixed(2)}`
-          }
-        })),
-        color: '#3b82f6',
-        pointPadding: 0,
-        groupPadding: 0,
+        data: counts,
+        color: '#74b9ff',
+        borderColor: '#0984e3',
         borderWidth: 1,
-        borderColor: '#2563eb'
+        dataLabels: {
+          enabled: true,
+          formatter: function() {
+            const percentage = ((this.y / totalCount) * 100).toFixed(1);
+            return `${percentage}%`;
+          },
+          style: {
+            color: '#3b82f6',
+            fontSize: '11px',
+            fontWeight: '700',
+            textOutline: 'none'
+          },
+          y: -5
+        }
       }];
       
-      // Add normal curve if checked
-      if (showNormalCurve) {
+      // Add normal curve if checked (yellow dashed line)
+      if (showNormalCurve && stdDev > 0) {
         const normalCurveData = [];
-        const totalArea = n * binWidth; // Total area of histogram
+        const totalArea = totalCount * binWidth; // Total area of histogram
         
-        for (let i = 0; i <= 100; i++) {
-          const x = min + (max - min) * (i / 100);
+        for (let i = 0; i < categories.length; i++) {
+          const x = binCenters[i];
           // Normal distribution PDF
           const z = (x - mean) / stdDev;
           const pdf = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * z * z);
           const y = pdf * totalArea; // Scale to match histogram
-          normalCurveData.push([x, y]);
+          normalCurveData.push(y);
         }
         
         series.push({
           name: 'Normal Curve',
           type: 'line',
           data: normalCurveData,
-          color: '#f97316',
+          color: '#f1c40f',
           lineWidth: 3,
+          dashStyle: 'Dash',
           marker: { enabled: false },
           enableMouseTracking: true
         });
       }
       
       // Create chart
-      Highcharts.chart('histogram-chart', {
+      histogramChart = Highcharts.chart('histogram-chart', {
         chart: {
           backgroundColor: 'transparent',
           height: 400
         },
         title: { text: null },
         xAxis: {
+          categories: categories,
           title: { 
             text: resultsData.column || 'Value',
             style: { color: '#475569', fontWeight: '600' }
           },
+          labels: {
+            style: {
+              color: '#475569',
+              fontSize: '10px'
+            },
+            rotation: -45,
+            align: 'right'
+          },
           gridLineWidth: 1,
-          gridLineColor: '#e9ecef'
+          gridLineColor: '#e9ecef',
+          lineColor: '#999'
         },
         yAxis: {
           title: { 
             text: 'Frequency',
             style: { color: '#475569', fontWeight: '600' }
           },
-          gridLineColor: '#e9ecef'
+          gridLineColor: '#e9ecef',
+          gridLineWidth: 1
         },
         legend: {
-          enabled: showNormalCurve,
-          align: 'right',
-          verticalAlign: 'top',
-          itemStyle: { color: '#475569' }
+          enabled: false
         },
         tooltip: {
-          shared: false,
-          useHTML: true,
-          backgroundColor: '#ffffff',
-          borderColor: '#e9ecef',
-          formatter: function() {
-            if (this.series.name === 'Frequency') {
-              return `<div style="padding: 8px;">
-                <strong>Range:</strong> ${this.point.custom.range}<br/>
-                <strong>Frequency:</strong> ${this.y}
-              </div>`;
-            } else {
-              return `<div style="padding: 8px;">
-                <strong>Value:</strong> ${this.x.toFixed(2)}<br/>
-                <strong>Density:</strong> ${this.y.toFixed(4)}
-              </div>`;
-            }
-          }
+          enabled: false
         },
         plotOptions: {
           column: {
             pointPadding: 0,
-            groupPadding: 0,
+            groupPadding: 0.1,
             borderWidth: 1
           }
         },
@@ -696,6 +880,97 @@
       const bins = document.getElementById('numBins').value;
       document.getElementById('binsValue').textContent = bins;
       createHistogram();
+    }
+
+    // Binning method calculations
+    function calculateBinsSturges(n) {
+      return Math.max(1, Math.ceil(Math.log2(n) + 1));
+    }
+
+    function calculateBinsScott(data) {
+      const n = data.length;
+      if (n < 2) return 5;
+      const mean = data.reduce((a, b) => a + b, 0) / n;
+      const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1);
+      const stdDev = Math.sqrt(variance);
+      if (stdDev === 0) return 5;
+      const h = 3.5 * stdDev / Math.pow(n, 1/3);
+      const range = Math.max(...data) - Math.min(...data);
+      return Math.max(1, Math.ceil(range / h));
+    }
+
+    function calculateBinsFD(data) {
+      const n = data.length;
+      if (n < 2) return 5;
+      const sorted = [...data].sort((a, b) => a - b);
+      const q1Index = Math.floor(n * 0.25);
+      const q3Index = Math.floor(n * 0.75);
+      const q1 = sorted[q1Index];
+      const q3 = sorted[q3Index];
+      const iqr = q3 - q1;
+      if (iqr === 0) return calculateBinsSturges(n);
+      const h = 2 * iqr / Math.pow(n, 1/3);
+      const range = sorted[n - 1] - sorted[0];
+      return Math.max(1, Math.ceil(range / h));
+    }
+
+    function calculateBinsSqrt(n) {
+      return Math.max(1, Math.ceil(Math.sqrt(n)));
+    }
+
+    function calculateBinsRice(n) {
+      return Math.max(1, Math.ceil(2 * Math.pow(n, 1/3)));
+    }
+
+    function updateBinningMethod() {
+      const method = document.getElementById('binningMethod').value;
+      const numBinsInput = document.getElementById('numBins');
+      const binsValue = document.getElementById('binsValue');
+      
+      if (method === 'manual') {
+        numBinsInput.disabled = false;
+        createHistogram();
+      } else {
+        const data = getFilteredData();
+        let calculatedBins = 5;
+        
+        switch(method) {
+          case 'sturges':
+            calculatedBins = calculateBinsSturges(data.length);
+            break;
+          case 'scott':
+            calculatedBins = calculateBinsScott(data);
+            break;
+          case 'fd':
+            calculatedBins = calculateBinsFD(data);
+            break;
+          case 'sqrt':
+            calculatedBins = calculateBinsSqrt(data.length);
+            break;
+          case 'rice':
+            calculatedBins = calculateBinsRice(data.length);
+            break;
+        }
+        
+        numBinsInput.value = calculatedBins;
+        binsValue.textContent = calculatedBins;
+        numBinsInput.disabled = true;
+        createHistogram();
+      }
+    }
+
+    // Get filtered data based on range sliders
+    let originalDataMin, originalDataMax;
+    function getFilteredData() {
+      if (!resultsData || !resultsData.rawData) return [];
+      
+      const leftPercent = parseFloat(document.getElementById('leftTruncation')?.value || 0);
+      const rightPercent = parseFloat(document.getElementById('rightTruncation')?.value || 100);
+      
+      const leftValue = originalDataMin + (originalDataMax - originalDataMin) * (leftPercent / 100);
+      const rightValue = originalDataMin + (originalDataMax - originalDataMin) * (rightPercent / 100);
+      
+      return resultsData.rawData.filter(d => d >= leftValue && d <= rightValue);
     }
 
     function showView(viewName) {
@@ -732,6 +1007,100 @@
 
     function toggleDropdown() {
       document.getElementById('dropdownMenu').classList.toggle('show');
+    }
+
+    // Initialize range sliders
+    function initializeRangeSliders() {
+      if (!resultsData || !resultsData.rawData) return;
+      
+      originalDataMin = Math.min(...resultsData.rawData);
+      originalDataMax = Math.max(...resultsData.rawData);
+      
+      // Update display labels
+      document.getElementById('data-min-value').textContent = `Min: ${originalDataMin.toFixed(2)}`;
+      document.getElementById('data-max-value').textContent = `Max: ${originalDataMax.toFixed(2)}`;
+      document.getElementById('leftRangeValue').textContent = originalDataMin.toFixed(2);
+      document.getElementById('rightRangeValue').textContent = originalDataMax.toFixed(2);
+      document.getElementById('remainingN').textContent = resultsData.rawData.length;
+      
+      // Setup slider event listeners
+      const leftSlider = document.getElementById('leftTruncation');
+      const rightSlider = document.getElementById('rightTruncation');
+      
+      if (leftSlider) {
+        leftSlider.addEventListener('input', updateRangeSliders);
+        leftSlider.addEventListener('mousedown', () => {
+          leftSlider.style.zIndex = '3';
+          if (rightSlider) rightSlider.style.pointerEvents = 'none';
+        });
+        leftSlider.addEventListener('mouseup', () => {
+          leftSlider.style.zIndex = '2';
+          if (rightSlider) rightSlider.style.pointerEvents = '';
+        });
+      }
+      
+      if (rightSlider) {
+        rightSlider.addEventListener('input', updateRangeSliders);
+        rightSlider.addEventListener('mousedown', () => {
+          rightSlider.style.zIndex = '3';
+          if (leftSlider) leftSlider.style.pointerEvents = 'none';
+        });
+        rightSlider.addEventListener('mouseup', () => {
+          rightSlider.style.zIndex = '1';
+          if (leftSlider) leftSlider.style.pointerEvents = '';
+        });
+      }
+    }
+
+    // Update range sliders and filter data
+    function updateRangeSliders() {
+      const leftPercent = parseFloat(document.getElementById('leftTruncation').value);
+      const rightPercent = parseFloat(document.getElementById('rightTruncation').value);
+      
+      // Prevent sliders from crossing
+      if (leftPercent >= rightPercent - 1) {
+        document.getElementById('rightTruncation').value = Math.min(100, leftPercent + 1);
+        return;
+      }
+      if (rightPercent <= leftPercent + 1) {
+        document.getElementById('leftTruncation').value = Math.max(0, rightPercent - 1);
+        return;
+      }
+      
+      // Calculate actual values
+      const leftValue = originalDataMin + (originalDataMax - originalDataMin) * (leftPercent / 100);
+      const rightValue = originalDataMin + (originalDataMax - originalDataMin) * (rightPercent / 100);
+      
+      // Update display
+      document.getElementById('leftRangeValue').textContent = leftValue.toFixed(2);
+      document.getElementById('rightRangeValue').textContent = rightValue.toFixed(2);
+      
+      // Update active range indicator
+      const activeRange = document.getElementById('activeRangeIndicator');
+      if (activeRange) {
+        activeRange.style.left = leftPercent + '%';
+        activeRange.style.width = (rightPercent - leftPercent) + '%';
+      }
+      
+      // Re-create histogram with filtered data
+      createHistogram();
+    }
+
+    // Reset range sliders
+    function resetRangeSliders() {
+      document.getElementById('leftTruncation').value = 0;
+      document.getElementById('rightTruncation').value = 100;
+      document.getElementById('leftRangeValue').textContent = originalDataMin.toFixed(2);
+      document.getElementById('rightRangeValue').textContent = originalDataMax.toFixed(2);
+      
+      const activeRange = document.getElementById('activeRangeIndicator');
+      if (activeRange) {
+        activeRange.style.left = '0%';
+        activeRange.style.width = '100%';
+      }
+      
+      document.getElementById('remainingN').textContent = resultsData.rawData.length;
+      createHistogram();
     }
 
     function closeDialog() {
