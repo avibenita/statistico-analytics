@@ -541,6 +541,7 @@
     let resultsData = null;
     let histogramChart = null;
     let currentData = [];
+    let currentDecimals = 2;
 
     // Load results when page is ready
     if (typeof Office !== 'undefined') {
@@ -581,7 +582,18 @@
         <div class="stats-panel">
           <div class="panel-heading">
             <span>Descriptive Statistics</span>
-            <span style="font-size: 12px; color: var(--text-muted);">n = ${n}</span>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <label for="decimalsSelect" style="font-size: 12px; color: var(--text-muted); margin: 0;">Decimals:</label>
+              <select id="decimalsSelect" onchange="updateDecimals()" style="padding: 4px 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface-0); color: var(--text-primary);">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+              <span style="font-size: 12px; color: var(--text-muted);">n = ${n}</span>
+            </div>
           </div>
           <div style="padding: 12px;">
             <!-- Table 1: Central Tendency -->
@@ -658,8 +670,8 @@
             <!-- Bins Slider (Manual mode) -->
             <div class="control-group" id="manualBinsControl">
               <label for="numBins">Bins:</label>
-              <span id="binsValue">15</span>
-              <input type="range" id="numBins" min="5" max="50" value="15" step="1" oninput="updateHistogram()">
+              <span id="binsValue">5</span>
+              <input type="range" id="numBins" min="1" max="30" value="5" step="1" oninput="updateHistogram()">
             </div>
 
             <!-- Normal Curve Toggle -->
@@ -888,6 +900,51 @@
       createHistogram();
     }
 
+    function updateDecimals() {
+      const select = document.getElementById('decimalsSelect');
+      currentDecimals = parseInt(select.value);
+      
+      // Re-display the statistics with new decimal places
+      if (resultsData && resultsData.descriptive) {
+        const desc = resultsData.descriptive;
+        const d = currentDecimals;
+        
+        // Update all statistics values in the tables
+        const statsElements = {
+          'mean': parseFloat(desc.mean).toFixed(d),
+          'stdDev': parseFloat(desc.stdDev).toFixed(d),
+          'variance': parseFloat(desc.variance).toFixed(d),
+          'kurtosis': parseFloat(desc.kurtosis).toFixed(d),
+          'skewness': parseFloat(desc.skewness).toFixed(d),
+          'range': parseFloat(desc.range).toFixed(d),
+          'min': parseFloat(desc.min).toFixed(d),
+          'q1': parseFloat(desc.q1).toFixed(d),
+          'median': parseFloat(desc.median).toFixed(d),
+          'q3': parseFloat(desc.q3).toFixed(d),
+          'max': parseFloat(desc.max).toFixed(d)
+        };
+        
+        // Find and update each cell by matching the original value
+        document.querySelectorAll('.stats-table td').forEach(cell => {
+          const text = cell.textContent;
+          // Try to match against our original values
+          Object.keys(statsElements).forEach(key => {
+            if (parseFloat(text) === parseFloat(desc[key])) {
+              cell.textContent = statsElements[key];
+            }
+          });
+        });
+        
+        // Update range slider labels
+        if (originalDataMin !== undefined) {
+          document.getElementById('leftRangeValue').textContent = parseFloat(document.getElementById('leftRangeValue').textContent).toFixed(d);
+          document.getElementById('rightRangeValue').textContent = parseFloat(document.getElementById('rightRangeValue').textContent).toFixed(d);
+          document.getElementById('data-min-value').textContent = `Min: ${originalDataMin.toFixed(d)}`;
+          document.getElementById('data-max-value').textContent = `Max: ${originalDataMax.toFixed(d)}`;
+        }
+      }
+    }
+
     // Binning method calculations
     function calculateBinsSturges(n) {
       return Math.max(1, Math.ceil(Math.log2(n) + 1));
@@ -1026,11 +1083,11 @@
       originalDataMin = Math.min(...resultsData.rawData);
       originalDataMax = Math.max(...resultsData.rawData);
       
-      // Update display labels
-      document.getElementById('data-min-value').textContent = `Min: ${originalDataMin.toFixed(2)}`;
-      document.getElementById('data-max-value').textContent = `Max: ${originalDataMax.toFixed(2)}`;
-      document.getElementById('leftRangeValue').textContent = originalDataMin.toFixed(2);
-      document.getElementById('rightRangeValue').textContent = originalDataMax.toFixed(2);
+      // Update display labels with current decimal places
+      document.getElementById('data-min-value').textContent = `Min: ${originalDataMin.toFixed(currentDecimals)}`;
+      document.getElementById('data-max-value').textContent = `Max: ${originalDataMax.toFixed(currentDecimals)}`;
+      document.getElementById('leftRangeValue').textContent = originalDataMin.toFixed(currentDecimals);
+      document.getElementById('rightRangeValue').textContent = originalDataMax.toFixed(currentDecimals);
       document.getElementById('remainingN').textContent = resultsData.rawData.length;
       
       // Setup slider event listeners
@@ -1145,9 +1202,9 @@
       prevLeftPercent = leftPercent;
       prevRightPercent = rightPercent;
       
-      // Update display
-      document.getElementById('leftRangeValue').textContent = leftValue.toFixed(2);
-      document.getElementById('rightRangeValue').textContent = rightValue.toFixed(2);
+      // Update display with current decimal places
+      document.getElementById('leftRangeValue').textContent = leftValue.toFixed(currentDecimals);
+      document.getElementById('rightRangeValue').textContent = rightValue.toFixed(currentDecimals);
       document.getElementById('remainingN').textContent = filteredData.length;
       
       // Update active range indicator
@@ -1168,8 +1225,8 @@
       prevLeftPercent = 0;
       prevRightPercent = 100;
       
-      document.getElementById('leftRangeValue').textContent = originalDataMin.toFixed(2);
-      document.getElementById('rightRangeValue').textContent = originalDataMax.toFixed(2);
+      document.getElementById('leftRangeValue').textContent = originalDataMin.toFixed(currentDecimals);
+      document.getElementById('rightRangeValue').textContent = originalDataMax.toFixed(currentDecimals);
       
       const activeRange = document.getElementById('activeRangeIndicator');
       if (activeRange) {
@@ -1183,13 +1240,22 @@
 
     function closeDialog() {
       try {
+        // Try to close using Office.js dialog API
         if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
-          Office.context.ui.messageParent('close');
+          // Message parent to close this dialog
+          Office.context.ui.messageParent(JSON.stringify({ action: 'closeDialog' }));
         }
+        // Also try window.close() as fallback
+        window.close();
       } catch (e) {
-        console.log('Could not message parent:', e);
+        console.error('Error closing dialog:', e);
+        // Force close as last resort
+        try {
+          window.close();
+        } catch (e2) {
+          console.error('Could not close window:', e2);
+        }
       }
-      window.close();
     }
 
     // Close dropdown when clicking outside
