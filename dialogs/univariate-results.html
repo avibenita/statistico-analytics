@@ -319,12 +319,20 @@
 
   <script>
     let resultsData = null;
-    let histogram Chart = null;
+    let histogramChart = null;
     let currentData = [];
 
-    Office.onReady(() => {
-      loadResults();
-    });
+    // Load results when page is ready
+    if (typeof Office !== 'undefined') {
+      Office.onReady(() => {
+        loadResults();
+      });
+    } else {
+      // Fallback if Office.js not available
+      window.addEventListener('DOMContentLoaded', () => {
+        loadResults();
+      });
+    }
 
     function loadResults() {
       const dataJSON = localStorage.getItem('univariateResults');
@@ -475,10 +483,14 @@
     }
 
     function closeDialog() {
-      window.close();
-      if (Office.context.ui) {
-        Office.context.ui.messageParent('close');
+      try {
+        if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+          Office.context.ui.messageParent('close');
+        }
+      } catch (e) {
+        console.log('Could not message parent:', e);
       }
+      window.close();
     }
 
     // Close dropdown when clicking outside
