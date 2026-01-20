@@ -986,8 +986,6 @@
       const leftValue = originalDataMin + (originalDataMax - originalDataMin) * (leftPercent / 100);
       const rightValue = originalDataMin + (originalDataMax - originalDataMin) * (rightPercent / 100);
       
-      console.log(`Filter range: ${leftValue.toFixed(2)} to ${rightValue.toFixed(2)} (${leftPercent}% to ${rightPercent}%)`);
-      
       return resultsData.rawData.filter(d => d >= leftValue && d <= rightValue);
     }
 
@@ -1089,8 +1087,6 @@
       const leftValue = originalDataMin + (originalDataMax - originalDataMin) * (leftPercent / 100);
       const rightValue = originalDataMin + (originalDataMax - originalDataMin) * (rightPercent / 100);
       
-      console.log(`Slider update: Left=${leftPercent}% (${leftValue.toFixed(2)}), Right=${rightPercent}% (${rightValue.toFixed(2)})`);
-      
       // Check filtered data count BEFORE updating
       const filteredData = resultsData.rawData.filter(d => d >= leftValue && d <= rightValue);
       
@@ -1098,7 +1094,17 @@
         // Revert to previous valid positions
         document.getElementById('leftTruncation').value = prevLeftPercent;
         document.getElementById('rightTruncation').value = prevRightPercent;
-        alert(`Please keep at least ${MIN_REQUIRED_OBS} observations.`);
+        
+        // Show warning in UI (not alert - not supported in Office dialogs)
+        const remainingNEl = document.getElementById('remainingN');
+        if (remainingNEl) {
+          remainingNEl.textContent = `min ${MIN_REQUIRED_OBS}`;
+          remainingNEl.style.color = '#dc2626';
+          setTimeout(() => {
+            remainingNEl.style.color = '';
+          }, 1000);
+        }
+        console.warn(`Minimum ${MIN_REQUIRED_OBS} observations required`);
         return;
       }
       
@@ -1139,7 +1145,6 @@
       }
       
       document.getElementById('remainingN').textContent = resultsData.rawData.length;
-      console.log('Range sliders reset');
       createHistogram();
     }
 
