@@ -80,9 +80,16 @@
 }
 
 .range-btn:disabled {
-  opacity: 0.3;
+  opacity: 0.5;
   cursor: not-allowed;
-  pointer-events: none;
+  background: var(--surface-1);
+  color: var(--text-muted);
+  border-style: dashed;
+}
+
+.range-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .range-btn.active {
