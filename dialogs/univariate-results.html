@@ -394,11 +394,11 @@
     }
 
     #leftTruncation {
-      z-index: 2;
+      z-index: 1;
     }
 
     #rightTruncation {
-      z-index: 1;
+      z-index: 2;
     }
 
     .reset-button {
@@ -975,7 +975,7 @@
     let originalDataMin, originalDataMax;
     let prevLeftPercent = 0;
     let prevRightPercent = 100;
-    const MIN_REQUIRED_OBS = 10;
+    let updateTimeout = null;
     
     function getFilteredData() {
       if (!resultsData || !resultsData.rawData) return [];
@@ -1050,7 +1050,7 @@
           if (rightSlider) rightSlider.style.pointerEvents = 'none';
         });
         leftSlider.addEventListener('mouseup', () => {
-          leftSlider.style.zIndex = '2';
+          leftSlider.style.zIndex = '1';
           if (rightSlider) rightSlider.style.pointerEvents = '';
         });
       }
@@ -1062,7 +1062,7 @@
           if (leftSlider) leftSlider.style.pointerEvents = 'none';
         });
         rightSlider.addEventListener('mouseup', () => {
-          rightSlider.style.zIndex = '1';
+          rightSlider.style.zIndex = '2';
           if (leftSlider) leftSlider.style.pointerEvents = '';
         });
       }
@@ -1087,10 +1087,11 @@
       const leftValue = originalDataMin + (originalDataMax - originalDataMin) * (leftPercent / 100);
       const rightValue = originalDataMin + (originalDataMax - originalDataMin) * (rightPercent / 100);
       
-      // Check filtered data count BEFORE updating
+      // Check filtered data count BEFORE updating (use 5% of total or minimum 5)
       const filteredData = resultsData.rawData.filter(d => d >= leftValue && d <= rightValue);
+      const minRequired = Math.max(5, Math.ceil(resultsData.rawData.length * 0.05));
       
-      if (filteredData.length < MIN_REQUIRED_OBS) {
+      if (filteredData.length < minRequired) {
         // Revert to previous valid positions
         document.getElementById('leftTruncation').value = prevLeftPercent;
         document.getElementById('rightTruncation').value = prevRightPercent;
@@ -1098,13 +1099,13 @@
         // Show warning in UI (not alert - not supported in Office dialogs)
         const remainingNEl = document.getElementById('remainingN');
         if (remainingNEl) {
-          remainingNEl.textContent = `min ${MIN_REQUIRED_OBS}`;
+          remainingNEl.textContent = `min ${minRequired}`;
           remainingNEl.style.color = '#dc2626';
           setTimeout(() => {
             remainingNEl.style.color = '';
-          }, 1000);
+            remainingNEl.textContent = filteredData.length;
+          }, 1500);
         }
-        console.warn(`Minimum ${MIN_REQUIRED_OBS} observations required`);
         return;
       }
       
