@@ -525,14 +525,17 @@
             </div>
             <div class="control-group">
               <label>Normal Curve:</label>
-              <input type="checkbox" id="showNormal" checked onchange="updateHistogram()">
+              <input type="checkbox" id="showNormalCurve" checked onchange="updateHistogram()">
             </div>
           </div>
           <div id="histogram-chart"></div>
         </div>
       `;
 
-      createHistogram();
+      // Wait for DOM to be ready before creating histogram
+      setTimeout(() => {
+        createHistogram();
+      }, 100);
     }
 
     function createHistogram() {
@@ -541,9 +544,19 @@
         return;
       }
 
+      // Check if elements exist
+      const numBinsEl = document.getElementById('numBins');
+      const showNormalCurveEl = document.getElementById('showNormalCurve');
+      const chartContainer = document.getElementById('histogram-chart');
+      
+      if (!numBinsEl || !showNormalCurveEl || !chartContainer) {
+        console.error('Histogram elements not found in DOM');
+        return;
+      }
+
       const data = resultsData.rawData;
-      const numBins = parseInt(document.getElementById('numBins').value);
-      const showNormalCurve = document.getElementById('showNormalCurve').checked;
+      const numBins = parseInt(numBinsEl.value);
+      const showNormalCurve = showNormalCurveEl.checked;
       
       // Calculate statistics for normal curve
       const n = data.length;
