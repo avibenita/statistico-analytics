@@ -389,9 +389,14 @@ function calculateStatistics(data, address, transform) {
     const skewness = calculateSkewness(data, mean, stdDev);
     const kurtosis = calculateKurtosis(data, mean, stdDev);
     
+    // Get column name from dropdown
+    const dropdown = document.getElementById('ddlVariable');
+    const columnName = dropdown.options[dropdown.selectedIndex]?.text || 'Variable';
+    
     return {
         dataSource: address,
-        column: currentColumn,
+        column: columnName,
+        columnIndex: currentColumn,
         transform: transform,
         trim: { min: trimMin, max: trimMax },
         n: n,

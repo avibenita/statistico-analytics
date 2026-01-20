@@ -279,8 +279,11 @@
   <div class="header">
     <h1>
       <i class="fa-solid fa-chart-simple"></i>
-      <span id="pageTitle">Univariate Analysis Results</span>
+      <span id="pageTitle">Interactive Histogram</span>
     </h1>
+    <div style="font-size: 16px; color: var(--text-secondary); font-weight: 500;">
+      <span id="variableName">Variable</span> <span id="sampleSize">(n=--)</span>
+    </div>
     <div class="header-controls">
       <div style="position: relative;">
         <button class="dropdown-btn" onclick="toggleDropdown()">
@@ -350,7 +353,11 @@
     }
 
     function displayHistogramView() {
-      const { descriptive, n } = resultsData;
+      const { descriptive, n, column, dataSource } = resultsData;
+      
+      // Update header with variable info
+      document.getElementById('variableName').textContent = column || 'Variable';
+      document.getElementById('sampleSize').textContent = `(n=${n})`;
       
       document.getElementById('resultsContent').innerHTML = `
         <!-- Statistics Panel -->
