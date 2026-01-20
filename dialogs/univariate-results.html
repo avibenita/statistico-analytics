@@ -37,27 +37,77 @@
       font-size: 13px;
     }
 
-    /* Header */
+    /* Header - 3 parts layout */
     .header {
       background: var(--surface-1);
       border-bottom: 1px solid var(--border);
       padding: 16px 20px;
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
+      gap: 20px;
     }
 
-    .header h1 {
-      font-size: 20px;
+    /* Part 1: Logo + Module */
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+    }
+
+    .header-module {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-brand {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-module-name {
+      font-size: 15px;
       font-weight: 700;
       color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      gap: 10px;
     }
 
-    .header-controls {
+    /* Part 2: Center - View Name + Variable */
+    .header-center {
+      text-align: center;
+    }
+
+    .header-view-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .header-variable {
+      font-size: 14px;
+      font-style: italic;
+      color: var(--text-secondary);
+    }
+
+    /* Part 3: Right - Dropdown */
+    .header-right {
       display: flex;
+      justify-content: flex-end;
       align-items: center;
       gap: 12px;
     }
@@ -272,23 +322,67 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* Floating Close Button */
+    .close-btn-floating {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 54px;
+      height: 54px;
+      background: #dc2626;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      font-size: 22px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .close-btn-floating:hover {
+      background: #b91c1c;
+      box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+      transform: scale(1.08);
+    }
+
+    .close-btn-floating:active {
+      transform: scale(0.95);
+    }
   </style>
 </head>
 <body>
-  <!-- Header -->
+  <!-- Header - 3 Parts -->
   <div class="header">
-    <h1>
-      <i class="fa-solid fa-chart-simple"></i>
-      <span id="pageTitle">Interactive Histogram</span>
-    </h1>
-    <div style="font-size: 16px; color: var(--text-secondary); font-weight: 500;">
-      <span id="variableName">Variable</span> <span id="sampleSize">(n=--)</span>
+    <!-- Part 1: Logo + Module Name -->
+    <div class="header-left">
+      <div class="header-logo">
+        <i class="fa-solid fa-chart-line"></i>
+      </div>
+      <div class="header-module">
+        <div class="header-brand">Statistico Analytics</div>
+        <div class="header-module-name">Univariate Analysis</div>
+      </div>
     </div>
-    <div class="header-controls">
+
+    <!-- Part 2: Center - View Name + Variable -->
+    <div class="header-center">
+      <div class="header-view-name" id="viewName">Interactive Histogram</div>
+      <div class="header-variable">
+        <span id="variableName">Variable</span> <span id="sampleSize">(n=--)</span>
+      </div>
+    </div>
+
+    <!-- Part 3: Right - Dropdown -->
+    <div class="header-right">
       <div style="position: relative;">
         <button class="dropdown-btn" onclick="toggleDropdown()">
           <i class="fa-solid fa-bars"></i>
-          Analysis Views
+          Advanced Results
           <i class="fa-solid fa-chevron-down"></i>
         </button>
         <div class="dropdown-content" id="dropdownMenu">
@@ -304,11 +398,12 @@
             <i class="fa-solid fa-chart-scatter"></i>
             Q-Q Plot
           </div>
+          <div class="analysis-option" onclick="showView('normality')">
+            <i class="fa-solid fa-vial"></i>
+            Normality Tests
+          </div>
         </div>
       </div>
-      <button class="close-btn" onclick="closeDialog()">
-        <i class="fa-solid fa-times"></i> Close
-      </button>
     </div>
   </div>
 
@@ -465,6 +560,17 @@
     }
 
     function showView(viewName) {
+      // View names mapping
+      const viewTitles = {
+        'histogram': 'Interactive Histogram',
+        'boxplot': 'Box Plot Analysis',
+        'qqplot': 'Q-Q Plot Analysis',
+        'normality': 'Normality Tests'
+      };
+      
+      // Update view name in header
+      document.getElementById('viewName').textContent = viewTitles[viewName] || 'Analysis';
+      
       // Update active state
       document.querySelectorAll('.analysis-option').forEach(opt => opt.classList.remove('active'));
       event.target.closest('.analysis-option').classList.add('active');
@@ -479,7 +585,7 @@
         document.getElementById('resultsContent').innerHTML = `
           <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
             <i class="fa-solid fa-info-circle" style="font-size: 48px; margin-bottom: 16px;"></i>
-            <div>${viewName} view coming soon!</div>
+            <div>${viewTitles[viewName]} coming soon!</div>
           </div>
         `;
       }
@@ -508,5 +614,10 @@
       }
     });
   </script>
+
+  <!-- Floating Close Button -->
+  <button class="close-btn-floating" onclick="closeDialog()" title="Close Dialog">
+    <i class="fa-solid fa-times"></i>
+  </button>
 </body>
 </html>
