@@ -28,59 +28,7 @@
     /* Add any dialog-specific overrides here if needed */
   </style>
 
-    .header {
-      background: var(--surface-1);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 20px;
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 20px;
-      flex-shrink: 0; /* Header doesn't shrink */
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
 
-    /* Part 1: Logo + Module */
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .header-logo {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 18px;
-    }
-
-    .header-module {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .header-brand {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .header-module-name {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    /* Part 2: Center - View Name + Variable */
     .header-center {
       text-align: center;
     }
