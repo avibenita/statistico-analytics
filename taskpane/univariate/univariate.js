@@ -444,6 +444,21 @@ function calculateKurtosis(data, mean, stdDev) {
  */
 let resultsDialog = null;
 
+// Theme management
+function setResultsTheme(theme) {
+    localStorage.setItem('resultsTheme', theme);
+    
+    // Update UI
+    document.getElementById('themeLight').classList.toggle('active', theme === 'light');
+    document.getElementById('themeDark').classList.toggle('active', theme === 'dark');
+}
+
+// Initialize theme on load
+Office.onReady(() => {
+    const savedTheme = localStorage.getItem('resultsTheme') || 'light';
+    setResultsTheme(savedTheme);
+});
+
 function openResultsDialog(results) {
     // Store results in localStorage for the dialog
     localStorage.setItem('univariateResults', JSON.stringify(results));

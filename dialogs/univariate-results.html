@@ -475,6 +475,184 @@
     .close-btn-floating:active {
       transform: scale(0.95);
     }
+
+    /* ===== DARK THEME ===== */
+    body.theme-dark {
+      --surface-0: #0c1624;
+      --surface-1: #1a1f2e;
+      --surface-2: #242938;
+      --border: #2d3748;
+      --accent-1: rgb(255,165,120);
+      --accent-2: rgb(120,200,255);
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255,255,255,0.8);
+      --text-muted: rgba(255,255,255,0.6);
+      background-color: #0c1624;
+    }
+
+    body.theme-dark .header {
+      background: #1a1f2e;
+      border-bottom: 1px solid #2d3748;
+    }
+
+    body.theme-dark .header-logo {
+      background: linear-gradient(135deg, rgb(255,165,120), rgb(120,200,255));
+    }
+
+    body.theme-dark .header-view-name,
+    body.theme-dark .header-module-name {
+      color: #ffffff;
+    }
+
+    body.theme-dark .header-brand,
+    body.theme-dark .header-variable {
+      color: rgba(255,255,255,0.7);
+    }
+
+    body.theme-dark .dropdown-btn {
+      background: #242938;
+      border-color: #2d3748;
+      color: #ffffff;
+    }
+
+    body.theme-dark .dropdown-btn:hover {
+      border-color: rgb(255,165,120);
+      background: #2d3748;
+    }
+
+    body.theme-dark .dropdown-content {
+      background: #1a1f2e;
+      border-color: #2d3748;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    body.theme-dark .analysis-option {
+      color: rgba(255,255,255,0.9);
+    }
+
+    body.theme-dark .analysis-option:hover {
+      background: #242938;
+      color: rgb(255,165,120);
+    }
+
+    body.theme-dark .analysis-option.active {
+      background: #242938;
+      color: rgb(255,165,120);
+    }
+
+    body.theme-dark .stats-panel {
+      background: #1a1f2e;
+      border-color: #2d3748;
+    }
+
+    body.theme-dark .panel-heading {
+      background: #242938;
+      border-bottom-color: #2d3748;
+      color: #ffffff;
+    }
+
+    body.theme-dark .stats-table th {
+      background: #242938;
+      color: rgba(255,255,255,0.9);
+      border-bottom-color: #2d3748;
+    }
+
+    body.theme-dark .stats-table th.highlight {
+      background: rgba(255, 165, 120, 0.2);
+      color: rgb(255,165,120);
+    }
+
+    body.theme-dark .stats-table td {
+      color: rgba(255,255,255,0.8);
+      border-bottom-color: #2d3748;
+    }
+
+    body.theme-dark .stats-table td.highlight {
+      background: rgba(255, 165, 120, 0.1);
+      color: rgb(255,165,120);
+    }
+
+    body.theme-dark .histogram-panel {
+      background: #1a1f2e;
+      border-color: #2d3748;
+    }
+
+    body.theme-dark .histogram-controls {
+      background: #242938;
+      border-bottom-color: #2d3748;
+    }
+
+    body.theme-dark .control-group label {
+      color: rgba(255,255,255,0.8);
+    }
+
+    body.theme-dark .control-group select {
+      background: #1a1f2e;
+      color: #ffffff;
+      border-color: #2d3748;
+    }
+
+    body.theme-dark .range-controls {
+      background: #242938;
+      border-top-color: #2d3748;
+    }
+
+    body.theme-dark .slider-track {
+      background: #1a1f2e;
+    }
+
+    body.theme-dark .active-range {
+      background: rgb(255,165,120);
+    }
+
+    body.theme-dark .range-slider-row {
+      color: rgba(255,255,255,0.8);
+    }
+
+    body.theme-dark .value-display {
+      color: #ffffff;
+    }
+
+    body.theme-dark .reset-button {
+      background: #1a1f2e;
+      color: rgba(255,255,255,0.8);
+      border-color: #2d3748;
+    }
+
+    body.theme-dark .reset-button:hover {
+      border-color: rgb(255,165,120);
+      color: rgb(255,165,120);
+    }
+
+    body.theme-dark .close-btn-floating {
+      background: #dc2626;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.5);
+    }
+
+    /* Highcharts dark theme overrides */
+    body.theme-dark .highcharts-background {
+      fill: #1a1f2e !important;
+    }
+
+    body.theme-dark .highcharts-title,
+    body.theme-dark .highcharts-axis-title,
+    body.theme-dark .highcharts-axis-labels,
+    body.theme-dark .highcharts-legend-item text {
+      fill: #ffffff !important;
+    }
+
+    body.theme-dark .highcharts-grid-line {
+      stroke: #2d3748 !important;
+    }
+
+    body.theme-dark .highcharts-tooltip-box {
+      fill: #242938 !important;
+      stroke: #2d3748 !important;
+    }
+
+    body.theme-dark .highcharts-tooltip text {
+      fill: #ffffff !important;
+    }
   </style>
 </head>
 <body>
@@ -543,14 +721,23 @@
     let currentData = [];
     let currentDecimals = 2;
 
+    // Apply theme from localStorage
+    function applyTheme() {
+      const theme = localStorage.getItem('resultsTheme') || 'light';
+      document.body.classList.remove('theme-light', 'theme-dark');
+      document.body.classList.add(`theme-${theme}`);
+    }
+
     // Load results when page is ready
     if (typeof Office !== 'undefined') {
       Office.onReady(() => {
+        applyTheme();
         loadResults();
       });
     } else {
       // Fallback if Office.js not available
       window.addEventListener('DOMContentLoaded', () => {
+        applyTheme();
         loadResults();
       });
     }

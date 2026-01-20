@@ -486,6 +486,46 @@ input[type="range"] {
   100% { transform: rotate(360deg); }
 }
 
+/* Theme Selector Buttons */
+.theme-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: var(--surface-0);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theme-btn:hover {
+  border-color: var(--accent-1);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.1);
+}
+
+.theme-btn.active {
+  background: var(--accent-1);
+  border-color: var(--accent-1);
+  color: white;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.2);
+}
+
+.theme-btn i {
+  font-size: 14px;
+}
+
+.theme-btn.active i {
+  color: white;
+}
+
 /* Clean Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
