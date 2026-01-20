@@ -188,3 +188,88 @@
     transform: translateY(0);
   }
 }
+
+/* ===== RESPONSIVE DESIGN FOR DATA INPUT PANEL ===== */
+
+/* Extra small screens */
+@media (max-width: 280px) {
+  .panel-section {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .section-title {
+    font-size: 11px;
+    padding-bottom: 6px;
+  }
+  
+  .range-btn {
+    padding: 6px 8px;
+    font-size: 10px;
+    min-height: 36px;
+  }
+  
+  .range-btn i {
+    font-size: 12px;
+  }
+  
+  .range-display {
+    padding: 8px;
+    font-size: 10px;
+  }
+  
+  .range-dropdown {
+    padding: 8px;
+  }
+  
+  .range-dropdown select {
+    padding: 6px;
+    font-size: 11px;
+  }
+}
+
+/* Small screens */
+@media (min-width: 280px) and (max-width: 360px) {
+  .panel-section {
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .range-btn {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+}
+
+/* Touch-friendly */
+@media (pointer: coarse) {
+  .range-btn {
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+  
+  .range-dropdown select {
+    min-height: 44px;
+  }
+}
+
+/* Landscape on small devices */
+@media (orientation: landscape) and (max-height: 500px) {
+  .panel-section {
+    padding: 10px;
+    gap: 8px;
+  }
+  
+  .range-display {
+    padding: 8px;
+    margin-top: 8px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes slideIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}

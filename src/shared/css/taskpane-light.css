@@ -505,15 +505,362 @@ input[type="range"] {
   background: var(--text-muted);
 }
 
-/* Responsive */
-@media (max-width: 320px) {
-  .stats-mini {
-    grid-template-columns: repeat(2, 1fr);
+/* ===== COMPREHENSIVE RESPONSIVE DESIGN ===== */
+
+/* Extra small screens (< 280px) - Very narrow taskpane */
+@media (max-width: 280px) {
+  body {
+    font-size: 11px;
+    padding: 6px;
+  }
+  
+  .hub-header, .module-header {
+    padding: 8px;
+  }
+  
+  .hub-title, .module-header h2 {
+    font-size: 14px;
+    gap: 6px;
+  }
+  
+  .hub-subtitle {
+    font-size: 10px;
+  }
+  
+  .modules-grid {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .module-card {
+    padding: 10px;
   }
   
   .module-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 18px;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+  
+  .module-title {
+    font-size: 12px;
+  }
+  
+  .module-description {
+    font-size: 10px;
+    display: none; /* Hide on very small screens */
+  }
+  
+  .panel-section {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .section-title {
+    font-size: 11px;
+    padding-bottom: 6px;
+  }
+  
+  .btn-primary {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  
+  .stats-mini {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  
+  .stat-box {
+    padding: 6px;
+  }
+  
+  .stat-label {
+    font-size: 9px;
+  }
+  
+  .stat-value {
+    font-size: 12px;
+  }
+}
+
+/* Small screens (280px - 320px) - Very narrow taskpane */
+@media (min-width: 280px) and (max-width: 320px) {
+  body {
+    font-size: 12px;
+    padding: 8px;
+  }
+  
+  .hub-title {
+    font-size: 15px;
+  }
+  
+  .module-card {
+    padding: 12px;
+  }
+  
+  .module-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  
+  .module-title {
+    font-size: 13px;
+  }
+  
+  .module-description {
+    font-size: 10px;
+  }
+  
+  .panel-section {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .stats-mini {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Medium-small screens (320px - 360px) - Narrow taskpane */
+@media (min-width: 320px) and (max-width: 360px) {
+  body {
+    padding: 12px;
+  }
+  
+  .hub-header {
+    padding: 12px;
+  }
+  
+  .modules-grid {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .module-card {
+    padding: 14px;
+  }
+  
+  .panel-section {
+    padding: 14px;
+  }
+  
+  .stats-mini {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Medium screens (360px - 480px) - Standard taskpane */
+@media (min-width: 360px) and (max-width: 480px) {
+  body {
+    padding: 14px;
+  }
+  
+  .hub-header {
+    padding: 14px;
+  }
+  
+  .modules-grid {
+    padding: 12px;
+  }
+}
+
+/* Large screens (480px - 640px) - Wide taskpane */
+@media (min-width: 480px) and (max-width: 640px) {
+  body {
+    padding: 18px;
+  }
+  
+  .hub-header, .module-header {
+    padding: 18px;
+  }
+  
+  .modules-grid {
+    padding: 16px;
+    gap: 14px;
+  }
+  
+  .module-card {
+    padding: 18px;
+  }
+  
+  .panel-section {
+    padding: 18px;
+  }
+  
+  .stats-mini {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Extra large screens (> 640px) - Standalone or full window */
+@media (min-width: 640px) {
+  body {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .hub-header, .module-header {
+    padding: 24px;
+  }
+  
+  .hub-title {
+    font-size: 22px;
+  }
+  
+  .modules-grid {
+    padding: 20px;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  
+  .module-card {
+    padding: 24px;
+  }
+  
+  .panel-section {
+    padding: 24px;
+  }
+  
+  .stats-mini {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  }
+}
+
+/* Touch-friendly targets for mobile and touch devices */
+@media (pointer: coarse) {
+  /* iOS minimum touch target: 44x44px */
+  .module-card {
+    min-height: 44px;
+  }
+  
+  .btn-primary, .back-button, button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px 16px;
+  }
+  
+  select, input[type="text"], input[type="number"] {
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+  
+  .tab-btn {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+  
+  input[type="checkbox"], input[type="radio"] {
+    min-width: 20px;
+    min-height: 20px;
+  }
+}
+
+/* Landscape orientation on small devices */
+@media (orientation: landscape) and (max-height: 500px) {
+  .hub-header, .module-header {
+    padding: 8px 16px;
+  }
+  
+  .hub-title {
+    font-size: 16px;
+  }
+  
+  .modules-grid {
+    padding: 8px;
+  }
+  
+  .module-card {
+    padding: 12px;
+  }
+  
+  .panel-section {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .btn-primary {
+    padding: 8px 14px;
+  }
+  
+  .footer-compact {
+    padding: 8px;
+    margin-top: 12px;
+  }
+}
+
+/* High DPI / Retina displays - Smoother fonts */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .module-icon, .hub-title i {
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Reduced motion preference - Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Contrast preference - Accessibility */
+@media (prefers-contrast: high) {
+  :root {
+    --border: #000000;
+    --text-muted: #4a5568;
+  }
+  
+  .module-card {
+    border-width: 2px;
+  }
+}
+
+/* Container queries for ultimate responsiveness (progressive enhancement) */
+@supports (container-type: inline-size) {
+  .hub-container, .module-container {
+    container-type: inline-size;
+  }
+  
+  @container (max-width: 300px) {
+    .module-description {
+      display: none;
+    }
+    
+    .stats-mini {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @container (min-width: 500px) {
+    .stats-mini {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+  
+  .back-button, .btn-primary {
+    display: none;
+  }
+  
+  .module-card {
+    border: 1px solid #000;
+    break-inside: avoid;
   }
 }
