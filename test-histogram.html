@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histogram Test - Direct Link</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f8f9fa;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #1e293b;
+      margin-bottom: 20px;
+    }
+    .status {
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+      font-weight: 600;
+    }
+    .success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 2px solid #10b981;
+    }
+    .info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 2px solid #3b82f6;
+    }
+    .link {
+      display: inline-block;
+      background: #3b82f6;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      margin: 10px 10px 10px 0;
+      transition: all 0.2s;
+    }
+    .link:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+    .instructions {
+      background: #fef3c7;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+      border-left: 4px solid #f59e0b;
+    }
+    .code {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      margin: 10px 0;
+    }
+    .timestamp {
+      color: #64748b;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔍 Histogram Fix Verification</h1>
+    
+    <div class="status success">
+      ✅ Latest commit: ec9db28 (4 minutes ago)
+    </div>
+
+    <div class="status info">
+      ⏱️ GitHub Pages typically deploys within 2-5 minutes
+    </div>
+
+    <h2>📋 Test Steps:</h2>
+    
+    <div class="instructions">
+      <strong>Step 1:</strong> Clear Excel Add-in Cache
+      <div class="code">
+        1. Close any open results dialogs<br>
+        2. Close the taskpane<br>
+        3. Reopen the taskpane (it will reload fresh)
+      </div>
+    </div>
+
+    <div class="instructions">
+      <strong>Step 2:</strong> Test the Fix
+      <div class="code">
+        1. Select a data column in Excel<br>
+        2. Open Univariate Analysis<br>
+        3. Load data (Sample or Select range)<br>
+        4. Click "Run Full Analysis"<br>
+        5. Results should open WITHOUT errors
+      </div>
+    </div>
+
+    <h2>🔗 Direct Links (for verification):</h2>
+    
+    <a href="https://www.statistico.live/statistico-analytics/dialogs/univariate-results.html" target="_blank" class="link">
+      Open Results Dialog (Direct)
+    </a>
+    
+    <a href="https://www.statistico.live/statistico-analytics/taskpane/hub.html" target="_blank" class="link">
+      Open Hub (Direct)
+    </a>
+
+    <h2>✅ Expected Results:</h2>
+    <ul>
+      <li>✅ Dialog opens without JavaScript errors</li>
+      <li>✅ Header shows: Logo | View Name + Variable (n=X) | Dropdown</li>
+      <li>✅ Statistics tables display correctly</li>
+      <li>✅ Histogram renders with real data</li>
+      <li>✅ Orange normal curve overlay appears</li>
+      <li>✅ Bin slider works (5-50 bins)</li>
+      <li>✅ "Normal Curve" checkbox toggles the curve</li>
+    </ul>
+
+    <h2>🐛 If You Still See Errors:</h2>
+    <ol>
+      <li><strong>Hard Refresh:</strong> Press Ctrl+Shift+R in the dialog</li>
+      <li><strong>Clear LocalStorage:</strong> Open F12 DevTools → Console → Type:
+        <div class="code">localStorage.clear(); location.reload(true);</div>
+      </li>
+      <li><strong>Wait 2 more minutes:</strong> GitHub Pages might still be deploying</li>
+    </ol>
+
+    <div class="timestamp">
+      <strong>Test page created:</strong> <span id="currentTime"></span><br>
+      <strong>Deployment started:</strong> ~4 minutes ago<br>
+      <strong>Should be live by:</strong> <span id="liveTime"></span>
+    </div>
+  </div>
+
+  <script>
+    const now = new Date();
+    document.getElementById('currentTime').textContent = now.toLocaleTimeString();
+    
+    const liveTime = new Date(now.getTime() + 2 * 60000); // +2 minutes
+    document.getElementById('liveTime').textContent = liveTime.toLocaleTimeString();
+
+    // Auto-refresh status every 30 seconds
+    let countdown = 120; // 2 minutes
+    const countdownTimer = setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        document.querySelector('.status.info').innerHTML = 
+          '✅ Deployment should be complete! Ready to test.';
+        document.querySelector('.status.info').className = 'status success';
+        clearInterval(countdownTimer);
+      } else {
+        document.querySelector('.status.info').innerHTML = 
+          `⏱️ Estimated time remaining: ${countdown} seconds`;
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
