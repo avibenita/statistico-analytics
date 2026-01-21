@@ -32,21 +32,23 @@ function displayQQPlotView() {
     <div class="qqplot-container">
       <!-- Horizontal Controls Row -->
       <div class="qqplot-controls-row">
-        <label class="radio-option active" id="radioQQ">
-          <input type="radio" name="plotType" value="qq" checked onchange="switchPlotType('qq')">
-          <span class="radio-label">
-            <strong>QQ Plot</strong>
-            <small>Quantile-Quantile</small>
-          </span>
-        </label>
-        
-        <label class="radio-option" id="radioPP">
-          <input type="radio" name="plotType" value="pp" onchange="switchPlotType('pp')">
-          <span class="radio-label">
-            <strong>PP Plot</strong>
-            <small>Probability-Probability</small>
-          </span>
-        </label>
+        <div class="plot-type-group">
+          <label class="radio-option active" id="radioQQ">
+            <input type="radio" name="plotType" value="qq" checked onchange="switchPlotType('qq')">
+            <span class="radio-label">
+              <strong>QQ Plot</strong>
+              <small>Quantile-Quantile</small>
+            </span>
+          </label>
+          
+          <label class="radio-option" id="radioPP">
+            <input type="radio" name="plotType" value="pp" onchange="switchPlotType('pp')">
+            <span class="radio-label">
+              <strong>PP Plot</strong>
+              <small>Probability-Probability</small>
+            </span>
+          </label>
+        </div>
         
         <select id="distributionSelect" class="distribution-select" onchange="switchDistribution()">
           <option value="normal" selected>Normal</option>
