@@ -55,15 +55,15 @@ function displayKernelView() {
       <div class="kernel-info">
         <div class="info-row">
           <span class="info-label">Mean:</span>
-          <span class="info-value">${descriptive.mean.toFixed(3)}</span>
+          <span class="info-value">${parseFloat(descriptive.mean).toFixed(3)}</span>
         </div>
         <div class="info-row">
           <span class="info-label">Std Dev:</span>
-          <span class="info-value">${descriptive.stdDev.toFixed(3)}</span>
+          <span class="info-value">${parseFloat(descriptive.stdDev).toFixed(3)}</span>
         </div>
         <div class="info-row">
           <span class="info-label">Range:</span>
-          <span class="info-value">[${descriptive.min.toFixed(2)}, ${descriptive.max.toFixed(2)}]</span>
+          <span class="info-value">[${parseFloat(descriptive.min).toFixed(2)}, ${parseFloat(descriptive.max).toFixed(2)}]</span>
         </div>
       </div>
     </div>
