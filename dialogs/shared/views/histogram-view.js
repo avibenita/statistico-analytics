@@ -61,84 +61,88 @@ function displayHistogramView() {
           </select>
         </div>
       </div>
-      <div style="padding: 12px;">
-        <table class="stats-table" style="margin-bottom: 12px;">
-          <thead>
-            <tr>
-              <th>Count</th>
-              <th>Average</th>
-              <th>Std Dev</th>
-              <th class="highlight">Variance</th>
-              <th class="highlight">Kurtosis</th>
-              <th class="highlight">Skewness</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>${n}</td>
-              <td>${stats.mean}</td>
-              <td>${stats.stdDev}</td>
-              <td class="highlight">${stats.variance}</td>
-              <td class="highlight">${stats.kurtosis}</td>
-              <td class="highlight">${stats.skewness}</td>
-            </tr>
-          </tbody>
-        </table>
-        <table class="stats-table">
-          <thead>
-            <tr>
-              <th class="highlight">Range</th>
-              <th class="highlight">Minimum</th>
-              <th class="highlight">Q25</th>
-              <th>Median</th>
-              <th class="highlight">Q75</th>
-              <th class="highlight">Maximum</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="highlight">${stats.range}</td>
-              <td class="highlight">${stats.min}</td>
-              <td class="highlight">${stats.q1}</td>
-              <td>${stats.median}</td>
-              <td class="highlight">${stats.q3}</td>
-              <td class="highlight">${stats.max}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="stats-grid">
+        <div class="stats-frame">
+          <table class="stats-table">
+            <thead>
+              <tr>
+                <th>Count</th>
+                <th>Average</th>
+                <th>Std Dev</th>
+                <th class="highlight">Variance</th>
+                <th class="highlight">Kurtosis</th>
+                <th class="highlight">Skewness</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>${n}</td>
+                <td>${stats.mean}</td>
+                <td>${stats.stdDev}</td>
+                <td class="highlight">${stats.variance}</td>
+                <td class="highlight">${stats.kurtosis}</td>
+                <td class="highlight">${stats.skewness}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="stats-frame">
+          <table class="stats-table">
+            <thead>
+              <tr>
+                <th class="highlight">Range</th>
+                <th class="highlight">Minimum</th>
+                <th class="highlight">Q25</th>
+                <th>Median</th>
+                <th class="highlight">Q75</th>
+                <th class="highlight">Maximum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="highlight">${stats.range}</td>
+                <td class="highlight">${stats.min}</td>
+                <td class="highlight">${stats.q1}</td>
+                <td>${stats.median}</td>
+                <td class="highlight">${stats.q3}</td>
+                <td class="highlight">${stats.max}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
     <!-- Histogram Panel -->
     <div class="histogram-panel">
-      <div class="panel-heading">Interactive Histogram</div>
-      <div class="histogram-controls">
-        <div class="control-group">
-          <label for="binningMethod">Method:</label>
-          <select id="binningMethod" onchange="updateBinningMethod()">
-            <option value="manual">Manual (User-defined)</option>
-            <option value="sturges">Sturges (log₂)</option>
-            <option value="scott">Scott (Normal optimal)</option>
-            <option value="fd">Freedman-Diaconis (Robust)</option>
-            <option value="sqrt">Square Root (√n)</option>
-            <option value="rice">Rice (2n^(1/3))</option>
-          </select>
-          <i class="fa-solid fa-info-circle" style="color: var(--accent-2); cursor: help;" title="Binning Methods&#10;• Manual: Choose bins yourself&#10;• Sturges: Good for normal distributions&#10;• Scott: Optimal for minimizing error&#10;• Freedman-Diaconis: Robust to outliers"></i>
+      <div class="histogram-header">
+        <!-- Row 1: Method, Bins, Normal -->
+        <div class="histogram-controls-row">
+          <div class="control-group-inline">
+            <label for="binningMethod">Method:</label>
+            <select id="binningMethod" onchange="updateBinningMethod()">
+              <option value="manual">Manual</option>
+              <option value="sturges">Sturges</option>
+              <option value="scott">Scott</option>
+              <option value="fd">FD</option>
+              <option value="sqrt">√n</option>
+              <option value="rice">Rice</option>
+            </select>
+          </div>
+          <div class="control-group-inline" id="manualBinsControl">
+            <label for="numBins">Bins:</label>
+            <span id="binsValue">5</span>
+            <input type="range" id="numBins" min="1" max="30" value="5" step="1" oninput="updateHistogram()">
+          </div>
+          <div class="control-group-inline">
+            <label for="showNormalCurve">Normal:</label>
+            <input type="checkbox" id="showNormalCurve" checked onchange="updateHistogram()">
+          </div>
         </div>
-        <div class="control-group" id="manualBinsControl">
-          <label for="numBins">Bins:</label>
-          <span id="binsValue">5</span>
-          <input type="range" id="numBins" min="1" max="30" value="5" step="1" oninput="updateHistogram()">
-        </div>
-        <div class="control-group">
-          <label for="showNormalCurve">Normal:</label>
-          <input type="checkbox" id="showNormalCurve" checked onchange="updateHistogram()">
-        </div>
-      </div>
-      <div id="histogram-chart"></div>
-      <div class="range-controls">
+        
+        <!-- Row 2: Range Slider -->
         <div class="range-slider-row">
-          <span>Min</span>
+          <span class="range-label">Min</span>
           <span id="leftRangeValue" class="value-display">0</span>
           <div class="slider-container">
             <div class="slider-track"></div>
@@ -147,15 +151,13 @@ function displayHistogramView() {
             <input type="range" id="rightTruncation" min="0" max="100" value="100" step="1" style="position: absolute; width: 100%; background: transparent; z-index: 1;">
           </div>
           <span id="rightRangeValue" class="value-display">100</span>
-          <span>Max</span>
+          <span class="range-label">Max</span>
           <button id="resetRanges" class="reset-button" onclick="resetRangeSliders()">Reset</button>
-          <span style="margin-left: 10px; color: var(--text-muted); font-size: 12px;">n: <span id="remainingN">--</span></span>
-        </div>
-        <div class="range-display" style="display: flex; justify-content: center; gap: 20px; margin-top: 8px; font-size: 11px; color: var(--text-muted);">
-          <span id="data-min-value">Min: --</span>
-          <span id="data-max-value">Max: --</span>
+          <span class="remaining-n">n: <span id="remainingN">--</span></span>
         </div>
       </div>
+      
+      <div id="histogram-chart"></div>
     </div>
   `;
 
