@@ -30,8 +30,38 @@ function displayKernelView() {
   const content = document.getElementById('resultsContent');
   content.innerHTML = `
     <div class="kernel-container">
-      <div class="kernel-controls">
-        <div class="control-row">
+      <!-- Top Row: Stats Cards + Controls -->
+      <div class="kernel-top-row">
+        <!-- Stats Cards Panel -->
+        <div class="kernel-stats-panel">
+          <div class="stat-card">
+            <div class="stat-label">N</div>
+            <div class="stat-value">${n}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Min</div>
+            <div class="stat-value">${parseFloat(descriptive.min).toFixed(1)}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Mean</div>
+            <div class="stat-value">${parseFloat(descriptive.mean).toFixed(2)}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">St. Dev</div>
+            <div class="stat-value">${parseFloat(descriptive.stdDev).toFixed(2)}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Mode</div>
+            <div class="stat-value">${descriptive.mode || 'N/A'}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Max</div>
+            <div class="stat-value">${parseFloat(descriptive.max).toFixed(1)}</div>
+          </div>
+        </div>
+        
+        <!-- Controls Panel -->
+        <div class="kernel-controls-panel">
           <div class="control-group">
             <label for="kernelType">Kernel:</label>
             <select id="kernelType" onchange="updateKernelDensity()">
@@ -43,29 +73,17 @@ function displayKernelView() {
           </div>
           <div class="control-group">
             <label for="bandwidth">Bandwidth:</label>
-            <span id="bandwidthValue">Auto</span>
-            <input type="range" id="bandwidth" min="0.1" max="3" step="0.1" value="1" oninput="updateKernelDensity()">
-            <button class="reset-button" onclick="resetBandwidth()" style="margin-left: 8px; padding: 4px 12px; font-size: 11px;">Reset</button>
+            <div class="bandwidth-controls">
+              <span id="bandwidthValue">1.00x</span>
+              <input type="range" id="bandwidth" min="0.1" max="3" step="0.1" value="1" oninput="updateKernelDensity()">
+              <button class="reset-button" onclick="resetBandwidth()">Reset</button>
+            </div>
           </div>
         </div>
       </div>
       
-      <div id="kernelChart"></div>
-      
-      <div class="kernel-info">
-        <div class="info-row">
-          <span class="info-label">Mean:</span>
-          <span class="info-value">${parseFloat(descriptive.mean).toFixed(3)}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Std Dev:</span>
-          <span class="info-value">${parseFloat(descriptive.stdDev).toFixed(3)}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Range:</span>
-          <span class="info-value">[${parseFloat(descriptive.min).toFixed(2)}, ${parseFloat(descriptive.max).toFixed(2)}]</span>
-        </div>
-      </div>
+      <!-- Chart (now taller) -->
+      <div id="kernelChart" class="kernel-chart-full"></div>
     </div>
   `;
   
