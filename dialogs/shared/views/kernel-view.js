@@ -60,9 +60,9 @@ function displayKernelView() {
           </div>
         </div>
         
-        <!-- Controls Panel -->
+        <!-- Controls Panel - Single Row -->
         <div class="kernel-controls-panel">
-          <div class="control-group">
+          <div class="control-group-inline">
             <label for="kernelType">Kernel:</label>
             <select id="kernelType" onchange="updateKernelDensity()">
               <option value="gaussian" selected>Gaussian</option>
@@ -71,13 +71,11 @@ function displayKernelView() {
               <option value="uniform">Uniform</option>
             </select>
           </div>
-          <div class="control-group">
+          <div class="control-group-inline">
             <label for="bandwidth">Bandwidth:</label>
-            <div class="bandwidth-controls">
-              <span id="bandwidthValue">1.00x</span>
-              <input type="range" id="bandwidth" min="0.1" max="3" step="0.1" value="1" oninput="updateKernelDensity()">
-              <button class="reset-button" onclick="resetBandwidth()">Reset</button>
-            </div>
+            <span id="bandwidthValue">1.00x</span>
+            <input type="range" id="bandwidth" min="0.1" max="3" step="0.1" value="1" oninput="updateKernelDensity()" style="width: 120px;">
+            <button class="reset-button" onclick="resetBandwidth()">Reset</button>
           </div>
         </div>
       </div>

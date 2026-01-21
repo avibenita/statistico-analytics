@@ -870,60 +870,55 @@ input[type="radio"]:checked + span {
   color: var(--accent-1);
 }
 
-/* Controls Panel */
+/* Controls Panel - Horizontal Layout */
 .kernel-controls-panel {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 16px;
   background: var(--surface-1);
   border: 1px solid var(--border);
   border-radius: 10px;
+  flex-wrap: wrap;
 }
 
-.kernel-controls-panel .control-group {
+.control-group-inline {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
-.kernel-controls-panel label {
-  font-size: 12px;
+.control-group-inline label {
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
-.kernel-controls-panel select {
-  padding: 8px 12px;
+.control-group-inline select {
+  padding: 6px 10px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
 }
 
-.bandwidth-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.bandwidth-controls span {
-  font-size: 13px;
+.control-group-inline span {
+  font-size: 12px;
   color: var(--accent-1);
   font-weight: 700;
+  min-width: 45px;
   text-align: center;
 }
 
-.bandwidth-controls input[type="range"] {
-  width: 100%;
-}
-
-.bandwidth-controls .reset-button {
-  padding: 6px 12px;
+.control-group-inline .reset-button {
+  padding: 4px 10px;
   font-size: 11px;
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -931,11 +926,13 @@ input[type="radio"]:checked + span {
   color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.bandwidth-controls .reset-button:hover {
+.control-group-inline .reset-button:hover {
   background: var(--accent-1);
   color: white;
+  border-color: var(--accent-1);
 }
 
 /* Chart - Now Taller */
