@@ -126,6 +126,23 @@ function updateChartTitle() {
 }
 
 /**
+ * Fit a linear regression line to QQ/PP plot data
+ * Returns slope and intercept for y = slope * x + intercept
+ */
+function fitLine(xData, yData) {
+  const n = xData.length;
+  const sumX = xData.reduce((a, b) => a + b, 0);
+  const sumY = yData.reduce((a, b) => a + b, 0);
+  const sumXY = xData.reduce((sum, x, i) => sum + x * yData[i], 0);
+  const sumXX = xData.reduce((sum, x) => sum + x * x, 0);
+  
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+  
+  return { slope, intercept };
+}
+
+/**
  * Calculate theoretical quantiles/probabilities based on selected distribution
  */
 function getTheoreticalValues(sortedData, distribution, plotType, mean, std) {
@@ -229,7 +246,13 @@ function createQQPPPlots() {
   
   const plotData = theoretical.map((t, i) => [t, empirical[i]]);
   
-  const detrendedData = theoretical.map((t, i) => [t, empirical[i] - t]);
+  // Fit a line to the QQ/PP plot and calculate residuals
+  const { slope, intercept } = fitLine(theoretical, empirical);
+  const detrendedData = theoretical.map((t, i) => {
+    const fittedValue = slope * t + intercept;
+    const residual = empirical[i] - fittedValue;
+    return [t, residual];
+  });
   
   const minVal = Math.min(...theoretical, ...empirical);
   const maxVal = Math.max(...theoretical, ...empirical);
