@@ -116,9 +116,9 @@ function displayHistogramView() {
     <!-- Histogram Panel -->
     <div class="histogram-panel">
       <div class="histogram-header">
-        <!-- Row 1: Method, Bins, Normal -->
+        <!-- Row 1: Method, Bins, Normal (Each in Frame) -->
         <div class="histogram-controls-row">
-          <div class="control-group-inline">
+          <div class="control-frame">
             <label for="binningMethod">Method:</label>
             <select id="binningMethod" onchange="updateBinningMethod()">
               <option value="manual">Manual</option>
@@ -129,12 +129,12 @@ function displayHistogramView() {
               <option value="rice">Rice</option>
             </select>
           </div>
-          <div class="control-group-inline" id="manualBinsControl">
+          <div class="control-frame" id="manualBinsControl">
             <label for="numBins">Bins:</label>
             <span id="binsValue">5</span>
             <input type="range" id="numBins" min="1" max="30" value="5" step="1" oninput="updateHistogram()">
           </div>
-          <div class="control-group-inline">
+          <div class="control-frame">
             <label for="showNormalCurve">Normal:</label>
             <input type="checkbox" id="showNormalCurve" checked onchange="updateHistogram()">
           </div>
@@ -289,8 +289,7 @@ function createHistogram(animate = false) {
       gridLineColor: gridColor
     },
     legend: {
-      enabled: showNormalCurve,
-      itemStyle: { color: textColor }
+      enabled: false
     },
     tooltip: {
       backgroundColor: 'rgba(0, 0, 0, 0.8)',

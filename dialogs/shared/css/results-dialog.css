@@ -278,8 +278,20 @@ body {
 .histogram-controls-row {
   display: flex;
   gap: 16px;
-  align-items: center;
+  align-items: stretch;
   flex-wrap: wrap;
+}
+
+.control-frame {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  flex: 1;
+  min-width: 150px;
 }
 
 .control-group-inline {
