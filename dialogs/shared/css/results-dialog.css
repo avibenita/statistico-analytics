@@ -178,15 +178,17 @@ body {
   color: #dc2626;
 }
 
-/* Content - Flexible and scrollable */
+/* Content - Flexible full height layout */
 .content {
-  padding: 20px;
-  max-width: 1200px;
+  padding: 16px;
+  max-width: 1400px;
   margin: 0 auto;
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* Statistics Panel */
@@ -247,12 +249,68 @@ body {
   border-bottom: none;
 }
 
-/* Histogram Panel */
+/* Compact Stats Row for Histogram */
+.histogram-stats-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  background: var(--surface-2);
+  border-radius: 6px;
+  min-width: 70px;
+}
+
+.stat-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-value.highlight {
+  color: var(--accent-1);
+}
+
+.stat-select {
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-0);
+  color: var(--text-primary);
+}
+
+/* Histogram Panel - Full Height */
 .histogram-panel {
   background: var(--surface-0);
   border: 1.5px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .histogram-controls {
@@ -416,9 +474,10 @@ body {
 }
 
 #histogram-chart {
-  padding: 16px;
+  padding: 12px;
   width: 100%;
-  height: clamp(400px, 55vh, 700px);
+  flex: 1;
+  min-height: 0;
 }
 
 /* Loading */
