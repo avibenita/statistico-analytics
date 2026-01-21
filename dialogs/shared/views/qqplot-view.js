@@ -248,11 +248,26 @@ function createQQPPPlots() {
   
   // Fit a line to the QQ/PP plot and calculate residuals
   const { slope, intercept } = fitLine(theoretical, empirical);
-  const detrendedData = theoretical.map((t, i) => {
+  const residuals = theoretical.map((t, i) => {
     const fittedValue = slope * t + intercept;
-    const residual = empirical[i] - fittedValue;
-    return [t, residual];
+    return empirical[i] - fittedValue;
   });
+  
+  // Verify residuals are centered (should sum to ~0)
+  const residualSum = residuals.reduce((a, b) => a + b, 0);
+  const residualMean = residualSum / residuals.length;
+  
+  // Center residuals at exactly 0 (remove any numerical drift)
+  const centeredResiduals = residuals.map(r => r - residualMean);
+  
+  const detrendedData = theoretical.map((t, i) => [t, centeredResiduals[i]]);
+  
+  console.log(`Residual mean before centering: ${residualMean.toFixed(6)}`);
+  console.log(`Residual range: [${Math.min(...centeredResiduals).toFixed(2)}, ${Math.max(...centeredResiduals).toFixed(2)}]`);
+  
+  // Calculate symmetric y-axis range for detrended plot
+  const maxAbsResidual = Math.max(...centeredResiduals.map(Math.abs));
+  const residualYAxisMax = maxAbsResidual * 1.1; // Add 10% padding
   
   const minVal = Math.min(...theoretical, ...empirical);
   const maxVal = Math.max(...theoretical, ...empirical);
@@ -334,9 +349,11 @@ function createQQPPPlots() {
       gridLineColor: gridColor
     },
     yAxis: {
-      title: { text: 'Deviation from Reference', style: { color: textColor } },
+      title: { text: 'Residuals from Fitted Line', style: { color: textColor } },
       labels: { style: { color: textColor } },
       gridLineColor: gridColor,
+      min: -residualYAxisMax,
+      max: residualYAxisMax,
       plotLines: [{
         value: 0,
         color: '#e74c3c',
