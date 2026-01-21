@@ -46,28 +46,70 @@ function displayHistogramView() {
   document.getElementById('sampleSize').textContent = `(n=${n})`;
   
   document.getElementById('resultsContent').innerHTML = `
-    <!-- Compact Statistics Row -->
-    <div class="histogram-stats-compact">
-      <div class="stat-item"><span class="stat-label">N</span><span class="stat-value">${n}</span></div>
-      <div class="stat-item"><span class="stat-label">Mean</span><span class="stat-value highlight">${stats.mean}</span></div>
-      <div class="stat-item"><span class="stat-label">SD</span><span class="stat-value highlight">${stats.stdDev}</span></div>
-      <div class="stat-item"><span class="stat-label">Median</span><span class="stat-value highlight">${stats.median}</span></div>
-      <div class="stat-item"><span class="stat-label">Min</span><span class="stat-value">${stats.min}</span></div>
-      <div class="stat-item"><span class="stat-label">Max</span><span class="stat-value">${stats.max}</span></div>
-      <div class="stat-item"><span class="stat-label">Q1</span><span class="stat-value">${stats.q1}</span></div>
-      <div class="stat-item"><span class="stat-label">Q3</span><span class="stat-value">${stats.q3}</span></div>
-      <div class="stat-item"><span class="stat-label">Decimals</span>
-        <select id="decimalsSelect" onchange="updateDecimals()" class="stat-select">
-          <option value="0">0</option>
-          <option value="1">1</option>
-          <option value="2" selected>2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-        </select>
+    <!-- Statistics Panel -->
+    <div class="stats-panel">
+      <div class="panel-heading">
+        <span>Variable - Descriptive Statistics</span>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <label for="decimalsSelect" style="font-size: 12px; color: var(--text-muted); margin: 0;">Decimals:</label>
+          <select id="decimalsSelect" onchange="updateDecimals()" style="padding: 4px 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface-0); color: var(--text-primary);">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+      </div>
+      <div style="padding: 12px;">
+        <table class="stats-table" style="margin-bottom: 12px;">
+          <thead>
+            <tr>
+              <th>Count</th>
+              <th>Average</th>
+              <th>Std Dev</th>
+              <th class="highlight">Variance</th>
+              <th class="highlight">Kurtosis</th>
+              <th class="highlight">Skewness</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>${n}</td>
+              <td>${stats.mean}</td>
+              <td>${stats.stdDev}</td>
+              <td class="highlight">${stats.variance}</td>
+              <td class="highlight">${stats.kurtosis}</td>
+              <td class="highlight">${stats.skewness}</td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th class="highlight">Range</th>
+              <th class="highlight">Minimum</th>
+              <th class="highlight">Q25</th>
+              <th>Median</th>
+              <th class="highlight">Q75</th>
+              <th class="highlight">Maximum</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="highlight">${stats.range}</td>
+              <td class="highlight">${stats.min}</td>
+              <td class="highlight">${stats.q1}</td>
+              <td>${stats.median}</td>
+              <td class="highlight">${stats.q3}</td>
+              <td class="highlight">${stats.max}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <!-- Histogram Panel (Full Height) -->
+    <!-- Histogram Panel -->
     <div class="histogram-panel">
       <div class="panel-heading">Interactive Histogram</div>
       <div class="histogram-controls">
@@ -233,9 +275,9 @@ function createHistogram(animate = false) {
       categories: categories,
       title: { text: 'Value Range', style: { color: textColor } },
       labels: {
-        style: { color: textColor },
-        rotation: -45,
-        align: 'right'
+        style: { color: textColor, fontSize: '11px' },
+        rotation: 0,
+        align: 'center'
       },
       gridLineColor: gridColor
     },
