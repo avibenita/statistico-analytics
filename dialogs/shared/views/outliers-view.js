@@ -275,23 +275,45 @@ function displayOutliersResults() {
   const outlierCount = outliers.length;
   const outlierPercent = ((outlierCount / totalData) * 100).toFixed(2);
   
+  // Calculate stats for original and clean data
+  const originalData = resultsData.rawData;
+  const outlierValues = new Set(outliers.map(o => o.value));
+  const cleanData = originalData.filter(val => !outlierValues.has(val));
+  
+  const calcStats = (data) => {
+    const sorted = [...data].sort((a, b) => a - b);
+    const n = sorted.length;
+    const mean = data.reduce((a, b) => a + b, 0) / n;
+    const median = n % 2 === 0 ? (sorted[n/2-1] + sorted[n/2]) / 2 : sorted[Math.floor(n/2)];
+    const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n;
+    const stdDev = Math.sqrt(variance);
+    return { mean, median, stdDev };
+  };
+  
+  const originalStats = calcStats(originalData);
+  const cleanStats = outlierCount > 0 ? calcStats(cleanData) : originalStats;
+  
   let resultsHTML = `
     <div class="outliers-summary">
-      <div class="summary-card">
-        <div class="summary-label">Method</div>
-        <div class="summary-value">${method}</div>
-      </div>
       <div class="summary-card ${outlierCount > 0 ? 'has-outliers' : ''}">
         <div class="summary-label">Outliers Detected</div>
         <div class="summary-value">${outlierCount} / ${totalData} (${outlierPercent}%)</div>
       </div>
-      <div class="summary-card">
-        <div class="summary-label">Lower Bound</div>
-        <div class="summary-value">${lowerBound.toFixed(4)}</div>
+      <div class="summary-card stats-card">
+        <div class="summary-label">Original Data</div>
+        <div class="summary-stats">
+          <div>Mean: ${originalStats.mean.toFixed(4)}</div>
+          <div>Median: ${originalStats.median.toFixed(4)}</div>
+          <div>Std Dev: ${originalStats.stdDev.toFixed(4)}</div>
+        </div>
       </div>
-      <div class="summary-card">
-        <div class="summary-label">Upper Bound</div>
-        <div class="summary-value">${upperBound.toFixed(4)}</div>
+      <div class="summary-card stats-card">
+        <div class="summary-label">Without Outliers</div>
+        <div class="summary-stats">
+          <div>Mean: ${cleanStats.mean.toFixed(4)}</div>
+          <div>Median: ${cleanStats.median.toFixed(4)}</div>
+          <div>Std Dev: ${cleanStats.stdDev.toFixed(4)}</div>
+        </div>
       </div>
     </div>
   `;

@@ -1991,16 +1991,38 @@ body.theme-dark .highcharts-tooltip text {
   border-color: #e74c3c;
 }
 
+.summary-card.stats-card {
+  min-width: 200px;
+}
+
 .summary-label {
   font-size: 12px;
   color: var(--text-muted);
   margin-bottom: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .summary-value {
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.summary-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.summary-stats div {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-weight: 500;
 }
 
 .outliers-list {
