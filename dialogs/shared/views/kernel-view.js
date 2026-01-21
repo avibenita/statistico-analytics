@@ -240,6 +240,9 @@ function updateKernelChart(animate = false) {
       shared: false
     },
     plotOptions: {
+      series: {
+        animation: animate
+      },
       area: {
         fillOpacity: 0.3,
         lineWidth: 2,

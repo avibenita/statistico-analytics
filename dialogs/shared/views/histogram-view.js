@@ -299,6 +299,7 @@ function createHistogram(animate = false) {
     },
     plotOptions: {
       column: {
+        animation: animate,
         groupPadding: 0.1,
         pointPadding: 0.05,
         borderWidth: 0,
@@ -312,6 +313,7 @@ function createHistogram(animate = false) {
         }
       },
       line: {
+        animation: animate,
         marker: { enabled: false },
         lineWidth: 2,
         dashStyle: 'Dash'
