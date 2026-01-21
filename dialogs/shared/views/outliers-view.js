@@ -15,6 +15,7 @@
 
 let currentOutlierMethod = 'iqr';
 let outlierResults = null;
+let chartOrderBy = 'index'; // 'index' or 'value'
 
 /**
  * Display outliers detection view
@@ -356,27 +357,35 @@ function displayOutliersResults() {
   if (outlierCount > 0) {
     resultsHTML += `
       <div class="outliers-list">
-        <div class="outliers-list-header">Detected Outliers:</div>
-        <table class="outliers-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Value</th>
-              <th>Type</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${outliers.map((outlier, idx) => `
+        <div class="outliers-list-header">
+          <span>Detected Outliers:</span>
+          <div class="order-toggle">
+            <button class="order-btn ${chartOrderBy === 'index' ? 'active' : ''}" onclick="toggleChartOrder('index')">Order by Index</button>
+            <button class="order-btn ${chartOrderBy === 'value' ? 'active' : ''}" onclick="toggleChartOrder('value')">Order by Value</button>
+          </div>
+        </div>
+        <div class="outliers-table-container">
+          <table class="outliers-table">
+            <thead>
               <tr>
-                <td>${idx + 1}</td>
-                <td>${outlier.value.toFixed(4)}</td>
-                <td><span class="outlier-badge ${outlier.type}">${outlier.type}</span></td>
-                <td>${getOutlierDetails(outlier)}</td>
+                <th>#</th>
+                <th>Value</th>
+                <th>Type</th>
+                <th>Details</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${outliers.map((outlier, idx) => `
+                <tr>
+                  <td>${idx + 1}</td>
+                  <td>${outlier.value.toFixed(4)}</td>
+                  <td><span class="outlier-badge ${outlier.type}">${outlier.type}</span></td>
+                  <td>${getOutlierDetails(outlier)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>
     `;
   } else {
@@ -413,8 +422,23 @@ function createOutliersChart() {
   const { outliers, lowerBound, upperBound } = outlierResults;
   
   const outlierIndices = new Set(outliers.map(o => o.index));
-  const normalPoints = data.map((val, idx) => outlierIndices.has(idx) ? null : [idx, val]).filter(p => p !== null);
-  const outlierPoints = outliers.map(o => [o.index, o.value]);
+  
+  let normalPoints, outlierPoints;
+  
+  if (chartOrderBy === 'index') {
+    // Order by original observation index
+    normalPoints = data.map((val, idx) => outlierIndices.has(idx) ? null : [idx, val]).filter(p => p !== null);
+    outlierPoints = outliers.map(o => [o.index, o.value]);
+  } else {
+    // Order by value (sorted)
+    const sortedData = data.map((val, idx) => ({ val, idx, isOutlier: outlierIndices.has(idx) }))
+                            .sort((a, b) => a.val - b.val);
+    normalPoints = sortedData.filter(d => !d.isOutlier).map((d, newIdx) => [newIdx, d.val]);
+    outlierPoints = sortedData.filter(d => d.isOutlier).map((d, newIdx) => {
+      const position = sortedData.findIndex(item => item.idx === d.idx);
+      return [position, d.val];
+    });
+  }
   
   const textColor = document.body.classList.contains('theme-dark') ? '#ffffff' : '#1e293b';
   const gridColor = document.body.classList.contains('theme-dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
@@ -428,7 +452,7 @@ function createOutliersChart() {
     },
     title: null,
     xAxis: {
-      title: { text: 'Observation Index', style: { color: textColor } },
+      title: { text: chartOrderBy === 'index' ? 'Observation Index' : 'Sorted Position', style: { color: textColor } },
       labels: { style: { color: textColor } },
       gridLineColor: gridColor
     },
@@ -482,4 +506,14 @@ function createOutliersChart() {
       }
     ]
   });
+}
+
+/**
+ * Toggle chart ordering
+ */
+function toggleChartOrder(orderBy) {
+  chartOrderBy = orderBy;
+  document.querySelectorAll('.order-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  createOutliersChart();
 }

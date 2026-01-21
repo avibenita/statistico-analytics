@@ -1227,6 +1227,26 @@ body.theme-dark .comparison-table tbody tr:hover {
   background: rgba(52, 152, 219, 0.15);
 }
 
+body.theme-dark .order-btn {
+  background: #1a1f2e;
+  border-color: #2d3748;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+body.theme-dark .order-btn:hover {
+  background: rgba(52, 152, 219, 0.2);
+  border-color: #3498db;
+}
+
+body.theme-dark .order-btn.active {
+  background: #3498db;
+  color: #ffffff;
+}
+
+body.theme-dark .outliers-table-container {
+  border-color: #2d3748;
+}
+
 body.theme-dark .stats-table th {
   background: #242938;
   color: rgba(255,255,255,0.9);
@@ -2088,10 +2108,50 @@ body.theme-dark .highcharts-tooltip text {
 }
 
 .outliers-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 12px;
   color: var(--text-primary);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.order-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.order-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  color: var(--text-color);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.order-btn:hover {
+  background: rgba(52, 152, 219, 0.1);
+  border-color: #3498db;
+}
+
+.order-btn.active {
+  background: #3498db;
+  color: #ffffff;
+  border-color: #3498db;
+}
+
+.outliers-table-container {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
 }
 
 .outliers-table {
@@ -2110,6 +2170,9 @@ body.theme-dark .highcharts-tooltip text {
   background: var(--surface-2);
   font-weight: 600;
   color: var(--text-secondary);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .outlier-badge {
