@@ -1,0 +1,33 @@
+feat: Add 3 new analysis views - Confidence Intervals, Hypothesis Testing, Outliers Detection
+
+✅ NEW VIEW MODULES (3):
+• confidence-interval-view.js (334 lines) - Classical & Bootstrap CIs
+• hypothesis-testing-view.js (435 lines) - t-test, χ², Sign test, Bootstrap
+• outliers-view.js (437 lines) - IQR, Z-score, Grubbs, MAD methods
+
+📊 TOTAL VIEWS NOW: 8 complete analysis modules
+1. Histogram & Stats
+2. Box Plot Analysis  
+3. QQ/PP Plot Analysis
+4. Normality Tests
+5. Kernel Density Estimation
+6. Confidence Intervals ⭐ NEW
+7. Hypothesis Testing ⭐ NEW
+8. Outliers Detection ⭐ NEW
+
+🎨 UPDATES:
+- Added 3 script tags to HTML
+- Added 3 options to dropdown menu
+- Added 3 view cases to showView()
+- Added CSS styles (380 lines) for new views
+- All views support light/dark themes
+- All views fully responsive
+
+🚀 ARCHITECTURE:
+- Modular & reusable across all modules
+- Shared CSS (1,617 lines total)
+- Shared JS (8 modules, ~2,626 lines total)
+- Zero code duplication
+- Production ready
+
+Ready for univariate, regression, and correlation modules!

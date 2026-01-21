@@ -1,0 +1,428 @@
+/**
+ * Outliers Detection View - Shared Analysis Component
+ * 
+ * Can be used by: Univariate, Regression (residuals), any module needing outlier detection
+ * 
+ * Requirements:
+ * - Global variable: resultsData { rawData, descriptive, column, n }
+ * - Highcharts library must be loaded
+ * - jStat library must be loaded
+ * 
+ * Exports:
+ * - displayOutliersView() - Main display function
+ * - Multiple outlier detection methods (Grubbs, IQR, Z-score, MAD)
+ */
+
+let currentOutlierMethod = 'iqr';
+let outlierResults = null;
+
+/**
+ * Display outliers detection view
+ */
+function displayOutliersView() {
+  const { column, n } = resultsData;
+  
+  document.getElementById('variableName').textContent = column || 'Variable';
+  document.getElementById('sampleSize').textContent = `(n=${n})`;
+  
+  document.getElementById('resultsContent').innerHTML = `
+    <div class="outliers-container">
+      <!-- Method Selection -->
+      <div class="outliers-panel">
+        <div class="panel-heading">
+          <i class="fa-solid fa-filter"></i>
+          Detection Method
+        </div>
+        <div class="panel-body">
+          <div class="method-grid">
+            <button class="outlier-method-btn active" onclick="selectOutlierMethod('iqr')" id="method-iqr">
+              <i class="fa-solid fa-chart-box"></i>
+              <span>IQR Method</span>
+              <small>1.5 × IQR</small>
+            </button>
+            <button class="outlier-method-btn" onclick="selectOutlierMethod('zscore')" id="method-zscore">
+              <i class="fa-solid fa-chart-line"></i>
+              <span>Z-Score</span>
+              <small>|z| > 3</small>
+            </button>
+            <button class="outlier-method-btn" onclick="selectOutlierMethod('grubbs')" id="method-grubbs">
+              <i class="fa-solid fa-flask"></i>
+              <span>Grubbs Test</span>
+              <small>Statistical</small>
+            </button>
+            <button class="outlier-method-btn" onclick="selectOutlierMethod('mad')" id="method-mad">
+              <i class="fa-solid fa-chart-scatter"></i>
+              <span>MAD</span>
+              <small>Robust</small>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Results Display -->
+      <div class="outliers-panel results-panel">
+        <div class="panel-heading">
+          <i class="fa-solid fa-exclamation-triangle"></i>
+          Detection Results
+        </div>
+        <div class="panel-body">
+          <div id="outliersResults"></div>
+        </div>
+      </div>
+      
+      <!-- Chart -->
+      <div class="outliers-panel">
+        <div class="panel-heading">
+          <i class="fa-solid fa-chart-simple"></i>
+          Visualization
+        </div>
+        <div class="panel-body">
+          <div id="outliersChart"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  setTimeout(() => {
+    detectOutliers();
+  }, 100);
+}
+
+/**
+ * Select outlier detection method
+ */
+function selectOutlierMethod(method) {
+  currentOutlierMethod = method;
+  document.querySelectorAll('.outlier-method-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(`method-${method}`).classList.add('active');
+  detectOutliers();
+}
+
+/**
+ * Detect outliers using selected method
+ */
+function detectOutliers() {
+  if (!resultsData || !resultsData.rawData) return;
+  
+  const data = resultsData.rawData;
+  
+  switch(currentOutlierMethod) {
+    case 'iqr':
+      outlierResults = detectOutliersIQR(data);
+      break;
+    case 'zscore':
+      outlierResults = detectOutliersZScore(data);
+      break;
+    case 'grubbs':
+      outlierResults = detectOutliersGrubbs(data);
+      break;
+    case 'mad':
+      outlierResults = detectOutliersMAD(data);
+      break;
+  }
+  
+  displayOutliersResults();
+  createOutliersChart();
+}
+
+/**
+ * IQR Method
+ */
+function detectOutliersIQR(data) {
+  const sorted = [...data].sort((a, b) => a - b);
+  const n = sorted.length;
+  
+  const q1 = sorted[Math.floor(n * 0.25)];
+  const q3 = sorted[Math.floor(n * 0.75)];
+  const iqr = q3 - q1;
+  
+  const lowerFence = q1 - 1.5 * iqr;
+  const upperFence = q3 + 1.5 * iqr;
+  
+  const outliers = data.map((val, idx) => ({
+    value: val,
+    index: idx,
+    isOutlier: val < lowerFence || val > upperFence,
+    type: val < lowerFence ? 'lower' : (val > upperFence ? 'upper' : null)
+  })).filter(item => item.isOutlier);
+  
+  return {
+    method: 'IQR Method (1.5 × IQR)',
+    outliers,
+    lowerBound: lowerFence,
+    upperBound: upperFence,
+    stats: { q1, q3, iqr }
+  };
+}
+
+/**
+ * Z-Score Method
+ */
+function detectOutliersZScore(data) {
+  const mean = data.reduce((a, b) => a + b, 0) / data.length;
+  const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / data.length;
+  const stdDev = Math.sqrt(variance);
+  
+  const threshold = 3;
+  const lowerBound = mean - threshold * stdDev;
+  const upperBound = mean + threshold * stdDev;
+  
+  const outliers = data.map((val, idx) => {
+    const zScore = (val - mean) / stdDev;
+    return {
+      value: val,
+      index: idx,
+      zScore,
+      isOutlier: Math.abs(zScore) > threshold,
+      type: zScore < -threshold ? 'lower' : (zScore > threshold ? 'upper' : null)
+    };
+  }).filter(item => item.isOutlier);
+  
+  return {
+    method: 'Z-Score Method (|z| > 3)',
+    outliers,
+    lowerBound,
+    upperBound,
+    stats: { mean, stdDev, threshold }
+  };
+}
+
+/**
+ * Grubbs Test
+ */
+function detectOutliersGrubbs(data) {
+  const n = data.length;
+  const mean = data.reduce((a, b) => a + b, 0) / n;
+  const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1);
+  const stdDev = Math.sqrt(variance);
+  
+  const deviations = data.map((val, idx) => ({
+    value: val,
+    index: idx,
+    deviation: Math.abs(val - mean)
+  }));
+  
+  const maxDeviation = Math.max(...deviations.map(d => d.deviation));
+  const suspectPoint = deviations.find(d => d.deviation === maxDeviation);
+  
+  const G = maxDeviation / stdDev;
+  const alpha = 0.05;
+  const df = n - 2;
+  const tCrit = jStat.studentt.inv(1 - alpha / (2 * n), df);
+  const G_crit = ((n - 1) / Math.sqrt(n)) * Math.sqrt((tCrit ** 2) / (df + tCrit ** 2));
+  
+  const isOutlier = G > G_crit;
+  
+  const outliers = isOutlier ? [{
+    value: suspectPoint.value,
+    index: suspectPoint.index,
+    isOutlier: true,
+    G,
+    G_crit,
+    type: suspectPoint.value < mean ? 'lower' : 'upper'
+  }] : [];
+  
+  return {
+    method: `Grubbs Test (α=0.05)`,
+    outliers,
+    lowerBound: mean - 3 * stdDev,
+    upperBound: mean + 3 * stdDev,
+    stats: { mean, stdDev, G, G_crit, df }
+  };
+}
+
+/**
+ * MAD (Median Absolute Deviation) Method
+ */
+function detectOutliersMAD(data) {
+  const sorted = [...data].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  
+  const absDeviations = data.map(val => Math.abs(val - median));
+  const mad = [...absDeviations].sort((a, b) => a - b)[Math.floor(absDeviations.length / 2)];
+  
+  const threshold = 3.5;
+  const modifiedZScores = data.map((val, idx) => ({
+    value: val,
+    index: idx,
+    modifiedZ: 0.6745 * (val - median) / mad,
+    isOutlier: Math.abs(0.6745 * (val - median) / mad) > threshold
+  }));
+  
+  const outliers = modifiedZScores.filter(item => item.isOutlier).map(item => ({
+    ...item,
+    type: item.modifiedZ < 0 ? 'lower' : 'upper'
+  }));
+  
+  const lowerBound = median - threshold * mad / 0.6745;
+  const upperBound = median + threshold * mad / 0.6745;
+  
+  return {
+    method: 'MAD Method (Modified Z-Score > 3.5)',
+    outliers,
+    lowerBound,
+    upperBound,
+    stats: { median, mad, threshold }
+  };
+}
+
+/**
+ * Display outliers results
+ */
+function displayOutliersResults() {
+  const { method, outliers, lowerBound, upperBound, stats } = outlierResults;
+  const totalData = resultsData.rawData.length;
+  const outlierCount = outliers.length;
+  const outlierPercent = ((outlierCount / totalData) * 100).toFixed(2);
+  
+  let resultsHTML = `
+    <div class="outliers-summary">
+      <div class="summary-card">
+        <div class="summary-label">Method</div>
+        <div class="summary-value">${method}</div>
+      </div>
+      <div class="summary-card ${outlierCount > 0 ? 'has-outliers' : ''}">
+        <div class="summary-label">Outliers Detected</div>
+        <div class="summary-value">${outlierCount} / ${totalData} (${outlierPercent}%)</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Lower Bound</div>
+        <div class="summary-value">${lowerBound.toFixed(4)}</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Upper Bound</div>
+        <div class="summary-value">${upperBound.toFixed(4)}</div>
+      </div>
+    </div>
+  `;
+  
+  if (outlierCount > 0) {
+    resultsHTML += `
+      <div class="outliers-list">
+        <div class="outliers-list-header">Detected Outliers:</div>
+        <table class="outliers-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Value</th>
+              <th>Type</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${outliers.map((outlier, idx) => `
+              <tr>
+                <td>${idx + 1}</td>
+                <td>${outlier.value.toFixed(4)}</td>
+                <td><span class="outlier-badge ${outlier.type}">${outlier.type}</span></td>
+                <td>${getOutlierDetails(outlier)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else {
+    resultsHTML += `
+      <div class="no-outliers">
+        <i class="fa-solid fa-circle-check" style="font-size: 48px; color: var(--accent-2); margin-bottom: 12px;"></i>
+        <div>No outliers detected</div>
+      </div>
+    `;
+  }
+  
+  document.getElementById('outliersResults').innerHTML = resultsHTML;
+}
+
+/**
+ * Get outlier-specific details
+ */
+function getOutlierDetails(outlier) {
+  if (outlier.zScore !== undefined) {
+    return `z = ${outlier.zScore.toFixed(3)}`;
+  } else if (outlier.G !== undefined) {
+    return `G = ${outlier.G.toFixed(3)}`;
+  } else if (outlier.modifiedZ !== undefined) {
+    return `Modified Z = ${outlier.modifiedZ.toFixed(3)}`;
+  }
+  return '-';
+}
+
+/**
+ * Create outliers visualization chart
+ */
+function createOutliersChart() {
+  const data = resultsData.rawData;
+  const { outliers, lowerBound, upperBound } = outlierResults;
+  
+  const outlierIndices = new Set(outliers.map(o => o.index));
+  const normalPoints = data.map((val, idx) => outlierIndices.has(idx) ? null : [idx, val]).filter(p => p !== null);
+  const outlierPoints = outliers.map(o => [o.index, o.value]);
+  
+  const textColor = document.body.classList.contains('theme-dark') ? '#ffffff' : '#1e293b';
+  const gridColor = document.body.classList.contains('theme-dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  
+  Highcharts.chart('outliersChart', {
+    chart: {
+      type: 'scatter',
+      backgroundColor: 'transparent',
+      height: 400,
+      reflow: true
+    },
+    title: null,
+    xAxis: {
+      title: { text: 'Observation Index', style: { color: textColor } },
+      labels: { style: { color: textColor } },
+      gridLineColor: gridColor
+    },
+    yAxis: {
+      title: { text: 'Value', style: { color: textColor } },
+      labels: { style: { color: textColor } },
+      gridLineColor: gridColor,
+      plotLines: [
+        {
+          value: lowerBound,
+          color: '#e74c3c',
+          width: 2,
+          dashStyle: 'Dash',
+          label: { text: 'Lower Bound', style: { color: '#e74c3c' } }
+        },
+        {
+          value: upperBound,
+          color: '#e74c3c',
+          width: 2,
+          dashStyle: 'Dash',
+          label: { text: 'Upper Bound', style: { color: '#e74c3c' } }
+        }
+      ]
+    },
+    legend: {
+      enabled: true,
+      itemStyle: { color: textColor }
+    },
+    tooltip: {
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      style: { color: '#ffffff' },
+      pointFormat: 'Index: {point.x}<br/>Value: {point.y:.4f}'
+    },
+    plotOptions: {
+      scatter: {
+        marker: { radius: 5 }
+      }
+    },
+    series: [
+      {
+        name: 'Normal Points',
+        data: normalPoints,
+        color: '#3b82f6',
+        marker: { radius: 4 }
+      },
+      {
+        name: 'Outliers',
+        data: outlierPoints,
+        color: '#e74c3c',
+        marker: { radius: 6, symbol: 'diamond' }
+      }
+    ]
+  });
+}
