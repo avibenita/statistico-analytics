@@ -59,20 +59,23 @@ function displayQQPlotView() {
         </select>
       </div>
       
-      <!-- Main Chart Panel -->
-      <div class="chart-panel" id="mainChartPanel">
-        <div class="panel-header">
-          <h3 id="chartTitle">QQ Plot - Normal Distribution</h3>
+      <!-- Charts Side by Side -->
+      <div class="charts-grid">
+        <!-- Main Chart Panel -->
+        <div class="chart-panel" id="mainChartPanel">
+          <div class="panel-header">
+            <h3 id="chartTitle">QQ Plot - Normal Distribution</h3>
+          </div>
+          <div id="qqplot-chart" class="chart-container"></div>
         </div>
-        <div id="qqplot-chart" class="chart-container"></div>
-      </div>
-      
-      <!-- Detrended Chart Panel -->
-      <div class="chart-panel" id="detrendedChartPanel">
-        <div class="panel-header">
-          <h3>Detrended Plot</h3>
+        
+        <!-- Detrended Chart Panel -->
+        <div class="chart-panel" id="detrendedChartPanel">
+          <div class="panel-header">
+            <h3>Detrended Plot</h3>
+          </div>
+          <div id="detrended-chart" class="chart-container"></div>
         </div>
-        <div id="detrended-chart" class="chart-container"></div>
       </div>
     </div>
   `;
