@@ -30,40 +30,31 @@ function displayQQPlotView() {
   const content = document.getElementById('resultsContent');
   content.innerHTML = `
     <div class="qqplot-container">
-      <!-- Centered, Prominent Controls -->
-      <div class="qqplot-controls-header">
-        <div class="plot-type-selector">
-          <div class="selector-label">Plot Type</div>
-          <div class="radio-group">
-            <label class="radio-option active" id="radioQQ">
-              <input type="radio" name="plotType" value="qq" checked onchange="switchPlotType('qq')">
-              <span class="radio-label">
-                <i class="fa-solid fa-chart-line"></i>
-                <strong>QQ Plot</strong>
-                <small>Quantile-Quantile</small>
-              </span>
-            </label>
-            <label class="radio-option" id="radioPP">
-              <input type="radio" name="plotType" value="pp" onchange="switchPlotType('pp')">
-              <span class="radio-label">
-                <i class="fa-solid fa-chart-scatter"></i>
-                <strong>PP Plot</strong>
-                <small>Probability-Probability</small>
-              </span>
-            </label>
-          </div>
-        </div>
+      <!-- Horizontal Controls Row -->
+      <div class="qqplot-controls-row">
+        <label class="radio-option active" id="radioQQ">
+          <input type="radio" name="plotType" value="qq" checked onchange="switchPlotType('qq')">
+          <span class="radio-label">
+            <strong>QQ Plot</strong>
+            <small>Quantile-Quantile</small>
+          </span>
+        </label>
         
-        <div class="distribution-selector">
-          <label for="distributionSelect" class="selector-label">Theoretical Distribution</label>
-          <select id="distributionSelect" class="distribution-select" onchange="switchDistribution()">
-            <option value="normal" selected>📊 Normal</option>
-            <option value="exponential">📉 Exponential</option>
-            <option value="uniform">📏 Uniform</option>
-            <option value="lognormal">📈 Log-Normal</option>
-            <option value="gamma">🎲 Gamma</option>
-          </select>
-        </div>
+        <label class="radio-option" id="radioPP">
+          <input type="radio" name="plotType" value="pp" onchange="switchPlotType('pp')">
+          <span class="radio-label">
+            <strong>PP Plot</strong>
+            <small>Probability-Probability</small>
+          </span>
+        </label>
+        
+        <select id="distributionSelect" class="distribution-select" onchange="switchDistribution()">
+          <option value="normal" selected>Normal</option>
+          <option value="exponential">Exponential</option>
+          <option value="uniform">Uniform</option>
+          <option value="lognormal">Log-Normal</option>
+          <option value="gamma">Gamma</option>
+        </select>
       </div>
       
       <!-- Main Chart Panel -->
@@ -251,12 +242,11 @@ function createQQPPPlots() {
     chart: {
       backgroundColor: 'transparent',
       height: null,
-      reflow: true
+      reflow: true,
+      spacingTop: 5,
+      spacingBottom: 5
     },
-    title: {
-      text: `${plotTypeLabel} Plot - ${distLabel} Distribution`,
-      style: { color: textColor, fontSize: '14px', fontWeight: 600 }
-    },
+    title: null,
     xAxis: {
       title: { text: `Theoretical ${plotTypeLabel === 'QQ' ? 'Quantiles' : 'Probabilities'}`, style: { color: textColor } },
       labels: { style: { color: textColor } },
@@ -305,12 +295,11 @@ function createQQPPPlots() {
     chart: {
       backgroundColor: 'transparent',
       height: null,
-      reflow: true
+      reflow: true,
+      spacingTop: 5,
+      spacingBottom: 5
     },
-    title: {
-      text: `Detrended ${plotTypeLabel} Plot`,
-      style: { color: textColor, fontSize: '14px', fontWeight: 600 }
-    },
+    title: null,
     xAxis: {
       title: { text: `Theoretical ${plotTypeLabel === 'QQ' ? 'Quantiles' : 'Probabilities'}`, style: { color: textColor } },
       labels: { style: { color: textColor } },

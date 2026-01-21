@@ -479,61 +479,33 @@ body {
 .qqplot-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-/* Centered, Prominent Controls Header */
-.qqplot-controls-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  padding: 20px;
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Plot Type Selector */
-.plot-type-selector {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-.selector-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Radio Group for Plot Type */
-.radio-group {
-  display: flex;
   gap: 16px;
-  flex-wrap: wrap;
-  justify-content: center;
+  height: 100%;
 }
 
+/* Horizontal Controls Row */
+.qqplot-controls-row {
+  display: flex;
+  gap: 12px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* Radio Options (QQ and PP buttons) */
 .radio-option {
   position: relative;
   flex: 1;
-  min-width: 180px;
-  max-width: 240px;
-  padding: 16px 20px;
+  min-width: 0;
+  height: 60px;
+  padding: 12px 16px;
   background: var(--surface-2);
   border: 2px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
 }
 
 .radio-option input[type="radio"] {
@@ -546,62 +518,47 @@ body {
 .radio-option:hover {
   border-color: var(--accent-1);
   background: var(--surface-1);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .radio-option.active {
   border-color: var(--accent-1);
-  background: linear-gradient(135deg, var(--surface-1), var(--surface-2));
-  box-shadow: 0 0 0 3px rgba(255, 165, 120, 0.2);
+  background: var(--surface-1);
+  box-shadow: 0 0 0 2px rgba(255, 165, 120, 0.2);
 }
 
 .radio-label {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
-.radio-label i {
-  font-size: 24px;
-  color: var(--accent-1);
-  transition: transform 0.3s ease;
-}
-
-.radio-option.active .radio-label i {
-  transform: scale(1.1);
+  gap: 2px;
+  align-items: center;
+  text-align: center;
 }
 
 .radio-label strong {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: 0.3px;
 }
 
 .radio-label small {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
   font-weight: 400;
+  white-space: nowrap;
 }
 
 .radio-option.active .radio-label strong {
   color: var(--accent-1);
 }
 
-/* Distribution Selector */
-.distribution-selector {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  max-width: 300px;
-}
-
+/* Distribution Select (same height as buttons) */
 .distribution-select {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
+  height: 60px;
   padding: 12px 16px;
   font-size: 15px;
   font-weight: 600;
@@ -610,53 +567,65 @@ body {
   border: 2px solid var(--border);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   text-align: center;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
 }
 
 .distribution-select:hover {
   border-color: var(--accent-2);
-  background: var(--surface-1);
+  background-color: var(--surface-1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .distribution-select:focus {
   outline: none;
   border-color: var(--accent-2);
-  box-shadow: 0 0 0 3px rgba(120, 200, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(120, 200, 255, 0.2);
 }
 
-/* Chart Panels */
+/* Chart Panels - Compact & Responsive */
 .chart-panel {
   background: var(--surface-1);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .chart-panel:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
 }
 
 /* Panel differentiation for QQ vs PP */
 .qq-panel {
-  border-left: 4px solid var(--accent-1);
+  border-left: 3px solid var(--accent-1);
 }
 
 .pp-panel {
-  border-left: 4px solid var(--accent-2);
+  border-left: 3px solid var(--accent-2);
 }
 
 .panel-header {
-  padding: 16px 20px;
+  padding: 10px 16px;
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .panel-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: 0.3px;
@@ -672,8 +641,9 @@ body {
 
 .chart-container {
   width: 100%;
-  height: clamp(280px, 35vh, 400px);
-  padding: 12px;
+  flex: 1;
+  min-height: 0;
+  padding: 8px;
 }
 
 /* Radio button styling (legacy) */
@@ -1200,23 +1170,24 @@ body.theme-dark .highcharts-tooltip text {
     height: clamp(250px, 30vh, 320px);
   }
   
-  /* QQ/PP Plot responsive */
-  .radio-group {
+  /* QQ/PP Plot responsive - stack on narrow screens */
+  .qqplot-controls-row {
     flex-direction: column;
-    width: 100%;
+    gap: 8px;
   }
   
-  .radio-option {
-    min-width: 100%;
-    max-width: 100%;
+  .radio-option,
+  .distribution-select {
+    height: 50px;
+    font-size: 14px;
   }
   
-  .qqplot-controls-header {
-    padding: 16px;
+  .radio-label strong {
+    font-size: 14px;
   }
   
-  .chart-container {
-    height: clamp(220px, 25vh, 280px);
+  .radio-label small {
+    font-size: 9px;
   }
 
   .tests-grid {
