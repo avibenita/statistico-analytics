@@ -294,6 +294,12 @@ body {
   min-width: 150px;
 }
 
+.range-control-frame {
+  flex: 2;
+  min-width: 400px;
+  gap: 10px;
+}
+
 .control-group-inline {
   display: flex;
   align-items: center;

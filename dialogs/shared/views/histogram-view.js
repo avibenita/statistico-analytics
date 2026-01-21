@@ -116,10 +116,10 @@ function displayHistogramView() {
     <!-- Histogram Panel -->
     <div class="histogram-panel">
       <div class="histogram-header">
-        <!-- Row 1: Method, Bins, Normal (Each in Frame) -->
+        <!-- All Controls in One Row (Each in Frame) -->
         <div class="histogram-controls-row">
           <div class="control-frame">
-            <label for="binningMethod">Method:</label>
+            <label for="binningMethod">Binning Method:</label>
             <select id="binningMethod" onchange="updateBinningMethod()">
               <option value="manual">Manual</option>
               <option value="sturges">Sturges</option>
@@ -138,22 +138,20 @@ function displayHistogramView() {
             <label for="showNormalCurve">Normal:</label>
             <input type="checkbox" id="showNormalCurve" checked onchange="updateHistogram()">
           </div>
-        </div>
-        
-        <!-- Row 2: Range Slider -->
-        <div class="range-slider-row">
-          <span class="range-label">Min</span>
-          <span id="leftRangeValue" class="value-display">0</span>
-          <div class="slider-container">
-            <div class="slider-track"></div>
-            <div id="activeRangeIndicator" class="active-range"></div>
-            <input type="range" id="leftTruncation" min="0" max="100" value="0" step="1" style="position: absolute; width: 100%; background: transparent; z-index: 2;">
-            <input type="range" id="rightTruncation" min="0" max="100" value="100" step="1" style="position: absolute; width: 100%; background: transparent; z-index: 1;">
+          <div class="control-frame range-control-frame">
+            <span class="range-label">Min</span>
+            <span id="leftRangeValue" class="value-display">0</span>
+            <div class="slider-container">
+              <div class="slider-track"></div>
+              <div id="activeRangeIndicator" class="active-range"></div>
+              <input type="range" id="leftTruncation" min="0" max="100" value="0" step="1" style="position: absolute; width: 100%; background: transparent; z-index: 2;">
+              <input type="range" id="rightTruncation" min="0" max="100" value="100" step="1" style="position: absolute; width: 100%; background: transparent; z-index: 1;">
+            </div>
+            <span id="rightRangeValue" class="value-display">100</span>
+            <span class="range-label">Max</span>
+            <button id="resetRanges" class="reset-button" onclick="resetRangeSliders()">Reset</button>
+            <span class="remaining-n">n: <span id="remainingN">--</span></span>
           </div>
-          <span id="rightRangeValue" class="value-display">100</span>
-          <span class="range-label">Max</span>
-          <button id="resetRanges" class="reset-button" onclick="resetRangeSliders()">Reset</button>
-          <span class="remaining-n">n: <span id="remainingN">--</span></span>
         </div>
       </div>
       
