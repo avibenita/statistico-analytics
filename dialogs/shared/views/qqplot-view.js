@@ -265,9 +265,19 @@ function createQQPPPlots() {
   console.log(`Residual mean before centering: ${residualMean.toFixed(6)}`);
   console.log(`Residual range: [${Math.min(...centeredResiduals).toFixed(2)}, ${Math.max(...centeredResiduals).toFixed(2)}]`);
   
-  // Calculate symmetric y-axis range for detrended plot
-  const maxAbsResidual = Math.max(...centeredResiduals.map(Math.abs));
-  const residualYAxisMax = maxAbsResidual * 1.1; // Add 10% padding
+  // Calculate y-axis range for detrended plot
+  // PP plots: use fixed range ±0.10 to avoid misleading scale
+  // QQ plots: use data-driven range with some padding
+  let residualYAxisMax;
+  if (currentPlotType === 'pp') {
+    residualYAxisMax = 0.10; // Fixed range for PP plots
+  } else {
+    const maxAbsResidual = Math.max(...centeredResiduals.map(Math.abs));
+    residualYAxisMax = maxAbsResidual * 1.1; // Add 10% padding for QQ
+  }
+  
+  // Calculate confidence band: ±2/√n (2 standard errors)
+  const confidenceBand = 2 / Math.sqrt(n);
   
   const minVal = Math.min(...theoretical, ...empirical);
   const maxVal = Math.max(...theoretical, ...empirical);
@@ -354,12 +364,36 @@ function createQQPPPlots() {
       gridLineColor: gridColor,
       min: -residualYAxisMax,
       max: residualYAxisMax,
+      plotBands: [{
+        from: -confidenceBand,
+        to: confidenceBand,
+        color: 'rgba(255, 165, 120, 0.1)',
+        zIndex: 1,
+        label: {
+          text: `±2/√n = ±${confidenceBand.toFixed(3)}`,
+          style: { color: textColor, fontSize: '10px' },
+          align: 'right',
+          x: -10
+        }
+      }],
       plotLines: [{
         value: 0,
         color: '#e74c3c',
         width: 2,
         dashStyle: 'Dash',
         zIndex: 5
+      }, {
+        value: confidenceBand,
+        color: 'rgba(255, 165, 120, 0.4)',
+        width: 1,
+        dashStyle: 'Dot',
+        zIndex: 4
+      }, {
+        value: -confidenceBand,
+        color: 'rgba(255, 165, 120, 0.4)',
+        width: 1,
+        dashStyle: 'Dot',
+        zIndex: 4
       }]
     },
     legend: {
