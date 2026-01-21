@@ -139,6 +139,7 @@ function displayHistogramView() {
             <input type="checkbox" id="showNormalCurve" checked onchange="updateHistogram()">
           </div>
           <div class="control-frame range-control-frame">
+            <label>Data Range:</label>
             <span class="range-label">Min</span>
             <span id="leftRangeValue" class="value-display">0</span>
             <div class="slider-container">
@@ -150,7 +151,7 @@ function displayHistogramView() {
             <span id="rightRangeValue" class="value-display">100</span>
             <span class="range-label">Max</span>
             <button id="resetRanges" class="reset-button" onclick="resetRangeSliders()">Reset</button>
-            <span class="remaining-n">n: <span id="remainingN">--</span></span>
+            <span class="remaining-n"><span id="remainingN">--</span></span>
           </div>
         </div>
       </div>

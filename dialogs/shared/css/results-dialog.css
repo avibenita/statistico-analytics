@@ -286,18 +286,25 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 14px 18px;
   background: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
   flex: 1;
   min-width: 150px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .range-control-frame {
-  flex: 2;
-  min-width: 400px;
-  gap: 10px;
+  flex: 3;
+  min-width: 500px;
+  gap: 12px;
+}
+
+.control-frame label {
+  font-weight: 600;
+  color: var(--text-color);
+  white-space: nowrap;
 }
 
 .control-group-inline {
@@ -1232,6 +1239,12 @@ body.theme-dark .histogram-panel {
 body.theme-dark .histogram-controls {
   background: #242938;
   border-bottom-color: #2d3748;
+}
+
+body.theme-dark .control-frame {
+  background: #1a1f2e;
+  border-color: #2d3748;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
 body.theme-dark .control-group label {
