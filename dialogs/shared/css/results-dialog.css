@@ -1210,6 +1210,23 @@ body.theme-dark .panel-heading {
   color: #ffffff;
 }
 
+body.theme-dark .stats-table th,
+body.theme-dark .comparison-table thead {
+  background: #242938;
+}
+
+body.theme-dark .comparison-table th {
+  border-bottom-color: #2d3748;
+}
+
+body.theme-dark .comparison-table td {
+  border-bottom-color: #2d3748;
+}
+
+body.theme-dark .comparison-table tbody tr:hover {
+  background: rgba(52, 152, 219, 0.15);
+}
+
 body.theme-dark .stats-table th {
   background: #242938;
   color: rgba(255,255,255,0.9);
@@ -1995,6 +2012,12 @@ body.theme-dark .highcharts-tooltip text {
   min-width: 200px;
 }
 
+.summary-card.stats-table-card {
+  flex: 1;
+  width: 100%;
+  overflow-x: auto;
+}
+
 .summary-label {
   font-size: 12px;
   color: var(--text-muted);
@@ -2023,6 +2046,41 @@ body.theme-dark .highcharts-tooltip text {
   justify-content: space-between;
   padding: 4px 0;
   font-weight: 500;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.comparison-table thead {
+  background: var(--bg-color);
+}
+
+.comparison-table th {
+  padding: 10px 12px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-color);
+  border-bottom: 2px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.comparison-table td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.comparison-table td.range-label {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.comparison-table tbody tr:hover {
+  background: rgba(52, 152, 219, 0.05);
 }
 
 .outliers-list {

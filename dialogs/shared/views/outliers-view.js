@@ -284,10 +284,20 @@ function displayOutliersResults() {
     const sorted = [...data].sort((a, b) => a - b);
     const n = sorted.length;
     const mean = data.reduce((a, b) => a + b, 0) / n;
-    const median = n % 2 === 0 ? (sorted[n/2-1] + sorted[n/2]) / 2 : sorted[Math.floor(n/2)];
     const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n;
     const stdDev = Math.sqrt(variance);
-    return { mean, median, stdDev };
+    
+    // Quartiles
+    const q1Index = Math.floor(n * 0.25);
+    const q2Index = Math.floor(n * 0.50);
+    const q3Index = Math.floor(n * 0.75);
+    const q25 = sorted[q1Index];
+    const q50 = n % 2 === 0 ? (sorted[n/2-1] + sorted[n/2]) / 2 : sorted[q2Index];
+    const q75 = sorted[q3Index];
+    const min = sorted[0];
+    const max = sorted[n-1];
+    
+    return { count: n, mean, stdDev, min, q25, q50, q75, max };
   };
   
   const originalStats = calcStats(originalData);
@@ -299,21 +309,46 @@ function displayOutliersResults() {
         <div class="summary-label">Outliers Detected</div>
         <div class="summary-value">${outlierCount} / ${totalData} (${outlierPercent}%)</div>
       </div>
-      <div class="summary-card stats-card">
-        <div class="summary-label">Original Data</div>
-        <div class="summary-stats">
-          <div>Mean: ${originalStats.mean.toFixed(4)}</div>
-          <div>Median: ${originalStats.median.toFixed(4)}</div>
-          <div>Std Dev: ${originalStats.stdDev.toFixed(4)}</div>
-        </div>
-      </div>
-      <div class="summary-card stats-card">
-        <div class="summary-label">Without Outliers</div>
-        <div class="summary-stats">
-          <div>Mean: ${cleanStats.mean.toFixed(4)}</div>
-          <div>Median: ${cleanStats.median.toFixed(4)}</div>
-          <div>Std Dev: ${cleanStats.stdDev.toFixed(4)}</div>
-        </div>
+      <div class="summary-card stats-table-card">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Range</th>
+              <th>Count</th>
+              <th>Average</th>
+              <th>Std</th>
+              <th>Min</th>
+              <th>Q25</th>
+              <th>Q50</th>
+              <th>Q75</th>
+              <th>Max</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="range-label">Original data</td>
+              <td>${originalStats.count}</td>
+              <td>${originalStats.mean.toFixed(0)}</td>
+              <td>${originalStats.stdDev.toFixed(0)}</td>
+              <td>${originalStats.min}</td>
+              <td>${originalStats.q25.toFixed(0)}</td>
+              <td>${originalStats.q50.toFixed(0)}</td>
+              <td>${originalStats.q75.toFixed(0)}</td>
+              <td>${originalStats.max}</td>
+            </tr>
+            <tr>
+              <td class="range-label">WITHOUT outliers</td>
+              <td>${cleanStats.count}</td>
+              <td>${cleanStats.mean.toFixed(0)}</td>
+              <td>${cleanStats.stdDev.toFixed(0)}</td>
+              <td>${cleanStats.min}</td>
+              <td>${cleanStats.q25.toFixed(0)}</td>
+              <td>${cleanStats.q50.toFixed(0)}</td>
+              <td>${cleanStats.q75.toFixed(0)}</td>
+              <td>${cleanStats.max}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   `;
