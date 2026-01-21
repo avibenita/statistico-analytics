@@ -178,13 +178,13 @@ function initializeKernelDensity() {
   const bandwidthSlider = document.getElementById('bandwidth');
   if (bandwidthSlider) bandwidthSlider.value = 1;
   
-  updateKernelChart();
+  updateKernelChart(true); // Animate on initial load
 }
 
 /**
  * Update kernel density chart
  */
-function updateKernelChart() {
+function updateKernelChart(animate = false) {
   if (!resultsData || !resultsData.rawData) return;
   
   const kernelTypeEl = document.getElementById('kernelType');
@@ -213,7 +213,8 @@ function updateKernelChart() {
     chart: {
       backgroundColor: 'transparent',
       height: null,
-      reflow: true
+      reflow: true,
+      animation: animate
     },
     title: {
       text: `Kernel Density Estimation (${currentKernelType.charAt(0).toUpperCase() + currentKernelType.slice(1)})`,
