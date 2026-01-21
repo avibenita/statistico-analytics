@@ -90,64 +90,84 @@ function switchDistribution() {
 /**
  * Calculate theoretical quantiles/probabilities based on selected distribution
  */
-function getTheoreticalValues(sortedData, distribution, plotType) {
+function getTheoreticalValues(sortedData, distribution, plotType, mean, std) {
   const n = sortedData.length;
   const theoretical = [];
   const empirical = [];
   
   for (let i = 0; i < n; i++) {
     const p = (i + 0.5) / n;
-    empirical.push(sortedData[i]);
     
     let theoreticalValue;
     
     if (plotType === 'qq') {
-      switch(distribution) {
-        case 'normal':
-          theoreticalValue = jStat.normal.inv(p, 0, 1);
-          break;
-        case 'exponential':
-          theoreticalValue = jStat.exponential.inv(p, 1);
-          break;
-        case 'uniform':
-          theoreticalValue = jStat.uniform.inv(p, 0, 1);
-          break;
-        case 'lognormal':
-          theoreticalValue = jStat.lognormal.inv(p, 0, 1);
-          break;
-        case 'gamma':
-          theoreticalValue = jStat.gamma.inv(p, 2, 1);
-          break;
-        default:
-          theoreticalValue = jStat.normal.inv(p, 0, 1);
-      }
-      theoretical.push(theoreticalValue);
-    } else {
-      const mean = sortedData.reduce((a, b) => a + b, 0) / n;
-      const std = Math.sqrt(sortedData.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n);
-      const standardized = (sortedData[i] - mean) / std;
+      // For QQ plots: theoretical quantiles on x-axis, sample quantiles (raw data) on y-axis
+      empirical.push(sortedData[i]); // Raw data values
       
       switch(distribution) {
         case 'normal':
-          theoreticalValue = jStat.normal.cdf(standardized, 0, 1);
+          // Scale theoretical quantile to match data mean and std
+          theoreticalValue = jStat.normal.inv(p, mean, std);
           break;
         case 'exponential':
-          theoreticalValue = jStat.exponential.cdf(Math.abs(standardized), 1);
+          // Fit exponential using lambda = 1/mean
+          const lambda = mean > 0 ? 1 / mean : 1;
+          theoreticalValue = jStat.exponential.inv(p, lambda);
           break;
         case 'uniform':
-          theoreticalValue = jStat.uniform.cdf(standardized, -3, 3);
+          // Fit uniform to data range
+          const dataMin = Math.min(...sortedData);
+          const dataMax = Math.max(...sortedData);
+          theoreticalValue = jStat.uniform.inv(p, dataMin, dataMax);
           break;
         case 'lognormal':
-          theoreticalValue = sortedData[i] > 0 ? jStat.lognormal.cdf(sortedData[i], 0, 1) : 0;
+          // Fit lognormal using log-transformed statistics
+          const logMean = Math.log(mean);
+          const logStd = Math.sqrt(Math.log(1 + (std * std) / (mean * mean)));
+          theoreticalValue = jStat.lognormal.inv(p, logMean, logStd);
           break;
         case 'gamma':
-          theoreticalValue = sortedData[i] > 0 ? jStat.gamma.cdf(sortedData[i], 2, 1) : 0;
+          // Fit gamma using method of moments
+          const shape = (mean * mean) / (std * std);
+          const scale = (std * std) / mean;
+          theoreticalValue = jStat.gamma.inv(p, shape, scale);
           break;
         default:
-          theoreticalValue = jStat.normal.cdf(standardized, 0, 1);
+          theoreticalValue = jStat.normal.inv(p, mean, std);
       }
       theoretical.push(theoreticalValue);
-      empirical[i] = p;
+      
+    } else {
+      // For PP plots: theoretical probabilities on x-axis, empirical probabilities on y-axis
+      empirical.push(p); // Empirical probability
+      
+      switch(distribution) {
+        case 'normal':
+          theoreticalValue = jStat.normal.cdf(sortedData[i], mean, std);
+          break;
+        case 'exponential':
+          const lambda2 = mean > 0 ? 1 / mean : 1;
+          theoreticalValue = jStat.exponential.cdf(sortedData[i], lambda2);
+          break;
+        case 'uniform':
+          const dataMin2 = Math.min(...sortedData);
+          const dataMax2 = Math.max(...sortedData);
+          theoreticalValue = jStat.uniform.cdf(sortedData[i], dataMin2, dataMax2);
+          break;
+        case 'lognormal':
+          const logMean2 = Math.log(mean);
+          const logStd2 = Math.sqrt(Math.log(1 + (std * std) / (mean * mean)));
+          theoreticalValue = sortedData[i] > 0 ? jStat.lognormal.cdf(sortedData[i], logMean2, logStd2) : 0;
+          break;
+        case 'gamma':
+          const shape2 = (mean * mean) / (std * std);
+          const scale2 = (std * std) / mean;
+          theoreticalValue = sortedData[i] > 0 ? jStat.gamma.cdf(sortedData[i], shape2, scale2) : 0;
+          break;
+        default:
+          theoreticalValue = jStat.normal.cdf(sortedData[i], mean, std);
+      }
+      theoretical.push(theoreticalValue);
     }
   }
   
@@ -163,15 +183,11 @@ function createQQPPPlots() {
   const sortedData = [...resultsData.rawData].sort((a, b) => a - b);
   const n = sortedData.length;
   
-  if (currentPlotType === 'qq' && currentDistribution !== 'normal') {
-    const mean = sortedData.reduce((a, b) => a + b, 0) / n;
-    const std = Math.sqrt(sortedData.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n);
-    for (let i = 0; i < n; i++) {
-      sortedData[i] = (sortedData[i] - mean) / std;
-    }
-  }
+  // Calculate statistics for fitting theoretical distribution
+  const mean = sortedData.reduce((a, b) => a + b, 0) / n;
+  const std = Math.sqrt(sortedData.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n);
   
-  const { theoretical, empirical } = getTheoreticalValues(sortedData, currentDistribution, currentPlotType);
+  const { theoretical, empirical } = getTheoreticalValues(sortedData, currentDistribution, currentPlotType, mean, std);
   
   const plotData = theoretical.map((t, i) => [t, empirical[i]]);
   
