@@ -238,13 +238,24 @@ function createHistogram(animate = false) {
     const end = max + range * 0.1;
     const step = (end - start) / points;
     
+    const maxFrequency = Math.max(...frequencies);
+    const normalYValues = [];
+    
     for (let i = 0; i <= points; i++) {
       const x = start + i * step;
       const z = (x - mean) / stdDev;
       const density = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * z * z);
-      const scaledDensity = density * totalCount * binWidth;
-      normalCurveData.push([x, scaledDensity]);
+      normalYValues.push({ x, density });
     }
+    
+    const maxDensity = Math.max(...normalYValues.map(d => d.density));
+    const normalScale = maxDensity > 0 ? maxFrequency / maxDensity * 0.8 : 1;
+    
+    normalCurveData = normalYValues.map(d => {
+      const normalizedX = (d.x - min) / range;
+      const categoryIndex = normalizedX * (numBins - 1);
+      return [categoryIndex, d.density * normalScale];
+    });
   }
 
   const textColor = document.body.classList.contains('theme-dark') ? '#ffffff' : '#1e293b';
