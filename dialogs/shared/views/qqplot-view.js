@@ -324,7 +324,7 @@ function createQQPPPlots() {
         }
       },
       {
-        name: 'Reference Line (y=x)',
+        name: 'Fitted Reference Line',
         type: 'line',
         data: referenceLine,
         color: '#e74c3c',
