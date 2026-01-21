@@ -30,35 +30,57 @@ function displayQQPlotView() {
   const content = document.getElementById('resultsContent');
   content.innerHTML = `
     <div class="qqplot-container">
-      <div class="qqplot-controls">
-        <div class="control-row">
-          <div class="control-group">
-            <label>Plot Type:</label>
-            <div class="btn-group">
-              <button id="btnQQ" class="plot-type-btn active" onclick="switchPlotType('qq')">
-                <i class="fa-solid fa-chart-line"></i> QQ Plot
-              </button>
-              <button id="btnPP" class="plot-type-btn" onclick="switchPlotType('pp')">
-                <i class="fa-solid fa-chart-scatter"></i> PP Plot
-              </button>
-            </div>
+      <!-- Centered, Prominent Controls -->
+      <div class="qqplot-controls-header">
+        <div class="plot-type-selector">
+          <div class="selector-label">Plot Type</div>
+          <div class="radio-group">
+            <label class="radio-option active" id="radioQQ">
+              <input type="radio" name="plotType" value="qq" checked onchange="switchPlotType('qq')">
+              <span class="radio-label">
+                <i class="fa-solid fa-chart-line"></i>
+                <strong>QQ Plot</strong>
+                <small>Quantile-Quantile</small>
+              </span>
+            </label>
+            <label class="radio-option" id="radioPP">
+              <input type="radio" name="plotType" value="pp" onchange="switchPlotType('pp')">
+              <span class="radio-label">
+                <i class="fa-solid fa-chart-scatter"></i>
+                <strong>PP Plot</strong>
+                <small>Probability-Probability</small>
+              </span>
+            </label>
           </div>
-          <div class="control-group">
-            <label for="distributionSelect">Distribution:</label>
-            <select id="distributionSelect" onchange="switchDistribution()">
-              <option value="normal" selected>Normal</option>
-              <option value="exponential">Exponential</option>
-              <option value="uniform">Uniform</option>
-              <option value="lognormal">Log-Normal</option>
-              <option value="gamma">Gamma</option>
-            </select>
-          </div>
+        </div>
+        
+        <div class="distribution-selector">
+          <label for="distributionSelect" class="selector-label">Theoretical Distribution</label>
+          <select id="distributionSelect" class="distribution-select" onchange="switchDistribution()">
+            <option value="normal" selected>📊 Normal</option>
+            <option value="exponential">📉 Exponential</option>
+            <option value="uniform">📏 Uniform</option>
+            <option value="lognormal">📈 Log-Normal</option>
+            <option value="gamma">🎲 Gamma</option>
+          </select>
         </div>
       </div>
       
-      <div id="qqplot-chart"></div>
+      <!-- Main Chart Panel -->
+      <div class="chart-panel" id="mainChartPanel">
+        <div class="panel-header">
+          <h3 id="chartTitle">QQ Plot - Normal Distribution</h3>
+        </div>
+        <div id="qqplot-chart" class="chart-container"></div>
+      </div>
       
-      <div id="detrended-chart"></div>
+      <!-- Detrended Chart Panel -->
+      <div class="chart-panel" id="detrendedChartPanel">
+        <div class="panel-header">
+          <h3>Detrended Plot</h3>
+        </div>
+        <div id="detrended-chart" class="chart-container"></div>
+      </div>
     </div>
   `;
   
@@ -73,8 +95,15 @@ function displayQQPlotView() {
 function switchPlotType(type) {
   currentPlotType = type;
   
-  document.getElementById('btnQQ').classList.toggle('active', type === 'qq');
-  document.getElementById('btnPP').classList.toggle('active', type === 'pp');
+  document.getElementById('radioQQ').classList.toggle('active', type === 'qq');
+  document.getElementById('radioPP').classList.toggle('active', type === 'pp');
+  
+  // Update panel styling
+  const mainPanel = document.getElementById('mainChartPanel');
+  mainPanel.className = 'chart-panel ' + (type === 'qq' ? 'qq-panel' : 'pp-panel');
+  
+  // Update chart title
+  updateChartTitle();
   
   createQQPPPlots();
 }
@@ -84,7 +113,20 @@ function switchPlotType(type) {
  */
 function switchDistribution() {
   currentDistribution = document.getElementById('distributionSelect').value;
+  updateChartTitle();
   createQQPPPlots();
+}
+
+/**
+ * Update chart title based on current plot type and distribution
+ */
+function updateChartTitle() {
+  const plotTypeLabel = currentPlotType.toUpperCase();
+  const distLabel = currentDistribution.charAt(0).toUpperCase() + currentDistribution.slice(1);
+  const titleEl = document.getElementById('chartTitle');
+  if (titleEl) {
+    titleEl.textContent = `${plotTypeLabel} Plot - ${distLabel} Distribution`;
+  }
 }
 
 /**

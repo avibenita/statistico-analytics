@@ -472,7 +472,211 @@ body {
   padding: 12px;
 }
 
-/* Radio button styling */
+/* ========================================
+   QQ/PP Plot View - Enhanced Styling
+   ======================================== */
+
+.qqplot-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Centered, Prominent Controls Header */
+.qqplot-controls-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Plot Type Selector */
+.plot-type-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.selector-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Radio Group for Plot Type */
+.radio-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.radio-option {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+  max-width: 240px;
+  padding: 16px 20px;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.radio-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.radio-option:hover {
+  border-color: var(--accent-1);
+  background: var(--surface-1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.radio-option.active {
+  border-color: var(--accent-1);
+  background: linear-gradient(135deg, var(--surface-1), var(--surface-2));
+  box-shadow: 0 0 0 3px rgba(255, 165, 120, 0.2);
+}
+
+.radio-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.radio-label i {
+  font-size: 24px;
+  color: var(--accent-1);
+  transition: transform 0.3s ease;
+}
+
+.radio-option.active .radio-label i {
+  transform: scale(1.1);
+}
+
+.radio-label strong {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.3px;
+}
+
+.radio-label small {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.radio-option.active .radio-label strong {
+  color: var(--accent-1);
+}
+
+/* Distribution Selector */
+.distribution-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.distribution-select {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.distribution-select:hover {
+  border-color: var(--accent-2);
+  background: var(--surface-1);
+}
+
+.distribution-select:focus {
+  outline: none;
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 3px rgba(120, 200, 255, 0.2);
+}
+
+/* Chart Panels */
+.chart-panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.chart-panel:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Panel differentiation for QQ vs PP */
+.qq-panel {
+  border-left: 4px solid var(--accent-1);
+}
+
+.pp-panel {
+  border-left: 4px solid var(--accent-2);
+}
+
+.panel-header {
+  padding: 16px 20px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.3px;
+}
+
+.qq-panel .panel-header h3 {
+  color: var(--accent-1);
+}
+
+.pp-panel .panel-header h3 {
+  color: var(--accent-2);
+}
+
+.chart-container {
+  width: 100%;
+  height: clamp(280px, 35vh, 400px);
+  padding: 12px;
+}
+
+/* Radio button styling (legacy) */
 input[type="radio"] {
   accent-color: var(--accent-1);
   cursor: pointer;
@@ -994,6 +1198,25 @@ body.theme-dark .highcharts-tooltip text {
   #qqPlot,
   #ppPlot {
     height: clamp(250px, 30vh, 320px);
+  }
+  
+  /* QQ/PP Plot responsive */
+  .radio-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .radio-option {
+    min-width: 100%;
+    max-width: 100%;
+  }
+  
+  .qqplot-controls-header {
+    padding: 16px;
+  }
+  
+  .chart-container {
+    height: clamp(220px, 25vh, 280px);
   }
 
   .tests-grid {
