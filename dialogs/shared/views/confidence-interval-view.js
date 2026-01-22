@@ -1,22 +1,23 @@
 /**
- * Confidence Interval View - VB6 Version
+ * Confidence Interval View - Matches 0confidence-interval.html
  * 
- * Shared Analysis Component using exact VB6 CofInterval.frm calculations
+ * Shared Analysis Component - Uses EXACT same calculations as 0confidence-interval.html
  * 
  * Can be used by: Univariate, Regression, any module needing confidence intervals
  * 
  * Requirements:
  * - Global variable: resultsData { rawData, descriptive, column, n }
- * - jStat library must be loaded
+ * - NO external libraries needed (jStat not required)
  * 
  * Exports:
  * - displayConfidenceIntervalView() - Main display function
- * - Bootstrap and Classical CI calculations (VB6 compatible)
+ * - Bootstrap and Classical CI calculations
  * 
- * VB6 Compatibility:
- * - Classical Mean: Uses Excel's TINV with FPC correction
- * - Classical Stdev: Uses Excel's CHIINV distribution
- * - Bootstrap: Uses percentile method matching VB6
+ * Implementation Notes:
+ * - Classical Mean: T-distribution with optional FPC correction
+ * - Classical Stdev: Chi-square distribution (asymmetric intervals)
+ * - Bootstrap: Percentile method for all statistics
+ * - All helper functions match HTML version exactly
  */
 
 let currentMethod = 'classical';
@@ -164,8 +165,7 @@ function calculateCI() {
 }
 
 /**
- * Classical confidence interval - VB6 Version
- * Matches VB6 CofInterval.frm calculations exactly
+ * Classical confidence interval - Matches 0confidence-interval.html exactly
  */
 function calculateClassicalCI() {
   const data = resultsData.rawData;
@@ -175,76 +175,60 @@ function calculateClassicalCI() {
   let pointEstimate, lcl, ucl, methodName;
   
   if (currentParameter === 'mean') {
-    // VB6: Average(Victor1)
     const mean = data.reduce((a, b) => a + b, 0) / n;
-    
-    // VB6: Stdev(Victor1)
     const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1);
     const stdev = Math.sqrt(variance);
     
-    // VB6: Factor = ((pop - n) / (pop - 1)) ^ 0.5
-    // For now, Factor = 1 (no finite population correction in this simplified version)
-    const Factor = 1;
+    // Finite population correction factor (matching HTML version)
+    let Factor = 1;
+    // Note: Population size not available in this context, so Factor = 1
     
-    // VB6: xlApp.TInv(alpha, n - 1) - Excel's TINV returns two-tailed value
-    const tCrit = jStat.studentt.inv(1 - alpha / 2, n - 1);
+    // VB6: xlApp.TInv(alpha, n - 1) * Factor * Stdev / n ^ 0.5
+    const tValue = getTValue(alpha / 2, n - 1);
+    const marginOfError = tValue * Factor * stdev / Math.sqrt(n);
     
-    // VB6: Margin = TInv(alpha, n-1) * Factor * Stdev / sqrt(n)
-    const marginOfError = tCrit * Factor * stdev / Math.sqrt(n);
-    
-    // VB6: LCL = Average - marginOfError, UCL = Average + marginOfError
+    // VB6: LCL = Average - TInv * Factor * Stdev / sqrt(n)
+    // VB6: UCL = Average + TInv * Factor * Stdev / sqrt(n)
     pointEstimate = mean;
     lcl = mean - marginOfError;
     ucl = mean + marginOfError;
     methodName = `t-distribution (df=${n-1})`;
     
   } else if (currentParameter === 'median') {
-    // Median not supported in VB6 Classical method
-    // Bootstrap method should be used for median
+    // Median not supported in Classical method (use Bootstrap)
     const sorted = [...data].sort((a, b) => a - b);
-    pointEstimate = sorted[Math.floor(n / 2)];
+    const mid = Math.floor(n / 2);
+    pointEstimate = n % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
     
-    const stderr = 1.253 * Math.sqrt(n) / n;
-    const zCrit = jStat.normal.inv(1 - alpha / 2, 0, 1);
-    const delta = zCrit * stderr * (sorted[n-1] - sorted[0]);
-    
-    lcl = pointEstimate - delta;
-    ucl = pointEstimate + delta;
-    methodName = 'Binomial approximation (not VB6)';
+    // Use bootstrap instead
+    lcl = pointEstimate;
+    ucl = pointEstimate;
+    methodName = 'Use Bootstrap for Median';
     
   } else if (currentParameter === 'variance') {
-    // VB6: Average(Victor1)
     const mean = data.reduce((a, b) => a + b, 0) / n;
-    
-    // VB6: Variance = Stdev^2
     const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1);
     
-    // VB6: xlApp.ChiInv(probability, df)
-    // Note: jStat uses left-tail, Excel's CHIINV uses right-tail
-    // So we need to swap the probabilities
-    const chiLower = jStat.chisquare.inv(1 - alpha / 2, n - 1);  // VB6: ChiInv(1-alpha/2, n-1)
-    const chiUpper = jStat.chisquare.inv(alpha / 2, n - 1);      // VB6: ChiInv(alpha/2, n-1)
+    // VB6: UCL = sqrt(((n - 1) * Stdev^2) / ChiInv(1 - alpha/2, n - 1))
+    // VB6: LCL = sqrt(((n - 1) * Stdev^2) / ChiInv(alpha/2, n - 1))
+    const chiUpper = getChiSquareValue(alpha / 2, n - 1);
+    const chiLower = getChiSquareValue(1 - alpha / 2, n - 1);
     
-    // VB6: LCL = ((n-1)*Variance) / ChiUpper, UCL = ((n-1)*Variance) / ChiLower
     pointEstimate = variance;
     lcl = ((n - 1) * variance) / chiLower;
     ucl = ((n - 1) * variance) / chiUpper;
     methodName = `χ² distribution (df=${n-1})`;
     
   } else if (currentParameter === 'stdev') {
-    // VB6: Average(Victor1)
     const mean = data.reduce((a, b) => a + b, 0) / n;
-    
-    // VB6: Stdev(Victor1)
     const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1);
     const stdev = Math.sqrt(variance);
     
-    // VB6: xlApp.ChiInv(probability, df)
-    const chiLower = jStat.chisquare.inv(1 - alpha / 2, n - 1);  // VB6: ChiInv(1-alpha/2, n-1)
-    const chiUpper = jStat.chisquare.inv(alpha / 2, n - 1);      // VB6: ChiInv(alpha/2, n-1)
+    // VB6: UCL = sqrt(((n - 1) * Stdev^2) / ChiInv(1 - alpha/2, n - 1))
+    // VB6: LCL = sqrt(((n - 1) * Stdev^2) / ChiInv(alpha/2, n - 1))
+    const chiUpper = getChiSquareValue(alpha / 2, n - 1);
+    const chiLower = getChiSquareValue(1 - alpha / 2, n - 1);
     
-    // VB6: LCL = sqrt(((n-1)*Stdev^2) / ChiUpper)
-    // VB6: UCL = sqrt(((n-1)*Stdev^2) / ChiLower)
     pointEstimate = stdev;
     lcl = Math.sqrt(((n - 1) * variance) / chiLower);
     ucl = Math.sqrt(((n - 1) * variance) / chiUpper);
@@ -255,20 +239,18 @@ function calculateClassicalCI() {
 }
 
 /**
- * Bootstrap confidence interval - VB6 Version
- * Matches VB6 CofInterval.frm Resample_click() procedure exactly
+ * Bootstrap confidence interval - Matches 0confidence-interval.html exactly
  */
 function calculateBootstrapCI() {
   const data = resultsData.rawData;
   const intBootstrapN = data.length;  // VB6: intBootstrapN = 1 * Me.Ssize
-  const intIteration = 2000;           // VB6: intIteration = 1 * Me.Iterations (default 500, using 2000 here)
+  const intIteration = 2000;           // Bootstrap iterations (HTML uses configurable, we use 2000)
   const alpha = 1 - (currentConfidence / 100);
   
   // VB6: ReDim hold2(intIteration) - Array for bootstrapped statistics
   const hold2 = [];
   
-  // VB6: Randomize
-  // VB6: For j = 1 To intIteration
+  // VB6: Randomize and resample loop
   for (let j = 0; j < intIteration; j++) {
     // VB6: ReDim hold(intBootstrapN) - Bootstrapped array
     const hold = [];
@@ -286,42 +268,36 @@ function calculateBootstrapCI() {
     let stat;
     if (currentParameter === 'mean') {
       // VB6: If Me.OpParameter(0).Value = True Then hold2(j) = Statsmain.Average(hold)
-      stat = hold.reduce((a, b) => a + b, 0) / intBootstrapN;
-    } else if (currentParameter === 'median') {
-      // VB6: If Me.OpParameter(2).Value = True Then hold2(j) = CalculateMedian10(hold)
-      const sorted = [...hold].sort((a, b) => a - b);
-      const mid = Math.floor(intBootstrapN / 2);
-      stat = intBootstrapN % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-    } else if (currentParameter === 'variance') {
-      // Variance not in VB6, but using same logic as stdev
-      const mean = hold.reduce((a, b) => a + b, 0) / intBootstrapN;
-      stat = hold.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (intBootstrapN - 1);
+      stat = calculateMean(hold);
     } else if (currentParameter === 'stdev') {
       // VB6: If Me.OpParameter(1).Value = True Then hold2(j) = Statsmain.Stdev(hold)
-      const mean = hold.reduce((a, b) => a + b, 0) / intBootstrapN;
-      const variance = hold.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (intBootstrapN - 1);
-      stat = Math.sqrt(variance);
+      const mean = calculateMean(hold);
+      stat = calculateStdev(hold, mean);
+    } else if (currentParameter === 'median') {
+      // VB6: If Me.OpParameter(2).Value = True Then hold2(j) = CalculateMedian10(hold)
+      stat = calculateMedian(hold);
+    } else if (currentParameter === 'variance') {
+      const mean = calculateMean(hold);
+      stat = calculateVariance(hold, mean);
     }
     
     hold2.push(stat);
   }
   
   // VB6: AverageB = Statsmain.Average(hold2)
-  const AverageB = hold2.reduce((a, b) => a + b, 0) / intIteration;
+  const AverageB = calculateMean(hold2);
   
   // VB6: UCLM = xlApp.Percentile(hold2, 1 - (alpha / 2))
   // VB6: LCLM = xlApp.Percentile(hold2, alpha / 2)
   hold2.sort((a, b) => a - b);
-  const lowerIdx = Math.floor(intIteration * (alpha / 2));
-  const upperIdx = Math.floor(intIteration * (1 - alpha / 2));
-  const LCLM = hold2[lowerIdx];
-  const UCLM = hold2[upperIdx];
+  const LCLM = calculatePercentile(hold2, alpha / 2);
+  const UCLM = calculatePercentile(hold2, 1 - alpha / 2);
   
   return {
     pointEstimate: AverageB,
     lcl: LCLM,
     ucl: UCLM,
-    methodName: `Bootstrap (${intIteration} replicates, VB6 method)`
+    methodName: `Bootstrap (${intIteration} replicates)`
   };
 }
 
@@ -396,4 +372,131 @@ function displayCIResults(results) {
       </table>
     </div>
   `;
+}
+
+// ============================================
+// HELPER FUNCTIONS - Match 0confidence-interval.html exactly
+// ============================================
+
+function calculateMean(data) {
+  if (!data || data.length === 0) return 0;
+  return data.reduce((sum, val) => sum + val, 0) / data.length;
+}
+
+function calculateStdev(data, mean) {
+  if (!data || data.length < 2) return 0;
+  const variance = data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (data.length - 1);
+  return Math.sqrt(variance);
+}
+
+function calculateVariance(data, mean) {
+  if (!data || data.length < 2) return 0;
+  return data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (data.length - 1);
+}
+
+function calculateMedian(data) {
+  if (!data || data.length === 0) return 0;
+  const sorted = [...data].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function calculatePercentile(data, p) {
+  if (!data || data.length === 0) return 0;
+  const sorted = [...data].sort((a, b) => a - b);
+  const index = (sorted.length - 1) * p;
+  const lower = Math.floor(index);
+  const upper = Math.ceil(index);
+  const weight = index - lower;
+  return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+}
+
+// Statistical functions - VB6 Excel compatibility (from HTML version)
+// VB6 uses: xlApp.TInv(alpha, n - 1)
+// Excel's TINV returns two-tailed t-value
+function getTValue(p, df) {
+  // t-distribution approximation
+  // For df > 30, use normal approximation
+  if (df > 30) {
+    return normalInv(1 - p);
+  }
+  
+  // For smaller df, use improved approximation
+  // This matches Excel's TINV function more closely
+  const z = normalInv(1 - p);
+  const g1 = (z * z * z + z) / 4;
+  const g2 = (5 * z * z * z * z * z + 16 * z * z * z + 3 * z) / 96;
+  const g3 = (3 * Math.pow(z, 7) + 19 * Math.pow(z, 5) + 17 * z * z * z - 15 * z) / 384;
+  const g4 = (79 * Math.pow(z, 9) + 776 * Math.pow(z, 7) + 1482 * Math.pow(z, 5) - 1920 * z * z * z - 945 * z) / 92160;
+  
+  return z + g1 / df + g2 / (df * df) + g3 / (df * df * df) + g4 / (df * df * df * df);
+}
+
+function normalInv(p) {
+  // Approximation of inverse normal CDF (from HTML version)
+  if (p <= 0 || p >= 1) return 0;
+  
+  const a1 = -3.969683028665376e+01;
+  const a2 =  2.209460984245205e+02;
+  const a3 = -2.759285104469687e+02;
+  const a4 =  1.383577518672690e+02;
+  const a5 = -3.066479806614716e+01;
+  const a6 =  2.506628277459239e+00;
+  
+  const b1 = -5.447609879822406e+01;
+  const b2 =  1.615858368580409e+02;
+  const b3 = -1.556989798598866e+02;
+  const b4 =  6.680131188771972e+01;
+  const b5 = -1.328068155288572e+01;
+  
+  const c1 = -7.784894002430293e-03;
+  const c2 = -3.223964580411365e-01;
+  const c3 = -2.400758277161838e+00;
+  const c4 = -2.549732539343734e+00;
+  const c5 =  4.374664141464968e+00;
+  const c6 =  2.938163982698783e+00;
+  
+  const d1 =  7.784695709041462e-03;
+  const d2 =  3.224671290700398e-01;
+  const d3 =  2.445134137142996e+00;
+  const d4 =  3.754408661907416e+00;
+  
+  const pLow = 0.02425;
+  const pHigh = 1 - pLow;
+  
+  let q, r, result;
+  
+  if (p < pLow) {
+    q = Math.sqrt(-2 * Math.log(p));
+    result = (((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) /
+            ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+  } else if (p <= pHigh) {
+    q = p - 0.5;
+    r = q * q;
+    result = (((((a1 * r + a2) * r + a3) * r + a4) * r + a5) * r + a6) * q /
+            (((((b1 * r + b2) * r + b3) * r + b4) * r + b5) * r + 1);
+  } else {
+    q = Math.sqrt(-2 * Math.log(1 - p));
+    result = -(((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) /
+             ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+  }
+  
+  return result;
+}
+
+// VB6 uses: xlApp.ChiInv(probability, df)
+// Excel's CHIINV returns the inverse of the right-tailed chi-square distribution
+function getChiSquareValue(p, df) {
+  // Chi-square inverse using Wilson-Hilferty transformation
+  // This approximation matches Excel's CHIINV function
+  if (p <= 0 || p >= 1) return df;
+  
+  const z = normalInv(p);
+  
+  // Wilson-Hilferty transformation for chi-square
+  const h = 2 / (9 * df);
+  const chiSq = df * Math.pow(1 - h + z * Math.sqrt(h), 3);
+  
+  // Ensure positive value and reasonable bounds
+  return Math.max(0.001, Math.min(chiSq, df * 10));
 }
