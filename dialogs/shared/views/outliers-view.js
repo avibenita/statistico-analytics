@@ -74,8 +74,14 @@ function displayOutliersView() {
       <!-- Chart -->
       <div class="outliers-panel">
         <div class="panel-heading">
-          <i class="fa-solid fa-chart-simple"></i>
-          Visualization
+          <div>
+            <i class="fa-solid fa-chart-simple"></i>
+            Visualization
+          </div>
+          <div class="order-toggle">
+            <button class="order-btn ${chartOrderBy === 'index' ? 'active' : ''}" onclick="toggleChartOrder('index')">Order by Index</button>
+            <button class="order-btn ${chartOrderBy === 'value' ? 'active' : ''}" onclick="toggleChartOrder('value')">Order by Value</button>
+          </div>
         </div>
         <div class="panel-body">
           <div id="outliersChart"></div>
@@ -360,13 +366,7 @@ function displayOutliersResults() {
     
     resultsHTML += `
       <div class="outliers-list">
-        <div class="outliers-list-header">
-          <span>Detected Outliers:</span>
-          <div class="order-toggle">
-            <button class="order-btn ${chartOrderBy === 'index' ? 'active' : ''}" onclick="toggleChartOrder('index')">Order by Index</button>
-            <button class="order-btn ${chartOrderBy === 'value' ? 'active' : ''}" onclick="toggleChartOrder('value')">Order by Value</button>
-          </div>
-        </div>
+        <div class="outliers-list-header">Detected Outliers:</div>
         <div class="outliers-table-container">
           <table class="outliers-table">
             <thead>
@@ -429,16 +429,27 @@ function createOutliersChart() {
   let normalPoints, outlierPoints, xAxisTitle;
   
   if (chartOrderBy === 'index') {
-    // Order by original observation index - show all data
+    // Order by original observation index (as they appear in sheet)
     normalPoints = data.map((val, idx) => outlierIndices.has(idx) ? null : [idx, val]).filter(p => p !== null);
     outlierPoints = outliers.map(o => [o.index, o.value]);
     xAxisTitle = 'Observation Index';
   } else {
-    // Order by value - show only outliers sorted by value
-    const sortedOutliers = [...outliers].sort((a, b) => a.value - b.value);
-    normalPoints = [];
-    outlierPoints = sortedOutliers.map((o, idx) => [idx, o.value]);
-    xAxisTitle = 'Outlier Rank (sorted by value)';
+    // Order by value - sort ALL data from smallest to largest
+    const allData = data.map((val, idx) => ({ 
+      val, 
+      idx, 
+      isOutlier: outlierIndices.has(idx) 
+    })).sort((a, b) => a.val - b.val);
+    
+    normalPoints = allData.filter(d => !d.isOutlier).map((d, position) => {
+      const sortedPosition = allData.findIndex(item => item.idx === d.idx);
+      return [sortedPosition, d.val];
+    });
+    outlierPoints = allData.filter(d => d.isOutlier).map((d, position) => {
+      const sortedPosition = allData.findIndex(item => item.idx === d.idx);
+      return [sortedPosition, d.val];
+    });
+    xAxisTitle = 'Sorted Position (by value)';
   }
   
   const textColor = document.body.classList.contains('theme-dark') ? '#ffffff' : '#1e293b';
