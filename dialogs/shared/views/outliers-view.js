@@ -441,13 +441,15 @@ function createOutliersChart() {
       isOutlier: outlierIndices.has(idx) 
     })).sort((a, b) => a.val - b.val);
     
-    normalPoints = allData.filter(d => !d.isOutlier).map((d, position) => {
-      const sortedPosition = allData.findIndex(item => item.idx === d.idx);
-      return [sortedPosition, d.val];
-    });
-    outlierPoints = allData.filter(d => d.isOutlier).map((d, position) => {
-      const sortedPosition = allData.findIndex(item => item.idx === d.idx);
-      return [sortedPosition, d.val];
+    // Assign positions based on sorted order
+    normalPoints = [];
+    outlierPoints = [];
+    allData.forEach((item, sortedPosition) => {
+      if (item.isOutlier) {
+        outlierPoints.push([sortedPosition, item.val]);
+      } else {
+        normalPoints.push([sortedPosition, item.val]);
+      }
     });
     xAxisTitle = 'Sorted Position (by value)';
   }
