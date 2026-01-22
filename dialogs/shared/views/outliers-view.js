@@ -39,8 +39,10 @@ function displayOutliersView() {
       <!-- Method Selection -->
       <div class="outliers-panel">
         <div class="panel-heading">
-          <i class="fa-solid fa-filter"></i>
-          Detection Method
+          <div>
+            <i class="fa-solid fa-filter"></i>
+            Detection Method
+          </div>
         </div>
         <div class="panel-body">
           <div class="method-grid">
@@ -72,8 +74,10 @@ function displayOutliersView() {
       <div class="outliers-results-grid">
         <div class="outliers-panel results-panel">
           <div class="panel-heading">
-            <i class="fa-solid fa-exclamation-triangle"></i>
-            Detection Results
+            <div>
+              <i class="fa-solid fa-exclamation-triangle"></i>
+              Detection Results
+            </div>
           </div>
           <div class="panel-body">
             <div id="outliersResults"></div>
@@ -83,8 +87,10 @@ function displayOutliersView() {
         <!-- Detected Outliers Table -->
         <div class="outliers-panel">
           <div class="panel-heading">
-            <i class="fa-solid fa-table"></i>
-            Detected Outliers
+            <div>
+              <i class="fa-solid fa-table"></i>
+              Detected Outliers
+            </div>
           </div>
           <div class="panel-body">
             <div id="outliersTable"></div>
