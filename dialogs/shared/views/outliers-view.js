@@ -428,21 +428,19 @@ function createOutliersChart() {
   
   const outlierIndices = new Set(outliers.map(o => o.index));
   
-  let normalPoints, outlierPoints;
+  let normalPoints, outlierPoints, xAxisTitle;
   
   if (chartOrderBy === 'index') {
-    // Order by original observation index
+    // Order by original observation index - show all data
     normalPoints = data.map((val, idx) => outlierIndices.has(idx) ? null : [idx, val]).filter(p => p !== null);
     outlierPoints = outliers.map(o => [o.index, o.value]);
+    xAxisTitle = 'Observation Index';
   } else {
-    // Order by value (sorted)
-    const sortedData = data.map((val, idx) => ({ val, idx, isOutlier: outlierIndices.has(idx) }))
-                            .sort((a, b) => a.val - b.val);
-    normalPoints = sortedData.filter(d => !d.isOutlier).map((d, newIdx) => [newIdx, d.val]);
-    outlierPoints = sortedData.filter(d => d.isOutlier).map((d, newIdx) => {
-      const position = sortedData.findIndex(item => item.idx === d.idx);
-      return [position, d.val];
-    });
+    // Order by value - show only outliers sorted by value
+    const sortedOutliers = [...outliers].sort((a, b) => a.value - b.value);
+    normalPoints = [];
+    outlierPoints = sortedOutliers.map((o, idx) => [idx, o.value]);
+    xAxisTitle = 'Outlier Rank (sorted by value)';
   }
   
   const textColor = document.body.classList.contains('theme-dark') ? '#ffffff' : '#1e293b';
@@ -457,7 +455,7 @@ function createOutliersChart() {
     },
     title: null,
     xAxis: {
-      title: { text: chartOrderBy === 'index' ? 'Observation Index' : 'Sorted Position', style: { color: textColor } },
+      title: { text: xAxisTitle, style: { color: textColor } },
       labels: { style: { color: textColor } },
       gridLineColor: gridColor
     },
@@ -489,7 +487,14 @@ function createOutliersChart() {
     tooltip: {
       backgroundColor: 'rgba(0, 0, 0, 0.8)',
       style: { color: '#ffffff' },
-      pointFormat: 'Index: {point.x}<br/>Value: {point.y:.4f}'
+      formatter: function() {
+        if (chartOrderBy === 'index') {
+          return `Index: <b>${this.x}</b><br/>Value: <b>${this.y.toFixed(4)}</b>`;
+        } else {
+          const outlier = outliers.find(o => o.value === this.y);
+          return `Rank: <b>${this.x + 1}</b><br/>Value: <b>${this.y.toFixed(4)}</b><br/>Original Index: <b>${outlier ? outlier.index : 'N/A'}</b>`;
+        }
+      }
     },
     plotOptions: {
       scatter: {
