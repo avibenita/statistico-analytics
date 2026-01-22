@@ -355,10 +355,8 @@ function displayOutliersResults() {
   `;
   
   if (outlierCount > 0) {
-    // Sort outliers based on current ordering
-    const sortedOutliers = chartOrderBy === 'index' 
-      ? [...outliers].sort((a, b) => a.index - b.index)
-      : [...outliers].sort((a, b) => a.value - b.value);
+    // Table always shows outliers by their original index
+    const sortedOutliers = [...outliers].sort((a, b) => a.index - b.index);
     
     resultsHTML += `
       <div class="outliers-list">
@@ -373,16 +371,16 @@ function displayOutliersResults() {
           <table class="outliers-table">
             <thead>
               <tr>
-                <th>${chartOrderBy === 'index' ? 'Index' : '#'}</th>
+                <th>Index</th>
                 <th>Value</th>
                 <th>Type</th>
                 <th>Details</th>
               </tr>
             </thead>
             <tbody>
-              ${sortedOutliers.map((outlier, idx) => `
+              ${sortedOutliers.map((outlier) => `
                 <tr>
-                  <td>${chartOrderBy === 'index' ? outlier.index : (idx + 1)}</td>
+                  <td>${outlier.index}</td>
                   <td>${outlier.value.toFixed(4)}</td>
                   <td><span class="outlier-badge ${outlier.type}">${outlier.type}</span></td>
                   <td>${getOutlierDetails(outlier)}</td>
@@ -519,12 +517,11 @@ function createOutliersChart() {
 }
 
 /**
- * Toggle chart ordering (applies to both table and chart)
+ * Toggle chart ordering (applies to chart only, not table)
  */
 function toggleChartOrder(orderBy) {
   chartOrderBy = orderBy;
   document.querySelectorAll('.order-btn').forEach(btn => btn.classList.remove('active'));
   event.target.classList.add('active');
-  displayOutliersResults();
   createOutliersChart();
 }
