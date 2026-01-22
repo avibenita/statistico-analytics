@@ -1983,6 +1983,10 @@ body.theme-dark .highcharts-tooltip text {
   .outliers-results-grid {
     grid-template-columns: 1fr;
   }
+  
+  .results-horizontal-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .outliers-panel {
@@ -2043,10 +2047,16 @@ body.theme-dark .highcharts-tooltip text {
   margin-bottom: 20px;
 }
 
+.results-horizontal-layout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
 .outliers-summary-compact {
   display: flex;
   justify-content: center;
-  margin-bottom: 24px;
 }
 
 .summary-card-compact {
@@ -2079,7 +2089,7 @@ body.theme-dark .highcharts-tooltip text {
 }
 
 .comparison-table-container {
-  margin-top: 20px;
+  flex: 1;
 }
 
 .comparison-table {

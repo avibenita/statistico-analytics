@@ -341,16 +341,17 @@ function displayOutliersResults() {
   // Get column name for Excel address
   const columnName = resultsData.column || 'A';
   
-  // Results panel content (left side)
+  // Results panel content - summary and table side by side
   let resultsHTML = `
-    <div class="outliers-summary-compact">
-      <div class="summary-card-compact ${outlierCount > 0 ? 'has-outliers' : ''}">
-        <div class="summary-label">OUTLIERS DETECTED</div>
-        <div class="summary-value-large">${outlierCount} / ${totalData} (${outlierPercent}%)</div>
+    <div class="results-horizontal-layout">
+      <div class="outliers-summary-compact">
+        <div class="summary-card-compact ${outlierCount > 0 ? 'has-outliers' : ''}">
+          <div class="summary-label">OUTLIERS DETECTED</div>
+          <div class="summary-value-large">${outlierCount} / ${totalData} (${outlierPercent}%)</div>
+        </div>
       </div>
-    </div>
-    <div class="comparison-table-container">
-      <table class="comparison-table">
+      <div class="comparison-table-container">
+        <table class="comparison-table">
         <thead>
           <tr>
             <th>Range</th>
@@ -389,6 +390,7 @@ function displayOutliersResults() {
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
   `;
   
