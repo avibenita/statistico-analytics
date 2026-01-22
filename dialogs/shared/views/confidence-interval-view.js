@@ -33,16 +33,17 @@ function displayConfidenceIntervalView() {
   document.getElementById('variableName').textContent = column || 'Variable';
   document.getElementById('sampleSize').textContent = `(n=${n})`;
   
-  // Match HTML version UI exactly (dark theme with radio buttons)
+  // Match HTML version UI exactly (dark theme with 4-frame configuration)
   document.getElementById('resultsContent').innerHTML = `
     <style>
       /* Dark theme matching 0confidence-interval.html */
-      .ci-config-panel {
-        background: #1a1f2e;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 15px;
+      .ci-section {
+        background: #242938;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 0;
         border: 1px solid #2d3748;
+        flex: 1;
       }
       
       .ci-section-title {
@@ -50,13 +51,13 @@ function displayConfidenceIntervalView() {
         font-size: 0.85em;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
         font-weight: bold;
       }
       
       .ci-inline-radio {
         display: flex;
-        gap: 20px;
+        gap: 15px;
         flex-wrap: wrap;
         align-items: center;
       }
@@ -70,6 +71,11 @@ function displayConfidenceIntervalView() {
         font-size: 14px;
       }
       
+      .ci-radio-option.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      
       .ci-radio-option input[type="radio"] {
         cursor: pointer;
         width: 18px;
@@ -77,10 +83,20 @@ function displayConfidenceIntervalView() {
         accent-color: rgb(255,165,120);
       }
       
+      .ci-radio-option.disabled input {
+        cursor: not-allowed;
+      }
+      
+      .ci-panel-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+      
       .ci-alpha-control {
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 10px;
       }
       
       .ci-alpha-control select {
@@ -118,11 +134,50 @@ function displayConfidenceIntervalView() {
         text-align: center;
       }
       
+      .ci-inline-control {
+        display: none;
+        margin-left: 20px;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .ci-inline-control.active {
+        display: flex;
+      }
+      
+      .ci-inline-control input[type="number"] {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 4px;
+        color: white;
+        padding: 4px 8px;
+        width: 80px;
+        font-size: 13px;
+      }
+      
+      .ci-refresh-btn {
+        background: linear-gradient(135deg, rgb(255,165,120), rgb(255,140,90));
+        border: none;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+      
+      .ci-refresh-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(255,165,120,0.5);
+      }
+      
       .ci-results-panel {
         background: #1a1f2e;
         border-radius: 10px;
         padding: 20px;
         border: 2px solid rgba(255,255,255,0.25);
+        margin-top: 15px;
       }
       
       .ci-result-large {
@@ -226,11 +281,12 @@ function displayConfidenceIntervalView() {
     </style>
     
     <div class="ci-container">
-      <!-- Configuration Panel -->
-      <div class="ci-config-panel">
-        <div style="display: flex; gap: 30px; margin-bottom: 15px;">
-          <!-- Method -->
-          <div style="flex: 1;">
+      <!-- Configuration Panel with 4 Frames -->
+      <div style="background: #1a1f2e; border-radius: 10px; padding: 20px; margin-bottom: 15px; border: 1px solid #2d3748;">
+        <!-- ROW 1: METHOD and PARAMETER -->
+        <div class="ci-panel-row">
+          <!-- METHOD Frame -->
+          <div class="ci-section">
             <div class="ci-section-title">METHOD:</div>
             <div class="ci-inline-radio">
               <label class="ci-radio-option">
@@ -241,11 +297,20 @@ function displayConfidenceIntervalView() {
                 <input type="radio" name="ci-method" value="bootstrap" onchange="selectMethod('bootstrap')">
                 <span>Bootstrap</span>
               </label>
+              
+              <!-- Bootstrap Iterations (inline) -->
+              <div class="ci-inline-control" id="ci-bootstrap-iterations">
+                <label style="color: rgba(255,255,255,0.8); font-size: 13px;">Iterations:</label>
+                <input type="number" id="ci-iterations-input" value="500" min="100" max="10000" step="100">
+                <button onclick="refreshIterations()" class="ci-refresh-btn">
+                  <i class="fa-solid fa-sync-alt"></i> Refresh
+                </button>
+              </div>
             </div>
           </div>
           
-          <!-- Parameter -->
-          <div style="flex: 1;">
+          <!-- PARAMETER Frame -->
+          <div class="ci-section">
             <div class="ci-section-title">PARAMETER:</div>
             <div class="ci-inline-radio">
               <label class="ci-radio-option">
@@ -256,26 +321,54 @@ function displayConfidenceIntervalView() {
                 <input type="radio" name="ci-parameter" value="stdev" onchange="selectParameter('stdev')">
                 <span>Stdev</span>
               </label>
-              <label class="ci-radio-option" style="opacity: 0.4;">
+              <label class="ci-radio-option disabled" id="ci-median-option">
                 <input type="radio" name="ci-parameter" value="median" disabled>
                 <span>Median</span>
               </label>
+              <label class="ci-radio-option disabled" id="ci-percentile-option">
+                <input type="radio" name="ci-parameter" value="percentile" disabled onchange="selectParameter('percentile')">
+                <span>Percentile</span>
+              </label>
+              
+              <!-- Percentile Value (inline) -->
+              <div class="ci-inline-control" id="ci-percentile-value">
+                <label style="color: rgba(255,255,255,0.8); font-size: 13px;">Value:</label>
+                <input type="number" id="ci-percentile-input" value="50" min="1" max="99" step="1">
+                <span style="color: rgba(255,255,255,0.8); font-size: 13px;">%</span>
+                <button onclick="refreshPercentile()" class="ci-refresh-btn">
+                  <i class="fa-solid fa-sync-alt"></i> Refresh
+                </button>
+              </div>
             </div>
           </div>
         </div>
         
-        <!-- Alpha Control -->
-        <div>
-          <div class="ci-alpha-control">
-            <label style="color: rgba(255,255,255,0.6); font-size: 0.95em; font-weight: bold; min-width: 30px;">α =</label>
-            <select id="ci-alpha-preset" onchange="setAlphaPreset()">
-              <option value="0.01">0.01 (99%)</option>
-              <option value="0.02">0.02 (98%)</option>
-              <option value="0.05" selected>0.05 (95%)</option>
-              <option value="0.10">0.10 (90%)</option>
-            </select>
-            <input type="range" id="ci-alpha-slider" min="0.01" max="0.15" step="0.001" value="0.05" oninput="updateAlphaSlider()">
-            <span class="ci-alpha-display" id="ci-alpha-display">0.050</span>
+        <!-- ROW 2: ALPHA and POP SIZE -->
+        <div class="ci-panel-row">
+          <!-- ALPHA Frame -->
+          <div class="ci-section">
+            <div class="ci-alpha-control">
+              <label style="color: rgba(255,255,255,0.6); font-size: 0.95em; font-weight: bold; margin-right: 10px;">α =</label>
+              <select id="ci-alpha-preset" onchange="setAlphaPreset()">
+                <option value="0.01">0.01 (99%)</option>
+                <option value="0.02">0.02 (98%)</option>
+                <option value="0.05" selected>0.05 (95%)</option>
+                <option value="0.10">0.10 (90%)</option>
+              </select>
+              <input type="range" id="ci-alpha-slider" min="0.01" max="0.15" step="0.001" value="0.05" oninput="updateAlphaSlider()">
+              <span class="ci-alpha-display" id="ci-alpha-display">0.050</span>
+            </div>
+          </div>
+          
+          <!-- POP SIZE Frame -->
+          <div class="ci-section" id="ci-popsize-section">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label style="color: rgba(255,255,255,0.6); font-size: 0.85em; text-transform: uppercase; font-weight: bold;">Pop. Size (opt):</label>
+              <input type="number" id="ci-popsize-input" placeholder="Unknown" min="1" oninput="togglePopSizeRefresh()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: white; padding: 6px 10px; width: 120px;">
+              <button id="ci-popsize-refresh" onclick="refreshPopSize()" class="ci-refresh-btn" style="display: none;">
+                <i class="fa-solid fa-sync-alt"></i> Refresh
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -340,6 +433,7 @@ function displayConfidenceIntervalView() {
   `;
   
   setTimeout(() => {
+    updateMethodVisibility();
     calculateCI();
   }, 100);
 }
@@ -349,8 +443,7 @@ function displayConfidenceIntervalView() {
  */
 function selectMethod(method) {
   currentMethod = method;
-  document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
-  document.getElementById(`btn-${method}`).classList.add('active');
+  updateMethodVisibility();
   calculateCI();
 }
 
@@ -358,9 +451,134 @@ function selectMethod(method) {
  * Select parameter
  */
 function selectParameter(param) {
+  // Check if parameter is disabled
+  const radio = document.querySelector(`input[name="ci-parameter"][value="${param}"]`);
+  if (radio && radio.disabled) return;
+  
   currentParameter = param;
-  document.querySelectorAll('.param-btn').forEach(btn => btn.classList.remove('active'));
-  document.getElementById(`param-${param}`).classList.add('active');
+  updateParameterVisibility();
+  calculateCI();
+}
+
+/**
+ * Update visibility based on method selection
+ */
+function updateMethodVisibility() {
+  const isBootstrap = currentMethod === 'bootstrap';
+  
+  // Show/hide bootstrap iterations
+  const iterationsControl = document.getElementById('ci-bootstrap-iterations');
+  if (iterationsControl) {
+    iterationsControl.classList.toggle('active', isBootstrap);
+  }
+  
+  // Enable/disable median and percentile for bootstrap
+  const medianOption = document.getElementById('ci-median-option');
+  const percentileOption = document.getElementById('ci-percentile-option');
+  const medianRadio = document.querySelector('input[name="ci-parameter"][value="median"]');
+  const percentileRadio = document.querySelector('input[name="ci-parameter"][value="percentile"]');
+  
+  if (isBootstrap) {
+    if (medianOption) medianOption.classList.remove('disabled');
+    if (percentileOption) percentileOption.classList.remove('disabled');
+    if (medianRadio) medianRadio.disabled = false;
+    if (percentileRadio) percentileRadio.disabled = false;
+  } else {
+    if (medianOption) medianOption.classList.add('disabled');
+    if (percentileOption) percentileOption.classList.add('disabled');
+    if (medianRadio) medianRadio.disabled = true;
+    if (percentileRadio) percentileRadio.disabled = true;
+    
+    // Reset to mean if median or percentile was selected
+    if (currentParameter === 'median' || currentParameter === 'percentile') {
+      const meanRadio = document.querySelector('input[name="ci-parameter"][value="mean"]');
+      if (meanRadio) meanRadio.checked = true;
+      currentParameter = 'mean';
+    }
+    
+    // Hide percentile input
+    const percentileControl = document.getElementById('ci-percentile-value');
+    if (percentileControl) percentileControl.classList.remove('active');
+  }
+  
+  // Enable/disable pop size (only for classical mean)
+  updatePopSizeVisibility();
+}
+
+/**
+ * Update visibility based on parameter selection
+ */
+function updateParameterVisibility() {
+  // Show/hide percentile value input
+  const percentileControl = document.getElementById('ci-percentile-value');
+  if (percentileControl) {
+    percentileControl.classList.toggle('active', currentParameter === 'percentile');
+  }
+  
+  updatePopSizeVisibility();
+}
+
+/**
+ * Update pop size visibility (only for classical mean)
+ */
+function updatePopSizeVisibility() {
+  const enablePopSize = currentMethod === 'classical' && currentParameter === 'mean';
+  const popSizeInput = document.getElementById('ci-popsize-input');
+  const popSizeSection = document.getElementById('ci-popsize-section');
+  
+  if (popSizeInput && popSizeSection) {
+    if (enablePopSize) {
+      popSizeInput.disabled = false;
+      popSizeInput.style.opacity = '1';
+      popSizeInput.style.cursor = 'text';
+      popSizeSection.style.opacity = '1';
+    } else {
+      popSizeInput.disabled = true;
+      popSizeInput.style.opacity = '0.5';
+      popSizeInput.style.cursor = 'not-allowed';
+      popSizeSection.style.opacity = '0.5';
+      
+      // Hide refresh button
+      const refreshBtn = document.getElementById('ci-popsize-refresh');
+      if (refreshBtn) refreshBtn.style.display = 'none';
+    }
+  }
+}
+
+/**
+ * Toggle pop size refresh button visibility
+ */
+function togglePopSizeRefresh() {
+  const popInput = document.getElementById('ci-popsize-input');
+  const refreshBtn = document.getElementById('ci-popsize-refresh');
+  if (popInput && refreshBtn) {
+    const hasValue = popInput.value !== '' && !isNaN(popInput.value);
+    const isEnabled = currentMethod === 'classical' && currentParameter === 'mean';
+    refreshBtn.style.display = (hasValue && isEnabled) ? 'inline-flex' : 'none';
+  }
+}
+
+/**
+ * Refresh with current iterations
+ */
+function refreshIterations() {
+  console.log('🔄 Refreshing Bootstrap with new iterations');
+  calculateCI();
+}
+
+/**
+ * Refresh with current percentile
+ */
+function refreshPercentile() {
+  console.log('🔄 Refreshing Bootstrap percentile');
+  calculateCI();
+}
+
+/**
+ * Refresh with current pop size
+ */
+function refreshPopSize() {
+  console.log('🔄 Refreshing with population size');
   calculateCI();
 }
 
@@ -419,7 +637,13 @@ function calculateClassicalCI() {
     
     // Finite population correction factor (matching HTML version)
     let Factor = 1;
-    // Note: Population size not available in this context, so Factor = 1
+    const popInput = document.getElementById('ci-popsize-input');
+    const populationSize = popInput && popInput.value ? parseInt(popInput.value) : null;
+    
+    if (populationSize && populationSize > n) {
+      Factor = Math.sqrt((populationSize - n) / (populationSize - 1));
+      console.log('  FPC applied:', Factor.toFixed(4));
+    }
     
     // VB6: xlApp.TInv(alpha, n - 1) * Factor * Stdev / n ^ 0.5
     const tValue = getTValue(alpha / 2, n - 1);
@@ -486,8 +710,14 @@ function calculateClassicalCI() {
 function calculateBootstrapCI() {
   const data = resultsData.rawData;
   const intBootstrapN = data.length;  // VB6: intBootstrapN = 1 * Me.Ssize
-  const intIteration = 2000;           // Bootstrap iterations (HTML uses configurable, we use 2000)
+  
+  // Get iterations from input (matching HTML version)
+  const iterationsInput = document.getElementById('ci-iterations-input');
+  const intIteration = iterationsInput ? parseInt(iterationsInput.value) || 500 : 500;
+  
   const alpha = 1 - (currentConfidence / 100);
+  
+  console.log(`✓ Bootstrap - ${currentParameter} calculation with ${intIteration} iterations (VB6 version)`);
   
   // VB6: ReDim hold2(intIteration) - Array for bootstrapped statistics
   const hold2 = [];
@@ -518,6 +748,12 @@ function calculateBootstrapCI() {
     } else if (currentParameter === 'median') {
       // VB6: If Me.OpParameter(2).Value = True Then hold2(j) = CalculateMedian10(hold)
       stat = calculateMedian(hold);
+    } else if (currentParameter === 'percentile') {
+      // VB6: If Me.OpParameter(3).Value = True Then hold2(j) = CalculatePercentileBase1(hold, intBootstrapN, Me.PercentileValue / 100, sss)
+      const percentileInput = document.getElementById('ci-percentile-input');
+      const p = percentileInput ? parseFloat(percentileInput.value) / 100 : 0.5;
+      stat = calculatePercentile(hold, p);
+      if (j === 0) console.log(`  Percentile: ${(p * 100).toFixed(0)}%`);
     } else if (currentParameter === 'variance') {
       const mean = calculateMean(hold);
       stat = calculateVariance(hold, mean);
@@ -534,6 +770,8 @@ function calculateBootstrapCI() {
   hold2.sort((a, b) => a - b);
   const LCLM = calculatePercentile(hold2, alpha / 2);
   const UCLM = calculatePercentile(hold2, 1 - alpha / 2);
+  
+  console.log(`  Center (AverageB): ${AverageB.toFixed(4)}, LCL: ${LCLM.toFixed(4)}, UCL: ${UCLM.toFixed(4)}`);
   
   return {
     pointEstimate: AverageB,
@@ -607,27 +845,46 @@ function updateInterpretation(pointEstimate, lcl, ucl, margin, decimals) {
     mean: 'mean',
     stdev: 'standard deviation',
     median: 'median',
-    variance: 'variance'
+    variance: 'variance',
+    percentile: 'percentile'
   };
-  const paramName = paramLabels[currentParameter] || currentParameter;
+  let paramName = paramLabels[currentParameter] || currentParameter;
+  
+  // For percentile, include the specific value
+  if (currentParameter === 'percentile') {
+    const percentileInput = document.getElementById('ci-percentile-input');
+    const pValue = percentileInput ? parseFloat(percentileInput.value) : 50;
+    paramName = `${pValue}th percentile`;
+  }
   
   let interpretation = '';
   
   if (currentMethod === 'classical') {
+    const popInput = document.getElementById('ci-popsize-input');
+    const populationSize = popInput && popInput.value ? parseInt(popInput.value) : null;
+    const fpcNote = (populationSize && currentParameter === 'mean') 
+      ? ` <i class="fa-solid fa-info-circle" style="color: rgb(120,200,255);"></i> FPC applied (N=${populationSize}).` 
+      : '';
+    
     interpretation = `
       <i class="fa-solid fa-check-circle" style="color: rgb(120,200,255); margin-right: 6px;"></i>
       We are <strong style="color: rgb(255,165,120);">${confidenceLevel}% confident</strong> that the true population ${paramName} 
       lies between <strong style="color: rgb(120,200,255);">${lcl.toFixed(decimals)}</strong> and 
       <strong style="color: rgb(120,200,255);">${ucl.toFixed(decimals)}</strong>.
       ${margin ? ` Margin of error: <strong style="color: rgb(255,165,120);">±${margin.toFixed(decimals)}</strong>.` : ''}
+      ${fpcNote}
     `;
   } else {
+    const iterationsInput = document.getElementById('ci-iterations-input');
+    const iterations = iterationsInput ? parseInt(iterationsInput.value) || 500 : 500;
+    
     interpretation = `
       <i class="fa-solid fa-check-circle" style="color: rgb(120,200,255); margin-right: 6px;"></i>
-      Based on <strong style="color: rgb(255,165,120);">bootstrap resampling</strong>, 
+      Based on <strong style="color: rgb(255,165,120);">${iterations} resamples</strong>, 
       we are <strong style="color: rgb(255,165,120);">${confidenceLevel}% confident</strong> that the true population ${paramName} 
       lies between <strong style="color: rgb(120,200,255);">${lcl.toFixed(decimals)}</strong> and 
       <strong style="color: rgb(120,200,255);">${ucl.toFixed(decimals)}</strong>.
+      Bootstrap estimate: <strong>${pointEstimate.toFixed(decimals)}</strong>.
     `;
   }
   
