@@ -313,11 +313,17 @@ async function runAnalysis() {
     runButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Running...</span>';
     
     try {
-        // Apply trim
-        const sorted = [...currentData].sort((a, b) => a - b);
-        const minIdx = Math.floor((sorted.length - 1) * trimMin / 100);
-        const maxIdx = Math.floor((sorted.length - 1) * trimMax / 100);
-        let processedData = sorted.slice(minIdx, maxIdx + 1);
+        // Apply trim by value range (keeping original order)
+        let processedData = currentData;
+        if (trimMin > 0 || trimMax < 100) {
+            const sorted = [...currentData].sort((a, b) => a - b);
+            const minIdx = Math.floor((sorted.length - 1) * trimMin / 100);
+            const maxIdx = Math.floor((sorted.length - 1) * trimMax / 100);
+            const minValue = sorted[minIdx];
+            const maxValue = sorted[maxIdx];
+            // Filter by value range while preserving original order
+            processedData = currentData.filter(v => v >= minValue && v <= maxValue);
+        }
         
         // Apply transform
         processedData = applyTransform(processedData, currentTransform);
