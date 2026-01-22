@@ -25,7 +25,7 @@ let currentParameter = 'mean';
 let currentConfidence = 95;
 
 /**
- * Display confidence interval view
+ * Display confidence interval view - Matches 0confidence-interval.html UI exactly
  */
 function displayConfidenceIntervalView() {
   const { column, n } = resultsData;
@@ -33,85 +33,307 @@ function displayConfidenceIntervalView() {
   document.getElementById('variableName').textContent = column || 'Variable';
   document.getElementById('sampleSize').textContent = `(n=${n})`;
   
+  // Match HTML version UI exactly (dark theme with radio buttons)
   document.getElementById('resultsContent').innerHTML = `
+    <style>
+      /* Dark theme matching 0confidence-interval.html */
+      .ci-config-panel {
+        background: #1a1f2e;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border: 1px solid #2d3748;
+      }
+      
+      .ci-section-title {
+        color: rgba(255,255,255,0.6);
+        font-size: 0.85em;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+        font-weight: bold;
+      }
+      
+      .ci-inline-radio {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      
+      .ci-radio-option {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        color: rgba(255,255,255,0.8);
+        font-size: 14px;
+      }
+      
+      .ci-radio-option input[type="radio"] {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+        accent-color: rgb(255,165,120);
+      }
+      
+      .ci-alpha-control {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      
+      .ci-alpha-control select {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 4px;
+        color: white;
+        padding: 6px 10px;
+      }
+      
+      .ci-alpha-control input[type="range"] {
+        flex: 1;
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255,255,255,0.2);
+        outline: none;
+        -webkit-appearance: none;
+      }
+      
+      .ci-alpha-control input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: rgb(255,165,120);
+        cursor: pointer;
+        box-shadow: 0 0 8px rgba(255,165,120,0.5);
+      }
+      
+      .ci-alpha-display {
+        font-size: 15px;
+        font-weight: 600;
+        color: rgb(255,165,120);
+        min-width: 60px;
+        text-align: center;
+      }
+      
+      .ci-results-panel {
+        background: #1a1f2e;
+        border-radius: 10px;
+        padding: 20px;
+        border: 2px solid rgba(255,255,255,0.25);
+      }
+      
+      .ci-result-large {
+        text-align: center;
+        font-size: 28px;
+        font-weight: 600;
+        color: rgb(255,165,120);
+        margin: 15px 0;
+        letter-spacing: 0.5px;
+      }
+      
+      .ci-plus-minus {
+        font-size: 24px;
+        color: rgba(255,255,255,0.8);
+        margin: 0 8px;
+      }
+      
+      .ci-confidence-bar-container {
+        position: relative;
+        height: 60px;
+        margin: 20px 0;
+        background: rgba(255,255,255,0.05);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      
+      .ci-confidence-bar {
+        position: absolute;
+        height: 100%;
+        background: linear-gradient(90deg, rgba(120,200,255,0.2), rgba(120,200,255,0.4), rgba(120,200,255,0.2));
+        border: 2px solid rgb(120,200,255);
+        border-radius: 4px;
+        transition: all 0.5s ease;
+      }
+      
+      .ci-confidence-marker {
+        position: absolute;
+        width: 3px;
+        height: 100%;
+        background: rgb(255,165,120);
+        box-shadow: 0 0 10px rgb(255,165,120);
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      
+      .ci-delta-label {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 13px;
+        font-weight: 700;
+        color: white;
+        background: rgba(0,0,0,0.8);
+        padding: 5px 10px;
+        border-radius: 4px;
+        border: 1px solid rgba(255,255,255,0.3);
+      }
+      
+      .ci-delta-label.left { left: 8px; }
+      .ci-delta-label.right { right: 8px; }
+      
+      .ci-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin: 20px 0;
+      }
+      
+      .ci-stat-box {
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 6px;
+        padding: 12px;
+        text-align: center;
+      }
+      
+      .ci-stat-label {
+        font-size: 10px;
+        color: rgba(255,255,255,0.6);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        letter-spacing: 0.5px;
+      }
+      
+      .ci-stat-value {
+        font-size: 17px;
+        font-weight: 600;
+        color: white;
+      }
+      
+      .ci-interpretation {
+        margin-top: 15px;
+        padding: 12px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.8);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+    </style>
+    
     <div class="ci-container">
-      <!-- Method Selection -->
-      <div class="ci-panel">
-        <div class="panel-heading">
-          <i class="fa-solid fa-chart-line"></i>
-          Method Selection
-        </div>
-        <div class="panel-body">
-          <div class="method-buttons">
-            <button class="method-btn active" onclick="selectMethod('classical')" id="btn-classical">
-              <i class="fa-solid fa-calculator"></i>
-              <span>Classical</span>
-            </button>
-            <button class="method-btn" onclick="selectMethod('bootstrap')" id="btn-bootstrap">
-              <i class="fa-solid fa-shuffle"></i>
-              <span>Bootstrap</span>
-            </button>
+      <!-- Configuration Panel -->
+      <div class="ci-config-panel">
+        <div style="display: flex; gap: 30px; margin-bottom: 15px;">
+          <!-- Method -->
+          <div style="flex: 1;">
+            <div class="ci-section-title">METHOD:</div>
+            <div class="ci-inline-radio">
+              <label class="ci-radio-option">
+                <input type="radio" name="ci-method" value="classical" checked onchange="selectMethod('classical')">
+                <span>Classical</span>
+              </label>
+              <label class="ci-radio-option">
+                <input type="radio" name="ci-method" value="bootstrap" onchange="selectMethod('bootstrap')">
+                <span>Bootstrap</span>
+              </label>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Parameter Selection -->
-      <div class="ci-panel">
-        <div class="panel-heading">
-          <i class="fa-solid fa-sliders"></i>
-          Parameter
-        </div>
-        <div class="panel-body">
-          <div class="parameter-grid">
-            <button class="param-btn active" onclick="selectParameter('mean')" id="param-mean">
-              <i class="fa-solid fa-chart-bar"></i>
-              <span>Mean</span>
-            </button>
-            <button class="param-btn" onclick="selectParameter('median')" id="param-median">
-              <i class="fa-solid fa-chart-line"></i>
-              <span>Median</span>
-            </button>
-            <button class="param-btn" onclick="selectParameter('variance')" id="param-variance">
-              <i class="fa-solid fa-chart-area"></i>
-              <span>Variance</span>
-            </button>
-            <button class="param-btn" onclick="selectParameter('stdev')" id="param-stdev">
-              <i class="fa-solid fa-chart-scatter"></i>
-              <span>Std Dev</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Confidence Level -->
-      <div class="ci-panel">
-        <div class="panel-heading">
-          <i class="fa-solid fa-percent"></i>
-          Confidence Level
-        </div>
-        <div class="panel-body">
-          <div class="confidence-control">
-            <input type="range" id="confidenceSlider" min="80" max="99" value="95" step="1" oninput="updateConfidence(this.value)">
-            <div class="confidence-display">
-              <span id="confidenceValue">95</span>%
+          
+          <!-- Parameter -->
+          <div style="flex: 1;">
+            <div class="ci-section-title">PARAMETER:</div>
+            <div class="ci-inline-radio">
+              <label class="ci-radio-option">
+                <input type="radio" name="ci-parameter" value="mean" checked onchange="selectParameter('mean')">
+                <span>Mean</span>
+              </label>
+              <label class="ci-radio-option">
+                <input type="radio" name="ci-parameter" value="stdev" onchange="selectParameter('stdev')">
+                <span>Stdev</span>
+              </label>
+              <label class="ci-radio-option" style="opacity: 0.4;">
+                <input type="radio" name="ci-parameter" value="median" disabled>
+                <span>Median</span>
+              </label>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Results -->
-      <div class="ci-panel results-panel">
-        <div class="panel-heading">
-          <i class="fa-solid fa-chart-simple"></i>
-          Results
+        
+        <!-- Alpha Control -->
+        <div>
+          <div class="ci-alpha-control">
+            <label style="color: rgba(255,255,255,0.6); font-size: 0.95em; font-weight: bold; min-width: 30px;">α =</label>
+            <select id="ci-alpha-preset" onchange="setAlphaPreset()">
+              <option value="0.01">0.01 (99%)</option>
+              <option value="0.02">0.02 (98%)</option>
+              <option value="0.05" selected>0.05 (95%)</option>
+              <option value="0.10">0.10 (90%)</option>
+            </select>
+            <input type="range" id="ci-alpha-slider" min="0.01" max="0.15" step="0.001" value="0.05" oninput="updateAlphaSlider()">
+            <span class="ci-alpha-display" id="ci-alpha-display">0.050</span>
+          </div>
         </div>
-        <div class="panel-body">
-          <div id="ciResults">
-            <div class="loading" style="text-align: center; padding: 20px; color: var(--text-muted);">
-              <i class="fa-solid fa-info-circle" style="font-size: 32px; margin-bottom: 12px;"></i>
-              <div>Select method and parameter</div>
+      </div>
+      
+      <!-- Results Panel -->
+      <div class="ci-results-panel">
+        <h3 style="margin: 0 0 15px 0; color: rgb(255,165,120); font-size: 1.1em; font-weight: 600;">Margin of Errors</h3>
+        
+        <div class="ci-result-large">
+          <span id="ci-mean-value">—</span>
+          <span class="ci-plus-minus" id="ci-plus-minus">±</span>
+          <span id="ci-margin-value">—</span>
+        </div>
+        
+        <div class="ci-confidence-bar-container">
+          <div class="ci-confidence-bar" id="ci-confidence-bar">
+            <div class="ci-delta-label left" id="ci-delta-left">—</div>
+            <div class="ci-delta-label right" id="ci-delta-right">—</div>
+          </div>
+          <div class="ci-confidence-marker"></div>
+        </div>
+        
+        <div class="ci-stats-grid">
+          <div class="ci-stat-box">
+            <div class="ci-stat-label">Lower Limit (LCL)</div>
+            <div class="ci-stat-value" id="ci-lcl-value">—</div>
+          </div>
+          <div class="ci-stat-box">
+            <div class="ci-stat-label">Point Estimate</div>
+            <div class="ci-stat-value" id="ci-center-value">—</div>
+          </div>
+          <div class="ci-stat-box">
+            <div class="ci-stat-label">Upper Limit (UCL)</div>
+            <div class="ci-stat-value" id="ci-ucl-value">—</div>
+          </div>
+          <div class="ci-stat-box">
+            <div class="ci-stat-label">Sample Size (n)</div>
+            <div class="ci-stat-value" id="ci-sample-size">${n}</div>
+          </div>
+          <div class="ci-stat-box">
+            <div class="ci-stat-label">Confidence Level</div>
+            <div class="ci-stat-value" id="ci-confidence-level">95%</div>
+          </div>
+          <div class="ci-stat-box">
+            <div class="ci-stat-label">Decimals</div>
+            <div class="ci-stat-value">
+              <select id="ci-decimals" onchange="calculateCI()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px; width: 60px;">
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
             </div>
           </div>
+        </div>
+        
+        <div class="ci-interpretation" id="ci-interpretation">
+          <i class="fa-solid fa-info-circle" style="color: rgb(120,200,255); margin-right: 6px;"></i>
+          Configure parameters to see confidence interval.
         </div>
       </div>
     </div>
@@ -143,11 +365,27 @@ function selectParameter(param) {
 }
 
 /**
- * Update confidence level
+ * Update alpha from slider
  */
-function updateConfidence(value) {
-  currentConfidence = parseInt(value);
-  document.getElementById('confidenceValue').textContent = value;
+function updateAlphaSlider() {
+  const slider = document.getElementById('ci-alpha-slider');
+  const alpha = parseFloat(slider.value);
+  currentConfidence = ((1 - alpha) * 100).toFixed(0);
+  document.getElementById('ci-alpha-display').textContent = alpha.toFixed(3);
+  document.getElementById('ci-confidence-level').textContent = currentConfidence + '%';
+  calculateCI();
+}
+
+/**
+ * Set alpha from preset dropdown
+ */
+function setAlphaPreset() {
+  const select = document.getElementById('ci-alpha-preset');
+  const alpha = parseFloat(select.value);
+  currentConfidence = ((1 - alpha) * 100).toFixed(0);
+  document.getElementById('ci-alpha-slider').value = alpha;
+  document.getElementById('ci-alpha-display').textContent = alpha.toFixed(3);
+  document.getElementById('ci-confidence-level').textContent = currentConfidence + '%';
   calculateCI();
 }
 
@@ -172,7 +410,7 @@ function calculateClassicalCI() {
   const n = data.length;
   const alpha = 1 - (currentConfidence / 100);
   
-  let pointEstimate, lcl, ucl, methodName;
+  let pointEstimate, lcl, ucl, margin, methodName;
   
   if (currentParameter === 'mean') {
     const mean = data.reduce((a, b) => a + b, 0) / n;
@@ -192,6 +430,7 @@ function calculateClassicalCI() {
     pointEstimate = mean;
     lcl = mean - marginOfError;
     ucl = mean + marginOfError;
+    margin = marginOfError;
     methodName = `t-distribution (df=${n-1})`;
     
   } else if (currentParameter === 'median') {
@@ -203,6 +442,7 @@ function calculateClassicalCI() {
     // Use bootstrap instead
     lcl = pointEstimate;
     ucl = pointEstimate;
+    margin = null;
     methodName = 'Use Bootstrap for Median';
     
   } else if (currentParameter === 'variance') {
@@ -217,6 +457,7 @@ function calculateClassicalCI() {
     pointEstimate = variance;
     lcl = ((n - 1) * variance) / chiLower;
     ucl = ((n - 1) * variance) / chiUpper;
+    margin = null; // Asymmetric interval
     methodName = `χ² distribution (df=${n-1})`;
     
   } else if (currentParameter === 'stdev') {
@@ -232,10 +473,11 @@ function calculateClassicalCI() {
     pointEstimate = stdev;
     lcl = Math.sqrt(((n - 1) * variance) / chiLower);
     ucl = Math.sqrt(((n - 1) * variance) / chiUpper);
+    margin = null; // Asymmetric interval
     methodName = `χ² distribution (df=${n-1})`;
   }
   
-  return { pointEstimate, lcl, ucl, methodName };
+  return { pointEstimate, lcl, ucl, margin, methodName };
 }
 
 /**
@@ -297,81 +539,99 @@ function calculateBootstrapCI() {
     pointEstimate: AverageB,
     lcl: LCLM,
     ucl: UCLM,
+    margin: null, // Bootstrap uses asymmetric intervals
     methodName: `Bootstrap (${intIteration} replicates)`
   };
 }
 
 /**
- * Display CI results
+ * Display CI results - Matches 0confidence-interval.html display exactly
  */
 function displayCIResults(results) {
-  const { pointEstimate, lcl, ucl, methodName } = results;
-  const marginOfError = (ucl - lcl) / 2;
+  const { pointEstimate, lcl, ucl, methodName, margin } = results;
+  const decimals = parseInt(document.getElementById('ci-decimals')?.value || 2);
   
+  // Update main display
+  document.getElementById('ci-center-value').textContent = pointEstimate.toFixed(decimals);
+  document.getElementById('ci-mean-value').textContent = pointEstimate.toFixed(decimals);
+  
+  // Show/hide ± symbol based on whether margin is available
+  const plusMinus = document.getElementById('ci-plus-minus');
+  const marginValue = document.getElementById('ci-margin-value');
+  
+  if (margin !== null && margin !== undefined) {
+    plusMinus.style.display = 'inline';
+    marginValue.style.display = 'inline';
+    marginValue.textContent = margin.toFixed(decimals);
+  } else {
+    plusMinus.style.display = 'none';
+    marginValue.style.display = 'none';
+  }
+  
+  // Update LCL/UCL
+  document.getElementById('ci-lcl-value').textContent = lcl.toFixed(decimals);
+  document.getElementById('ci-ucl-value').textContent = ucl.toFixed(decimals);
+  
+  // Update confidence bar (dynamic positioning)
+  const range = ucl - lcl;
+  const center = pointEstimate;
+  const visualHalfRange = range * 1.5;
+  const visualMin = center - visualHalfRange;
+  const visualMax = center + visualHalfRange;
+  const totalVisualRange = visualMax - visualMin;
+  
+  const lclPercent = ((lcl - visualMin) / totalVisualRange) * 100;
+  const uclPercent = ((ucl - visualMin) / totalVisualRange) * 100;
+  const width = Math.max(0, Math.min(100, uclPercent - lclPercent));
+  
+  const bar = document.getElementById('ci-confidence-bar');
+  bar.style.left = Math.max(0, Math.min(100 - width, lclPercent)) + '%';
+  bar.style.width = width + '%';
+  
+  // Update delta labels
+  const deltaLeft = Math.abs(pointEstimate - lcl);
+  const deltaRight = Math.abs(ucl - pointEstimate);
+  document.getElementById('ci-delta-left').textContent = '−' + deltaLeft.toFixed(decimals);
+  document.getElementById('ci-delta-right').textContent = '+' + deltaRight.toFixed(decimals);
+  
+  // Update interpretation
+  updateInterpretation(pointEstimate, lcl, ucl, margin, decimals);
+}
+
+/**
+ * Update interpretation text
+ */
+function updateInterpretation(pointEstimate, lcl, ucl, margin, decimals) {
+  const confidenceLevel = currentConfidence;
   const paramLabels = {
-    mean: 'Mean',
-    median: 'Median',
-    variance: 'Variance',
-    stdev: 'Standard Deviation'
+    mean: 'mean',
+    stdev: 'standard deviation',
+    median: 'median',
+    variance: 'variance'
   };
+  const paramName = paramLabels[currentParameter] || currentParameter;
   
-  document.getElementById('ciResults').innerHTML = `
-    <div class="ci-result-display">
-      <div class="result-header">
-        <strong>${paramLabels[currentParameter]}</strong>
-        <span style="font-size: 11px; color: var(--text-muted);">${methodName}</span>
-      </div>
-      
-      <div class="result-value-large">
-        ${pointEstimate.toFixed(4)}
-        <span class="plus-minus">±</span>
-        ${marginOfError.toFixed(4)}
-      </div>
-      
-      <div class="confidence-bar-container">
-        <div class="confidence-bar" style="left: 25%; width: 50%;"></div>
-        <div class="confidence-marker"></div>
-        <div class="confidence-label lcl">${lcl.toFixed(4)}</div>
-        <div class="confidence-label mean">Point Estimate</div>
-        <div class="confidence-label ucl">${ucl.toFixed(4)}</div>
-      </div>
-      
-      <table class="ci-stats-table">
-        <thead>
-          <tr>
-            <th>Statistic</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Point Estimate</td>
-            <td>${pointEstimate.toFixed(4)}</td>
-          </tr>
-          <tr>
-            <td>Lower Confidence Limit</td>
-            <td>${lcl.toFixed(4)}</td>
-          </tr>
-          <tr>
-            <td>Upper Confidence Limit</td>
-            <td>${ucl.toFixed(4)}</td>
-          </tr>
-          <tr>
-            <td>Margin of Error</td>
-            <td>${marginOfError.toFixed(4)}</td>
-          </tr>
-          <tr>
-            <td>Confidence Level</td>
-            <td>${currentConfidence}%</td>
-          </tr>
-          <tr>
-            <td>Method</td>
-            <td>${methodName}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  `;
+  let interpretation = '';
+  
+  if (currentMethod === 'classical') {
+    interpretation = `
+      <i class="fa-solid fa-check-circle" style="color: rgb(120,200,255); margin-right: 6px;"></i>
+      We are <strong style="color: rgb(255,165,120);">${confidenceLevel}% confident</strong> that the true population ${paramName} 
+      lies between <strong style="color: rgb(120,200,255);">${lcl.toFixed(decimals)}</strong> and 
+      <strong style="color: rgb(120,200,255);">${ucl.toFixed(decimals)}</strong>.
+      ${margin ? ` Margin of error: <strong style="color: rgb(255,165,120);">±${margin.toFixed(decimals)}</strong>.` : ''}
+    `;
+  } else {
+    interpretation = `
+      <i class="fa-solid fa-check-circle" style="color: rgb(120,200,255); margin-right: 6px;"></i>
+      Based on <strong style="color: rgb(255,165,120);">bootstrap resampling</strong>, 
+      we are <strong style="color: rgb(255,165,120);">${confidenceLevel}% confident</strong> that the true population ${paramName} 
+      lies between <strong style="color: rgb(120,200,255);">${lcl.toFixed(decimals)}</strong> and 
+      <strong style="color: rgb(120,200,255);">${ucl.toFixed(decimals)}</strong>.
+    `;
+  }
+  
+  document.getElementById('ci-interpretation').innerHTML = interpretation;
 }
 
 // ============================================
