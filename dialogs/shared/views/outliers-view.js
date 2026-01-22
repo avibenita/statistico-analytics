@@ -70,20 +70,21 @@ function displayOutliersView() {
         </div>
       </div>
       
-      <!-- Results Display Grid -->
-      <div class="outliers-results-grid">
-        <div class="outliers-panel results-panel">
-          <div class="panel-heading">
-            <div>
-              <i class="fa-solid fa-exclamation-triangle"></i>
-              Detection Results
-            </div>
-          </div>
-          <div class="panel-body">
-            <div id="outliersResults"></div>
+      <!-- Results Display - Summary and Comparison Table -->
+      <div class="outliers-panel results-panel">
+        <div class="panel-heading">
+          <div>
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            Detection Results
           </div>
         </div>
-        
+        <div class="panel-body">
+          <div id="outliersResults"></div>
+        </div>
+      </div>
+      
+      <!-- Table and Chart Grid -->
+      <div class="outliers-results-grid">
         <!-- Detected Outliers Table -->
         <div class="outliers-panel">
           <div class="panel-heading">
@@ -96,22 +97,22 @@ function displayOutliersView() {
             <div id="outliersTable"></div>
           </div>
         </div>
-      </div>
-      
-      <!-- Chart -->
-      <div class="outliers-panel">
-        <div class="panel-heading">
-          <div>
-            <i class="fa-solid fa-chart-simple"></i>
-            Visualization
+        
+        <!-- Chart -->
+        <div class="outliers-panel">
+          <div class="panel-heading">
+            <div>
+              <i class="fa-solid fa-chart-simple"></i>
+              Visualization
+            </div>
+            <div class="order-toggle">
+              <button class="order-btn ${chartOrderBy === 'index' ? 'active' : ''}" onclick="toggleChartOrder('index')">Order by Index</button>
+              <button class="order-btn ${chartOrderBy === 'value' ? 'active' : ''}" onclick="toggleChartOrder('value')">Order by Value</button>
+            </div>
           </div>
-          <div class="order-toggle">
-            <button class="order-btn ${chartOrderBy === 'index' ? 'active' : ''}" onclick="toggleChartOrder('index')">Order by Index</button>
-            <button class="order-btn ${chartOrderBy === 'value' ? 'active' : ''}" onclick="toggleChartOrder('value')">Order by Value</button>
+          <div class="panel-body">
+            <div id="outliersChart"></div>
           </div>
-        </div>
-        <div class="panel-body">
-          <div id="outliersChart"></div>
         </div>
       </div>
     </div>
