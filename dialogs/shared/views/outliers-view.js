@@ -18,6 +18,14 @@ let outlierResults = null;
 let chartOrderBy = 'index'; // 'index' or 'value'
 
 /**
+ * Convert row index to Excel address (e.g., 0 -> A2, assuming row 1 is header)
+ */
+function getExcelAddress(rowIndex, columnName) {
+  const rowNumber = rowIndex + 2; // +2 because row 1 is header and Excel is 1-indexed
+  return `${columnName}${rowNumber}`;
+}
+
+/**
  * Display outliers detection view
  */
 function displayOutliersView() {
@@ -60,14 +68,27 @@ function displayOutliersView() {
         </div>
       </div>
       
-      <!-- Results Display -->
-      <div class="outliers-panel results-panel">
-        <div class="panel-heading">
-          <i class="fa-solid fa-exclamation-triangle"></i>
-          Detection Results
+      <!-- Results Display Grid -->
+      <div class="outliers-results-grid">
+        <div class="outliers-panel results-panel">
+          <div class="panel-heading">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            Detection Results
+          </div>
+          <div class="panel-body">
+            <div id="outliersResults"></div>
+          </div>
         </div>
-        <div class="panel-body">
-          <div id="outliersResults"></div>
+        
+        <!-- Detected Outliers Table -->
+        <div class="outliers-panel">
+          <div class="panel-heading">
+            <i class="fa-solid fa-table"></i>
+            Detected Outliers
+          </div>
+          <div class="panel-body">
+            <div id="outliersTable"></div>
+          </div>
         </div>
       </div>
       
@@ -310,89 +331,92 @@ function displayOutliersResults() {
   const originalStats = calcStats(originalData);
   const cleanStats = outlierCount > 0 ? calcStats(cleanData) : originalStats;
   
+  // Get column name for Excel address
+  const columnName = resultsData.column || 'A';
+  
+  // Results panel content (left side)
   let resultsHTML = `
-    <div class="outliers-summary">
-      <div class="summary-card ${outlierCount > 0 ? 'has-outliers' : ''}">
-        <div class="summary-label">Outliers Detected</div>
-        <div class="summary-value">${outlierCount} / ${totalData} (${outlierPercent}%)</div>
+    <div class="outliers-summary-compact">
+      <div class="summary-card-compact ${outlierCount > 0 ? 'has-outliers' : ''}">
+        <div class="summary-label">OUTLIERS DETECTED</div>
+        <div class="summary-value-large">${outlierCount} / ${totalData} (${outlierPercent}%)</div>
       </div>
-      <div class="summary-card stats-table-card">
-        <table class="comparison-table">
-          <thead>
-            <tr>
-              <th>Range</th>
-              <th>Count</th>
-              <th>Average</th>
-              <th>Std</th>
-              <th>Min</th>
-              <th>Q25</th>
-              <th>Q50</th>
-              <th>Q75</th>
-              <th>Max</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="range-label">Original data</td>
-              <td>${originalStats.count}</td>
-              <td>${originalStats.mean.toFixed(0)}</td>
-              <td>${originalStats.stdDev.toFixed(0)}</td>
-              <td>${originalStats.min}</td>
-              <td>${originalStats.q25.toFixed(0)}</td>
-              <td>${originalStats.q50.toFixed(0)}</td>
-              <td>${originalStats.q75.toFixed(0)}</td>
-              <td>${originalStats.max}</td>
-            </tr>
-            <tr>
-              <td class="range-label">WITHOUT outliers</td>
-              <td>${cleanStats.count}</td>
-              <td>${cleanStats.mean.toFixed(0)}</td>
-              <td>${cleanStats.stdDev.toFixed(0)}</td>
-              <td>${cleanStats.min}</td>
-              <td>${cleanStats.q25.toFixed(0)}</td>
-              <td>${cleanStats.q50.toFixed(0)}</td>
-              <td>${cleanStats.q75.toFixed(0)}</td>
-              <td>${cleanStats.max}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    </div>
+    <div class="comparison-table-container">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Range</th>
+            <th>Count</th>
+            <th>Average</th>
+            <th>Std</th>
+            <th>Min</th>
+            <th>Q25</th>
+            <th>Q50</th>
+            <th>Q75</th>
+            <th>Max</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="range-label">Original data</td>
+            <td>${originalStats.count}</td>
+            <td>${originalStats.mean.toFixed(0)}</td>
+            <td>${originalStats.stdDev.toFixed(0)}</td>
+            <td>${originalStats.min}</td>
+            <td>${originalStats.q25.toFixed(0)}</td>
+            <td>${originalStats.q50.toFixed(0)}</td>
+            <td>${originalStats.q75.toFixed(0)}</td>
+            <td>${originalStats.max}</td>
+          </tr>
+          <tr>
+            <td class="range-label">WITHOUT outliers</td>
+            <td>${cleanStats.count}</td>
+            <td>${cleanStats.mean.toFixed(0)}</td>
+            <td>${cleanStats.stdDev.toFixed(0)}</td>
+            <td>${cleanStats.min}</td>
+            <td>${cleanStats.q25.toFixed(0)}</td>
+            <td>${cleanStats.q50.toFixed(0)}</td>
+            <td>${cleanStats.q75.toFixed(0)}</td>
+            <td>${cleanStats.max}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   `;
   
+  // Outliers table content (right side)
+  let tableHTML = '';
   if (outlierCount > 0) {
     // Table always shows outliers by their original index
     const sortedOutliers = [...outliers].sort((a, b) => a.index - b.index);
     
-    resultsHTML += `
-      <div class="outliers-list">
-        <div class="outliers-list-header">Detected Outliers:</div>
-        <div class="outliers-table-container">
-          <table class="outliers-table">
-            <thead>
+    tableHTML = `
+      <div class="outliers-table-container">
+        <table class="outliers-table">
+          <thead>
+            <tr>
+              <th>Index</th>
+              <th>Value</th>
+              <th>Type</th>
+              <th>Excel Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sortedOutliers.map((outlier) => `
               <tr>
-                <th>Index</th>
-                <th>Value</th>
-                <th>Type</th>
-                <th>Details</th>
+                <td>${outlier.index}</td>
+                <td>${outlier.value.toFixed(4)}</td>
+                <td><span class="outlier-badge ${outlier.type}">${outlier.type}</span></td>
+                <td class="excel-address">${getExcelAddress(outlier.index, columnName)}</td>
               </tr>
-            </thead>
-            <tbody>
-              ${sortedOutliers.map((outlier) => `
-                <tr>
-                  <td>${outlier.index}</td>
-                  <td>${outlier.value.toFixed(4)}</td>
-                  <td><span class="outlier-badge ${outlier.type}">${outlier.type}</span></td>
-                  <td>${getOutlierDetails(outlier)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
+            `).join('')}
+          </tbody>
+        </table>
       </div>
     `;
   } else {
-    resultsHTML += `
+    tableHTML = `
       <div class="no-outliers">
         <i class="fa-solid fa-circle-check" style="font-size: 48px; color: var(--accent-2); margin-bottom: 12px;"></i>
         <div>No outliers detected</div>
@@ -401,6 +425,7 @@ function displayOutliersResults() {
   }
   
   document.getElementById('outliersResults').innerHTML = resultsHTML;
+  document.getElementById('outliersTable').innerHTML = tableHTML;
 }
 
 /**
