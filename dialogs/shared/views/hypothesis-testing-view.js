@@ -97,16 +97,48 @@ function displayHypothesisTestingView() {
       </div>
       
       <!-- Results Panel -->
-      <div class="hyp-panel results-panel">
-        <div class="panel-heading">
-          <i class="fa-solid fa-chart-line"></i>
-          Test Results
+      <div class="hyp-panel results-panel" id="resultsPanel" style="display: block;">
+        <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>
+            <i class="fa-solid fa-chart-line"></i>
+            Test Results
+          </span>
+          <button id="visualizeTestBtn" onclick="openVisualizationModal()" style="display: none; background: linear-gradient(135deg, var(--accent-2), rgb(100,180,235)); border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease;">
+            <i class="fa-solid fa-chart-bar" style="margin-right: 6px;"></i>
+            Visualize Test
+          </button>
         </div>
         <div class="panel-body">
           <div id="hypothesisResults">
             <div class="loading" style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
               <i class="fa-solid fa-flask" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
               <div>Configure test and click "Run Test"</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Visualization Modal -->
+    <div id="visualizationModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+      <div style="background: #1a1f2e; border-radius: 12px; width: 90%; max-width: 1000px; max-height: 90vh; overflow: hidden; box-shadow: 0 10px 50px rgba(0,0,0,0.5); border: 1px solid #2d3748;">
+        <!-- Modal Header -->
+        <div style="background: #0c1624; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3748;">
+          <span style="color: rgb(255,165,120); font-size: 18px; font-weight: 600;">
+            <i class="fa-solid fa-chart-line" style="margin-right: 10px;"></i>
+            Hypothesis Test Visualization
+          </span>
+          <button onclick="closeVisualizationModal()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; padding: 0; line-height: 1; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+            ×
+          </button>
+        </div>
+        <!-- Modal Body -->
+        <div style="padding: 20px; max-height: calc(90vh - 70px); overflow-y: auto;">
+          <div id="chartContainer" style="width: 100%; height: 500px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="text-align: center; color: rgba(255,255,255,0.6);">
+              <i class="fa-solid fa-chart-line" style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;"></i>
+              <div style="font-size: 16px; margin-bottom: 8px;">Chart will be rendered here</div>
+              <div style="font-size: 13px; opacity: 0.7;">(Plotly integration coming next)</div>
             </div>
           </div>
         </div>
@@ -383,4 +415,56 @@ function displayTestResults(results) {
       </table>
     </div>
   `;
+  
+  // Show the Visualize button after results are displayed
+  const visualizeBtn = document.getElementById('visualizeTestBtn');
+  if (visualizeBtn) {
+    visualizeBtn.style.display = 'inline-flex';
+  }
+  
+  // Store test results for visualization
+  window.currentTestResults = results;
+}
+
+/**
+ * Open visualization modal
+ */
+function openVisualizationModal() {
+  const modal = document.getElementById('visualizationModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    // Trigger animation
+    setTimeout(() => {
+      modal.style.opacity = '1';
+    }, 10);
+    
+    console.log('📊 Opening visualization modal');
+    console.log('Test results:', window.currentTestResults);
+    
+    // TODO: Call chart rendering function here
+    // renderTestChart(window.currentTestResults);
+  }
+}
+
+/**
+ * Close visualization modal
+ */
+function closeVisualizationModal() {
+  const modal = document.getElementById('visualizationModal');
+  if (modal) {
+    modal.style.opacity = '0';
+    setTimeout(() => {
+      modal.style.display = 'none';
+    }, 300); // Wait for animation
+  }
+}
+
+// Close modal when clicking outside
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', function(e) {
+    const modal = document.getElementById('visualizationModal');
+    if (modal && e.target === modal) {
+      closeVisualizationModal();
+    }
+  });
 }
