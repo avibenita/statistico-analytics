@@ -757,9 +757,12 @@ function refreshPopSize() {
 function updateAlphaSlider() {
   const slider = document.getElementById('ci-alpha-slider');
   const alpha = parseFloat(slider.value);
-  currentConfidence = ((1 - alpha) * 100).toFixed(0);
+  currentConfidence = (1 - alpha) * 100; // Keep as number, not string
+  
   document.getElementById('ci-alpha-display').textContent = alpha.toFixed(3);
-  document.getElementById('ci-confidence-level').textContent = currentConfidence + '%';
+  document.getElementById('ci-confidence-level').textContent = currentConfidence.toFixed(1) + '%';
+  
+  console.log('🎚️ Alpha changed to:', alpha.toFixed(3), '→ Confidence:', currentConfidence.toFixed(1) + '%');
   calculateCI();
 }
 
@@ -769,10 +772,13 @@ function updateAlphaSlider() {
 function setAlphaPreset() {
   const select = document.getElementById('ci-alpha-preset');
   const alpha = parseFloat(select.value);
-  currentConfidence = ((1 - alpha) * 100).toFixed(0);
+  currentConfidence = (1 - alpha) * 100; // Keep as number, not string
+  
   document.getElementById('ci-alpha-slider').value = alpha;
   document.getElementById('ci-alpha-display').textContent = alpha.toFixed(3);
-  document.getElementById('ci-confidence-level').textContent = currentConfidence + '%';
+  document.getElementById('ci-confidence-level').textContent = currentConfidence.toFixed(1) + '%';
+  
+  console.log('🎚️ Alpha preset changed to:', alpha.toFixed(3), '→ Confidence:', currentConfidence.toFixed(1) + '%');
   calculateCI();
 }
 
