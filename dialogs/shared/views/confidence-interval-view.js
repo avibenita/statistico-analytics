@@ -410,6 +410,13 @@ function displayConfidenceIntervalView() {
           </div>
         </div>
         
+        <!-- Parameter Label -->
+        <div style="text-align: center; margin-bottom: 8px;">
+          <span id="ci-parameter-label" style="color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+            Mean
+          </span>
+        </div>
+        
         <div class="ci-result-large">
           <span id="ci-mean-value">—</span>
           <span class="ci-plus-minus" id="ci-plus-minus">±</span>
@@ -468,6 +475,7 @@ function displayConfidenceIntervalView() {
   setTimeout(() => {
     updateMethodBadge(currentMethod);
     updateResultsPanelStyle(currentMethod);
+    updateParameterLabel();
     updateMethodVisibility();
     calculateCI();
   }, 100);
@@ -645,7 +653,32 @@ function updateParameterVisibility() {
     percentileControl.classList.toggle('active', currentParameter === 'percentile');
   }
   
+  // Update parameter label
+  updateParameterLabel();
+  
   updatePopSizeVisibility();
+}
+
+/**
+ * Update parameter label above the result value
+ */
+function updateParameterLabel() {
+  const label = document.getElementById('ci-parameter-label');
+  if (!label) return;
+  
+  if (currentParameter === 'percentile') {
+    const percentileInput = document.getElementById('ci-percentile-input');
+    const pValue = percentileInput ? parseFloat(percentileInput.value) : 50;
+    label.textContent = `${pValue}th Percentile`;
+  } else {
+    const paramLabels = {
+      mean: 'Mean',
+      stdev: 'Standard Deviation',
+      median: 'Median',
+      variance: 'Variance'
+    };
+    label.textContent = paramLabels[currentParameter] || currentParameter;
+  }
 }
 
 /**
@@ -701,6 +734,7 @@ function refreshIterations() {
  */
 function refreshPercentile() {
   console.log('🔄 Refreshing Bootstrap percentile');
+  updateParameterLabel(); // Update label with new percentile value
   calculateCI();
 }
 
