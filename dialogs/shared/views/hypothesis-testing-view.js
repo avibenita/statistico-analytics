@@ -37,12 +37,41 @@ function displayHypothesisTestingView() {
         box-sizing: border-box;
       }
       
+      /* Force radio buttons to be visible */
+      input[type="radio"] {
+        appearance: auto !important;
+        -webkit-appearance: radio !important;
+        -moz-appearance: radio !important;
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        min-height: 18px !important;
+        max-width: 18px !important;
+        max-height: 18px !important;
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        margin: 0 5px 0 0 !important;
+        flex-shrink: 0 !important;
+        transform: none !important;
+        clip: auto !important;
+        clip-path: none !important;
+        overflow: visible !important;
+      }
+      
       #resultsContent input[type="radio"] {
         appearance: auto !important;
         -webkit-appearance: radio !important;
         -moz-appearance: radio !important;
         width: 18px !important;
         height: 18px !important;
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        margin: 0 !important;
+        flex-shrink: 0 !important;
       }
       
       #resultsContent label {
@@ -105,12 +134,19 @@ function displayHypothesisTestingView() {
       }
       
       .radio-option input[type="radio"] {
-        cursor: pointer;
-        width: 18px;
-        height: 18px;
-        accent-color: #007bff;
+        cursor: pointer !important;
+        width: 18px !important;
+        height: 18px !important;
+        accent-color: #007bff !important;
         background: transparent !important;
-        margin: 0 !important;
+        margin: 0 5px 0 0 !important;
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: static !important;
+        appearance: auto !important;
+        -webkit-appearance: radio !important;
+        -moz-appearance: radio !important;
       }
       
       .radio-option label {
