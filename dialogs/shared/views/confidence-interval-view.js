@@ -1001,12 +1001,11 @@ function displayCIResults(results) {
   const range = ucl - lcl;
   const center = pointEstimate;
   
-  // Use adaptive scaling based on confidence level to make changes visible
-  // Higher confidence (lower alpha) = wider interval, needs more space
-  // Calculate a multiplier that gives us 60-90% bar width range
+  // Use adaptive scaling to give ~50% bar width at alpha=0.05 (95% confidence)
+  // The bar width will vary based on confidence level to show changes clearly
   const alpha = 1 - (currentConfidence / 100);
-  const baseMultiplier = 0.5; // Base scaling
-  const alphaAdjustment = alpha * 0.5; // Adjust based on alpha (0 to 0.075 typically)
+  const baseMultiplier = 0.9; // Base scaling
+  const alphaAdjustment = alpha * 2.0; // Strong adjustment based on alpha
   const visualHalfRange = range * (baseMultiplier + alphaAdjustment);
   
   const visualMin = center - visualHalfRange;
