@@ -399,46 +399,172 @@ function displayHypothesisTestingView() {
       }
       
       /* Responsive Design */
-      @media (max-width: 900px) {
+      
+      /* Large tablets and small desktops */
+      @media (max-width: 1200px) {
+        .panel {
+          margin-bottom: 10px;
+        }
+        
         .test-params-container {
-          grid-template-columns: 1fr;
-        }
-        
-        .stat-row {
-          flex-direction: column;
-          gap: 16px;
-        }
-        
-        .toggle-buttons {
-          flex-direction: column;
-          width: 100%;
-        }
-        
-        .toggle-buttons button {
-          width: 100%;
+          gap: 6px;
         }
       }
       
-      @media (max-width: 768px) {
+      /* Tablets */
+      @media (max-width: 900px) {
         .panel-heading {
-          font-size: 1rem;
+          padding: 6px 10px;
+          font-size: 0.95rem;
+        }
+        
+        .panel-body {
+          padding: 8px 10px;
         }
         
         .input-section {
-          padding: 15px;
+          padding: 10px 12px;
+        }
+        
+        .config-row {
+          flex-direction: column !important;
+        }
+        
+        .method-section,
+        .parameter-section {
+          min-width: 100% !important;
+          flex: 1 !important;
+        }
+        
+        .test-params-container {
+          grid-template-columns: 1fr !important;
+          gap: 6px !important;
+        }
+        
+        .stat-row {
+          flex-direction: column !important;
+          gap: 10px !important;
+        }
+        
+        .stat-box {
+          width: 100%;
+        }
+        
+        .toggle-buttons {
+          flex-direction: column !important;
+          width: 100% !important;
+          gap: 6px !important;
+        }
+        
+        .toggle-buttons button {
+          width: 100% !important;
+        }
+        
+        .decision-display {
+          font-size: 15px !important;
+          padding: 8px 16px !important;
+        }
+      }
+      
+      /* Mobile phones */
+      @media (max-width: 768px) {
+        .panel-heading {
+          font-size: 0.9rem !important;
+          padding: 5px 8px !important;
+        }
+        
+        .panel-body {
+          padding: 6px 8px !important;
+        }
+        
+        .input-section {
+          padding: 8px 10px !important;
         }
         
         .section-label {
-          font-size: 0.75em;
+          font-size: 0.7em !important;
         }
         
         .radio-option label {
-          font-size: 12px;
+          font-size: 11px !important;
+        }
+        
+        .radio-option input[type="radio"] {
+          width: 16px !important;
+          height: 16px !important;
         }
         
         input[type="number"], input[type="text"] {
-          font-size: 12px;
-          padding: 5px 8px;
+          font-size: 11px !important;
+          padding: 4px 6px !important;
+        }
+        
+        .run-button {
+          padding: 8px 16px !important;
+          font-size: 13px !important;
+        }
+        
+        .param-label {
+          font-size: 9px !important;
+        }
+        
+        .param-value {
+          font-size: 13px !important;
+        }
+        
+        .stat-box {
+          padding: 8px 12px !important;
+          font-size: 12px !important;
+        }
+        
+        .stat-box span {
+          font-size: 15px !important;
+        }
+        
+        .diagnosis-title {
+          font-size: 10px !important;
+        }
+        
+        .decision-display {
+          font-size: 14px !important;
+          padding: 8px 14px !important;
+        }
+        
+        .toggle-buttons button {
+          font-size: 11px !important;
+          padding: 5px 10px !important;
+        }
+      }
+      
+      /* Small mobile phones */
+      @media (max-width: 480px) {
+        .panel {
+          margin-bottom: 8px;
+          border-radius: 6px;
+        }
+        
+        .panel-heading {
+          font-size: 0.85rem !important;
+        }
+        
+        .test-params-container {
+          grid-template-columns: 1fr !important;
+        }
+        
+        .message-panel {
+          padding: 20px 15px !important;
+        }
+        
+        .message-panel i {
+          font-size: 36px !important;
+        }
+        
+        .message-panel h3 {
+          font-size: 14px !important;
+        }
+        
+        .message-panel p {
+          font-size: 12px !important;
         }
       }
     </style>
@@ -451,9 +577,9 @@ function displayHypothesisTestingView() {
       <div class="panel-body">
         
         <!-- Row 1: Method and Parameter -->
-        <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
+        <div class="config-row" style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
           <!-- Method Sub-Panel -->
-          <div class="input-section" style="flex: 1; min-width: 300px; margin: 0;">
+          <div class="input-section method-section" style="flex: 1; min-width: 250px; margin: 0;">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
               <span class="section-label" style="margin: 0;">Method:</span>
               <div class="radio-option">
@@ -472,7 +598,7 @@ function displayHypothesisTestingView() {
           </div>
           
           <!-- Parameter Sub-Panel -->
-          <div class="input-section" style="flex: 2; min-width: 400px; margin: 0;">
+          <div class="input-section parameter-section" style="flex: 2; min-width: 350px; margin: 0;">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
               <span class="section-label" style="margin: 0;">Parameter:</span>
               <div class="radio-option">
