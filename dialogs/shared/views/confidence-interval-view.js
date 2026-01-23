@@ -786,11 +786,23 @@ function setAlphaPreset() {
  * Calculate confidence interval
  */
 function calculateCI() {
-  if (!resultsData || !resultsData.rawData) return;
+  if (!resultsData || !resultsData.rawData) {
+    console.warn('⚠️ calculateCI: No data available');
+    return;
+  }
+  
+  console.log('📊 Calculating CI - Method:', currentMethod, 'Parameter:', currentParameter, 'Confidence:', currentConfidence.toFixed(1) + '%');
   
   const results = currentMethod === 'classical' 
     ? calculateClassicalCI() 
     : calculateBootstrapCI();
+  
+  console.log('📐 Results:', {
+    pointEstimate: results.pointEstimate.toFixed(4),
+    lcl: results.lcl.toFixed(4),
+    ucl: results.ucl.toFixed(4),
+    width: (results.ucl - results.lcl).toFixed(4)
+  });
   
   displayCIResults(results);
 }
@@ -1000,7 +1012,17 @@ function displayCIResults(results) {
   const width = Math.max(0, Math.min(100, uclPercent - lclPercent));
   
   const bar = document.getElementById('ci-confidence-bar');
-  bar.style.left = Math.max(0, Math.min(100 - width, lclPercent)) + '%';
+  const leftPos = Math.max(0, Math.min(100 - width, lclPercent));
+  
+  console.log('📏 Bar Update:', {
+    range: range.toFixed(4),
+    width: width.toFixed(2) + '%',
+    left: leftPos.toFixed(2) + '%',
+    lcl: lcl.toFixed(4),
+    ucl: ucl.toFixed(4)
+  });
+  
+  bar.style.left = leftPos + '%';
   bar.style.width = width + '%';
   
   // Update bar color based on method
