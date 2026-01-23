@@ -278,6 +278,34 @@ function displayConfidenceIntervalView() {
         font-size: 12px;
         line-height: 1.6;
       }
+      
+      /* Animations for Bootstrap notice */
+      @keyframes slideInRight {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      
+      @keyframes slideOutRight {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+      
+      /* Results panel transition */
+      .ci-results-panel {
+        transition: border-color 0.5s ease, box-shadow 0.5s ease;
+      }
     </style>
     
     <div class="ci-container">
@@ -374,8 +402,13 @@ function displayConfidenceIntervalView() {
       </div>
       
       <!-- Results Panel -->
-      <div class="ci-results-panel">
-        <h3 style="margin: 0 0 15px 0; color: rgb(255,165,120); font-size: 1.1em; font-weight: 600;">Margin of Errors</h3>
+      <div class="ci-results-panel" id="ci-results-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h3 style="margin: 0; color: rgb(255,165,120); font-size: 1.1em; font-weight: 600;">Margin of Errors</h3>
+          <div id="ci-method-badge" style="padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; background: linear-gradient(135deg, rgba(120,200,255,0.2), rgba(120,200,255,0.15)); border: 1px solid rgb(120,200,255); color: rgb(120,200,255);">
+            Classical
+          </div>
+        </div>
         
         <div class="ci-result-large">
           <span id="ci-mean-value">—</span>
@@ -433,6 +466,8 @@ function displayConfidenceIntervalView() {
   `;
   
   setTimeout(() => {
+    updateMethodBadge(currentMethod);
+    updateResultsPanelStyle(currentMethod);
     updateMethodVisibility();
     calculateCI();
   }, 100);
@@ -443,8 +478,103 @@ function displayConfidenceIntervalView() {
  */
 function selectMethod(method) {
   currentMethod = method;
+  
+  // Show confirmation notice when Bootstrap is selected
+  if (method === 'bootstrap') {
+    showBootstrapNotice();
+  }
+  
+  // Update method badge
+  updateMethodBadge(method);
+  
+  // Update results panel styling
+  updateResultsPanelStyle(method);
+  
   updateMethodVisibility();
   calculateCI();
+}
+
+/**
+ * Show Bootstrap confirmation notice
+ */
+function showBootstrapNotice() {
+  // Create or get notice element
+  let notice = document.getElementById('ci-bootstrap-notice');
+  if (!notice) {
+    notice = document.createElement('div');
+    notice.id = 'ci-bootstrap-notice';
+    notice.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, rgba(255,165,120,0.95), rgba(255,140,90,0.95));
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(255,165,120,0.4);
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideInRight 0.3s ease;
+    `;
+    document.body.appendChild(notice);
+  }
+  
+  notice.innerHTML = `
+    <i class="fa-solid fa-sync-alt fa-spin" style="font-size: 16px;"></i>
+    <span>Bootstrap Method Selected - Resampling will be performed</span>
+  `;
+  notice.style.display = 'flex';
+  
+  // Auto-hide after 3 seconds
+  setTimeout(() => {
+    notice.style.animation = 'slideOutRight 0.3s ease';
+    setTimeout(() => {
+      notice.style.display = 'none';
+      notice.style.animation = 'slideInRight 0.3s ease';
+    }, 300);
+  }, 3000);
+}
+
+/**
+ * Update method badge in results panel
+ */
+function updateMethodBadge(method) {
+  const badge = document.getElementById('ci-method-badge');
+  if (badge) {
+    if (method === 'bootstrap') {
+      badge.textContent = 'Bootstrap';
+      badge.style.background = 'linear-gradient(135deg, rgba(255,165,120,0.3), rgba(255,140,90,0.2))';
+      badge.style.borderColor = 'rgb(255,165,120)';
+      badge.style.color = 'rgb(255,165,120)';
+    } else {
+      badge.textContent = 'Classical';
+      badge.style.background = 'linear-gradient(135deg, rgba(120,200,255,0.2), rgba(120,200,255,0.15))';
+      badge.style.borderColor = 'rgb(120,200,255)';
+      badge.style.color = 'rgb(120,200,255)';
+    }
+  }
+}
+
+/**
+ * Update results panel styling based on method
+ */
+function updateResultsPanelStyle(method) {
+  const panel = document.getElementById('ci-results-panel');
+  if (panel) {
+    if (method === 'bootstrap') {
+      // Subtle orange glow for bootstrap
+      panel.style.borderColor = 'rgba(255,165,120,0.4)';
+      panel.style.boxShadow = '0 4px 20px rgba(255,165,120,0.15), inset 0 0 0 2px rgba(255,165,120,0.25)';
+    } else {
+      // Default cyan glow for classical
+      panel.style.borderColor = 'rgba(255,255,255,0.25)';
+      panel.style.boxShadow = 'none';
+    }
+  }
 }
 
 /**
