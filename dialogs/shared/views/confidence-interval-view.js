@@ -1001,8 +1001,9 @@ function displayCIResults(results) {
   const range = ucl - lcl;
   const center = pointEstimate;
   
-  // Use smaller multiplier (0.65) to make bar take up more space and show alpha changes better
-  const visualHalfRange = range * 0.65;
+  // Use much smaller multiplier (0.35) to make bar take up most of container and show alpha changes dramatically
+  // Lower multiplier = bar fills more space = changes more visible
+  const visualHalfRange = range * 0.35;
   const visualMin = center - visualHalfRange;
   const visualMax = center + visualHalfRange;
   const totalVisualRange = visualMax - visualMin;
