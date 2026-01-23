@@ -32,6 +32,25 @@ function displayHypothesisTestingView() {
   
   document.getElementById('resultsContent').innerHTML = `
     <style>
+      /* Reset any inherited Office Add-in styles */
+      #resultsContent * {
+        box-sizing: border-box;
+      }
+      
+      #resultsContent input[type="radio"] {
+        appearance: auto !important;
+        -webkit-appearance: radio !important;
+        -moz-appearance: radio !important;
+        width: 18px !important;
+        height: 18px !important;
+      }
+      
+      #resultsContent label {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+      }
+      
       /* Matching 0H0testHypothesis.html styles */
       .panel {
         background: #1a1f2e;
@@ -55,11 +74,15 @@ function displayHypothesisTestingView() {
       }
       
       .input-section {
-        background: #242938;
+        background: #242938 !important;
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 20px;
         border: 1px solid #2d3748;
+      }
+      
+      .input-section * {
+        box-sizing: border-box;
       }
       
       .section-label {
@@ -72,10 +95,13 @@ function displayHypothesisTestingView() {
       }
       
       .radio-option {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 5px;
         cursor: pointer;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
       }
       
       .radio-option input[type="radio"] {
@@ -83,12 +109,17 @@ function displayHypothesisTestingView() {
         width: 18px;
         height: 18px;
         accent-color: #007bff;
+        background: transparent !important;
+        margin: 0 !important;
       }
       
       .radio-option label {
         cursor: pointer;
         font-size: 14px;
-        color: white;
+        color: white !important;
+        background: transparent !important;
+        margin: 0 !important;
+        padding: 0 !important;
       }
       
       .radio-option.disabled {
