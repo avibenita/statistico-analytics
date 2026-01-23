@@ -752,25 +752,100 @@ function togglePopSizeRefresh() {
  * Refresh with current iterations
  */
 function refreshIterations() {
+  const btn = document.querySelector('#ci-bootstrap-iterations button');
+  if (!btn) return;
+  
+  // Show calculating state
+  const originalHTML = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Calculating...';
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+  
   console.log('🔄 Refreshing Bootstrap with new iterations');
-  calculateCI();
+  
+  // Use setTimeout to allow UI to update before heavy calculation
+  setTimeout(() => {
+    calculateCI();
+    
+    // Show success state
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Complete!';
+    btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+    
+    // Reset after 1.5 seconds
+    setTimeout(() => {
+      btn.innerHTML = originalHTML;
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.background = 'linear-gradient(135deg, var(--accent-1), rgb(255,140,90))';
+    }, 1500);
+  }, 50);
 }
 
 /**
  * Refresh with current percentile
  */
 function refreshPercentile() {
+  const btn = document.querySelector('#ci-percentile-value button');
+  if (!btn) return;
+  
+  // Show calculating state
+  const originalHTML = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Calculating...';
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+  
   console.log('🔄 Refreshing Bootstrap percentile');
   updateParameterLabel(); // Update label with new percentile value
-  calculateCI();
+  
+  // Use setTimeout to allow UI to update before heavy calculation
+  setTimeout(() => {
+    calculateCI();
+    
+    // Show success state
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Complete!';
+    btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+    
+    // Reset after 1.5 seconds
+    setTimeout(() => {
+      btn.innerHTML = originalHTML;
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.background = 'linear-gradient(135deg, var(--accent-1), rgb(255,140,90))';
+    }, 1500);
+  }, 50);
 }
 
 /**
  * Refresh with current pop size
  */
 function refreshPopSize() {
+  const btn = document.getElementById('ci-popsize-refresh');
+  if (!btn) return;
+  
+  // Show calculating state
+  const originalHTML = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+  
   console.log('🔄 Refreshing with population size');
-  calculateCI();
+  
+  // Use setTimeout to allow UI to update
+  setTimeout(() => {
+    calculateCI();
+    
+    // Show success state
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Done';
+    btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+    
+    // Reset after 1.5 seconds
+    setTimeout(() => {
+      btn.innerHTML = originalHTML;
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.background = 'linear-gradient(135deg, var(--accent-1), rgb(255,140,90))';
+    }, 1500);
+  }, 50);
 }
 
 /**
