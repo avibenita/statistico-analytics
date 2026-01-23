@@ -362,6 +362,83 @@ function displayHypothesisTestingView() {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(120,200,255,0.4);
       }
+      
+      /* Message Panel (shown when configuration changes) */
+      .message-panel {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+        text-align: center;
+        background: rgba(255,165,120,0.05);
+        border: 2px dashed rgba(255,165,120,0.3);
+        border-radius: 12px;
+        margin: 20px 0;
+      }
+      
+      .message-panel i {
+        font-size: 64px;
+        color: rgba(255,165,120,0.6);
+        margin-bottom: 20px;
+      }
+      
+      .message-panel h3 {
+        font-size: 20px;
+        color: rgb(255,165,120);
+        margin: 0 0 12px 0;
+        font-weight: 600;
+      }
+      
+      .message-panel p {
+        font-size: 14px;
+        color: rgba(255,255,255,0.7);
+        margin: 0;
+      }
+      
+      /* Responsive Design */
+      @media (max-width: 900px) {
+        .test-params-container {
+          grid-template-columns: 1fr;
+        }
+        
+        .stat-row {
+          flex-direction: column;
+          gap: 16px;
+        }
+        
+        .toggle-buttons {
+          flex-direction: column;
+          width: 100%;
+        }
+        
+        .toggle-buttons button {
+          width: 100%;
+        }
+      }
+      
+      @media (max-width: 768px) {
+        .panel-heading {
+          font-size: 1rem;
+        }
+        
+        .input-section {
+          padding: 15px;
+        }
+        
+        .section-label {
+          font-size: 0.75em;
+        }
+        
+        .radio-option label {
+          font-size: 12px;
+        }
+        
+        input[type="number"], input[type="text"] {
+          font-size: 12px;
+          padding: 5px 8px;
+        }
+      }
     </style>
     
     <!-- INPUT PANEL -->
@@ -431,7 +508,7 @@ function displayHypothesisTestingView() {
             <label for="h0Value" style="font-weight: bold; white-space: nowrap; color: rgb(255,165,120); font-size: 1.05em;">
               H₀: <span id="h0ParamName">mean</span> =
             </label>
-            <input type="text" id="h0Value" value="0" placeholder="0" onchange="updateH0Value()" style="width: 100px; font-size: 1.1em; font-weight: bold; border: 2px solid rgb(255,165,120); background: rgba(0,0,0,0.3); color: rgb(255,165,120); text-align: center;">
+            <input type="text" id="h0Value" value="0" placeholder="0" onchange="updateH0Value()" oninput="updateH0Value()" style="width: 100px; font-size: 1.1em; font-weight: bold; border: 2px solid rgb(255,165,120); background: rgba(0,0,0,0.3); color: rgb(255,165,120); text-align: center;">
           </div>
           
           <!-- H1 Box -->
@@ -467,6 +544,15 @@ function displayHypothesisTestingView() {
           <i class="fa-solid fa-play" style="margin-right: 8px;"></i>Run the Test
         </button>
 
+      </div>
+    </div>
+
+    <!-- MESSAGE PANEL (shown when configuration changes) -->
+    <div id="messagePanel" style="display: none;">
+      <div class="message-panel">
+        <i class="fa-solid fa-play-circle"></i>
+        <h3>Configuration Updated</h3>
+        <p>Click "Run the Test" button to get results with the new settings</p>
       </div>
     </div>
 
@@ -559,6 +645,7 @@ function displayHypothesisTestingView() {
 function selectMethod(method) {
   currentTestMethod = method;
   updateMethodVisibility();
+  showConfigurationMessage();
 }
 
 /**
@@ -605,11 +692,22 @@ function selectParameter(param) {
   currentTestParameter = param;
   updateParameterLabels();
   
+  // Validate H0 value for variance (no negatives)
+  if (param === 'Variance') {
+    const h0Input = document.getElementById('h0Value');
+    if (h0Input && parseFloat(h0Input.value) < 0) {
+      h0Input.value = '0';
+      currentH0Value = 0;
+    }
+  }
+  
   // Show percentile input when percentile is selected
   const percentileInput = document.getElementById('percentileContainer');
   if (percentileInput) {
     percentileInput.classList.toggle('visible', param === 'Percentile');
   }
+  
+  showConfigurationMessage();
 }
 
 /**
@@ -617,6 +715,7 @@ function selectParameter(param) {
  */
 function selectOrientation(orientation) {
   currentTestOrientation = orientation;
+  showConfigurationMessage();
 }
 
 /**
@@ -624,8 +723,17 @@ function selectOrientation(orientation) {
  */
 function updateH0Value() {
   const input = document.getElementById('h0Value');
-  currentH0Value = parseFloat(input.value) || 0;
+  let value = parseFloat(input.value) || 0;
+  
+  // Don't allow negative variance
+  if (currentTestParameter === 'Variance' && value < 0) {
+    value = 0;
+    input.value = '0';
+  }
+  
+  currentH0Value = value;
   updateParameterLabels();
+  showConfigurationMessage();
 }
 
 /**
@@ -634,6 +742,7 @@ function updateH0Value() {
 function updateIterations() {
   const input = document.getElementById('iterations');
   bootstrapIterations = parseInt(input.value) || 500;
+  showConfigurationMessage();
 }
 
 /**
@@ -642,6 +751,7 @@ function updateIterations() {
 function updatePercentile() {
   // Just trigger parameter label update
   updateParameterLabels();
+  showConfigurationMessage();
 }
 
 /**
@@ -836,13 +946,35 @@ function runBootstrapTest() {
 }
 
 /**
+ * Show configuration message (hide results)
+ */
+function showConfigurationMessage() {
+  const messagePanel = document.getElementById('messagePanel');
+  const resultsPanel = document.getElementById('resultsPanel');
+  
+  if (messagePanel) {
+    messagePanel.style.display = 'block';
+  }
+  
+  if (resultsPanel) {
+    resultsPanel.style.display = 'none';
+  }
+}
+
+/**
  * Display test results
  */
 function displayTestResults(results) {
   const { testStat, pValue, critValue, testName, df } = results;
   
-  // Show results panel
+  // Hide message panel, show results panel
+  const messagePanel = document.getElementById('messagePanel');
   const resultsPanel = document.getElementById('resultsPanel');
+  
+  if (messagePanel) {
+    messagePanel.style.display = 'none';
+  }
+  
   if (resultsPanel) {
     resultsPanel.style.display = 'block';
   }
