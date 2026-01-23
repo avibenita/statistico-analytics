@@ -210,7 +210,7 @@ function displayConfidenceIntervalView() {
         background: linear-gradient(90deg, rgba(120,200,255,0.2), rgba(120,200,255,0.4), rgba(120,200,255,0.2));
         border: 2px solid rgb(120,200,255);
         border-radius: 4px;
-        transition: all 0.5s ease;
+        transition: all 0.3s ease;
       }
       
       .ci-confidence-bar.bootstrap {
@@ -309,7 +309,7 @@ function displayConfidenceIntervalView() {
       
       /* Results panel transition */
       .ci-results-panel {
-        transition: border-color 0.5s ease, box-shadow 0.5s ease;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
       }
     </style>
     
@@ -1022,8 +1022,12 @@ function displayCIResults(results) {
     ucl: ucl.toFixed(4)
   });
   
-  bar.style.left = leftPos + '%';
-  bar.style.width = width + '%';
+  // Force style update with setProperty to ensure it takes effect
+  bar.style.setProperty('left', leftPos + '%', 'important');
+  bar.style.setProperty('width', width + '%', 'important');
+  
+  // Force reflow to ensure style is applied
+  void bar.offsetWidth;
   
   // Update bar color based on method
   if (currentMethod === 'bootstrap') {
