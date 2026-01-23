@@ -57,7 +57,8 @@ function displayHypothesisTestingView() {
       .input-section {
         background: #242938;
         border-radius: 12px;
-        padding: 16px 20px;
+        padding: 20px;
+        margin-bottom: 20px;
         border: 1px solid #2d3748;
       }
       
@@ -66,24 +67,28 @@ function displayHypothesisTestingView() {
         font-size: 0.85em;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        margin-right: 15px;
+        margin-bottom: 10px;
         font-weight: bold;
       }
       
       .radio-option {
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
         cursor: pointer;
-        color: rgba(255,255,255,0.8);
-        font-size: 14px;
       }
       
       .radio-option input[type="radio"] {
         cursor: pointer;
         width: 18px;
         height: 18px;
-        accent-color: rgb(255,165,120);
+        accent-color: #007bff;
+      }
+      
+      .radio-option label {
+        cursor: pointer;
+        font-size: 14px;
+        color: white;
       }
       
       .radio-option.disabled {
@@ -91,14 +96,31 @@ function displayHypothesisTestingView() {
         cursor: not-allowed;
       }
       
-      .iterations-container, .percentile-container {
-        display: none;
+      .radio-option.disabled input[type="radio"],
+      .radio-option.disabled label {
+        cursor: not-allowed;
+      }
+      
+      .input-group {
+        display: flex;
         align-items: center;
         gap: 8px;
       }
       
-      .iterations-container.show, .percentile-container.show {
-        display: inline-flex;
+      .iterations-container {
+        display: none;
+      }
+      
+      .iterations-container.visible {
+        display: flex;
+      }
+      
+      .percentile-container {
+        display: none;
+      }
+      
+      .percentile-container.visible {
+        display: flex;
       }
       
       input[type="number"], input[type="text"] {
@@ -481,7 +503,7 @@ function updateMethodVisibility() {
   // Show/hide iterations
   const iterContainer = document.getElementById('iterationsContainer');
   if (iterContainer) {
-    iterContainer.classList.toggle('show', isBootstrap);
+    iterContainer.classList.toggle('visible', isBootstrap);
   }
   
   // Enable/disable median and percentile
@@ -519,7 +541,7 @@ function selectParameter(param) {
   // Show percentile input when percentile is selected
   const percentileInput = document.getElementById('percentileContainer');
   if (percentileInput) {
-    percentileInput.classList.toggle('show', param === 'Percentile');
+    percentileInput.classList.toggle('visible', param === 'Percentile');
   }
 }
 
