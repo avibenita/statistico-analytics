@@ -376,7 +376,7 @@ function displayConfidenceIntervalView() {
                 <span>Stdev</span>
               </label>
               <label class="ci-radio-option disabled" id="ci-median-option">
-                <input type="radio" name="ci-parameter" value="median" disabled>
+                <input type="radio" name="ci-parameter" value="median" disabled onchange="selectParameter('median')">
                 <span>Median</span>
               </label>
               <label class="ci-radio-option disabled" id="ci-percentile-option">
