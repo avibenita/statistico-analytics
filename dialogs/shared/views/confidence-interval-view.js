@@ -213,6 +213,11 @@ function displayConfidenceIntervalView() {
         transition: all 0.5s ease;
       }
       
+      .ci-confidence-bar.bootstrap {
+        background: linear-gradient(90deg, rgba(255,165,120,0.2), rgba(255,165,120,0.4), rgba(255,165,120,0.2));
+        border: 2px solid rgb(255,165,120);
+      }
+      
       .ci-confidence-marker {
         position: absolute;
         width: 3px;
@@ -974,10 +979,12 @@ function displayCIResults(results) {
   document.getElementById('ci-lcl-value').textContent = lcl.toFixed(decimals);
   document.getElementById('ci-ucl-value').textContent = ucl.toFixed(decimals);
   
-  // Update confidence bar (dynamic positioning)
+  // Update confidence bar (dynamic positioning with improved scaling)
   const range = ucl - lcl;
   const center = pointEstimate;
-  const visualHalfRange = range * 1.5;
+  
+  // Use smaller multiplier (0.65) to make bar take up more space and show alpha changes better
+  const visualHalfRange = range * 0.65;
   const visualMin = center - visualHalfRange;
   const visualMax = center + visualHalfRange;
   const totalVisualRange = visualMax - visualMin;
@@ -989,6 +996,13 @@ function displayCIResults(results) {
   const bar = document.getElementById('ci-confidence-bar');
   bar.style.left = Math.max(0, Math.min(100 - width, lclPercent)) + '%';
   bar.style.width = width + '%';
+  
+  // Update bar color based on method
+  if (currentMethod === 'bootstrap') {
+    bar.classList.add('bootstrap');
+  } else {
+    bar.classList.remove('bootstrap');
+  }
   
   // Update delta labels
   const deltaLeft = Math.abs(pointEstimate - lcl);
