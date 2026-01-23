@@ -107,6 +107,27 @@ function displayConfidenceIntervalView() {
         padding: 6px 10px;
       }
       
+      .ci-alpha-control select option {
+        background: #1a1f2e;
+        color: white;
+        padding: 8px;
+      }
+      
+      .ci-alpha-control select option:hover {
+        background: #242938;
+      }
+      
+      /* Style all dropdown options */
+      select option {
+        background: #1a1f2e;
+        color: white;
+        padding: 8px;
+      }
+      
+      select option:checked {
+        background: #242938;
+      }
+      
       .ci-alpha-control input[type="range"] {
         flex: 1;
         height: 6px;
@@ -599,6 +620,7 @@ function selectParameter(param) {
   if (radio && radio.disabled) return;
   
   currentParameter = param;
+  updateParameterLabel(); // Update the parameter label when parameter changes
   updateParameterVisibility();
   calculateCI();
 }
