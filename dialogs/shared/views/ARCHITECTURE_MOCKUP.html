@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histogram Analysis - Statistico</title>
+  
+  <!-- SHARED CSS - Common styles across all views -->
+  <link rel="stylesheet" href="./shared/statistico-base.css">
+  <link rel="stylesheet" href="./shared/statistico-scrollbars.css">
+  <link rel="stylesheet" href="./shared/statistico-responsive.css">
+  
+  <!-- VIEW-SPECIFIC CSS - Only for this view -->
+  <link rel="stylesheet" href="./histogram-view.css">
+  
+  <!-- SHARED LIBRARIES -->
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+  
+  <!-- SHARED UTILITIES -->
+  <script src="./shared/statistico-utils.js"></script>
+</head>
+<body>
+  <!-- HEADER (Could be shared component) -->
+  <header class="statistico-header">
+    <div class="header-content">
+      <h1 id="analysisTitle">Interactive Histogram</h1>
+      <p id="variableInfo"><span id="variableName">Variable</span> <span id="sampleSize">(n=0)</span></p>
+    </div>
+  </header>
+  
+  <!-- MAIN CONTENT AREA -->
+  <main id="resultsContent" class="statistico-content">
+    
+    <!-- STATISTICS PANEL - Fixed at top -->
+    <section class="stats-panel">
+      <div class="panel-heading">
+        <span>Descriptive Statistics</span>
+        <div class="controls">
+          <label for="decimalsSelect">Decimals:</label>
+          <select id="decimalsSelect">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="stats-grid">
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>Count</th>
+              <th>Average</th>
+              <th>Std Dev</th>
+              <th>Variance</th>
+              <th>Kurtosis</th>
+              <th>Skewness</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td id="stat-count">--</td>
+              <td id="stat-mean">--</td>
+              <td id="stat-stddev">--</td>
+              <td id="stat-variance">--</td>
+              <td id="stat-kurtosis">--</td>
+              <td id="stat-skewness">--</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>Range</th>
+              <th>Minimum</th>
+              <th>Q25</th>
+              <th>Median</th>
+              <th>Q75</th>
+              <th>Maximum</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td id="stat-range">--</td>
+              <td id="stat-min">--</td>
+              <td id="stat-q1">--</td>
+              <td id="stat-median">--</td>
+              <td id="stat-q3">--</td>
+              <td id="stat-max">--</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    
+    <!-- HISTOGRAM PANEL - Scrollable -->
+    <section class="histogram-panel">
+      <div class="histogram-controls">
+        <div class="control-group">
+          <label for="binningMethod">Binning Method:</label>
+          <select id="binningMethod">
+            <option value="manual">Manual</option>
+            <option value="sturges">Sturges</option>
+            <option value="scott">Scott</option>
+            <option value="fd">Freedman-Diaconis</option>
+          </select>
+        </div>
+        
+        <div class="control-group">
+          <label for="numBins">Bins:</label>
+          <input type="number" id="numBins" value="5" min="1" max="100">
+        </div>
+        
+        <div class="control-group">
+          <label for="showNormalCurve">
+            <input type="checkbox" id="showNormalCurve" checked>
+            Normal Curve
+          </label>
+        </div>
+        
+        <div class="control-group range-control">
+          <label>Data Range:</label>
+          <div class="range-slider-container">
+            <input type="range" id="leftTruncation" min="0" max="100" value="0">
+            <input type="range" id="rightTruncation" min="0" max="100" value="100">
+          </div>
+          <button id="resetRanges">Reset</button>
+        </div>
+      </div>
+      
+      <div id="histogram-chart" class="chart-container"></div>
+    </section>
+    
+  </main>
+  
+  <!-- FOOTER (Could be shared component) -->
+  <footer class="statistico-footer">
+    <button class="btn-close" onclick="closeView()">Close</button>
+  </footer>
+  
+  <!-- VIEW-SPECIFIC JAVASCRIPT - Only for this view -->
+  <script src="./histogram-view.js"></script>
+</body>
+</html>
