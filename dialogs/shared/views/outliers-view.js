@@ -36,9 +36,8 @@ function displayOutliersView() {
   
   document.getElementById('resultsContent').innerHTML = `
     <link rel="stylesheet" href="./shared/views/universal-popup-styles.css">
-    <script src="./shared/views/universal-popup-utility.js"></script>
     
-    <div class="outliers-container popup-panel-scroll">
+    <div class="outliers-container">
       <!-- Method Selection -->
       <div class="outliers-panel">
         <div class="panel-heading">
@@ -122,13 +121,6 @@ function displayOutliersView() {
   `;
   
   setTimeout(() => {
-    // Initialize universal popup structure
-    StatisticoPopup.applyStructure(
-      '#resultsContent',
-      null, // No fixed header panel
-      '.outliers-container'
-    );
-    
     detectOutliers();
   }, 100);
 }

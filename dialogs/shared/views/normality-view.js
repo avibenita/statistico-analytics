@@ -191,9 +191,8 @@ function displayNormalityView() {
   
   document.getElementById('resultsContent').innerHTML = `
     <link rel="stylesheet" href="./shared/views/universal-popup-styles.css">
-    <script src="./shared/views/universal-popup-utility.js"></script>
     
-    <div class="normality-container popup-panel-scroll">
+    <div class="normality-container">
       <div class="normality-grid">
         <!-- Normality Score Gauge -->
         <div class="normality-card gauge-card">
@@ -327,13 +326,6 @@ function displayNormalityView() {
   `;
   
   setTimeout(() => {
-    // Initialize universal popup structure
-    StatisticoPopup.applyStructure(
-      '#resultsContent',
-      null, // No fixed header panel
-      '.normality-container'
-    );
-    
     createNormalityGauge(normalityScore);
   }, 100);
 }

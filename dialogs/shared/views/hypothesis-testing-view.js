@@ -32,7 +32,6 @@ function displayHypothesisTestingView() {
   
   document.getElementById('resultsContent').innerHTML = `
     <link rel="stylesheet" href="./shared/views/universal-popup-styles.css">
-    <script src="./shared/views/universal-popup-utility.js"></script>
     
     <style>
       /* Reset any inherited Office Add-in styles */

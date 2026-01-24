@@ -30,9 +30,8 @@ function displayKernelView() {
   const content = document.getElementById('resultsContent');
   content.innerHTML = `
     <link rel="stylesheet" href="./shared/views/universal-popup-styles.css">
-    <script src="./shared/views/universal-popup-utility.js"></script>
     
-    <div class="kernel-container popup-panel-scroll">
+    <div class="kernel-container">
       <!-- Top Row: Stats Cards + Controls -->
       <div class="kernel-top-row">
         <!-- Stats Cards Panel -->
@@ -89,13 +88,6 @@ function displayKernelView() {
   `;
   
   setTimeout(() => {
-    // Initialize universal popup structure
-    StatisticoPopup.applyStructure(
-      '#resultsContent',
-      '.kernel-top-row',
-      '#kernelChart'
-    );
-    
     initializeKernelDensity();
   }, 100);
 }

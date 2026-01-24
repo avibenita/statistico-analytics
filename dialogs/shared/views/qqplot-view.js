@@ -30,9 +30,8 @@ function displayQQPlotView() {
   const content = document.getElementById('resultsContent');
   content.innerHTML = `
     <link rel="stylesheet" href="./shared/views/universal-popup-styles.css">
-    <script src="./shared/views/universal-popup-utility.js"></script>
     
-    <div class="qqplot-container popup-panel-scroll">
+    <div class="qqplot-container">
       <!-- Horizontal Controls Row -->
       <div class="qqplot-controls-row">
         <div class="plot-type-group">
@@ -84,13 +83,6 @@ function displayQQPlotView() {
   `;
   
   setTimeout(() => {
-    // Initialize universal popup structure
-    StatisticoPopup.applyStructure(
-      '#resultsContent',
-      '.qqplot-controls-row',
-      '.charts-grid'
-    );
-    
     createQQPPPlots();
   }, 100);
 }
