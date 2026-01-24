@@ -82,7 +82,7 @@ function displayKernelView() {
         </div>
       </div>
       
-      <!-- Chart (now taller) -->
+      <!-- Chart -->
       <div id="kernelChart" class="kernel-chart-full"></div>
     </div>
   `;

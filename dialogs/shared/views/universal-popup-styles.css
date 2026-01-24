@@ -2,89 +2,73 @@
  * STATISTICO UNIVERSAL POPUP STYLES
  * ==================================
  * 
+ * ROBUST STANDARD BASED ON OUTLIERS VIEW
+ * 
  * CRITICAL PRINCIPLES:
- * 1. Maximum display in 14" screens and up - NO SCROLLING
- * 2. Vertical scrollbar if needed on smaller displays
+ * 1. Maximum display in 14" screens and up
+ * 2. Automatic vertical scrollbar when content overflows
+ * 3. Charts remain full-sized and readable
  * 
  * ARCHITECTURE:
- * - Container: Flexbox column layout with viewport-based height
- * - Top Section: Fixed size, never scrolls (config/controls)
- * - Bottom Section: Flexible, scrolls when needed (results/charts)
+ * - #resultsContent gets automatic height constraint
+ * - All container divs scroll naturally when content is too tall
+ * - NO MANUAL CLASSES NEEDED - just include this CSS!
  * 
  * USAGE:
- * Add this to any popup's resultsContent container:
- * - Class: 'statistico-popup-container' on main container
- * - Class: 'popup-fixed-section' on top section (config)
- * - Class: 'popup-scroll-section' on bottom section (results)
+ * <link rel="stylesheet" href="./shared/views/universal-popup-styles.css">
+ * <div class="your-container">...</div>
  */
 
 /* ========================================
-   MAIN CONTAINER - Viewport Management
+   MAIN RESULTS CONTENT - Auto Height
    ======================================== */
 
-.statistico-popup-container {
+#resultsContent {
   display: flex !important;
   flex-direction: column !important;
   height: 100% !important;
   max-height: calc(100vh - 180px) !important; /* Account for header/footer */
   min-height: 400px !important;
-  overflow: hidden !important;
-  position: relative !important;
-}
-
-/* ========================================
-   TOP SECTION - Fixed, Never Scrolls
-   ======================================== */
-
-.popup-fixed-section {
-  flex-shrink: 0 !important; /* Never shrink */
-  flex-grow: 0 !important;   /* Never grow */
-  overflow: visible !important; /* Allow dropdowns to overflow */
-  z-index: 10 !important;
-}
-
-/* ========================================
-   BOTTOM SECTION - Flexible, Scrolls
-   ======================================== */
-
-.popup-scroll-section {
-  flex: 1 !important;          /* Take remaining space */
-  min-height: 0 !important;    /* Allow shrinking below content */
-  overflow-y: auto !important; /* Always enable vertical scroll */
+  overflow-y: auto !important;  /* AUTO SCROLL */
   overflow-x: hidden !important;
   position: relative !important;
+  padding: 16px !important;
 }
 
-/* Force scrollbar visibility */
-.popup-scroll-section {
-  scrollbar-width: thin !important; /* Firefox */
+/* ========================================
+   SCROLLBAR STYLING - Consistent & Visible
+   ======================================== */
+
+/* Firefox */
+#resultsContent {
+  scrollbar-width: thin !important;
   scrollbar-color: rgba(120,200,255,0.5) rgba(255,255,255,0.1) !important;
 }
 
-/* Webkit scrollbar styling */
-.popup-scroll-section::-webkit-scrollbar {
+/* Webkit (Chrome, Edge, Safari) */
+#resultsContent::-webkit-scrollbar {
   width: 12px !important;
   display: block !important;
 }
 
-.popup-scroll-section::-webkit-scrollbar-track {
+#resultsContent::-webkit-scrollbar-track {
   background: rgba(255,255,255,0.08) !important;
   border-radius: 6px !important;
   margin: 4px 0 !important;
 }
 
-.popup-scroll-section::-webkit-scrollbar-thumb {
+#resultsContent::-webkit-scrollbar-thumb {
   background: rgba(120,200,255,0.4) !important;
   border-radius: 6px !important;
   border: 2px solid rgba(26,31,46,1) !important;
   min-height: 40px !important; /* Minimum thumb size */
 }
 
-.popup-scroll-section::-webkit-scrollbar-thumb:hover {
+#resultsContent::-webkit-scrollbar-thumb:hover {
   background: rgba(120,200,255,0.6) !important;
 }
 
-.popup-scroll-section::-webkit-scrollbar-thumb:active {
+#resultsContent::-webkit-scrollbar-thumb:active {
   background: rgba(120,200,255,0.8) !important;
 }
 
@@ -92,149 +76,186 @@
    RESPONSIVE HEIGHT ADJUSTMENTS
    ======================================== */
 
-/* 14" laptops and up - Full display */
+/* 14" laptops and up (1366x768, 1920x1080) */
 @media (min-height: 800px) {
-  .statistico-popup-container {
+  #resultsContent {
     max-height: calc(100vh - 180px) !important;
   }
 }
 
-/* Shorter displays */
+/* 13" laptops (1280x720, 1366x768 smaller) */
 @media (max-height: 800px) {
-  .statistico-popup-container {
+  #resultsContent {
     max-height: calc(100vh - 150px) !important;
   }
 }
 
+/* Smaller displays */
 @media (max-height: 700px) {
-  .statistico-popup-container {
+  #resultsContent {
     max-height: calc(100vh - 120px) !important;
+    padding: 12px !important;
+  }
+}
+
+/* Mobile/tablet */
+@media (max-height: 600px) {
+  #resultsContent {
+    max-height: calc(100vh - 100px) !important;
+    padding: 8px !important;
+  }
+}
+
+/* ========================================
+   CHART CONTAINERS - Full Size
+   ======================================== */
+
+/* Ensure charts don't get compressed */
+#resultsContent > div[class*="-container"] {
+  min-height: min-content !important;
+  width: 100% !important;
+}
+
+/* Chart divs should maintain their size */
+div[id*="chart"],
+div[id*="Chart"],
+div[class*="chart-container"],
+div[class*="chart-panel"] {
+  min-height: 400px !important;
+  width: 100% !important;
+}
+
+/* ========================================
+   PANEL STRUCTURE - Natural Flow
+   ======================================== */
+
+/* Panels stack naturally, no forced height */
+div[class*="-panel"] {
+  margin-bottom: 16px !important;
+  flex-shrink: 0 !important; /* Don't compress panels */
+}
+
+/* Last panel has no bottom margin */
+div[class*="-panel"]:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Panel bodies contain content naturally */
+div[class*="panel-body"] {
+  padding: 16px !important;
+  min-height: min-content !important;
+}
+
+/* ========================================
+   GRID LAYOUTS - Responsive
+   ======================================== */
+
+/* Side-by-side charts */
+div[class*="-grid"],
+div[class*="charts-grid"] {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)) !important;
+  gap: 16px !important;
+  margin-bottom: 16px !important;
+}
+
+@media (max-width: 900px) {
+  div[class*="-grid"],
+  div[class*="charts-grid"] {
+    grid-template-columns: 1fr !important; /* Stack on smaller screens */
+  }
+}
+
+/* ========================================
+   COMPACT MODE - Short Displays
+   ======================================== */
+
+@media (max-height: 700px) {
+  div[class*="-panel"] {
+    margin-bottom: 12px !important;
   }
   
-  /* Compact spacing */
-  .popup-fixed-section .panel {
-    margin-bottom: 6px !important;
+  div[class*="panel-heading"] {
+    padding: 8px 12px !important;
+    font-size: 0.95rem !important;
   }
   
-  .popup-fixed-section .panel-heading {
-    padding: 5px 8px !important;
-  }
-  
-  .popup-fixed-section .panel-body {
-    padding: 6px 8px !important;
+  div[class*="panel-body"] {
+    padding: 12px !important;
   }
 }
 
 @media (max-height: 600px) {
-  .statistico-popup-container {
-    max-height: calc(100vh - 100px) !important;
+  div[class*="-panel"] {
+    margin-bottom: 8px !important;
   }
   
-  /* Ultra-compact */
-  .popup-fixed-section .panel {
-    margin-bottom: 4px !important;
-  }
-  
-  .popup-fixed-section .panel-heading {
-    padding: 4px 6px !important;
+  div[class*="panel-heading"] {
+    padding: 6px 10px !important;
     font-size: 0.9rem !important;
   }
   
-  .popup-fixed-section .panel-body {
-    padding: 4px 6px !important;
+  div[class*="panel-body"] {
+    padding: 8px !important;
+  }
+  
+  div[id*="chart"],
+  div[id*="Chart"] {
+    min-height: 300px !important; /* Smaller charts on tiny screens */
   }
 }
 
 /* ========================================
-   PANEL STRUCTURE
+   STATS PANELS - Compact
    ======================================== */
 
-/* Panels in fixed section stay compact */
-.popup-fixed-section .panel {
-  margin-bottom: 8px !important;
-}
-
-/* Panels in scroll section can expand */
-.popup-scroll-section .panel {
-  margin-bottom: 0 !important; /* Last panel, no bottom margin */
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 1 !important;
-  min-height: 0 !important;
-}
-
-.popup-scroll-section .panel .panel-body {
-  flex: 1 !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  min-height: 0 !important;
+div[class*="stats-panel"],
+div[class*="stats-grid"] {
+  flex-shrink: 0 !important;
+  margin-bottom: 16px !important;
 }
 
 /* ========================================
-   UTILITY CLASSES
+   CONTROLS - Stay Visible
    ======================================== */
 
-/* Force content to stay within bounds */
-.popup-content-wrapper {
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow-x: hidden !important;
+div[class*="controls"],
+div[class*="-controls-"] {
+  flex-shrink: 0 !important; /* Never compress controls */
+  margin-bottom: 12px !important;
+  z-index: 10 !important;
 }
-
-/* Compact mode for very short displays */
-.compact-mode .input-section {
-  padding: 6px 10px !important;
-}
-
-.compact-mode .section-label {
-  font-size: 0.7em !important;
-}
-
-.compact-mode .radio-option label {
-  font-size: 11px !important;
-}
-
-.compact-mode input[type="number"],
-.compact-mode input[type="text"] {
-  padding: 2px 4px !important;
-  font-size: 10px !important;
-}
-
-.compact-mode .run-button,
-.compact-mode button {
-  padding: 6px 12px !important;
-  font-size: 12px !important;
-}
-
-/* ========================================
-   DEBUGGING (Remove in production)
-   ======================================== */
-
-/* Uncomment to debug layout issues
-.statistico-popup-container {
-  outline: 2px solid red !important;
-}
-
-.popup-fixed-section {
-  outline: 2px solid blue !important;
-}
-
-.popup-scroll-section {
-  outline: 2px solid green !important;
-}
-*/
 
 /* ========================================
    PRINT STYLES
    ======================================== */
 
 @media print {
-  .statistico-popup-container {
+  #resultsContent {
     max-height: none !important;
     overflow: visible !important;
+    padding: 0 !important;
   }
   
-  .popup-scroll-section {
-    overflow: visible !important;
+  div[class*="-panel"] {
+    page-break-inside: avoid !important;
   }
 }
+
+/* ========================================
+   DEBUGGING (Uncomment to visualize)
+   ======================================== */
+
+/* 
+#resultsContent {
+  outline: 2px solid red !important;
+}
+
+div[class*="-container"] {
+  outline: 2px solid blue !important;
+}
+
+div[id*="chart"] {
+  outline: 2px solid green !important;
+}
+*/
