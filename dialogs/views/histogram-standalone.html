@@ -655,17 +655,15 @@
       for (let i = 0; i < numBins; i++) {
         const binStart = min + i * binWidth;
         const binEnd = binStart + binWidth;
-        const binCenter = binStart + binWidth / 2;
         
         categories.push(`${binStart.toFixed(0)}-${binEnd.toFixed(0)}`);
         
         const count = currentData.filter(v => v >= binStart && (i === numBins - 1 ? v <= binEnd : v < binEnd)).length;
         
-        // Use bin center as x-coordinate for proper alignment
+        // Use index for x-coordinate to align with categories
         histogramData.push({
-          x: binCenter,
-          y: count,
-          name: `${binStart.toFixed(0)}-${binEnd.toFixed(0)}`
+          x: i,
+          y: count
         });
       }
       
@@ -675,8 +673,7 @@
         data: histogramData,
         color: '#4a90e2',
         borderColor: '#2a5f9e',
-        borderWidth: 1,
-        pointRange: binWidth // Set column width to match bin width
+        borderWidth: 1
       }];
       
       // Add normal curve if checked
@@ -685,12 +682,17 @@
         const stdDev = Math.sqrt(currentData.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / currentData.length);
         
         const normalData = [];
-        const step = (max - min) / 100;
-        for (let x = min; x <= max; x += step) {
+        const numPoints = 100;
+        for (let i = 0; i <= numPoints; i++) {
+          const x = min + (i / numPoints) * (max - min);
           const y = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * 
                     Math.exp(-0.5 * Math.pow((x - mean) / stdDev, 2));
+          
+          // Map x-value to category index position
+          const categoryIndex = ((x - min) / (max - min)) * (numBins - 1);
+          
           // Scale to match histogram frequency (not density)
-          normalData.push([x, y * currentData.length * binWidth]);
+          normalData.push([categoryIndex, y * currentData.length * binWidth]);
         }
         
         series.push({
@@ -719,19 +721,16 @@
           style: { color: '#ffffff' }
         },
         xAxis: {
+          categories: categories,
           title: {
-            text: 'Value',
+            text: 'Value Range',
             style: { color: '#78c8ff' }
           },
           labels: {
-            style: { color: '#ffffff' },
-            formatter: function() {
-              return this.value.toFixed(0);
-            }
+            rotation: -45,
+            style: { color: '#ffffff' }
           },
-          gridLineColor: '#2d3748',
-          min: min - binWidth / 2,
-          max: max + binWidth / 2
+          gridLineColor: '#2d3748'
         },
         yAxis: {
           title: {
@@ -762,7 +761,15 @@
           shared: true,
           backgroundColor: 'rgba(26, 31, 46, 0.95)',
           style: { color: '#ffffff' },
-          borderColor: '#2d3748'
+          borderColor: '#2d3748',
+          formatter: function() {
+            let tooltip = '<b>' + this.x + '</b><br/>';
+            this.points.forEach(point => {
+              tooltip += '<span style="color:' + point.color + '">\u25CF</span> ' + 
+                         point.series.name + ': <b>' + point.y.toFixed(2) + '</b><br/>';
+            });
+            return tooltip;
+          }
         },
         series: series,
         credits: { enabled: false }
