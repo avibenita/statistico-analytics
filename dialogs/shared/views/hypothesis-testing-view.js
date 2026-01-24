@@ -37,6 +37,15 @@ function displayHypothesisTestingView() {
         box-sizing: border-box;
       }
       
+      /* Container uses flexbox to manage vertical space */
+      #resultsContent {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-height: calc(100vh - 180px); /* Account for header space */
+        overflow: hidden;
+      }
+      
       /* Force radio buttons to be visible */
       input[type="radio"] {
         appearance: auto !important;
@@ -87,6 +96,28 @@ function displayHypothesisTestingView() {
         box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.4);
         border: 1px solid #2d3748;
         margin-bottom: 12px;
+        flex-shrink: 0; /* Don't shrink configuration panel */
+      }
+      
+      /* Results panel can grow and scroll */
+      #resultsPanel {
+        flex: 1;
+        min-height: 0; /* Allow flexbox to shrink below content size */
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0;
+      }
+      
+      #resultsPanel .panel-body {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+      }
+      
+      /* Message panel should not scroll */
+      #messagePanel {
+        flex-shrink: 0;
       }
       
       .panel-heading {
@@ -102,6 +133,25 @@ function displayHypothesisTestingView() {
         padding: 10px 12px;
       }
       
+      /* Scrollbar styling for results panel */
+      #resultsPanel .panel-body::-webkit-scrollbar {
+        width: 8px;
+      }
+      
+      #resultsPanel .panel-body::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.05);
+        border-radius: 4px;
+      }
+      
+      #resultsPanel .panel-body::-webkit-scrollbar-thumb {
+        background: rgba(120,200,255,0.3);
+        border-radius: 4px;
+      }
+      
+      #resultsPanel .panel-body::-webkit-scrollbar-thumb:hover {
+        background: rgba(120,200,255,0.5);
+      }
+      
       .input-section {
         background: #242938 !important;
         border-radius: 8px;
@@ -112,6 +162,35 @@ function displayHypothesisTestingView() {
       
       .input-section * {
         box-sizing: border-box;
+      }
+      
+      /* Compact input sections on shorter displays */
+      @media (max-height: 700px) {
+        .input-section {
+          padding: 8px 12px !important;
+        }
+        
+        .section-label {
+          font-size: 0.75em !important;
+        }
+        
+        .radio-option {
+          gap: 4px;
+        }
+        
+        .radio-option label {
+          font-size: 12px !important;
+        }
+        
+        input[type="number"], input[type="text"] {
+          padding: 3px 6px !important;
+          font-size: 11px !important;
+        }
+        
+        .run-button {
+          padding: 8px 16px !important;
+          font-size: 13px !important;
+        }
       }
       
       .section-label {
@@ -399,6 +478,31 @@ function displayHypothesisTestingView() {
       }
       
       /* Responsive Design */
+      
+      /* Adjust viewport height for smaller screens */
+      @media (max-height: 800px) {
+        #resultsContent {
+          max-height: calc(100vh - 150px);
+        }
+      }
+      
+      @media (max-height: 700px) {
+        #resultsContent {
+          max-height: calc(100vh - 120px);
+        }
+        
+        .panel {
+          margin-bottom: 8px;
+        }
+        
+        .panel-heading {
+          padding: 6px 10px;
+        }
+        
+        .panel-body {
+          padding: 8px 10px;
+        }
+      }
       
       /* Large tablets and small desktops */
       @media (max-width: 1200px) {
