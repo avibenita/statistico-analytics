@@ -608,10 +608,28 @@
     function updateBins() {
       const value = document.getElementById('numBins').value;
       document.getElementById('numBinsValue').textContent = value;
+      
+      // Set slider moving flag to disable animation
+      isSliderMoving = true;
+      
+      // Clear existing timeout
+      if (sliderTimeout) {
+        clearTimeout(sliderTimeout);
+      }
+      
+      // Re-enable animation after slider stops moving for 300ms
+      sliderTimeout = setTimeout(() => {
+        isSliderMoving = false;
+      }, 300);
+      
       createHistogram();
     }
 
     // Create histogram - EXACT COPY of original logic
+    // Flag to control animation during slider moves
+    let isSliderMoving = false;
+    let sliderTimeout = null;
+
     function createHistogram() {
       const numBinsInput = document.getElementById('numBins');
       const showNormal = document.getElementById('showNormalCurve').checked;
@@ -630,24 +648,35 @@
       const max = Math.max(...currentData);
       const binWidth = (max - min) / numBins;
       
-      const bins = new Array(numBins).fill(0);
+      // Calculate histogram bins with bin centers for alignment
+      const histogramData = [];
       const categories = [];
       
-      // Calculate histogram bins
       for (let i = 0; i < numBins; i++) {
         const binStart = min + i * binWidth;
         const binEnd = binStart + binWidth;
+        const binCenter = binStart + binWidth / 2;
+        
         categories.push(`${binStart.toFixed(0)}-${binEnd.toFixed(0)}`);
-        bins[i] = currentData.filter(v => v >= binStart && (i === numBins - 1 ? v <= binEnd : v < binEnd)).length;
+        
+        const count = currentData.filter(v => v >= binStart && (i === numBins - 1 ? v <= binEnd : v < binEnd)).length;
+        
+        // Use bin center as x-coordinate for proper alignment
+        histogramData.push({
+          x: binCenter,
+          y: count,
+          name: `${binStart.toFixed(0)}-${binEnd.toFixed(0)}`
+        });
       }
       
       const series = [{
         name: 'Frequency',
         type: 'column',
-        data: bins,
+        data: histogramData,
         color: '#4a90e2',
         borderColor: '#2a5f9e',
-        borderWidth: 1
+        borderWidth: 1,
+        pointRange: binWidth // Set column width to match bin width
       }];
       
       // Add normal curve if checked
@@ -660,6 +689,7 @@
         for (let x = min; x <= max; x += step) {
           const y = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * 
                     Math.exp(-0.5 * Math.pow((x - mean) / stdDev, 2));
+          // Scale to match histogram frequency (not density)
           normalData.push([x, y * currentData.length * binWidth]);
         }
         
@@ -668,27 +698,40 @@
           type: 'spline',
           data: normalData,
           color: '#ffa578',
-          lineWidth: 2,
-          marker: { enabled: false }
+          lineWidth: 3,
+          marker: { enabled: false },
+          yAxis: 0 // Use same y-axis as histogram
         });
       }
+      
+      // Determine if animation should be enabled
+      const enableAnimation = !isSliderMoving;
       
       // Create chart
       histogramChart = Highcharts.chart('histogram-chart', {
         chart: {
           backgroundColor: '#242938',
-          style: { fontFamily: 'Segoe UI' }
+          style: { fontFamily: 'Segoe UI' },
+          animation: enableAnimation ? { duration: 500 } : false
         },
         title: {
           text: 'Distribution',
           style: { color: '#ffffff' }
         },
         xAxis: {
-          categories: categories,
+          title: {
+            text: 'Value',
+            style: { color: '#78c8ff' }
+          },
           labels: {
-            rotation: -45,
-            style: { color: '#ffffff' }
-          }
+            style: { color: '#ffffff' },
+            formatter: function() {
+              return this.value.toFixed(0);
+            }
+          },
+          gridLineColor: '#2d3748',
+          min: min - binWidth / 2,
+          max: max + binWidth / 2
         },
         yAxis: {
           title: {
@@ -705,8 +748,21 @@
           column: {
             groupPadding: 0,
             pointPadding: 0,
-            borderWidth: 1
+            borderWidth: 1,
+            animation: enableAnimation ? { duration: 400 } : false
+          },
+          spline: {
+            animation: enableAnimation ? { duration: 600 } : false
+          },
+          series: {
+            animation: enableAnimation
           }
+        },
+        tooltip: {
+          shared: true,
+          backgroundColor: 'rgba(26, 31, 46, 0.95)',
+          style: { color: '#ffffff' },
+          borderColor: '#2d3748'
         },
         series: series,
         credits: { enabled: false }
@@ -737,7 +793,7 @@
       }
     }
 
-    // Range sliders - EXACT COPY
+    // Range sliders - with animation control
     function updateRangeSliders() {
       const leftSlider = document.getElementById('leftTruncation');
       const rightSlider = document.getElementById('rightTruncation');
@@ -768,7 +824,21 @@
       currentData = originalData.filter(v => v >= leftValue && v <= rightValue);
       document.getElementById('remainingN').textContent = currentData.length;
       
-      // Update stats and chart
+      // Set slider moving flag to disable animation
+      isSliderMoving = true;
+      
+      // Clear existing timeout
+      if (sliderTimeout) {
+        clearTimeout(sliderTimeout);
+      }
+      
+      // Re-enable animation after slider stops moving for 300ms
+      sliderTimeout = setTimeout(() => {
+        isSliderMoving = false;
+        console.log('✅ Slider stopped, animations re-enabled');
+      }, 300);
+      
+      // Update stats and chart (without animation)
       const stats = calculateDescriptiveStats(currentData);
       populateStatistics(stats);
       createHistogram();
