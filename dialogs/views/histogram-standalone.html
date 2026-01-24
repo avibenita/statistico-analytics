@@ -39,7 +39,7 @@
       color: var(--text-primary);
       overflow-x: hidden;
       overflow-y: auto;
-      height: 100vh;
+      max-height: 100vh;
     }
 
     /* Scrollbar styling */
@@ -62,31 +62,31 @@
       background: rgba(120,200,255,0.6);
     }
 
-    /* Results container - EXACT match */
+    /* Results container - Compact */
     .results-container {
       display: none;
-      margin: 20px;
+      margin: 8px 12px;
     }
 
     .results-container.show {
       display: block !important;
     }
 
-    /* Panel styling - EXACT match */
+    /* Panel styling - Compact */
     .panel {
       background-color: var(--surface-1);
       border-radius: var(--panel-radius);
       box-shadow: var(--panel-shadow);
       border: 1px solid var(--border);
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     .panel-heading {
       background: transparent;
       color: var(--header-color);
       font-weight: 600;
-      padding: 12px 16px;
-      font-size: 1.2rem;
+      padding: 8px 12px;
+      font-size: 1rem;
       letter-spacing: .3px;
       display: flex;
       justify-content: space-between;
@@ -94,7 +94,7 @@
     }
 
     .panel-body {
-      padding: 16px;
+      padding: 8px 12px;
     }
 
     /* Table styling - EXACT match */
@@ -109,9 +109,9 @@
     }
 
     table th {
-      padding: 5px 8px;
+      padding: 4px 8px;
       font-weight: 600;
-      font-size: 13px;
+      font-size: 11px;
       background: var(--surface-0);
       color: var(--accent-1);
     }
@@ -122,8 +122,8 @@
     }
 
     table td {
-      padding: 8px 10px;
-      font-size: 14px;
+      padding: 5px 8px;
+      font-size: 12px;
       font-weight: 500;
       color: var(--text-primary);
     }
@@ -138,8 +138,8 @@
     /* ONE ROW - ALL 4 CONTROLS */
     .controls {
       display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
+      gap: 8px;
+      margin-bottom: 6px;
       font-size: 12px;
       flex-wrap: nowrap;      /* force same row */
       align-items: center;    /* vertically aligned */
@@ -200,12 +200,13 @@
       cursor: pointer;
     }
 
-    /* Chart container - with frame */
+    /* Chart container - Compact */
     #histogram-chart {
-      min-height: 400px;
+      min-height: 280px;
+      max-height: 320px;
       width: 100%;
-      margin-top: 12px;
-      padding: 10px;
+      margin-top: 8px;
+      padding: 8px;
       background: rgba(0,0,0,0.2);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 8px;
@@ -310,10 +311,10 @@
 </head>
 <body>
   
-  <!-- Simple Header -->
-  <div style="background: var(--surface-1); padding: 16px; border-bottom: 2px solid var(--border);">
-    <h1 style="margin: 0; font-size: 1.5rem; color: var(--accent-1);">Interactive Histogram</h1>
-    <p style="margin: 4px 0 0 0; font-size: 0.95rem; color: var(--text-secondary);">
+  <!-- Compact Header -->
+  <div style="background: var(--surface-1); padding: 8px 16px; border-bottom: 2px solid var(--border);">
+    <h1 style="margin: 0; font-size: 1.2rem; color: var(--accent-1);">Interactive Histogram</h1>
+    <p style="margin: 2px 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">
       <span id="headerVariableName">Variable</span> <span id="headerSampleSize">(n=0)</span>
     </p>
   </div>
@@ -338,7 +339,7 @@
       </div>
       <div class="panel-body" style="padding: 6px;">
         <!-- First Table: Central Tendency & Distribution Shape -->
-        <table style="margin-bottom: 8px;">
+        <table style="margin-bottom: 4px;">
           <tr>
             <th class="highlight">Count</th>
             <th class="highlight">Average</th>
@@ -389,7 +390,7 @@
         </span>
       </div>
 
-      <div class="panel-body" style="padding: 12px;">
+      <div class="panel-body" style="padding: 8px;">
         <!-- Main Controls -->
         <div class="controls">
           <div class="control-group">
@@ -774,34 +775,44 @@
         chart: {
           backgroundColor: '#242938',
           style: { fontFamily: 'Segoe UI' },
-          animation: enableAnimation ? { duration: 500 } : false
+          animation: enableAnimation ? { duration: 500 } : false,
+          spacingTop: 5,
+          spacingBottom: 5,
+          spacingLeft: 5,
+          spacingRight: 5,
+          height: 280
         },
         title: {
           text: 'Distribution',
-          style: { color: '#ffffff' }
+          style: { color: '#ffffff', fontSize: '13px' },
+          margin: 8
         },
         xAxis: {
           categories: categories,
           title: {
             text: 'Value Range',
-            style: { color: '#78c8ff' }
+            style: { color: '#78c8ff', fontSize: '11px' },
+            margin: 8
           },
           labels: {
             rotation: -45,
-            style: { color: '#ffffff' }
+            style: { color: '#ffffff', fontSize: '10px' }
           },
           gridLineColor: '#2d3748'
         },
         yAxis: {
           title: {
             text: 'Frequency',
-            style: { color: '#78c8ff' }
+            style: { color: '#78c8ff', fontSize: '11px' },
+            margin: 8
           },
-          labels: { style: { color: '#ffffff' } },
+          labels: { style: { color: '#ffffff', fontSize: '10px' } },
           gridLineColor: '#2d3748'
         },
         legend: {
-          itemStyle: { color: '#ffffff' }
+          itemStyle: { color: '#ffffff', fontSize: '11px' },
+          padding: 4,
+          itemMarginBottom: 4
         },
         plotOptions: {
           column: {
