@@ -465,6 +465,73 @@ Office.onReady(() => {
     setResultsTheme(savedTheme);
 });
 
+function openNewView(dialogUrl, results) {
+    Office.context.ui.displayDialogAsync(
+        dialogUrl,
+        { height: 90, width: 95, displayInIframe: false },
+        (asyncResult) => {
+            if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+                showStatus('error', 'Failed to open view: ' + asyncResult.error.message);
+            } else {
+                resultsDialog = asyncResult.value;
+                console.log('✅ New view opened:', dialogUrl);
+                
+                // Send data after a short delay
+                setTimeout(() => {
+                    if (resultsDialog) {
+                        const viewData = {
+                            values: results.rawData,
+                            column: results.column,
+                            descriptive: results.descriptive,
+                            n: results.n
+                        };
+                        resultsDialog.messageChild(JSON.stringify({
+                            action: 'loadData',
+                            data: viewData
+                        }));
+                    }
+                }, 1000);
+                
+                // Add message handlers
+                resultsDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
+                    try {
+                        const message = JSON.parse(arg.message);
+                        console.log('📩 Message from new view:', message);
+                        
+                        if (message.status === 'ready') {
+                            const viewData = {
+                                values: results.rawData,
+                                column: results.column,
+                                descriptive: results.descriptive,
+                                n: results.n
+                            };
+                            resultsDialog.messageChild(JSON.stringify({
+                                action: 'loadData',
+                                data: viewData
+                            }));
+                        } else if (message.action === 'switchView') {
+                            resultsDialog.close();
+                            resultsDialog = null;
+                            const newDialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/${message.view}`;
+                            openNewView(newDialogUrl, results);
+                        } else if (message.action === 'close' || message.action === 'closeDialog') {
+                            resultsDialog.close();
+                            resultsDialog = null;
+                        }
+                    } catch (e) {
+                        console.error('Error handling dialog message:', e);
+                    }
+                });
+                
+                resultsDialog.addEventHandler(Office.EventType.DialogEventReceived, (arg) => {
+                    console.log('Dialog event:', arg.error);
+                    resultsDialog = null;
+                });
+            }
+        }
+    );
+}
+
 function openResultsDialog(results) {
     // Store results in localStorage for the dialog
     localStorage.setItem('univariateResults', JSON.stringify(results));
@@ -504,11 +571,11 @@ function openResultsDialog(results) {
                 resultsDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
                     try {
                         const message = JSON.parse(arg.message);
-                        console.log('📩 Message from histogram:', message);
+                        console.log('📩 Message from dialog:', message);
                         
                         if (message.status === 'ready') {
-                            // Histogram is ready, send data
-                            const histogramData = {
+                            // Dialog is ready, send data
+                            const viewData = {
                                 values: results.rawData,
                                 column: results.column,
                                 descriptive: results.descriptive,
@@ -516,8 +583,19 @@ function openResultsDialog(results) {
                             };
                             resultsDialog.messageChild(JSON.stringify({
                                 action: 'loadData',
-                                data: histogramData
+                                data: viewData
                             }));
+                        } else if (message.action === 'switchView') {
+                            // User wants to switch to a different view
+                            console.log('🔄 Switching to view:', message.view);
+                            
+                            // Close current dialog
+                            resultsDialog.close();
+                            resultsDialog = null;
+                            
+                            // Open new view
+                            const newDialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/${message.view}`;
+                            openNewView(newDialogUrl, results);
                         } else if (message.action === 'close' || message.action === 'closeDialog') {
                             console.log('📤 Close dialog message received');
                             resultsDialog.close();
