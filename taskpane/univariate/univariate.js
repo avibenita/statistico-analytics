@@ -469,23 +469,56 @@ function openResultsDialog(results) {
     // Store results in localStorage for the dialog
     localStorage.setItem('univariateResults', JSON.stringify(results));
     
-    const dialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/univariate-results.html`;
+    // Use standalone histogram instead of full results dialog
+    const dialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/histogram-standalone.html`;
     
     Office.context.ui.displayDialogAsync(
         dialogUrl,
         { height: 90, width: 95, displayInIframe: false },
         (asyncResult) => {
             if (asyncResult.status === Office.AsyncResultStatus.Failed) {
-                showStatus('error', 'Failed to open results dialog: ' + asyncResult.error.message);
+                showStatus('error', 'Failed to open histogram: ' + asyncResult.error.message);
             } else {
                 resultsDialog = asyncResult.value;
-                console.log('✅ Results dialog opened successfully');
+                console.log('✅ Standalone histogram opened successfully');
+                
+                // Send data to standalone histogram
+                setTimeout(() => {
+                    if (resultsDialog) {
+                        const histogramData = {
+                            values: results.rawData,
+                            column: results.column,
+                            descriptive: results.descriptive,
+                            n: results.n
+                        };
+                        
+                        console.log('📤 Sending data to histogram:', histogramData);
+                        resultsDialog.messageChild(JSON.stringify({
+                            action: 'loadData',
+                            data: histogramData
+                        }));
+                    }
+                }, 1000);
                 
                 // Add message handler for dialog close requests
                 resultsDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
                     try {
                         const message = JSON.parse(arg.message);
-                        if (message.action === 'closeDialog') {
+                        console.log('📩 Message from histogram:', message);
+                        
+                        if (message.status === 'ready') {
+                            // Histogram is ready, send data
+                            const histogramData = {
+                                values: results.rawData,
+                                column: results.column,
+                                descriptive: results.descriptive,
+                                n: results.n
+                            };
+                            resultsDialog.messageChild(JSON.stringify({
+                                action: 'loadData',
+                                data: histogramData
+                            }));
+                        } else if (message.action === 'close' || message.action === 'closeDialog') {
                             console.log('📤 Close dialog message received');
                             resultsDialog.close();
                             resultsDialog = null;

@@ -458,8 +458,18 @@
         onMessageReceived
       );
       
-      // For testing, load sample data
-      loadSampleData();
+      // Send ready message to parent
+      setTimeout(() => {
+        sendMessageToParent({ status: 'ready' });
+      }, 500);
+      
+      // For testing, load sample data if no parent
+      setTimeout(() => {
+        if (!histogramChart) {
+          console.log('⏰ No data received from parent, loading sample data...');
+          loadSampleData();
+        }
+      }, 2000);
     };
     
     // Fallback: If Office.js doesn't load (browser testing), load sample data anyway
@@ -497,6 +507,14 @@
       
       if (message.action === 'loadData') {
         handleDataReceived(message.data);
+      }
+    }
+
+    // Send message to parent window
+    function sendMessageToParent(message) {
+      if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+        Office.context.ui.messageParent(JSON.stringify(message));
+        console.log('📤 Sent message to parent:', message);
       }
     }
 
@@ -903,11 +921,7 @@
 
     // Close view
     function closeView() {
-      if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
-        Office.context.ui.messageParent('close');
-      } else {
-        alert('Close button clicked. In real Office dialog, this closes the popup.');
-      }
+      sendMessageToParent({ action: 'close' });
     }
 
     console.log('✅ Histogram view script loaded');
