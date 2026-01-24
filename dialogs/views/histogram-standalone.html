@@ -15,6 +15,10 @@
   <script src="https://code.highcharts.com/highcharts.js"></script>
   <script src="https://code.highcharts.com/modules/histogram-bellcurve.js"></script>
   
+  <!-- Shared Header -->
+  <link rel="stylesheet" href="shared-header.css">
+  <script src="shared-header.js"></script>
+  
   <style>
     /* EXACT COPY OF ORIGINAL HISTOGRAM STYLES */
     :root {
@@ -311,13 +315,7 @@
 </head>
 <body>
   
-  <!-- Compact Header -->
-  <div style="background: var(--surface-1); padding: 8px 16px; border-bottom: 2px solid var(--border);">
-    <h1 style="margin: 0; font-size: 1.2rem; color: var(--accent-1);">Interactive Histogram</h1>
-    <p style="margin: 2px 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">
-      <span id="headerVariableName">Variable</span> <span id="headerSampleSize">(n=0)</span>
-    </p>
-  </div>
+  <!-- Shared Header will be inserted here by JavaScript -->
 
   <!-- RESULTS CONTAINER - Initially hidden, shown when data loads -->
   <div class="results-container" id="results-container">
@@ -477,6 +475,10 @@
     window.addEventListener('DOMContentLoaded', function() {
       console.log('🚀 DOM Content Loaded');
       
+      // Initialize shared header
+      StatisticoHeader.init('histogram', 'Variable', 0);
+      console.log('✅ Shared header initialized');
+      
       // Try immediately
       setTimeout(() => {
         console.log('⏰ Checking Office.js availability...');
@@ -538,9 +540,8 @@
         document.getElementById('histogram-title').textContent = `${varName} - Interactive Histogram`;
         console.log('✅ Titles updated');
         
-        // Update simple header
-        document.getElementById('headerVariableName').textContent = varName;
-        document.getElementById('headerSampleSize').textContent = `(n=${originalData.length})`;
+        // Update shared header
+        StatisticoHeader.updateVariable(varName, originalData.length);
         console.log('✅ Header updated');
         
         // Initialize range
