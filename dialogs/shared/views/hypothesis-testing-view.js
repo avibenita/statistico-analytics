@@ -31,19 +31,13 @@ function displayHypothesisTestingView() {
   document.getElementById('sampleSize').textContent = `(n=${n})`;
   
   document.getElementById('resultsContent').innerHTML = `
+    <link rel="stylesheet" href="./shared/views/universal-popup-styles.css">
+    <script src="./shared/views/universal-popup-utility.js"></script>
+    
     <style>
       /* Reset any inherited Office Add-in styles */
       #resultsContent * {
         box-sizing: border-box;
-      }
-      
-      /* Container uses flexbox to manage vertical space */
-      #resultsContent {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        max-height: calc(100vh - 180px); /* Account for header space */
-        overflow: hidden;
       }
       
       /* Force radio buttons to be visible */
@@ -104,38 +98,6 @@ function displayHypothesisTestingView() {
         margin-bottom: 8px;
       }
       
-      #inputPanel .panel-heading {
-        padding: 6px 10px;
-        font-size: 0.95rem;
-      }
-      
-      #inputPanel .panel-body {
-        padding: 8px 10px;
-      }
-      
-      /* Results panel can grow and scroll */
-      #resultsPanel {
-        flex: 1;
-        min-height: 0; /* Allow flexbox to shrink below content size */
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 0;
-        overflow: hidden; /* Ensure scrollbar appears */
-      }
-      
-      #resultsPanel .panel-body {
-        flex: 1;
-        overflow-y: auto !important;
-        overflow-x: hidden;
-        min-height: 0;
-        max-height: none; /* Remove any max-height constraint */
-      }
-      
-      /* Message panel should not scroll */
-      #messagePanel {
-        flex-shrink: 0;
-      }
-      
       .panel-heading {
         background: transparent;
         color: rgb(255,165,120);
@@ -147,33 +109,6 @@ function displayHypothesisTestingView() {
       
       .panel-body {
         padding: 10px 12px;
-      }
-      
-      /* Scrollbar styling for results panel */
-      #resultsPanel .panel-body::-webkit-scrollbar {
-        width: 10px;
-        display: block !important;
-      }
-      
-      #resultsPanel .panel-body::-webkit-scrollbar-track {
-        background: rgba(255,255,255,0.08);
-        border-radius: 5px;
-      }
-      
-      #resultsPanel .panel-body::-webkit-scrollbar-thumb {
-        background: rgba(120,200,255,0.4);
-        border-radius: 5px;
-        border: 2px solid rgba(26,31,46,1);
-      }
-      
-      #resultsPanel .panel-body::-webkit-scrollbar-thumb:hover {
-        background: rgba(120,200,255,0.6);
-      }
-      
-      /* Force scrollbar to always show when content overflows */
-      #resultsPanel .panel-body {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(120,200,255,0.4) rgba(255,255,255,0.08);
       }
       
       .input-section {
@@ -889,6 +824,15 @@ function displayHypothesisTestingView() {
       </div>
     </div>
   `;
+  
+  // Initialize universal popup structure
+  setTimeout(() => {
+    StatisticoPopup.applyStructure(
+      '#resultsContent',
+      '#inputPanel',
+      '#resultsPanel'
+    );
+  }, 100);
   
   // Initialize
   updateMethodVisibility();
