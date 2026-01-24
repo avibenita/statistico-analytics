@@ -38,7 +38,10 @@ function displayBoxPlotView() {
   
   const content = document.getElementById('resultsContent');
   content.innerHTML = `
-    <div class="boxplot-container">
+    <link rel="stylesheet" href="./shared/views/universal-popup-styles.css">
+    <script src="./shared/views/universal-popup-utility.js"></script>
+    
+    <div class="boxplot-container popup-panel-scroll">
       <div class="boxplot-panel">
         <div class="panel-heading">Box Plot with Outliers</div>
         <div id="boxWithOutliers"></div>
@@ -52,6 +55,13 @@ function displayBoxPlotView() {
   `;
   
   setTimeout(() => {
+    // Initialize universal popup structure
+    StatisticoPopup.applyStructure(
+      '#resultsContent',
+      null, // No fixed header panel
+      '.boxplot-container'
+    );
+    
     createBoxPlotCharts(boxData, column || 'Variable');
   }, 100);
 }

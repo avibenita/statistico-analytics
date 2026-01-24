@@ -46,6 +46,9 @@ function displayHistogramView() {
   document.getElementById('sampleSize').textContent = `(n=${n})`;
   
   document.getElementById('resultsContent').innerHTML = `
+    <link rel="stylesheet" href="./shared/views/universal-popup-styles.css">
+    <script src="./shared/views/universal-popup-utility.js"></script>
+    
     <!-- Statistics Panel -->
     <div class="stats-panel">
       <div class="panel-heading">
@@ -161,6 +164,13 @@ function displayHistogramView() {
   `;
 
   setTimeout(() => {
+    // Initialize universal popup structure - histogram has both panels in one container
+    StatisticoPopup.applyStructure(
+      '#resultsContent',
+      '.stats-panel',
+      '#histogram-chart'
+    );
+    
     initializeRangeSliders();
     updateDecimals();
     createHistogram(true);
