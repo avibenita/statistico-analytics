@@ -148,11 +148,25 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
     }
 
     .control-group label {
       color: var(--text-secondary);
       font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .range-control > label {
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      min-width: 80px;
     }
 
     .control-group select,
@@ -175,10 +189,15 @@
       cursor: pointer;
     }
 
-    /* Chart container - EXACT match */
+    /* Chart container - with frame */
     #histogram-chart {
       min-height: 400px;
       width: 100%;
+      margin-top: 12px;
+      padding: 10px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
     }
 
     /* Range slider styling - EXACT match */
@@ -186,8 +205,12 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      flex: 1;
-      min-width: 300px;
+      max-width: 650px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      margin-top: 8px;
     }
 
     .range-sliders {
@@ -349,8 +372,8 @@
         </span>
       </div>
 
-      <div class="panel-body" style="padding: 6px;">
-        <!-- Controls - EXACT COPY -->
+      <div class="panel-body" style="padding: 12px;">
+        <!-- Main Controls -->
         <div class="controls">
           <div class="control-group">
             <label for="binningMethod">Method:</label>
@@ -372,21 +395,21 @@
             <input type="checkbox" id="showNormalCurve" checked onchange="createHistogram()">
             <label for="showNormalCurve">Normal Curve</label>
           </div>
+        </div>
 
-          <!-- Range Control - EXACT COPY -->
-          <div class="range-control">
-            <label>Data Range:</label>
-            <span class="value-display" id="leftRangeValue">0</span>
-            <div class="range-sliders" style="flex: 1;">
-              <div class="range-track"></div>
-              <div class="range-active" id="activeRangeIndicator"></div>
-              <input type="range" id="leftTruncation" min="0" max="100" value="0" step="1" oninput="updateRangeSliders()">
-              <input type="range" id="rightTruncation" min="0" max="100" value="100" step="1" oninput="updateRangeSliders()">
-            </div>
-            <span class="value-display" id="rightRangeValue">100</span>
-            <button class="reset-button" onclick="resetRangeSliders()">Reset</button>
-            <span class="value-display" style="margin-left: 8px;">n=<span id="remainingN">--</span></span>
+        <!-- Range Control - Separate framed section -->
+        <div class="range-control">
+          <label>Data Range:</label>
+          <span class="value-display" id="leftRangeValue">0</span>
+          <div class="range-sliders" style="flex: 1;">
+            <div class="range-track"></div>
+            <div class="range-active" id="activeRangeIndicator"></div>
+            <input type="range" id="leftTruncation" min="0" max="100" value="0" step="1" oninput="updateRangeSliders()">
+            <input type="range" id="rightTruncation" min="0" max="100" value="100" step="1" oninput="updateRangeSliders()">
           </div>
+          <span class="value-display" id="rightRangeValue">100</span>
+          <button class="reset-button" onclick="resetRangeSliders()">Reset</button>
+          <span class="value-display" style="margin-left: 8px;">n=<span id="remainingN">--</span></span>
         </div>
 
         <!-- Chart -->
