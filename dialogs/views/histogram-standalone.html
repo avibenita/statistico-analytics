@@ -141,23 +141,25 @@
       margin-bottom: 10px;
       font-size: 12px;
       flex-wrap: wrap;
-      align-items: center;
+      align-items: stretch;
     }
 
     .control-group {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 12px;
+      gap: 8px;
+      padding: 10px 14px;
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 6px;
+      min-height: 42px;
     }
 
     .control-group label {
       color: var(--text-secondary);
       font-size: 12px;
       font-weight: 500;
+      white-space: nowrap;
     }
     
     .range-control > label {
@@ -166,7 +168,8 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       font-weight: 600;
-      min-width: 80px;
+      min-width: 100px;
+      white-space: nowrap;
     }
 
     .control-group select,
@@ -206,11 +209,12 @@
       align-items: center;
       gap: 8px;
       max-width: 650px;
-      padding: 10px 12px;
+      padding: 10px 14px;
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 6px;
       margin-top: 8px;
+      min-height: 42px;
     }
 
     .range-sliders {
@@ -257,11 +261,12 @@
     }
 
     .value-display {
-      min-width: 40px;
-      font-size: 11px;
+      min-width: 45px;
+      font-size: 12px;
       color: var(--accent-2);
       font-weight: 600;
       text-align: center;
+      display: inline-block;
     }
 
     .reset-button {
@@ -376,7 +381,7 @@
         <!-- Main Controls -->
         <div class="controls">
           <div class="control-group">
-            <label for="binningMethod">Method:</label>
+            <label for="binningMethod">Binning Method:</label>
             <select id="binningMethod" onchange="updateBinningMethod()">
               <option value="manual">Manual</option>
               <option value="sturges">Sturges</option>
