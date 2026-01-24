@@ -35,6 +35,9 @@ function displayConfidenceIntervalView() {
   
   // Match HTML version UI exactly (dark theme with 4-frame configuration)
   document.getElementById('resultsContent').innerHTML = `
+    <link rel="stylesheet" href="./shared/views/universal-popup-styles.css">
+    <script src="./shared/views/universal-popup-utility.js"></script>
+    
     <style>
       /* Dark theme matching 0confidence-interval.html */
       .ci-section {
@@ -498,7 +501,14 @@ function displayConfidenceIntervalView() {
     </div>
   `;
   
+  // Initialize universal popup structure
   setTimeout(() => {
+    StatisticoPopup.applyStructure(
+      '#resultsContent',
+      '#ci-config-panel',
+      '#ci-results-panel'
+    );
+    
     updateMethodBadge(currentMethod);
     updateResultsPanelStyle(currentMethod);
     updateParameterLabel();
