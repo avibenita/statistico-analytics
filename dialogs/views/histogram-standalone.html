@@ -419,6 +419,17 @@
       // For testing, load sample data
       loadSampleData();
     };
+    
+    // Fallback: If Office.js doesn't load (browser testing), load sample data anyway
+    window.addEventListener('DOMContentLoaded', function() {
+      setTimeout(() => {
+        // Check if Office.js loaded
+        if (typeof Office === 'undefined' || !Office.context) {
+          console.log('⚠️ Office.js not available - loading sample data for browser testing');
+          loadSampleData();
+        }
+      }, 500);
+    });
 
     // Handle messages from parent window
     function onMessageReceived(arg) {
