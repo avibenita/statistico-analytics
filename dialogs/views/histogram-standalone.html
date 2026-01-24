@@ -422,13 +422,30 @@
     
     // Fallback: If Office.js doesn't load (browser testing), load sample data anyway
     window.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 DOM Content Loaded');
+      
+      // Try immediately
       setTimeout(() => {
+        console.log('⏰ Checking Office.js availability...');
+        console.log('typeof Office:', typeof Office);
+        
         // Check if Office.js loaded
         if (typeof Office === 'undefined' || !Office.context) {
           console.log('⚠️ Office.js not available - loading sample data for browser testing');
           loadSampleData();
+        } else {
+          console.log('✅ Office.js is available');
         }
-      }, 500);
+      }, 100);
+      
+      // Backup fallback - just load data after 1 second regardless
+      setTimeout(() => {
+        const resultsContainer = document.getElementById('results-container');
+        if (!resultsContainer.classList.contains('show')) {
+          console.log('🔄 Force loading sample data (backup)');
+          loadSampleData();
+        }
+      }, 1000);
     });
 
     // Handle messages from parent window
@@ -443,56 +460,80 @@
 
     // Handle data received
     function handleDataReceived(data) {
-      console.log('📊 Data received:', data);
-      
-      originalData = data.values || data.data || [];
-      currentData = [...originalData];
-      
-      // Update stats
-      populateStatistics(data.descriptive);
-      
-      // Update variable name
-      const varName = data.column || data.variableName || 'Variable';
-      document.getElementById('statistics-title').textContent = `${varName} - Descriptive Statistics`;
-      document.getElementById('histogram-title').textContent = `${varName} - Interactive Histogram`;
-      
-      // Update simple header
-      document.getElementById('headerVariableName').textContent = varName;
-      document.getElementById('headerSampleSize').textContent = `(n=${originalData.length})`;
-      
-      // Initialize range
-      originalMin = Math.min(...originalData);
-      originalMax = Math.max(...originalData);
-      
-      // Show results
-      document.getElementById('results-container').classList.add('show');
-      
-      // Create histogram
-      createHistogram();
+      try {
+        console.log('📊 Data received:', data);
+        
+        originalData = data.values || data.data || [];
+        currentData = [...originalData];
+        console.log('✅ Data arrays set, length:', originalData.length);
+        
+        // Update stats
+        populateStatistics(data.descriptive);
+        console.log('✅ Statistics populated');
+        
+        // Update variable name
+        const varName = data.column || data.variableName || 'Variable';
+        document.getElementById('statistics-title').textContent = `${varName} - Descriptive Statistics`;
+        document.getElementById('histogram-title').textContent = `${varName} - Interactive Histogram`;
+        console.log('✅ Titles updated');
+        
+        // Update simple header
+        document.getElementById('headerVariableName').textContent = varName;
+        document.getElementById('headerSampleSize').textContent = `(n=${originalData.length})`;
+        console.log('✅ Header updated');
+        
+        // Initialize range
+        originalMin = Math.min(...originalData);
+        originalMax = Math.max(...originalData);
+        console.log('✅ Range initialized:', originalMin, '-', originalMax);
+        
+        // Show results
+        const resultsContainer = document.getElementById('results-container');
+        resultsContainer.classList.add('show');
+        console.log('✅ Results container shown');
+        
+        // Create histogram
+        console.log('🎨 Creating histogram...');
+        createHistogram();
+        console.log('✅ Histogram created');
+      } catch (error) {
+        console.error('❌ Error in handleDataReceived:', error);
+        alert('Error handling data: ' + error.message);
+      }
     }
 
     // Load sample data for testing
     function loadSampleData() {
-      console.log('📊 Loading sample data for testing...');
-      
-      // Generate realistic sample data (Horsepower-like)
-      const sampleData = [];
-      for (let i = 0; i < 369; i++) {
-        const u1 = Math.random();
-        const u2 = Math.random();
-        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-        sampleData.push(201.17 + z * 60.64);
+      try {
+        console.log('📊 Loading sample data for testing...');
+        
+        // Generate realistic sample data (Horsepower-like)
+        const sampleData = [];
+        for (let i = 0; i < 369; i++) {
+          const u1 = Math.random();
+          const u2 = Math.random();
+          const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+          sampleData.push(201.17 + z * 60.64);
+        }
+        
+        console.log('✅ Generated', sampleData.length, 'data points');
+        
+        // Calculate descriptive stats
+        const descriptive = calculateDescriptiveStats(sampleData);
+        console.log('✅ Calculated descriptive stats:', descriptive);
+        
+        handleDataReceived({
+          values: sampleData,
+          descriptive: descriptive,
+          column: 'Horsepower',
+          n: sampleData.length
+        });
+        
+        console.log('✅ Sample data loaded successfully');
+      } catch (error) {
+        console.error('❌ Error loading sample data:', error);
+        alert('Error loading sample data: ' + error.message);
       }
-      
-      // Calculate descriptive stats
-      const descriptive = calculateDescriptiveStats(sampleData);
-      
-      handleDataReceived({
-        values: sampleData,
-        descriptive: descriptive,
-        column: 'Horsepower',
-        n: sampleData.length
-      });
     }
 
     // Calculate descriptive statistics
