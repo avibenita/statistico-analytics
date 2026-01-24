@@ -95,8 +95,22 @@ function displayHypothesisTestingView() {
         border-radius: 8px;
         box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.4);
         border: 1px solid #2d3748;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
         flex-shrink: 0; /* Don't shrink configuration panel */
+      }
+      
+      /* Input panel - extra compact */
+      #inputPanel {
+        margin-bottom: 8px;
+      }
+      
+      #inputPanel .panel-heading {
+        padding: 6px 10px;
+        font-size: 0.95rem;
+      }
+      
+      #inputPanel .panel-body {
+        padding: 8px 10px;
       }
       
       /* Results panel can grow and scroll */
@@ -106,13 +120,15 @@ function displayHypothesisTestingView() {
         display: flex;
         flex-direction: column;
         margin-bottom: 0;
+        overflow: hidden; /* Ensure scrollbar appears */
       }
       
       #resultsPanel .panel-body {
         flex: 1;
-        overflow-y: auto;
+        overflow-y: auto !important;
         overflow-x: hidden;
         min-height: 0;
+        max-height: none; /* Remove any max-height constraint */
       }
       
       /* Message panel should not scroll */
@@ -135,27 +151,35 @@ function displayHypothesisTestingView() {
       
       /* Scrollbar styling for results panel */
       #resultsPanel .panel-body::-webkit-scrollbar {
-        width: 8px;
+        width: 10px;
+        display: block !important;
       }
       
       #resultsPanel .panel-body::-webkit-scrollbar-track {
-        background: rgba(255,255,255,0.05);
-        border-radius: 4px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 5px;
       }
       
       #resultsPanel .panel-body::-webkit-scrollbar-thumb {
-        background: rgba(120,200,255,0.3);
-        border-radius: 4px;
+        background: rgba(120,200,255,0.4);
+        border-radius: 5px;
+        border: 2px solid rgba(26,31,46,1);
       }
       
       #resultsPanel .panel-body::-webkit-scrollbar-thumb:hover {
-        background: rgba(120,200,255,0.5);
+        background: rgba(120,200,255,0.6);
+      }
+      
+      /* Force scrollbar to always show when content overflows */
+      #resultsPanel .panel-body {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(120,200,255,0.4) rgba(255,255,255,0.08);
       }
       
       .input-section {
         background: #242938 !important;
-        border-radius: 8px;
-        padding: 12px 15px;
+        border-radius: 6px;
+        padding: 8px 12px;
         margin-bottom: 0;
         border: 1px solid #2d3748;
       }
@@ -195,7 +219,7 @@ function displayHypothesisTestingView() {
       
       .section-label {
         color: rgba(255,255,255,0.6);
-        font-size: 0.8em;
+        font-size: 0.75em;
         text-transform: uppercase;
         letter-spacing: 0.4px;
         margin-bottom: 0;
@@ -205,7 +229,7 @@ function displayHypothesisTestingView() {
       .radio-option {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: 4px;
         cursor: pointer;
         background: transparent !important;
         border: none !important;
@@ -214,11 +238,11 @@ function displayHypothesisTestingView() {
       
       .radio-option input[type="radio"] {
         cursor: pointer !important;
-        width: 18px !important;
-        height: 18px !important;
+        width: 16px !important;
+        height: 16px !important;
         accent-color: #007bff !important;
         background: transparent !important;
-        margin: 0 5px 0 0 !important;
+        margin: 0 4px 0 0 !important;
         display: inline-block !important;
         visibility: visible !important;
         opacity: 1 !important;
@@ -230,7 +254,7 @@ function displayHypothesisTestingView() {
       
       .radio-option label {
         cursor: pointer;
-        font-size: 13px;
+        font-size: 12px;
         color: white !important;
         background: transparent !important;
         margin: 0 !important;
@@ -274,8 +298,8 @@ function displayHypothesisTestingView() {
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 4px;
         color: white;
-        padding: 4px 8px;
-        font-size: 12px;
+        padding: 3px 6px;
+        font-size: 11px;
       }
       
       input[type="number"]:focus, input[type="text"]:focus {
@@ -286,12 +310,12 @@ function displayHypothesisTestingView() {
       
       .run-button {
         width: 100%;
-        padding: 10px 20px;
+        padding: 8px 16px;
         background: linear-gradient(135deg, rgb(255,165,120), rgb(255,140,90));
         border: none;
         border-radius: 6px;
         color: white;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
@@ -681,7 +705,7 @@ function displayHypothesisTestingView() {
       <div class="panel-body">
         
         <!-- Row 1: Method and Parameter -->
-        <div class="config-row" style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
+        <div class="config-row" style="display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
           <!-- Method Sub-Panel -->
           <div class="input-section method-section" style="flex: 1; min-width: 250px; margin: 0;">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -734,36 +758,36 @@ function displayHypothesisTestingView() {
         </div>
 
         <!-- Row 2: Hypothesis (H₀ and H₁ on same row) -->
-        <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; justify-content: center;">
+        <div style="display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; align-items: center; justify-content: center;">
           <!-- H0 Box -->
-          <div style="display: flex; align-items: center; gap: 8px; background: linear-gradient(135deg, rgba(255,165,120,0.15), rgba(255,165,120,0.05)); border: 2px solid rgb(255,165,120); border-radius: 6px; padding: 5px 8px; box-shadow: 0 2px 8px rgba(255,165,120,0.3);">
-            <label for="h0Value" style="font-weight: bold; white-space: nowrap; color: rgb(255,165,120); font-size: 0.95em;">
+          <div style="display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, rgba(255,165,120,0.15), rgba(255,165,120,0.05)); border: 2px solid rgb(255,165,120); border-radius: 5px; padding: 4px 8px; box-shadow: 0 2px 8px rgba(255,165,120,0.3);">
+            <label for="h0Value" style="font-weight: bold; white-space: nowrap; color: rgb(255,165,120); font-size: 0.9em;">
               H₀: <span id="h0ParamName">mean</span> =
             </label>
-            <input type="text" id="h0Value" value="0" placeholder="0" onchange="updateH0Value()" oninput="updateH0Value()" style="width: 80px; font-size: 1em; font-weight: bold; border: 2px solid rgb(255,165,120); background: rgba(0,0,0,0.3); color: rgb(255,165,120); text-align: center;">
+            <input type="text" id="h0Value" value="0" placeholder="0" onchange="updateH0Value()" oninput="updateH0Value()" style="width: 70px; font-size: 0.95em; font-weight: bold; border: 2px solid rgb(255,165,120); background: rgba(0,0,0,0.3); color: rgb(255,165,120); text-align: center; padding: 3px 6px;">
           </div>
           
           <!-- H1 Box -->
-          <div style="display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, rgba(120,200,255,0.15), rgba(120,200,255,0.05)); border: 2px solid rgb(120,200,255); border-radius: 6px; padding: 5px 8px;">
-            <label style="font-weight: bold; white-space: nowrap; color: rgb(120,200,255); font-size: 0.95em;">
+          <div style="display: flex; align-items: center; gap: 5px; background: linear-gradient(135deg, rgba(120,200,255,0.15), rgba(120,200,255,0.05)); border: 2px solid rgb(120,200,255); border-radius: 5px; padding: 4px 8px;">
+            <label style="font-weight: bold; white-space: nowrap; color: rgb(120,200,255); font-size: 0.9em;">
               H₁: <span id="h1ParamName">mean</span>
             </label>
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <div class="radio-option" style="display: flex; align-items: center; gap: 4px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div class="radio-option" style="display: flex; align-items: center; gap: 3px;">
                 <input type="radio" id="orientLeft" name="orientation" value="left" onchange="selectOrientation('left')">
-                <label for="orientLeft" style="font-size: 1em; font-weight: bold; color: rgb(120,200,255);">
+                <label for="orientLeft" style="font-size: 0.95em; font-weight: bold; color: rgb(120,200,255);">
                   &lt; <span id="h1ValueLeft" style="color: rgb(255,165,120);">0</span>
                 </label>
               </div>
-              <div class="radio-option" style="display: flex; align-items: center; gap: 4px;">
+              <div class="radio-option" style="display: flex; align-items: center; gap: 3px;">
                 <input type="radio" id="orientTwo" name="orientation" value="two-sided" checked onchange="selectOrientation('two-sided')">
-                <label for="orientTwo" style="font-size: 1em; font-weight: bold; color: rgb(120,200,255);">
+                <label for="orientTwo" style="font-size: 0.95em; font-weight: bold; color: rgb(120,200,255);">
                   ≠ <span id="h1ValueTwo" style="color: rgb(255,165,120);">0</span>
                 </label>
               </div>
-              <div class="radio-option" style="display: flex; align-items: center; gap: 4px;">
+              <div class="radio-option" style="display: flex; align-items: center; gap: 3px;">
                 <input type="radio" id="orientRight" name="orientation" value="right" onchange="selectOrientation('right')">
-                <label for="orientRight" style="font-size: 1em; font-weight: bold; color: rgb(120,200,255);">
+                <label for="orientRight" style="font-size: 0.95em; font-weight: bold; color: rgb(120,200,255);">
                   &gt; <span id="h1ValueRight" style="color: rgb(255,165,120);">0</span>
                 </label>
               </div>
