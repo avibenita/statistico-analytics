@@ -467,15 +467,28 @@ Office.onReady(() => {
 });
 
 function openNewView(dialogUrl, results) {
+    console.log('🔵 openNewView called');
+    console.log('📂 Dialog URL:', dialogUrl);
+    console.log('📊 Results available:', !!results);
+    console.log('📊 Results data:', results);
+    
     Office.context.ui.displayDialogAsync(
         dialogUrl,
         { height: 90, width: 95, displayInIframe: false },
         (asyncResult) => {
+            console.log('📬 displayDialogAsync callback triggered');
+            console.log('Status:', asyncResult.status);
+            
             if (asyncResult.status === Office.AsyncResultStatus.Failed) {
-                showStatus('error', 'Failed to open view: ' + asyncResult.error.message);
+                const error = asyncResult.error;
+                console.error('❌ Failed to open view');
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                showStatus('error', 'Failed to open view: ' + error.message);
             } else {
                 resultsDialog = asyncResult.value;
                 console.log('✅ New view opened:', dialogUrl);
+                console.log('Dialog object:', resultsDialog);
                 
                 // Send data after a short delay
                 setTimeout(() => {
@@ -486,10 +499,14 @@ function openNewView(dialogUrl, results) {
                             descriptive: results.descriptive,
                             n: results.n
                         };
+                        
+                        console.log('📤 Sending data to new view:', viewData);
                         resultsDialog.messageChild(JSON.stringify({
                             action: 'loadData',
                             data: viewData
                         }));
+                    } else {
+                        console.warn('⚠️ resultsDialog is null, cannot send data');
                     }
                 }, 1000);
                 
@@ -511,13 +528,17 @@ function openNewView(dialogUrl, results) {
                                 data: viewData
                             }));
                         } else if (message.action === 'switchView') {
+                            console.log('🔄 Switch view in second handler');
                             if (resultsDialog) {
+                                console.log('🔴 Closing dialog (handler 2)');
                                 resultsDialog.close();
                                 resultsDialog = null;
                             }
-                            const newDialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/${message.view}`;
-                            console.log('📂 Switching to:', newDialogUrl);
-                            openNewView(newDialogUrl, currentResults);
+                            setTimeout(() => {
+                                const newDialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/${message.view}`;
+                                console.log('🟢 Opening new view (handler 2):', newDialogUrl);
+                                openNewView(newDialogUrl, currentResults);
+                            }, 300);
                         } else if (message.action === 'close' || message.action === 'closeDialog') {
                             resultsDialog.close();
                             resultsDialog = null;
@@ -596,14 +617,19 @@ function openResultsDialog(results) {
                             
                             // Close current dialog
                             if (resultsDialog) {
+                                console.log('🔴 Closing current dialog...');
                                 resultsDialog.close();
                                 resultsDialog = null;
+                                console.log('✅ Dialog closed');
                             }
                             
-                            // Open new view with stored results
-                            const newDialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/${message.view}`;
-                            console.log('📂 Opening new view:', newDialogUrl);
-                            openNewView(newDialogUrl, currentResults);
+                            // Wait a bit before opening new dialog
+                            setTimeout(() => {
+                                const newDialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/${message.view}`;
+                                console.log('🟢 Opening new view:', newDialogUrl);
+                                console.log('📊 Current results available:', !!currentResults);
+                                openNewView(newDialogUrl, currentResults);
+                            }, 300);
                         } else if (message.action === 'close' || message.action === 'closeDialog') {
                             console.log('📤 Close dialog message received');
                             resultsDialog.close();
