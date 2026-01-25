@@ -143,6 +143,9 @@ const StatisticoHeader = {
    */
   navigateTo(filename) {
     console.log('🔄 Navigating to:', filename);
+    console.log('typeof Office:', typeof Office);
+    console.log('Office.context:', Office.context);
+    console.log('Office.context.ui:', Office.context && Office.context.ui);
     
     // If in Office context, we need to pass data and open new dialog
     if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
@@ -154,12 +157,22 @@ const StatisticoHeader = {
       }
       
       // Close current dialog and let parent open the new one
-      Office.context.ui.messageParent(JSON.stringify({
+      const message = {
         action: 'switchView',
         view: filename
-      }));
+      };
+      
+      console.log('📤 Sending message to parent:', message);
+      
+      try {
+        Office.context.ui.messageParent(JSON.stringify(message));
+        console.log('✅ Message sent successfully');
+      } catch (error) {
+        console.error('❌ Error sending message:', error);
+      }
     } else {
       // Browser mode - simple navigation
+      console.log('⚠️ Not in Office context, using browser navigation');
       window.location.href = filename;
     }
   }
