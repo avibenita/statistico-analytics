@@ -471,42 +471,48 @@
     }
 
     // Select method
-    function selectMethod(method) {
+    window.selectMethod = function(method) {
       currentMethod = method;
       document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById(`method-${method}`).classList.add('active');
       if (dataReady) {
         detectOutliers();
       }
-    }
+    };
 
     // Toggle chart order
-    function toggleOrder(order) {
+    window.toggleOrder = function(order) {
       chartOrder = order;
       document.querySelectorAll('.order-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById(`order-${order}`).classList.add('active');
       if (outlierResults) {
         createChart();
       }
-    }
+    };
 
     // Toggle outliers table visibility
-    function toggleOutliersTable() {
+    window.toggleOutliersTable = function() {
+      console.log('🔄 Toggle button clicked');
       const tableContainer = document.getElementById('outliersTableContainer');
       const toggleBtn = document.getElementById('toggleTableBtn');
       const toggleText = document.getElementById('toggleTableText');
       const toggleIcon = toggleBtn.querySelector('i');
       
+      console.log('Table container:', tableContainer);
+      console.log('Current visibility:', tableContainer.classList.contains('visible'));
+      
       tableContainer.classList.toggle('visible');
       
       if (tableContainer.classList.contains('visible')) {
+        console.log('✅ Showing table');
         toggleText.textContent = 'Hide Details';
         toggleIcon.className = 'fa-solid fa-eye-slash';
       } else {
+        console.log('❌ Hiding table');
         toggleText.textContent = 'Show Details';
         toggleIcon.className = 'fa-solid fa-eye';
       }
-    }
+    };
 
     // IQR Method
     function detectIQR(data) {
