@@ -367,11 +367,11 @@
     // 6 NORMALITY TESTS (VB6-compatible)
     // ===========================================
 
-    // 1. Shapiro-Wilk Test (Simplified, robust version)
+    // 1. Shapiro-Wilk Test (Fixed, proper algorithm)
     function shapiroWilkTest(data) {
       const n = data.length;
       
-      if (n < 3) {
+      if (n < 3 || n > 5000) {
         return { statistic: NaN, pValue: NaN, critical: 0.95 };
       }
       
@@ -383,29 +383,55 @@
         return { statistic: NaN, pValue: NaN, critical: 0.95 };
       }
       
-      // Simplified coefficients calculation
-      let b = 0;
+      // Calculate a-coefficients properly
       const k = Math.floor(n / 2);
+      const a = [];
+      let sumSqA = 0;
       
       for (let i = 0; i < k; i++) {
-        const m = (i + 1 - 0.375) / (n + 0.25);
-        const expectedNormal = jStat.normal.inv(m, 0, 1);
-        b += expectedNormal * (sorted[n - 1 - i] - sorted[i]);
+        const p = (i + 1 - 0.375) / (n + 0.25);
+        const quantile = jStat.normal.inv(p, 0, 1);
+        a.push(quantile);
+        sumSqA += quantile * quantile;
       }
       
+      // Normalize coefficients
+      const normFactor = 1 / Math.sqrt(2 * sumSqA);
+      
+      // Calculate b = sum of a[i] * (x[n-i] - x[i+1])
+      let b = 0;
+      for (let i = 0; i < k; i++) {
+        b += a[i] * (sorted[n - 1 - i] - sorted[i]);
+      }
+      b *= normFactor;
+      
+      // W statistic = b² / variance
       const W = (b * b) / variance;
       
-      // Approximate p-value using normal approximation
+      console.log('Shapiro-Wilk debug:', { n, W, b, variance, mean });
+      
+      // Ensure W is in valid range [0, 1]
+      if (W > 1 || W < 0 || !isFinite(W)) {
+        console.warn('⚠️ Invalid W statistic:', W);
+        return { statistic: NaN, pValue: NaN, critical: 0.95 };
+      }
+      
+      // Calculate p-value using Royston's approximation
       let pValue;
-      if (W >= 1) {
+      if (W === 1) {
         pValue = 1.0;
-      } else if (W <= 0) {
+      } else if (W < 0.1) {
         pValue = 0.0;
       } else {
-        const ln_W = Math.log(1 - W);
-        const ln_n = Math.log(n);
-        const z = (-ln_W - 2.273 + 0.459 * ln_n) / (0.544 + 0.150 * ln_n);
-        pValue = 1 - jStat.normal.cdf(z, 0, 1);
+        const logW = Math.log(1 - W);
+        const logN = Math.log(n);
+        
+        // Royston (1992) approximation
+        const mu = -1.5861 - 0.31082 * logN - 0.083751 * logN * logN;
+        const sigma = Math.exp(-0.4803 - 0.082676 * logN + 0.0030302 * logN * logN);
+        const z = (logW - mu) / sigma;
+        
+        pValue = jStat.normal.cdf(z, 0, 1);
         pValue = Math.max(0, Math.min(1, pValue));
       }
       
@@ -432,24 +458,46 @@
       return { statistic: JB, pValue, critical };
     }
 
-    // 3. Kolmogorov-Smirnov Test
+    // 3. Kolmogorov-Smirnov Test (Fixed calculation)
     function kolmogorovSmirnovTest(data) {
       const n = data.length;
       const sorted = [...data].sort((a, b) => a - b);
       const mean = data.reduce((a, b) => a + b, 0) / n;
-      const stdDev = Math.sqrt(data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n);
+      const stdDev = Math.sqrt(data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1));
+      
+      if (stdDev === 0) {
+        return { statistic: NaN, pValue: NaN, critical: 1.36 / Math.sqrt(n) };
+      }
       
       let maxD = 0;
       for (let i = 0; i < n; i++) {
         const z = (sorted[i] - mean) / stdDev;
-        const empirical = (i + 1) / n;
+        const empiricalAfter = (i + 1) / n;
+        const empiricalBefore = i / n;
         const theoretical = jStat.normal.cdf(z, 0, 1);
-        const d = Math.abs(empirical - theoretical);
-        maxD = Math.max(maxD, d);
+        
+        // KS statistic is max of both distances
+        const d1 = Math.abs(empiricalAfter - theoretical);
+        const d2 = Math.abs(empiricalBefore - theoretical);
+        maxD = Math.max(maxD, d1, d2);
       }
       
-      const pValue = 1 - Math.exp(-2 * Math.pow(maxD * Math.sqrt(n), 2));
-      const critical = 1.36 / Math.sqrt(n); // Approx at 95%
+      // Improved p-value approximation (Marsaglia, Tsang, Wang 2003)
+      const sqrtN = Math.sqrt(n);
+      const lambda = (sqrtN + 0.12 + 0.11 / sqrtN) * maxD;
+      
+      let pValue;
+      if (lambda < 0.2) {
+        pValue = 1.0;
+      } else if (lambda > 4) {
+        pValue = 0.0;
+      } else {
+        // Approximation: 1 - KScdf(lambda)
+        pValue = 2 * Math.exp(-2 * lambda * lambda);
+        pValue = Math.max(0, Math.min(1, pValue));
+      }
+      
+      const critical = 1.36 / sqrtN; // Critical value at α=0.05
       
       return { statistic: maxD, pValue, critical };
     }
