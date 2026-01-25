@@ -537,11 +537,34 @@
     let currentH0 = 0;
     let currentH1Type = 'not-equal';
     let currentAlpha = 0.05;
+    let headerInitialized = false;
+    let librariesLoaded = false;
     
     // Initialize
     window.addEventListener('DOMContentLoaded', function() {
       console.log('✅ Hypothesis Testing loaded');
+      pollForDependencies();
     });
+
+    function pollForDependencies() {
+      if (!headerInitialized && typeof StatisticoHeader !== 'undefined') {
+        StatisticoHeader.init('hypothesis', 'Variable', 0);
+        headerInitialized = true;
+        console.log('✅ Shared header initialized');
+      }
+      
+      if (!librariesLoaded && typeof jStat !== 'undefined') {
+        librariesLoaded = true;
+        console.log('✅ jStat library loaded');
+      }
+      
+      if (headerInitialized && librariesLoaded) {
+        console.log('🎨 All dependencies ready.');
+        return;
+      }
+      
+      setTimeout(pollForDependencies, 100);
+    }
 
     // Method selection
     window.selectMethod = function(method) {
@@ -712,16 +735,23 @@
     }
 
     function handleDataReceived(data) {
+      if (!librariesLoaded || !headerInitialized) {
+        console.warn('⚠️ Libraries or header not ready, deferring data handling.');
+        setTimeout(() => handleDataReceived(data), 100);
+        return;
+      }
+      
       console.log('📊 Data received:', data);
       resultsData = {
-        values: data.values || [],
+        values: data.values || data.data || [],
         column: data.column || 'Variable',
         n: data.n || (data.values ? data.values.length : 0)
       };
       
-      if (typeof StatisticoHeader !== 'undefined') {
-        StatisticoHeader.updateVariable(resultsData.column, resultsData.n);
-      }
+      // Update header with variable name and sample size
+      const variableName = resultsData.column || 'Variable';
+      StatisticoHeader.updateVariable(variableName, resultsData.n);
+      console.log('✅ Header updated with data:', variableName, 'n=', resultsData.n);
     }
 
     function loadSampleData() {
