@@ -234,6 +234,33 @@
     let currentDistribution = 'normal';
     let qqppChart = null;
     let detrendedChart = null;
+    let librariesLoaded = false;
+    let dataReady = false;
+
+    // Check if all libraries are loaded
+    function checkLibraries() {
+      const highchartsReady = typeof Highcharts !== 'undefined';
+      const jstatReady = typeof jStat !== 'undefined';
+      librariesLoaded = highchartsReady && jstatReady;
+      
+      if (!librariesLoaded) {
+        console.log('⏳ Waiting for libraries... Highcharts:', highchartsReady, 'jStat:', jstatReady);
+      } else {
+        console.log('✅ All libraries loaded');
+      }
+      
+      return librariesLoaded;
+    }
+
+    // Try to render charts if everything is ready
+    function tryRenderCharts() {
+      if (librariesLoaded && dataReady && originalData.length > 0) {
+        console.log('🎨 All ready - creating charts...');
+        createQQPPPlots();
+      } else {
+        console.log('⏳ Not ready yet. Libraries:', librariesLoaded, 'Data:', dataReady, 'Length:', originalData.length);
+      }
+    }
 
     // Office.js initialization
     Office.initialize = function (reason) {
@@ -252,7 +279,7 @@
       
       // For testing, load sample data if no data received
       setTimeout(() => {
-        if (!qqppChart) {
+        if (!dataReady) {
           console.log('⏰ No data received from parent, loading sample data...');
           loadSampleData();
         }
@@ -263,15 +290,31 @@
     window.addEventListener('DOMContentLoaded', function() {
       console.log('🚀 DOM Content Loaded');
       
-      // Initialize shared header
-      StatisticoHeader.init('qqplot', 'Variable', 0);
-      console.log('✅ Shared header initialized');
+      // Wait for StatisticoHeader to be available
+      const initHeader = () => {
+        if (typeof StatisticoHeader !== 'undefined') {
+          StatisticoHeader.init('qqplot', 'Variable', 0);
+          console.log('✅ Shared header initialized');
+        } else {
+          console.log('⏳ Waiting for StatisticoHeader...');
+          setTimeout(initHeader, 100);
+        }
+      };
+      initHeader();
       
-      // Check if Office.js is available
-      if (typeof Office === 'undefined') {
-        console.log('⚠️ Office.js not available - loading sample data immediately');
-        setTimeout(loadSampleData, 100);
-      }
+      // Check if libraries are loaded
+      const checkAndInit = () => {
+        if (checkLibraries()) {
+          // Check if Office.js is available
+          if (typeof Office === 'undefined') {
+            console.log('⚠️ Office.js not available - loading sample data immediately');
+            loadSampleData();
+          }
+        } else {
+          setTimeout(checkAndInit, 100);
+        }
+      };
+      setTimeout(checkAndInit, 100);
     });
 
     // Message receiver
@@ -301,13 +344,30 @@
     // Load sample data for browser testing
     function loadSampleData() {
       console.log('📊 Loading sample data...');
+      
+      if (!checkLibraries()) {
+        console.log('⏳ Libraries not ready, retrying...');
+        setTimeout(loadSampleData, 200);
+        return;
+      }
+      
       const sampleData = generateSampleData();
       originalData = sampleData.values;
       varName = 'Sample Data';
+      dataReady = true;
       
-      StatisticoHeader.updateVariable(varName, originalData.length);
-      createQQPPPlots();
-      console.log('✅ Sample data loaded and charts created');
+      // Update header when available
+      const updateHeader = () => {
+        if (typeof StatisticoHeader !== 'undefined' && StatisticoHeader.updateVariable) {
+          StatisticoHeader.updateVariable(varName, originalData.length);
+          console.log('✅ Header updated with sample data');
+        } else {
+          setTimeout(updateHeader, 100);
+        }
+      };
+      updateHeader();
+      
+      tryRenderCharts();
     }
 
     // Generate sample data (normal distribution)
@@ -327,13 +387,29 @@
       try {
         console.log('📊 Data received:', data);
         
+        if (!checkLibraries()) {
+          console.log('⏳ Libraries not ready, waiting...');
+          setTimeout(() => handleDataReceived(data), 200);
+          return;
+        }
+        
         originalData = data.values || data.data || [];
         varName = data.variableName || data.column || 'Variable';
+        dataReady = true;
         console.log('✅ Data arrays set, length:', originalData.length);
         
-        StatisticoHeader.updateVariable(varName, originalData.length);
-        createQQPPPlots();
-        console.log('✅ Charts created successfully');
+        // Update header when available
+        const updateHeader = () => {
+          if (typeof StatisticoHeader !== 'undefined' && StatisticoHeader.updateVariable) {
+            StatisticoHeader.updateVariable(varName, originalData.length);
+            console.log('✅ Header updated');
+          } else {
+            setTimeout(updateHeader, 100);
+          }
+        };
+        updateHeader();
+        
+        tryRenderCharts();
       } catch (e) {
         console.error('❌ Error handling data:', e);
       }
@@ -347,14 +423,22 @@
       document.getElementById('radioPP').classList.toggle('active', type === 'pp');
       
       updateChartTitle();
-      createQQPPPlots();
+      
+      // Only create charts if data is ready
+      if (dataReady && originalData.length > 0) {
+        createQQPPPlots();
+      }
     }
 
     // Switch distribution
     function switchDistribution() {
       currentDistribution = document.getElementById('distributionSelect').value;
       updateChartTitle();
-      createQQPPPlots();
+      
+      // Only create charts if data is ready
+      if (dataReady && originalData.length > 0) {
+        createQQPPPlots();
+      }
     }
 
     // Update chart title
