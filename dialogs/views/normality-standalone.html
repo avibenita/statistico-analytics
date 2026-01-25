@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Normality Tests - Statistico</title>
+  <title>Tests of Normality Dashboard - Statistico</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
@@ -24,6 +24,8 @@
       --text-primary: #ffffff;
       --text-secondary: rgba(255,255,255,0.8);
       --text-muted: rgba(255,255,255,0.6);
+      --pass-color: #4ade80;
+      --fail-color: #f87171;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -47,172 +49,289 @@
       margin-bottom: 10px;
     }
 
-    .panel-title {
+    /* Summary Stats */
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 10px;
+      background: #000;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Gauge */
+    .gauge-panel {
+      background: #000;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .gauge-title {
+      text-align: center;
       font-size: 13px;
       font-weight: 600;
-      color: var(--accent-1);
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .gauge-container {
+      height: 180px;
     }
 
     /* Tests Grid */
     .tests-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
+      gap: 12px;
     }
 
     .test-card {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
+      background: grey;
       border-radius: 6px;
       padding: 12px;
     }
 
-    .test-name {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      margin-bottom: 8px;
-    }
-
-    .test-result {
+    .test-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
-    .test-label {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .test-value {
+    .test-name {
       font-size: 13px;
       font-weight: 600;
       color: var(--text-primary);
     }
 
-    .p-value {
-      font-size: 14px;
+    .test-badge {
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
       font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 4px;
+      background: ghostwhite;
     }
 
-    .p-value.pass {
-      background: rgba(34, 197, 94, 0.2);
-      color: #4ade80;
+    .test-badge.pass {
+      color: var(--pass-color);
     }
 
-    .p-value.fail {
-      background: rgba(239, 68, 68, 0.2);
-      color: #f87171;
+    .test-badge.fail {
+      color: var(--fail-color);
     }
 
-    /* Gauge */
-    .gauge-container {
-      height: 200px;
-      margin: 10px 0;
+    .test-details {
+      font-size: 12px;
     }
 
-    .overall-result {
-      text-align: center;
-      padding: 15px;
-      border-radius: 8px;
-      margin-top: 10px;
-      font-size: 15px;
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .detail-label {
+      color: var(--text-muted);
+    }
+
+    .detail-value {
+      color: var(--text-primary);
       font-weight: 600;
-    }
-
-    .overall-result.normal {
-      background: rgba(34, 197, 94, 0.15);
-      color: #4ade80;
-      border: 1px solid rgba(34, 197, 94, 0.3);
-    }
-
-    .overall-result.not-normal {
-      background: rgba(239, 68, 68, 0.15);
-      color: #f87171;
-      border: 1px solid rgba(239, 68, 68, 0.3);
     }
 
     @media (max-width: 768px) {
       .tests-grid {
         grid-template-columns: 1fr;
       }
+      .summary-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
   </style>
 </head>
 <body>
-  <statistico-header view-name="Normality Tests" module-name="Univariate Analysis"></statistico-header>
+  <statistico-header view-name="Tests of Normality" module-name="Univariate Analysis"></statistico-header>
   
   <div class="results-container">
-    <!-- Normality Score Gauge -->
-    <div class="panel">
-      <div class="panel-title">
-        <i class="fa-solid fa-gauge-high"></i>
-        Normality Score
+    <!-- Summary Stats -->
+    <div class="summary-stats">
+      <div class="stat-item">
+        <div class="stat-value" id="pass-count">0</div>
+        <div class="stat-label">Tests Passed</div>
       </div>
-      <div id="normalityGauge" class="gauge-container"></div>
-      <div id="overallResult" class="overall-result"></div>
+      <div class="stat-item">
+        <div class="stat-value" id="fail-count">0</div>
+        <div class="stat-label">Tests Failed</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="sample-size">—</div>
+        <div class="stat-label">Sample Size</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="significance">0.05</div>
+        <div class="stat-label">Significance</div>
+      </div>
     </div>
 
-    <!-- Statistical Tests -->
-    <div class="panel">
-      <div class="panel-title">
-        <i class="fa-solid fa-flask"></i>
-        Statistical Tests
+    <!-- NSI Gauge -->
+    <div class="gauge-panel">
+      <div class="gauge-title">
+        NSI<sup style="font-size:8px;">™</sup> -Normality Strength Index
       </div>
+      <div id="normalityGauge" class="gauge-container"></div>
+    </div>
+
+    <!-- Test Cards -->
+    <div class="panel">
       <div class="tests-grid">
+        <!-- Shapiro-Wilk -->
         <div class="test-card">
-          <div class="test-name">Shapiro-Wilk Test</div>
-          <div class="test-result">
-            <span class="test-label">W Statistic:</span>
-            <span class="test-value" id="sw-stat">—</span>
+          <div class="test-header">
+            <div class="test-name">Shapiro-Wilk</div>
+            <div class="test-badge" id="sw-badge">—</div>
           </div>
-          <div class="test-result">
-            <span class="test-label">p-value:</span>
-            <span class="p-value" id="sw-p">—</span>
+          <div class="test-details">
+            <div class="detail-row">
+              <span class="detail-label">Statistic:</span>
+              <span class="detail-value" id="sw-stat">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">p-value:</span>
+              <span class="detail-value" id="sw-p">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Critical:</span>
+              <span class="detail-value" id="sw-crit">—</span>
+            </div>
           </div>
         </div>
 
+        <!-- Anderson-Darling -->
         <div class="test-card">
-          <div class="test-name">Jarque-Bera Test</div>
-          <div class="test-result">
-            <span class="test-label">JB Statistic:</span>
-            <span class="test-value" id="jb-stat">—</span>
+          <div class="test-header">
+            <div class="test-name">Anderson-Darling</div>
+            <div class="test-badge" id="ad-badge">—</div>
           </div>
-          <div class="test-result">
-            <span class="test-label">p-value:</span>
-            <span class="p-value" id="jb-p">—</span>
+          <div class="test-details">
+            <div class="detail-row">
+              <span class="detail-label">Statistic:</span>
+              <span class="detail-value" id="ad-stat">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">p-value:</span>
+              <span class="detail-value" id="ad-p">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Critical:</span>
+              <span class="detail-value" id="ad-crit">—</span>
+            </div>
           </div>
         </div>
 
+        <!-- Kolmogorov-Smirnov -->
         <div class="test-card">
-          <div class="test-name">Kolmogorov-Smirnov</div>
-          <div class="test-result">
-            <span class="test-label">D Statistic:</span>
-            <span class="test-value" id="ks-stat">—</span>
+          <div class="test-header">
+            <div class="test-name">Kolmogorov-Smirnov</div>
+            <div class="test-badge" id="ks-badge">—</div>
           </div>
-          <div class="test-result">
-            <span class="test-label">p-value:</span>
-            <span class="p-value" id="ks-p">—</span>
+          <div class="test-details">
+            <div class="detail-row">
+              <span class="detail-label">Statistic:</span>
+              <span class="detail-value" id="ks-stat">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">p-value:</span>
+              <span class="detail-value" id="ks-p">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Critical:</span>
+              <span class="detail-value" id="ks-crit">—</span>
+            </div>
           </div>
         </div>
 
+        <!-- Cramer-von Mises -->
         <div class="test-card">
-          <div class="test-name">Anderson-Darling</div>
-          <div class="test-result">
-            <span class="test-label">A² Statistic:</span>
-            <span class="test-value" id="ad-stat">—</span>
+          <div class="test-header">
+            <div class="test-name">Cramer-von Mises</div>
+            <div class="test-badge" id="cvm-badge">—</div>
           </div>
-          <div class="test-result">
-            <span class="test-label">p-value:</span>
-            <span class="p-value" id="ad-p">—</span>
+          <div class="test-details">
+            <div class="detail-row">
+              <span class="detail-label">Statistic:</span>
+              <span class="detail-value" id="cvm-stat">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">p-value:</span>
+              <span class="detail-value" id="cvm-p">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Critical:</span>
+              <span class="detail-value" id="cvm-crit">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- D'Agostino-Pearson -->
+        <div class="test-card">
+          <div class="test-header">
+            <div class="test-name">D'Agostino-Pearson</div>
+            <div class="test-badge" id="dp-badge">—</div>
+          </div>
+          <div class="test-details">
+            <div class="detail-row">
+              <span class="detail-label">Statistic:</span>
+              <span class="detail-value" id="dp-stat">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">p-value:</span>
+              <span class="detail-value" id="dp-p">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Critical:</span>
+              <span class="detail-value" id="dp-crit">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jarque-Bera -->
+        <div class="test-card">
+          <div class="test-header">
+            <div class="test-name">Jarque-Bera</div>
+            <div class="test-badge" id="jb-badge">—</div>
+          </div>
+          <div class="test-details">
+            <div class="detail-row">
+              <span class="detail-label">Statistic:</span>
+              <span class="detail-value" id="jb-stat">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">p-value:</span>
+              <span class="detail-value" id="jb-p">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Critical:</span>
+              <span class="detail-value" id="jb-crit">—</span>
+            </div>
           </div>
         </div>
       </div>
@@ -224,13 +343,19 @@
     let varName = 'Variable';
     let librariesLoaded = false;
     let dataReady = false;
+    let gaugeChart = null;
+    const ALPHA = 0.05;
 
     function checkLibraries() {
       librariesLoaded = typeof Highcharts !== 'undefined' && typeof jStat !== 'undefined';
       return librariesLoaded;
     }
 
-    // Shapiro-Wilk Test
+    // ===========================================
+    // 6 NORMALITY TESTS (VB6-compatible)
+    // ===========================================
+
+    // 1. Shapiro-Wilk Test
     function shapiroWilkTest(data) {
       const n = data.length;
       const sorted = [...data].sort((a, b) => a - b);
@@ -268,10 +393,10 @@
         pValue = 1 - jStat.normal.cdf(z, 0, 1);
       }
       
-      return { statistic: W, pValue };
+      return { statistic: W, pValue, critical: 0.95 };
     }
 
-    // Jarque-Bera Test
+    // 2. Jarque-Bera Test
     function jarqueBeraTest(data) {
       const n = data.length;
       const mean = data.reduce((a, b) => a + b, 0) / n;
@@ -286,11 +411,12 @@
       
       const JB = (n / 6) * (Math.pow(skewness, 2) + Math.pow(kurtosis - 3, 2) / 4);
       const pValue = 1 - jStat.chisquare.cdf(JB, 2);
+      const critical = jStat.chisquare.inv(1 - ALPHA, 2);
       
-      return { statistic: JB, pValue };
+      return { statistic: JB, pValue, critical };
     }
 
-    // Kolmogorov-Smirnov Test
+    // 3. Kolmogorov-Smirnov Test
     function kolmogorovSmirnovTest(data) {
       const n = data.length;
       const sorted = [...data].sort((a, b) => a - b);
@@ -307,11 +433,12 @@
       }
       
       const pValue = 1 - Math.exp(-2 * Math.pow(maxD * Math.sqrt(n), 2));
+      const critical = 1.36 / Math.sqrt(n); // Approx at 95%
       
-      return { statistic: maxD, pValue };
+      return { statistic: maxD, pValue, critical };
     }
 
-    // Anderson-Darling Test
+    // 4. Anderson-Darling Test
     function andersonDarlingTest(data) {
       const n = data.length;
       const sorted = [...data].sort((a, b) => a - b);
@@ -335,118 +462,252 @@
       else if (A2Modified < 0.6) pValue = Math.exp(0.9177 - 4.279 * A2Modified - 1.38 * A2Modified * A2Modified);
       else pValue = Math.exp(1.2937 - 5.709 * A2Modified + 0.0186 * A2Modified * A2Modified);
       
-      return { statistic: A2Modified, pValue: Math.max(0, Math.min(1, pValue)) };
+      const critical = andersonDarlingCritical(ALPHA);
+      
+      return { statistic: A2Modified, pValue: Math.max(0, Math.min(1, pValue)), critical };
     }
 
-    // Run all tests
+    function andersonDarlingCritical(alpha) {
+      const table = [
+        [0.10, 0.631],
+        [0.05, 0.752],
+        [0.025, 0.873],
+        [0.01, 1.035]
+      ];
+      for (let [a, c] of table) {
+        if (alpha >= a) return c;
+      }
+      return 1.035;
+    }
+
+    // 5. Cramer-von Mises Test
+    function cramerVonMisesTest(data) {
+      const n = data.length;
+      const sorted = [...data].sort((a, b) => a - b);
+      const mean = data.reduce((a, b) => a + b, 0) / n;
+      const stdDev = Math.sqrt(data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n);
+      
+      let sum = 0;
+      for (let i = 0; i < n; i++) {
+        const z = (sorted[i] - mean) / stdDev;
+        const Fi = jStat.normal.cdf(z, 0, 1);
+        sum += Math.pow(Fi - (2 * i + 1) / (2 * n), 2);
+      }
+      
+      const W2 = sum + 1 / (12 * n);
+      
+      // Approximate p-value
+      let pValue;
+      if (W2 < 0.1) pValue = 1 - Math.exp(-0.5 * W2);
+      else if (W2 < 0.5) pValue = 1 - Math.exp(-W2 * (1 + 0.5 * W2));
+      else pValue = 0.001;
+      
+      const critical = cramerVonMisesCritical(ALPHA);
+      
+      return { statistic: W2, pValue, critical };
+    }
+
+    function cramerVonMisesCritical(alpha) {
+      const table = [
+        [0.10, 0.347],
+        [0.05, 0.461],
+        [0.025, 0.743],
+        [0.01, 1.167]
+      ];
+      for (let [a, c] of table) {
+        if (alpha >= a) return c;
+      }
+      return 1.167;
+    }
+
+    // 6. D'Agostino-Pearson Test (Omnibus)
+    function dagostinoPearsonTest(data) {
+      const n = data.length;
+      const mean = data.reduce((a, b) => a + b, 0) / n;
+      const m2 = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n;
+      const m3 = data.reduce((acc, val) => acc + Math.pow(val - mean, 3), 0) / n;
+      const m4 = data.reduce((acc, val) => acc + Math.pow(val - mean, 4), 0) / n;
+      
+      const b1 = Math.pow(m3, 2) / Math.pow(m2, 3);
+      const b2 = m4 / Math.pow(m2, 2);
+      
+      // Z-score for skewness
+      const sqrtB1 = Math.sqrt(b1);
+      const y = sqrtB1 * Math.sqrt((n + 1) * (n + 3) / (6 * (n - 2)));
+      const beta2_b1 = 3 * (Math.pow(n, 2) + 27 * n - 70) * (n + 1) * (n + 3) / ((n - 2) * (n + 5) * (n + 7) * (n + 9));
+      const W2 = -1 + Math.sqrt(2 * (beta2_b1 - 1));
+      const delta = 1 / Math.sqrt(0.5 * Math.log(W2));
+      const alpha_z = Math.sqrt(2 / (W2 - 1));
+      const zb1 = delta * Math.log(y / alpha_z + Math.sqrt(Math.pow(y / alpha_z, 2) + 1));
+      
+      // Z-score for kurtosis
+      const meanbeta2 = 3 * (n - 1) / (n + 1);
+      const varbeta2 = 24 * n * (n - 2) * (n - 3) / (Math.pow(n + 1, 2) * (n + 3) * (n + 5));
+      const x = (b2 - meanbeta2) / Math.sqrt(varbeta2);
+      const sqrtbeta1 = 6 * (n * n - 5 * n + 2) / ((n + 7) * (n + 9)) * Math.sqrt(6 * (n + 3) * (n + 5) / (n * (n - 2) * (n - 3)));
+      const A = 6 + 8 / sqrtbeta1 * (2 / sqrtbeta1 + Math.sqrt(1 + 4 / Math.pow(sqrtbeta1, 2)));
+      const zb2 = (1 - 2 / (9 * A) - Math.pow(1 - 2 / A, 1 / 3) * Math.pow(x / (2 / (9 * A)), 1 / 3)) / Math.sqrt(2 / (9 * A));
+      
+      const K2 = Math.pow(zb1, 2) + Math.pow(zb2, 2);
+      const pValue = 1 - jStat.chisquare.cdf(K2, 2);
+      const critical = andersonDarlingCritical(ALPHA); // Reuse AD critical
+      
+      return { statistic: K2, pValue, critical };
+    }
+
+    // ===========================================
+    // RUN ALL TESTS & UPDATE UI
+    // ===========================================
     function runNormalityTests() {
       if (!dataReady || !librariesLoaded || originalData.length === 0) return;
       
-      console.log('🧪 Running normality tests...');
+      console.log('🧪 Running all 6 normality tests...');
       
       const sw = shapiroWilkTest(originalData);
       const jb = jarqueBeraTest(originalData);
       const ks = kolmogorovSmirnovTest(originalData);
       const ad = andersonDarlingTest(originalData);
+      const cvm = cramerVonMisesTest(originalData);
+      const dp = dagostinoPearsonTest(originalData);
       
-      displayResults(sw, jb, ks, ad);
-      createGauge(sw, jb, ks, ad);
+      const tests = [
+        { name: 'Shapiro-Wilk', id: 'sw', ...sw, weight: 1.0 },
+        { name: 'Anderson-Darling', id: 'ad', ...ad, weight: 0.9 },
+        { name: 'Kolmogorov-Smirnov', id: 'ks', ...ks, weight: 0.8 },
+        { name: 'Cramer-von Mises', id: 'cvm', ...cvm, weight: 0.7 },
+        { name: "D'Agostino-Pearson", id: 'dp', ...dp, weight: 1.0 },
+        { name: 'Jarque-Bera', id: 'jb', ...jb, weight: 0.9 }
+      ];
+      
+      displayResults(tests);
+      calculateNSI(tests);
     }
 
-    function displayResults(sw, jb, ks, ad) {
-      const alpha = 0.05;
+    function displayResults(tests) {
+      let passCount = 0;
+      let failCount = 0;
       
-      document.getElementById('sw-stat').textContent = sw.statistic.toFixed(4);
-      document.getElementById('sw-p').textContent = sw.pValue.toFixed(4);
-      document.getElementById('sw-p').className = sw.pValue >= alpha ? 'p-value pass' : 'p-value fail';
+      tests.forEach(test => {
+        const pass = test.pValue >= ALPHA;
+        if (pass) passCount++; else failCount++;
+        
+        document.getElementById(`${test.id}-stat`).textContent = test.statistic.toFixed(4);
+        document.getElementById(`${test.id}-p`).textContent = test.pValue.toFixed(4);
+        document.getElementById(`${test.id}-crit`).textContent = test.critical.toFixed(4);
+        
+        const badge = document.getElementById(`${test.id}-badge`);
+        badge.textContent = pass ? 'PASS' : 'FAIL';
+        badge.className = pass ? 'test-badge pass' : 'test-badge fail';
+      });
       
-      document.getElementById('jb-stat').textContent = jb.statistic.toFixed(4);
-      document.getElementById('jb-p').textContent = jb.pValue.toFixed(4);
-      document.getElementById('jb-p').className = jb.pValue >= alpha ? 'p-value pass' : 'p-value fail';
+      document.getElementById('pass-count').textContent = passCount;
+      document.getElementById('fail-count').textContent = failCount;
+      document.getElementById('sample-size').textContent = originalData.length;
+    }
+
+    // ===========================================
+    // NSI (Normality Strength Index) - VB6 version
+    // ===========================================
+    function calculateNSI(tests) {
+      let totalWeight = 0;
+      let weightedScore = 0;
       
-      document.getElementById('ks-stat').textContent = ks.statistic.toFixed(4);
-      document.getElementById('ks-p').textContent = ks.pValue.toFixed(4);
-      document.getElementById('ks-p').className = ks.pValue >= alpha ? 'p-value pass' : 'p-value fail';
+      tests.forEach(test => {
+        const p = test.pValue;
+        const w = test.weight;
+        let score = 0;
+        
+        if (p === null || isNaN(p)) return;
+        
+        // Scoring algorithm from VB6 HTML
+        if (p < 0.001) {
+          score = 0;
+        } else if (p < 0.05) {
+          const logScale = Math.log10(p) - Math.log10(0.001);
+          const maxLogScale = Math.log10(0.05) - Math.log10(0.001);
+          score = 10 + (30 * logScale / maxLogScale);
+        } else if (p < 0.5) {
+          const logScale = Math.log10(p) - Math.log10(0.05);
+          const maxLogScale = Math.log10(0.5) - Math.log10(0.05);
+          score = 40 + (40 * logScale / maxLogScale);
+        } else {
+          score = 80 + (20 * (p - 0.5) / 0.5);
+        }
+        
+        weightedScore += score * w;
+        totalWeight += w;
+      });
       
-      document.getElementById('ad-stat').textContent = ad.statistic.toFixed(4);
-      document.getElementById('ad-p').textContent = ad.pValue.toFixed(4);
-      document.getElementById('ad-p').className = ad.pValue >= alpha ? 'p-value pass' : 'p-value fail';
-      
-      const passCount = [sw, jb, ks, ad].filter(t => t.pValue >= alpha).length;
-      const overallEl = document.getElementById('overallResult');
-      
-      if (passCount >= 3) {
-        overallEl.textContent = `✓ Data appears normally distributed (${passCount}/4 tests passed)`;
-        overallEl.className = 'overall-result normal';
+      const finalScore = Math.round(totalWeight > 0 ? weightedScore / totalWeight : 50);
+      updateGauge(finalScore);
+      console.log('📊 NSI Score:', finalScore);
+    }
+
+    function updateGauge(score) {
+      if (!gaugeChart) {
+        gaugeChart = Highcharts.chart('normalityGauge', {
+          chart: {
+            type: 'solidgauge',
+            backgroundColor: 'transparent',
+            height: 180
+          },
+          title: null,
+          pane: {
+            startAngle: -90,
+            endAngle: 90,
+            background: {
+              backgroundColor: '#1a1f2e',
+              innerRadius: '60%',
+              outerRadius: '100%',
+              shape: 'arc'
+            }
+          },
+          yAxis: {
+            min: 0,
+            max: 100,
+            stops: [
+              [0.3, '#ef4444'],
+              [0.6, '#f59e0b'],
+              [1, '#22c55e']
+            ],
+            lineWidth: 0,
+            tickWidth: 0,
+            minorTickInterval: null,
+            tickAmount: 2,
+            labels: {
+              y: 16,
+              style: { fontSize: '10px', color: '#fff' }
+            }
+          },
+          plotOptions: {
+            solidgauge: {
+              dataLabels: {
+                y: -25,
+                borderWidth: 0,
+                useHTML: true
+              }
+            }
+          },
+          credits: { enabled: false },
+          series: [{
+            name: 'NSI',
+            data: [score],
+            dataLabels: {
+              format: '<div style="text-align:center">' +
+                '<span style="font-size:32px;color:#fff;font-weight:700">{y}</span><br/>' +
+                '<span style="font-size:11px;opacity:0.7">Normality Score</span>' +
+                '</div>'
+            }
+          }]
+        });
       } else {
-        overallEl.textContent = `✗ Data may not be normally distributed (${passCount}/4 tests passed)`;
-        overallEl.className = 'overall-result not-normal';
+        gaugeChart.series[0].points[0].update(score);
       }
     }
 
-    function createGauge(sw, jb, ks, ad) {
-      const pValues = [sw.pValue, jb.pValue, ks.pValue, ad.pValue];
-      const avgPValue = pValues.reduce((a, b) => a + b, 0) / pValues.length;
-      const normalityScore = Math.min(100, avgPValue * 200);
-      
-      Highcharts.chart('normalityGauge', {
-        chart: {
-          type: 'solidgauge',
-          backgroundColor: 'transparent',
-          height: 200
-        },
-        title: null,
-        pane: {
-          startAngle: -90,
-          endAngle: 90,
-          background: {
-            backgroundColor: '#1a1f2e',
-            innerRadius: '60%',
-            outerRadius: '100%',
-            shape: 'arc'
-          }
-        },
-        yAxis: {
-          min: 0,
-          max: 100,
-          stops: [
-            [0.3, '#ef4444'],
-            [0.6, '#f59e0b'],
-            [1, '#22c55e']
-          ],
-          lineWidth: 0,
-          tickWidth: 0,
-          minorTickInterval: null,
-          tickAmount: 2,
-          labels: {
-            y: 16,
-            style: { fontSize: '10px', color: '#fff' }
-          }
-        },
-        plotOptions: {
-          solidgauge: {
-            dataLabels: {
-              y: -25,
-              borderWidth: 0,
-              useHTML: true
-            }
-          }
-        },
-        credits: { enabled: false },
-        series: [{
-          name: 'Normality',
-          data: [normalityScore],
-          dataLabels: {
-            format: '<div style="text-align:center">' +
-              '<span style="font-size:28px;color:#fff">{y:.1f}</span><br/>' +
-              '<span style="font-size:12px;opacity:0.7">Normality Score</span>' +
-              '</div>'
-          }
-        }]
-      });
-    }
-
-    // Office.js initialization
+    // ===========================================
+    // OFFICE.JS & DATA HANDLING
+    // ===========================================
     Office.initialize = function (reason) {
       console.log('✅ Normality Tests - Office.js initialized');
       Office.context.ui.addHandlerAsync(
@@ -454,7 +715,12 @@
         onMessageReceived
       );
       setTimeout(() => sendMessageToParent({ status: 'ready' }), 500);
-      setTimeout(() => { if (!dataReady) loadSampleData(); }, 2000);
+      setTimeout(() => { 
+        if (!dataReady) {
+          console.log('⚠️ No data received after 5s, loading sample data');
+          loadSampleData();
+        }
+      }, 5000);
     };
 
     window.addEventListener('DOMContentLoaded', function() {
