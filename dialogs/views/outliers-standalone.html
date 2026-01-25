@@ -547,13 +547,14 @@
         toggleText.textContent = 'Hide Details';
         toggleIcon.className = 'fa-solid fa-eye-slash';
         
-        // Scroll the table into view smoothly
+        // Scroll the table into view more prominently
         setTimeout(() => {
           tableContainer.scrollIntoView({ 
             behavior: 'smooth', 
-            block: 'nearest' 
+            block: 'center',
+            inline: 'nearest'
           });
-        }, 100);
+        }, 150);
       } else {
         console.log('❌ Hiding table');
         toggleText.textContent = 'Show Details';
