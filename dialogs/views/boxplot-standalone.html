@@ -65,8 +65,8 @@
     }
 
     .results-container.show {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr;
+      display: flex !important;
+      flex-direction: column;
       gap: 12px;
     }
 
@@ -91,19 +91,21 @@
 
     .chart-container {
       padding: 12px;
-      min-height: 250px;
-      max-height: 350px;
+      min-height: 200px;
+      max-height: 250px;
     }
 
-    /* Stats Summary Panel */
+    /* Responsive - Remove since we're stacking */
+    @media (max-width: 900px) {
+      /* Already stacked, no changes needed */
+    }
     .stats-panel {
       background-color: var(--surface-1);
       border-radius: var(--panel-radius);
       box-shadow: var(--panel-shadow);
       border: 1px solid var(--border);
       padding: 12px;
-      margin-bottom: 12px;
-      grid-column: 1 / -1;
+      margin-bottom: 0;
     }
 
     .stats-grid {
@@ -437,9 +439,9 @@
           type: 'boxplot',
           inverted: true,
           backgroundColor: 'transparent',
-          height: 280,
-          marginTop: 30,
-          marginBottom: 40,
+          height: 220,
+          marginTop: 25,
+          marginBottom: 35,
           marginLeft: 70,
           marginRight: 20,
           spacingTop: 5,
