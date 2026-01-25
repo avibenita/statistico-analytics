@@ -441,8 +441,8 @@
         }
         
         // p-value from standard normal
-        // When W is small → lnW is large negative → z is large negative → p-value is small
-        pValue = jStat.normal.cdf(z, 0, 1);
+        // We want: smaller W => smaller p-value
+        pValue = 1 - jStat.normal.cdf(z, 0, 1);
         
         // Ensure valid range
         pValue = Math.max(0.0001, Math.min(0.9999, pValue));
