@@ -752,3 +752,28 @@ function quickTestKernel() {
     openNewView(dialogUrl, results);
     showStatus('success', 'Test Kernel Density opened!');
 }
+
+/**
+ * Quick test function for Outliers Detection with sample data
+ */
+function quickTestOutliers() {
+    console.log('🧪 Quick test: Outliers Detection');
+    
+    // Generate sample data with some outliers
+    const sampleData = [];
+    for (let i = 0; i < 95; i++) {
+        const u1 = Math.random();
+        const u2 = Math.random();
+        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        sampleData.push(50 + z * 10);
+    }
+    // Add deliberate outliers
+    sampleData.push(5, 95, 100, 3, 92);
+    
+    const results = calculateStatistics(sampleData, 'Test Data', 'none');
+    currentResults = results;
+    
+    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/outliers-standalone.html';
+    openNewView(dialogUrl, results);
+    showStatus('success', 'Test Outliers Detection opened!');
+}
