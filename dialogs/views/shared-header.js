@@ -95,13 +95,14 @@ const StatisticoHeader = {
   renderDropdownItems() {
     const views = [
       { id: 'histogram', icon: 'fa-chart-column', label: 'Histogram & Stats', file: 'histogram-standalone.html' },
-      { id: 'boxplot', icon: 'fa-box', label: 'Box Plot', file: 'boxplot-standalone.html' },
-      { id: 'qqplot', icon: 'fa-chart-scatter', label: 'QQ/PP Plot', file: 'qqplot-standalone.html' },
-      { id: 'normality', icon: 'fa-vial', label: 'Normality Tests', file: 'normality-standalone.html' },
-      { id: 'kernel', icon: 'fa-wave-square', label: 'Kernel Density', file: 'kernel-standalone.html' },
-      { id: 'confidence', icon: 'fa-chart-line', label: 'Confidence Intervals', file: 'confidence-standalone.html' },
-      { id: 'hypothesis', icon: 'fa-flask', label: 'Hypothesis Testing', file: 'hypothesis-standalone.html' },
-      { id: 'outliers', icon: 'fa-exclamation-triangle', label: 'Outliers Detection', file: 'outliers-standalone.html' }
+      { id: 'boxplot', icon: 'fa-box', label: 'Box Plot', file: 'boxplot-standalone.html' }
+      // TODO: Add more views as they are created:
+      // { id: 'qqplot', icon: 'fa-chart-scatter', label: 'QQ/PP Plot', file: 'qqplot-standalone.html' },
+      // { id: 'normality', icon: 'fa-vial', label: 'Normality Tests', file: 'normality-standalone.html' },
+      // { id: 'kernel', icon: 'fa-wave-square', label: 'Kernel Density', file: 'kernel-standalone.html' },
+      // { id: 'confidence', icon: 'fa-chart-line', label: 'Confidence Intervals', file: 'confidence-standalone.html' },
+      // { id: 'hypothesis', icon: 'fa-flask', label: 'Hypothesis Testing', file: 'hypothesis-standalone.html' },
+      // { id: 'outliers', icon: 'fa-exclamation-triangle', label: 'Outliers Detection', file: 'outliers-standalone.html' }
     ];
     
     return views.map(view => `
