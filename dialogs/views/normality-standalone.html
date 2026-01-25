@@ -520,37 +520,53 @@
       return 1.167;
     }
 
-    // 6. D'Agostino-Pearson Test (Omnibus)
+    // 6. D'Agostino-Pearson Test (Omnibus) - Simplified robust version
     function dagostinoPearsonTest(data) {
       const n = data.length;
+      
+      // Need at least 8 observations
+      if (n < 8) {
+        console.warn('⚠️ D\'Agostino-Pearson requires n >= 8, got n =', n);
+        return { statistic: NaN, pValue: NaN, critical: 5.991 };
+      }
+      
       const mean = data.reduce((a, b) => a + b, 0) / n;
-      const m2 = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n;
-      const m3 = data.reduce((acc, val) => acc + Math.pow(val - mean, 3), 0) / n;
-      const m4 = data.reduce((acc, val) => acc + Math.pow(val - mean, 4), 0) / n;
+      const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n;
+      const stdDev = Math.sqrt(variance);
       
-      const b1 = Math.pow(m3, 2) / Math.pow(m2, 3);
-      const b2 = m4 / Math.pow(m2, 2);
+      if (stdDev === 0) {
+        console.warn('⚠️ D\'Agostino-Pearson: zero variance');
+        return { statistic: NaN, pValue: NaN, critical: 5.991 };
+      }
       
-      // Z-score for skewness
-      const sqrtB1 = Math.sqrt(b1);
-      const y = sqrtB1 * Math.sqrt((n + 1) * (n + 3) / (6 * (n - 2)));
-      const beta2_b1 = 3 * (Math.pow(n, 2) + 27 * n - 70) * (n + 1) * (n + 3) / ((n - 2) * (n + 5) * (n + 7) * (n + 9));
-      const W2 = -1 + Math.sqrt(2 * (beta2_b1 - 1));
-      const delta = 1 / Math.sqrt(0.5 * Math.log(W2));
-      const alpha_z = Math.sqrt(2 / (W2 - 1));
-      const zb1 = delta * Math.log(y / alpha_z + Math.sqrt(Math.pow(y / alpha_z, 2) + 1));
+      // Calculate standardized moments
+      const m3 = data.reduce((acc, val) => acc + Math.pow((val - mean) / stdDev, 3), 0) / n;
+      const m4 = data.reduce((acc, val) => acc + Math.pow((val - mean) / stdDev, 4), 0) / n;
       
-      // Z-score for kurtosis
-      const meanbeta2 = 3 * (n - 1) / (n + 1);
-      const varbeta2 = 24 * n * (n - 2) * (n - 3) / (Math.pow(n + 1, 2) * (n + 3) * (n + 5));
-      const x = (b2 - meanbeta2) / Math.sqrt(varbeta2);
-      const sqrtbeta1 = 6 * (n * n - 5 * n + 2) / ((n + 7) * (n + 9)) * Math.sqrt(6 * (n + 3) * (n + 5) / (n * (n - 2) * (n - 3)));
-      const A = 6 + 8 / sqrtbeta1 * (2 / sqrtbeta1 + Math.sqrt(1 + 4 / Math.pow(sqrtbeta1, 2)));
-      const zb2 = (1 - 2 / (9 * A) - Math.pow(1 - 2 / A, 1 / 3) * Math.pow(x / (2 / (9 * A)), 1 / 3)) / Math.sqrt(2 / (9 * A));
+      // Sample skewness and kurtosis
+      const skewness = m3;
+      const kurtosis = m4 - 3; // Excess kurtosis
       
-      const K2 = Math.pow(zb1, 2) + Math.pow(zb2, 2);
+      // Z-score for skewness (simplified)
+      const varSkew = 6 * (n - 2) / ((n + 1) * (n + 3));
+      const zSkew = skewness / Math.sqrt(varSkew);
+      
+      // Z-score for kurtosis (simplified)
+      const varKurt = 24 * n * (n - 2) * (n - 3) / (Math.pow(n + 1, 2) * (n + 3) * (n + 5));
+      const zKurt = kurtosis / Math.sqrt(varKurt);
+      
+      // Combined K² statistic
+      const K2 = Math.pow(zSkew, 2) + Math.pow(zKurt, 2);
+      
+      // Check for invalid values
+      if (!isFinite(K2)) {
+        console.warn('⚠️ D\'Agostino-Pearson: Invalid K² =', K2);
+        return { statistic: NaN, pValue: NaN, critical: 5.991 };
+      }
+      
+      // p-value from chi-square distribution (2 df)
       const pValue = 1 - jStat.chisquare.cdf(K2, 2);
-      const critical = andersonDarlingCritical(ALPHA); // Reuse AD critical
+      const critical = jStat.chisquare.inv(1 - ALPHA, 2); // ~5.991 at α=0.05
       
       return { statistic: K2, pValue, critical };
     }
