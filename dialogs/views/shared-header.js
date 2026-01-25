@@ -99,9 +99,9 @@ const StatisticoHeader = {
       { id: 'qqplot', icon: 'fa-chart-scatter', label: 'QQ/PP Plot', file: 'qqplot-standalone.html' },
       { id: 'kernel', icon: 'fa-wave-square', label: 'Kernel Density', file: 'kernel-standalone.html' },
       { id: 'outliers', icon: 'fa-exclamation-triangle', label: 'Outliers Detection', file: 'outliers-standalone.html' },
-      { id: 'confidence', icon: 'fa-chart-line', label: 'Confidence Intervals', file: 'confidence-standalone.html' }
-      // TODO: Add more views as they are created:
-      // { id: 'normality', icon: 'fa-vial', label: 'Normality Tests', file: 'normality-standalone.html' },
+      { id: 'confidence', icon: 'fa-chart-line', label: 'Confidence Intervals', file: 'confidence-standalone.html' },
+      { id: 'normality', icon: 'fa-vial', label: 'Normality Tests', file: 'normality-standalone.html' }
+      // TODO: Add last view:
       // { id: 'hypothesis', icon: 'fa-flask', label: 'Hypothesis Testing', file: 'hypothesis-standalone.html' }
     ];
     

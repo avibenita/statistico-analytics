@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Normality Tests - Statistico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/highcharts-more.js"></script>
+  <script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.4/jstat.min.js"></script>
+  <link rel="stylesheet" href="./shared-header.css">
+  <script src="./shared-header.js"></script>
+  
+  <style>
+    :root {
+      --surface-0: #0c1624;
+      --surface-1: #1a1f2e;
+      --surface-2: #242938;
+      --border: #2d3748;
+      --accent-1: rgb(255,165,120);
+      --accent-2: rgb(120,200,255);
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255,255,255,0.8);
+      --text-muted: rgba(255,255,255,0.6);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--surface-0);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text-primary);
+    }
+
+    .results-container {
+      padding: 10px;
+      max-width: 100%;
+    }
+
+    .panel {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-1);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Tests Grid */
+    .tests-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .test-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .test-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .test-result {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .test-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .test-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .p-value {
+      font-size: 14px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .p-value.pass {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+    }
+
+    .p-value.fail {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+
+    /* Gauge */
+    .gauge-container {
+      height: 200px;
+      margin: 10px 0;
+    }
+
+    .overall-result {
+      text-align: center;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .overall-result.normal {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .overall-result.not-normal {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .tests-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <statistico-header view-name="Normality Tests" module-name="Univariate Analysis"></statistico-header>
+  
+  <div class="results-container">
+    <!-- Normality Score Gauge -->
+    <div class="panel">
+      <div class="panel-title">
+        <i class="fa-solid fa-gauge-high"></i>
+        Normality Score
+      </div>
+      <div id="normalityGauge" class="gauge-container"></div>
+      <div id="overallResult" class="overall-result"></div>
+    </div>
+
+    <!-- Statistical Tests -->
+    <div class="panel">
+      <div class="panel-title">
+        <i class="fa-solid fa-flask"></i>
+        Statistical Tests
+      </div>
+      <div class="tests-grid">
+        <div class="test-card">
+          <div class="test-name">Shapiro-Wilk Test</div>
+          <div class="test-result">
+            <span class="test-label">W Statistic:</span>
+            <span class="test-value" id="sw-stat">—</span>
+          </div>
+          <div class="test-result">
+            <span class="test-label">p-value:</span>
+            <span class="p-value" id="sw-p">—</span>
+          </div>
+        </div>
+
+        <div class="test-card">
+          <div class="test-name">Jarque-Bera Test</div>
+          <div class="test-result">
+            <span class="test-label">JB Statistic:</span>
+            <span class="test-value" id="jb-stat">—</span>
+          </div>
+          <div class="test-result">
+            <span class="test-label">p-value:</span>
+            <span class="p-value" id="jb-p">—</span>
+          </div>
+        </div>
+
+        <div class="test-card">
+          <div class="test-name">Kolmogorov-Smirnov</div>
+          <div class="test-result">
+            <span class="test-label">D Statistic:</span>
+            <span class="test-value" id="ks-stat">—</span>
+          </div>
+          <div class="test-result">
+            <span class="test-label">p-value:</span>
+            <span class="p-value" id="ks-p">—</span>
+          </div>
+        </div>
+
+        <div class="test-card">
+          <div class="test-name">Anderson-Darling</div>
+          <div class="test-result">
+            <span class="test-label">A² Statistic:</span>
+            <span class="test-value" id="ad-stat">—</span>
+          </div>
+          <div class="test-result">
+            <span class="test-label">p-value:</span>
+            <span class="p-value" id="ad-p">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let originalData = [];
+    let varName = 'Variable';
+    let librariesLoaded = false;
+    let dataReady = false;
+
+    function checkLibraries() {
+      librariesLoaded = typeof Highcharts !== 'undefined' && typeof jStat !== 'undefined';
+      return librariesLoaded;
+    }
+
+    // Shapiro-Wilk Test
+    function shapiroWilkTest(data) {
+      const n = data.length;
+      const sorted = [...data].sort((a, b) => a - b);
+      const mean = sorted.reduce((a, b) => a + b, 0) / n;
+      
+      let a = [];
+      for (let i = 0; i < Math.floor(n / 2); i++) {
+        const p = (i + 1 - 0.375) / (n + 0.25);
+        const invNorm = jStat.normal.inv(p, 0, 1);
+        a.push(invNorm);
+      }
+      
+      const sumA2 = a.reduce((acc, val) => acc + val * val, 0);
+      const normFactor = 1 / Math.sqrt(sumA2);
+      a = a.map(val => val * normFactor);
+      
+      let b = 0;
+      for (let i = 0; i < a.length; i++) {
+        b += a[i] * (sorted[n - 1 - i] - sorted[i]);
+      }
+      
+      const variance = sorted.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0);
+      const W = (b * b) / variance;
+      
+      let pValue;
+      if (n < 50) {
+        const logW = Math.log(1 - W);
+        const logN = Math.log(n);
+        const z = -logW - 2.27 + 0.8 * logN;
+        pValue = 1 - jStat.normal.cdf(z, 0, 1);
+      } else {
+        const mu = 0.0038915 * Math.pow(Math.log(n) - 3, 3) + 0.37872 * Math.pow(Math.log(n) - 3, 2) - 0.08928 * (Math.log(n) - 3);
+        const sigma = Math.exp(-0.0015395 * Math.pow(Math.log(n) - 3, 3) + 0.13186 * Math.pow(Math.log(n) - 3, 2) - 0.27791 * (Math.log(n) - 3) - 1.0063);
+        const z = (Math.log(1 - W) - mu) / sigma;
+        pValue = 1 - jStat.normal.cdf(z, 0, 1);
+      }
+      
+      return { statistic: W, pValue };
+    }
+
+    // Jarque-Bera Test
+    function jarqueBeraTest(data) {
+      const n = data.length;
+      const mean = data.reduce((a, b) => a + b, 0) / n;
+      const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n;
+      const stdDev = Math.sqrt(variance);
+      
+      const m3 = data.reduce((acc, val) => acc + Math.pow((val - mean) / stdDev, 3), 0) / n;
+      const m4 = data.reduce((acc, val) => acc + Math.pow((val - mean) / stdDev, 4), 0) / n;
+      
+      const skewness = m3;
+      const kurtosis = m4;
+      
+      const JB = (n / 6) * (Math.pow(skewness, 2) + Math.pow(kurtosis - 3, 2) / 4);
+      const pValue = 1 - jStat.chisquare.cdf(JB, 2);
+      
+      return { statistic: JB, pValue };
+    }
+
+    // Kolmogorov-Smirnov Test
+    function kolmogorovSmirnovTest(data) {
+      const n = data.length;
+      const sorted = [...data].sort((a, b) => a - b);
+      const mean = data.reduce((a, b) => a + b, 0) / n;
+      const stdDev = Math.sqrt(data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n);
+      
+      let maxD = 0;
+      for (let i = 0; i < n; i++) {
+        const z = (sorted[i] - mean) / stdDev;
+        const empirical = (i + 1) / n;
+        const theoretical = jStat.normal.cdf(z, 0, 1);
+        const d = Math.abs(empirical - theoretical);
+        maxD = Math.max(maxD, d);
+      }
+      
+      const pValue = 1 - Math.exp(-2 * Math.pow(maxD * Math.sqrt(n), 2));
+      
+      return { statistic: maxD, pValue };
+    }
+
+    // Anderson-Darling Test
+    function andersonDarlingTest(data) {
+      const n = data.length;
+      const sorted = [...data].sort((a, b) => a - b);
+      const mean = data.reduce((a, b) => a + b, 0) / n;
+      const stdDev = Math.sqrt(data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n);
+      
+      let sum = 0;
+      for (let i = 0; i < n; i++) {
+        const z = (sorted[i] - mean) / stdDev;
+        const Fi = jStat.normal.cdf(z, 0, 1);
+        const F_ni = jStat.normal.cdf((sorted[n - 1 - i] - mean) / stdDev, 0, 1);
+        sum += (2 * i + 1) * (Math.log(Fi) + Math.log(1 - F_ni));
+      }
+      
+      const A2 = -n - sum / n;
+      const A2Modified = A2 * (1 + 0.75 / n + 2.25 / (n * n));
+      
+      let pValue;
+      if (A2Modified < 0.2) pValue = 1 - Math.exp(-13.436 + 101.14 * A2Modified - 223.73 * A2Modified * A2Modified);
+      else if (A2Modified < 0.34) pValue = 1 - Math.exp(-8.318 + 42.796 * A2Modified - 59.938 * A2Modified * A2Modified);
+      else if (A2Modified < 0.6) pValue = Math.exp(0.9177 - 4.279 * A2Modified - 1.38 * A2Modified * A2Modified);
+      else pValue = Math.exp(1.2937 - 5.709 * A2Modified + 0.0186 * A2Modified * A2Modified);
+      
+      return { statistic: A2Modified, pValue: Math.max(0, Math.min(1, pValue)) };
+    }
+
+    // Run all tests
+    function runNormalityTests() {
+      if (!dataReady || !librariesLoaded || originalData.length === 0) return;
+      
+      console.log('🧪 Running normality tests...');
+      
+      const sw = shapiroWilkTest(originalData);
+      const jb = jarqueBeraTest(originalData);
+      const ks = kolmogorovSmirnovTest(originalData);
+      const ad = andersonDarlingTest(originalData);
+      
+      displayResults(sw, jb, ks, ad);
+      createGauge(sw, jb, ks, ad);
+    }
+
+    function displayResults(sw, jb, ks, ad) {
+      const alpha = 0.05;
+      
+      document.getElementById('sw-stat').textContent = sw.statistic.toFixed(4);
+      document.getElementById('sw-p').textContent = sw.pValue.toFixed(4);
+      document.getElementById('sw-p').className = sw.pValue >= alpha ? 'p-value pass' : 'p-value fail';
+      
+      document.getElementById('jb-stat').textContent = jb.statistic.toFixed(4);
+      document.getElementById('jb-p').textContent = jb.pValue.toFixed(4);
+      document.getElementById('jb-p').className = jb.pValue >= alpha ? 'p-value pass' : 'p-value fail';
+      
+      document.getElementById('ks-stat').textContent = ks.statistic.toFixed(4);
+      document.getElementById('ks-p').textContent = ks.pValue.toFixed(4);
+      document.getElementById('ks-p').className = ks.pValue >= alpha ? 'p-value pass' : 'p-value fail';
+      
+      document.getElementById('ad-stat').textContent = ad.statistic.toFixed(4);
+      document.getElementById('ad-p').textContent = ad.pValue.toFixed(4);
+      document.getElementById('ad-p').className = ad.pValue >= alpha ? 'p-value pass' : 'p-value fail';
+      
+      const passCount = [sw, jb, ks, ad].filter(t => t.pValue >= alpha).length;
+      const overallEl = document.getElementById('overallResult');
+      
+      if (passCount >= 3) {
+        overallEl.textContent = `✓ Data appears normally distributed (${passCount}/4 tests passed)`;
+        overallEl.className = 'overall-result normal';
+      } else {
+        overallEl.textContent = `✗ Data may not be normally distributed (${passCount}/4 tests passed)`;
+        overallEl.className = 'overall-result not-normal';
+      }
+    }
+
+    function createGauge(sw, jb, ks, ad) {
+      const pValues = [sw.pValue, jb.pValue, ks.pValue, ad.pValue];
+      const avgPValue = pValues.reduce((a, b) => a + b, 0) / pValues.length;
+      const normalityScore = Math.min(100, avgPValue * 200);
+      
+      Highcharts.chart('normalityGauge', {
+        chart: {
+          type: 'solidgauge',
+          backgroundColor: 'transparent',
+          height: 200
+        },
+        title: null,
+        pane: {
+          startAngle: -90,
+          endAngle: 90,
+          background: {
+            backgroundColor: '#1a1f2e',
+            innerRadius: '60%',
+            outerRadius: '100%',
+            shape: 'arc'
+          }
+        },
+        yAxis: {
+          min: 0,
+          max: 100,
+          stops: [
+            [0.3, '#ef4444'],
+            [0.6, '#f59e0b'],
+            [1, '#22c55e']
+          ],
+          lineWidth: 0,
+          tickWidth: 0,
+          minorTickInterval: null,
+          tickAmount: 2,
+          labels: {
+            y: 16,
+            style: { fontSize: '10px', color: '#fff' }
+          }
+        },
+        plotOptions: {
+          solidgauge: {
+            dataLabels: {
+              y: -25,
+              borderWidth: 0,
+              useHTML: true
+            }
+          }
+        },
+        credits: { enabled: false },
+        series: [{
+          name: 'Normality',
+          data: [normalityScore],
+          dataLabels: {
+            format: '<div style="text-align:center">' +
+              '<span style="font-size:28px;color:#fff">{y:.1f}</span><br/>' +
+              '<span style="font-size:12px;opacity:0.7">Normality Score</span>' +
+              '</div>'
+          }
+        }]
+      });
+    }
+
+    // Office.js initialization
+    Office.initialize = function (reason) {
+      console.log('✅ Normality Tests - Office.js initialized');
+      Office.context.ui.addHandlerAsync(
+        Office.EventType.DialogParentMessageReceived,
+        onMessageReceived
+      );
+      setTimeout(() => sendMessageToParent({ status: 'ready' }), 500);
+      setTimeout(() => { if (!dataReady) loadSampleData(); }, 2000);
+    };
+
+    window.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 DOM Content Loaded');
+      const initHeader = () => {
+        if (typeof StatisticoHeader !== 'undefined') {
+          StatisticoHeader.init('normality', 'Variable', 0);
+        } else {
+          setTimeout(initHeader, 100);
+        }
+      };
+      initHeader();
+      
+      const checkAndInit = () => {
+        if (checkLibraries()) {
+          if (typeof Office === 'undefined') {
+            loadSampleData();
+          }
+        } else {
+          setTimeout(checkAndInit, 100);
+        }
+      };
+      setTimeout(checkAndInit, 100);
+    });
+
+    function onMessageReceived(arg) {
+      try {
+        const message = JSON.parse(arg.message);
+        if (message.action === 'sendData' && message.data) {
+          handleDataReceived(message.data);
+        }
+      } catch (e) {
+        console.error('Error:', e);
+      }
+    }
+
+    function sendMessageToParent(message) {
+      if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+        Office.context.ui.messageParent(JSON.stringify(message));
+      }
+    }
+
+    function loadSampleData() {
+      console.log('📊 Loading sample data...');
+      if (!checkLibraries()) {
+        setTimeout(loadSampleData, 200);
+        return;
+      }
+      
+      const sampleData = [];
+      for (let i = 0; i < 100; i++) {
+        const u1 = Math.random();
+        const u2 = Math.random();
+        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        sampleData.push(50 + z * 10);
+      }
+      
+      originalData = sampleData;
+      varName = 'Sample Data';
+      dataReady = true;
+      
+      const updateHeader = () => {
+        if (typeof StatisticoHeader !== 'undefined') {
+          StatisticoHeader.updateVariable(varName, originalData.length);
+        } else {
+          setTimeout(updateHeader, 100);
+        }
+      };
+      updateHeader();
+      
+      runNormalityTests();
+    }
+
+    function handleDataReceived(data) {
+      try {
+        if (!checkLibraries()) {
+          setTimeout(() => handleDataReceived(data), 200);
+          return;
+        }
+        
+        originalData = data.values || data.data || [];
+        varName = data.variableName || data.column || 'Variable';
+        dataReady = true;
+        
+        const updateHeader = () => {
+          if (typeof StatisticoHeader !== 'undefined') {
+            StatisticoHeader.updateVariable(varName, originalData.length);
+          } else {
+            setTimeout(updateHeader, 100);
+          }
+        };
+        updateHeader();
+        
+        runNormalityTests();
+      } catch (e) {
+        console.error('Error:', e);
+      }
+    }
+  </script>
+</body>
+</html>
