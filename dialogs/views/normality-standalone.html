@@ -84,24 +84,48 @@
     .dashboard-body {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 15px;
       padding: 12px;
       background: #0b0b0b;
     }
 
-    /* Summary panel */
-    .summary-panel {
-      background: #000;
-      border-radius: 6px;
-      padding: 10px;
-      min-height: 120px;
-      border: 1px solid #1e2533;
+    /* Card Wrapper */
+    .card-wrapper {
+      background: var(--surface-1);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      height: 150px;
+      display: flex;
+      flex-direction: column;
     }
 
+    .card-header {
+      background: linear-gradient(135deg, #1e2533 0%, #15192a 100%);
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-1);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      border-bottom: 1px solid rgba(255,165,120,0.2);
+    }
+
+    .card-body {
+      flex: 1;
+      background: #000;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Summary Stats */
     .summary-stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
+      gap: 8px;
+      width: 100%;
     }
 
     .stat-item {
@@ -109,13 +133,13 @@
     }
 
     .stat-value {
-      font-size: 22px;
+      font-size: 18px;
       font-weight: 700;
       color: var(--text-primary);
     }
 
     .stat-label {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--text-muted);
       margin-top: 2px;
     }
@@ -124,24 +148,10 @@
       margin-top: 4px;
     }
 
-    /* Gauge panel */
-    .gauge-panel {
-      background: #000;
-      border-radius: 6px;
-      padding: 10px;
-      border: 1px solid #1e2533;
-    }
-
-    .gauge-title {
-      text-align: center;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      margin-bottom: 5px;
-    }
-
+    /* Gauge */
     .gauge-container {
-      height: 180px;
+      height: 120px;
+      width: 100%;
     }
 
     /* Tests Grid */
@@ -239,35 +249,38 @@
         </div>
       </div>
       <div class="dashboard-body">
-        <div class="summary-panel">
-          <div class="summary-stats">
-            <div class="stat-item">
-              <div class="stat-value" id="pass-count">0</div>
-              <div class="stat-label">Tests Passed</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value" id="fail-count">0</div>
-              <div class="stat-label">Tests Failed</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value" id="sample-size">—</div>
-              <div class="stat-label">Sample Size</div>
-            </div>
-            <div class="stat-item" style="position: relative;">
-              <div class="stat-value" id="significance">0.05</div>
-              <div class="stat-label">Significance</div>
-              <input class="alpha-slider" type="range" id="alpha-slider" min="0.01" max="0.15" step="0.01" value="0.05" 
-                     style="width: 100%; margin-top: 5px; accent-color: #ffd700;"
-                     oninput="updateAlpha(this.value)">
-              <div style="font-size: 9px; color: rgba(255,255,255,0.5); margin-top: 2px;">Adjust</div>
+        <div class="card-wrapper">
+          <div class="card-header">Summary Statistics</div>
+          <div class="card-body">
+            <div class="summary-stats">
+              <div class="stat-item">
+                <div class="stat-value" id="pass-count">0</div>
+                <div class="stat-label">Tests Passed</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value" id="fail-count">0</div>
+                <div class="stat-label">Tests Failed</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value" id="sample-size">—</div>
+                <div class="stat-label">Sample Size</div>
+              </div>
+              <div class="stat-item" style="position: relative;">
+                <div class="stat-value" id="significance">0.05</div>
+                <div class="stat-label">Significance</div>
+                <input class="alpha-slider" type="range" id="alpha-slider" min="0.01" max="0.15" step="0.01" value="0.05" 
+                       style="width: 100%; margin-top: 5px; accent-color: #ffd700;"
+                       oninput="updateAlpha(this.value)">
+                <div style="font-size: 9px; color: rgba(255,255,255,0.5); margin-top: 2px;">Adjust</div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="gauge-panel">
-          <div class="gauge-title">
-            NSI<sup style="font-size:8px;">™</sup> -Normality Strength Index
+        <div class="card-wrapper">
+          <div class="card-header">NSI™ - Normality Strength Index</div>
+          <div class="card-body">
+            <div id="normalityGauge" class="gauge-container"></div>
           </div>
-          <div id="normalityGauge" class="gauge-container"></div>
         </div>
       </div>
     </div>
@@ -883,44 +896,60 @@
       if (!gaugeChart) {
         gaugeChart = Highcharts.chart('normalityGauge', {
           chart: {
-            type: 'solidgauge',
+            type: 'gauge',
             backgroundColor: 'transparent',
-            height: 180
+            height: 120,
+            plotBackgroundColor: null,
+            plotBackgroundImage: null,
+            plotBorderWidth: 0,
+            plotShadow: false
           },
           title: null,
           pane: {
             startAngle: -90,
             endAngle: 90,
-            background: {
-              backgroundColor: '#1a1f2e',
-              innerRadius: '60%',
-              outerRadius: '100%',
-              shape: 'arc'
-            }
+            background: null,
+            center: ['50%', '75%'],
+            size: '120%'
           },
           yAxis: {
             min: 0,
             max: 100,
-            lineWidth: 0,
-            tickWidth: 0,
-            minorTickInterval: null,
-            tickAmount: 3,
+            minorTickInterval: 'auto',
+            minorTickWidth: 1,
+            minorTickLength: 5,
+            minorTickPosition: 'inside',
+            minorTickColor: '#666',
+            tickPixelInterval: 30,
+            tickWidth: 2,
+            tickPosition: 'inside',
+            tickLength: 10,
+            tickColor: '#666',
             labels: {
-              y: 16,
+              distance: 12,
+              rotation: 'auto',
               style: { fontSize: '10px', color: '#fff' }
             },
             plotBands: [
-              { from: 0, to: 33.33, color: '#ef4444' },
-              { from: 33.33, to: 66.66, color: '#f59e0b' },
-              { from: 66.66, to: 100, color: '#22c55e' }
+              { from: 0, to: 33.33, color: '#ef4444', thickness: '40%' },
+              { from: 33.33, to: 66.66, color: '#f59e0b', thickness: '40%' },
+              { from: 66.66, to: 100, color: '#22c55e', thickness: '40%' }
             ]
           },
           plotOptions: {
-            solidgauge: {
-              dataLabels: {
-                y: -20,
+            gauge: {
+              dial: {
+                radius: '85%',
+                backgroundColor: '#fff',
                 borderWidth: 0,
-                useHTML: true
+                baseWidth: 5,
+                topWidth: 1,
+                baseLength: '0%',
+                rearLength: '0%'
+              },
+              pivot: {
+                backgroundColor: '#ffd700',
+                radius: 5
               }
             }
           },
@@ -929,10 +958,15 @@
             name: 'NSI',
             data: [score],
             dataLabels: {
+              y: 10,
+              borderWidth: 0,
+              useHTML: true,
               format: '<div style="text-align:center">' +
-                '<span style="font-size:30px;color:#fff;font-weight:700">{y}</span><br/>' +
-                '<span style="font-size:11px;opacity:0.7">NSI</span>' +
+                '<span style="font-size:26px;color:#ffd700;font-weight:700">{y}</span>' +
                 '</div>'
+            },
+            tooltip: {
+              valueSuffix: ' NSI'
             }
           }]
         });
