@@ -449,6 +449,7 @@ function calculateKurtosis(data, mean, stdDev) {
  * Open results in Office Dialog
  */
 let resultsDialog = null;
+let currentResults = null; // Store results globally for view switching
 
 // Theme management
 function setResultsTheme(theme) {
@@ -510,10 +511,13 @@ function openNewView(dialogUrl, results) {
                                 data: viewData
                             }));
                         } else if (message.action === 'switchView') {
-                            resultsDialog.close();
-                            resultsDialog = null;
+                            if (resultsDialog) {
+                                resultsDialog.close();
+                                resultsDialog = null;
+                            }
                             const newDialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/${message.view}`;
-                            openNewView(newDialogUrl, results);
+                            console.log('📂 Switching to:', newDialogUrl);
+                            openNewView(newDialogUrl, currentResults);
                         } else if (message.action === 'close' || message.action === 'closeDialog') {
                             resultsDialog.close();
                             resultsDialog = null;
@@ -533,7 +537,8 @@ function openNewView(dialogUrl, results) {
 }
 
 function openResultsDialog(results) {
-    // Store results in localStorage for the dialog
+    // Store results globally and in localStorage
+    currentResults = results;
     localStorage.setItem('univariateResults', JSON.stringify(results));
     
     // Use standalone histogram instead of full results dialog
@@ -590,12 +595,15 @@ function openResultsDialog(results) {
                             console.log('🔄 Switching to view:', message.view);
                             
                             // Close current dialog
-                            resultsDialog.close();
-                            resultsDialog = null;
+                            if (resultsDialog) {
+                                resultsDialog.close();
+                                resultsDialog = null;
+                            }
                             
-                            // Open new view
+                            // Open new view with stored results
                             const newDialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/${message.view}`;
-                            openNewView(newDialogUrl, results);
+                            console.log('📂 Opening new view:', newDialogUrl);
+                            openNewView(newDialogUrl, currentResults);
                         } else if (message.action === 'close' || message.action === 'closeDialog') {
                             console.log('📤 Close dialog message received');
                             resultsDialog.close();
