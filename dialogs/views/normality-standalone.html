@@ -599,55 +599,105 @@
       return 1.167;
     }
 
-    // 6. D'Agostino-Pearson Test (Omnibus) - Simplified robust version
+    // 6. D'Agostino-Pearson Test (Omnibus) - VB6 exact port
     function dagostinoPearsonTest(data) {
       const n = data.length;
-      
-      // Need at least 8 observations
       if (n < 8) {
         console.warn('⚠️ D\'Agostino-Pearson requires n >= 8, got n =', n);
-        return { statistic: NaN, pValue: NaN, critical: 5.991 };
+        return { statistic: NaN, pValue: NaN, critical: andersonDarlingCritical(currentAlpha) };
       }
-      
-      const mean = data.reduce((a, b) => a + b, 0) / n;
-      const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / n;
-      const stdDev = Math.sqrt(variance);
-      
-      if (stdDev === 0) {
-        console.warn('⚠️ D\'Agostino-Pearson: zero variance');
-        return { statistic: NaN, pValue: NaN, critical: 5.991 };
+
+      // VB6 sktest implementation (uses absolute deviations)
+      function sktest(vec, N) {
+        let xbar = 0;
+        for (let i = 0; i < N; i++) xbar += vec[i];
+        xbar = xbar / N;
+
+        const datad = new Array(N);
+        let m2 = 0;
+        for (let i = 0; i < N; i++) {
+          const di = Math.abs(vec[i]) - xbar;
+          datad[i] = di;
+          m2 += di * di;
+        }
+        m2 = m2 / N;
+
+        const np1 = N + 1;
+        const nm2 = N - 2;
+        const np3 = N + 3;
+        const np5 = N + 5;
+        const np7 = N + 7;
+        const np9 = N + 9;
+
+        // Skewness z-score (zb1)
+        let m3 = 0;
+        for (let i = 0; i < N; i++) m3 += Math.pow(datad[i], 3);
+        m3 = m3 / N;
+        const sqb1 = m3 / Math.sqrt(Math.pow(m2, 3));
+        const y = sqb1 * Math.sqrt((np1 * np3) / (6 * nm2));
+        const term1b2 = 3 * (N * N + 27 * N - 70) * np1 * np3;
+        const term2b2 = nm2 * np5 * np7 * np9;
+        const beta2 = term1b2 / term2b2;
+        const w = Math.sqrt(-1 + Math.sqrt(2 * (beta2 - 1)));
+        const delta = 1 / Math.sqrt(Math.log(w));
+        const alpha = Math.sqrt(2 / (w * w - 1));
+        const zb1 = delta * Math.log(y / alpha + Math.sqrt(Math.pow(y / alpha, 2) + 1));
+
+        // Kurtosis z-score (zb2)
+        let m4 = 0;
+        for (let i = 0; i < N; i++) m4 += Math.pow(datad[i], 4);
+        m4 = m4 / N;
+        const b2 = m4 / (m2 * m2);
+        const meanb2 = 3 * (N - 1) / np1;
+        const term1v = 24 * N * nm2 * (N - 3);
+        const term2v = np1 * np1 * np3 * np5;
+        const varb2 = term1v / term2v;
+        const x = (b2 - meanb2) / Math.sqrt(varb2);
+        const term1beta1 = 6 * (N * N - 5 * N + 2);
+        const term2beta1 = Math.sqrt(6 * np3 * np5);
+        const numerator = term1beta1 * term2beta1;
+        const term3beta1 = np7 * np9 * Math.sqrt(N * nm2 * (N - 3));
+        const beta1 = numerator / term3beta1;
+        const a = 6 + (8 / beta1) * ((2 / beta1) + Math.sqrt((4 / (beta1 * beta1)) + 1));
+        const t1 = 2 / (9 * a);
+        const t2 = 1 + x * Math.sqrt(2 / (a - 4));
+        const aa = 1 - t1;
+        const bb1 = (1 - 2 / a) / t2;
+        const bb2 = bb1 < 0 ? -bb1 : bb1;
+        const bb = Math.pow(bb2, 0.3);
+        const zb2 = (aa - bb) / Math.sqrt(t1);
+
+        return { zb1, zb2 };
       }
-      
-      // Calculate standardized moments
-      const m3 = data.reduce((acc, val) => acc + Math.pow((val - mean) / stdDev, 3), 0) / n;
-      const m4 = data.reduce((acc, val) => acc + Math.pow((val - mean) / stdDev, 4), 0) / n;
-      
-      // Sample skewness and kurtosis
-      const skewness = m3;
-      const kurtosis = m4 - 3; // Excess kurtosis
-      
-      // Z-score for skewness (simplified)
-      const varSkew = 6 * (n - 2) / ((n + 1) * (n + 3));
-      const zSkew = skewness / Math.sqrt(varSkew);
-      
-      // Z-score for kurtosis (simplified)
-      const varKurt = 24 * n * (n - 2) * (n - 3) / (Math.pow(n + 1, 2) * (n + 3) * (n + 5));
-      const zKurt = kurtosis / Math.sqrt(varKurt);
-      
-      // Combined K² statistic
-      const K2 = Math.pow(zSkew, 2) + Math.pow(zKurt, 2);
-      
-      // Check for invalid values
-      if (!isFinite(K2)) {
-        console.warn('⚠️ D\'Agostino-Pearson: Invalid K² =', K2);
-        return { statistic: NaN, pValue: NaN, critical: 5.991 };
-      }
-      
-      // p-value from chi-square distribution (2 df)
-      const pValue = 1 - jStat.chisquare.cdf(K2, 2);
-      const critical = jStat.chisquare.inv(1 - currentAlpha, 2);
-      
-      return { statistic: K2, pValue, critical };
+
+      const { zb1, zb2 } = sktest(data, n);
+      let Ksq = zb1 * zb1 + zb2 * zb2;
+
+      // Royston adjustment (adjust = True in VB6)
+      const Zc = -jStat.normal.inv(Math.exp(-0.5 * Ksq), 0, 1);
+      const Zt = 0.55 * Math.pow(n, 0.2) - 0.21;
+      const lnn = Math.log(n);
+      const a1 = (-5 + 3.46 * lnn) * Math.exp(-1.37 * lnn);
+      const b1 = 1 + (0.854 - 0.148 * lnn) * Math.exp(-0.55 * lnn);
+      const a2 = a1 - (2.13 / (1 - 2.37 * lnn)) * Zt;
+      const b2 = 2.13 / (1 - 2.37 * lnn) + b1;
+
+      let z;
+      if (Zc < -1) z = Zc;
+      else if (Zc < Zt) z = a1 + b1 * Zc;
+      else z = a2 + b2 * Zc;
+
+      const P = 1 - jStat.normal.cdf(z, 0, 1);
+      Ksq = -2 * Math.log(P);
+
+      // VB6: Pval = 1 - probchi(Ksq, df, lower_tail:=False)
+      // probchi with lower_tail=False returns upper tail, so Pval becomes lower tail
+      const pValue = jStat.chisquare.cdf(Ksq, 2);
+
+      // VB6 sets critical using Anderson-Darling interpolation
+      const critical = andersonDarlingCritical(currentAlpha);
+
+      return { statistic: Ksq, pValue, critical };
     }
 
     // ===========================================
