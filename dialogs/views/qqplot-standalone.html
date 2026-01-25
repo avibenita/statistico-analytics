@@ -237,43 +237,77 @@
 
     // Office.js initialization
     Office.initialize = function (reason) {
-      console.log('✅ QQ/PP Plot - Office.js initialized');
+      console.log('✅ QQ/PP Plot - Office.js initialized:', reason);
       
-      // Send ready message to parent
-      Office.context.ui.messageParent(JSON.stringify({ status: 'ready' }));
-      
-      // Listen for data from parent
+      // Listen for messages from parent
       Office.context.ui.addHandlerAsync(
         Office.EventType.DialogParentMessageReceived,
-        (arg) => {
-          try {
-            const message = JSON.parse(arg.message);
-            console.log('📩 Message received:', message);
-            
-            if (message.action === 'sendData' && message.data) {
-              handleDataReceived(message.data);
-            }
-          } catch (e) {
-            console.error('Error handling message:', e);
-          }
-        }
+        onMessageReceived
       );
       
-      // If not in Office, load sample data
-      if (!window.Office || !Office.context.ui) {
-        console.log('📊 Not in Office - loading sample data');
-        loadSampleData();
-      }
+      // Send ready message to parent
+      setTimeout(() => {
+        sendMessageToParent({ status: 'ready' });
+      }, 500);
+      
+      // For testing, load sample data if no data received
+      setTimeout(() => {
+        if (!qqppChart) {
+          console.log('⏰ No data received from parent, loading sample data...');
+          loadSampleData();
+        }
+      }, 2000);
     };
+
+    // Fallback: If Office.js doesn't load (browser testing), load sample data
+    window.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 DOM Content Loaded');
+      
+      // Initialize shared header
+      StatisticoHeader.init('qqplot', 'Variable', 0);
+      console.log('✅ Shared header initialized');
+      
+      // Check if Office.js is available
+      if (typeof Office === 'undefined') {
+        console.log('⚠️ Office.js not available - loading sample data immediately');
+        setTimeout(loadSampleData, 100);
+      }
+    });
+
+    // Message receiver
+    function onMessageReceived(arg) {
+      try {
+        const message = JSON.parse(arg.message);
+        console.log('📩 Message received:', message);
+        
+        if (message.action === 'sendData' && message.data) {
+          handleDataReceived(message.data);
+        } else if (message.action === 'switchView') {
+          console.log('🔄 Switch view request:', message.view);
+        }
+      } catch (e) {
+        console.error('❌ Error handling message:', e);
+      }
+    }
+
+    // Send message to parent window
+    function sendMessageToParent(message) {
+      if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+        Office.context.ui.messageParent(JSON.stringify(message));
+        console.log('📤 Sent message to parent:', message);
+      }
+    }
 
     // Load sample data for browser testing
     function loadSampleData() {
+      console.log('📊 Loading sample data...');
       const sampleData = generateSampleData();
       originalData = sampleData.values;
       varName = 'Sample Data';
       
       StatisticoHeader.updateVariable(varName, originalData.length);
       createQQPPPlots();
+      console.log('✅ Sample data loaded and charts created');
     }
 
     // Generate sample data (normal distribution)
@@ -290,13 +324,19 @@
 
     // Handle data received from parent
     function handleDataReceived(data) {
-      console.log('📊 Processing data:', data);
-      
-      originalData = data.values || data.rawData || [];
-      varName = data.variableName || data.column || 'Variable';
-      
-      StatisticoHeader.updateVariable(varName, originalData.length);
-      createQQPPPlots();
+      try {
+        console.log('📊 Data received:', data);
+        
+        originalData = data.values || data.data || [];
+        varName = data.variableName || data.column || 'Variable';
+        console.log('✅ Data arrays set, length:', originalData.length);
+        
+        StatisticoHeader.updateVariable(varName, originalData.length);
+        createQQPPPlots();
+        console.log('✅ Charts created successfully');
+      } catch (e) {
+        console.error('❌ Error handling data:', e);
+      }
     }
 
     // Switch between QQ and PP plots
@@ -549,13 +589,6 @@
         }]
       });
     }
-
-    // Auto-load sample data if not in Office
-    document.addEventListener('DOMContentLoaded', () => {
-      if (!window.Office || !Office.context.ui) {
-        loadSampleData();
-      }
-    });
   </script>
 </body>
 </html>
