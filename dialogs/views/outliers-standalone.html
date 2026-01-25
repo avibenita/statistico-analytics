@@ -38,7 +38,7 @@
     }
 
     .results-container {
-      padding: 12px;
+      padding: 10px;
       max-width: 100%;
     }
 
@@ -46,66 +46,66 @@
     .method-panel {
       background: var(--surface-1);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 12px;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
     }
 
     .panel-title {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 600;
       color: var(--accent-1);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .method-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
+      gap: 8px;
     }
 
     .method-btn {
-      padding: 12px;
+      padding: 8px 10px;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s ease;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       text-align: center;
     }
 
     .method-btn:hover {
       background: rgba(255, 255, 255, 0.08);
       border-color: var(--accent-1);
-      transform: translateY(-2px);
+      transform: translateY(-1px);
     }
 
     .method-btn.active {
       background: rgba(255, 165, 120, 0.15);
       border-color: var(--accent-1);
-      box-shadow: 0 0 15px rgba(255, 165, 120, 0.3);
+      box-shadow: 0 0 12px rgba(255, 165, 120, 0.3);
     }
 
     .method-btn i {
-      font-size: 20px;
+      font-size: 16px;
       color: var(--accent-2);
     }
 
     .method-btn .method-name {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 600;
       color: var(--text-primary);
     }
 
     .method-btn .method-desc {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--text-muted);
     }
 
@@ -113,23 +113,23 @@
     .summary-panel {
       background: var(--surface-1);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 12px;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
     }
 
     .summary-content {
       display: flex;
-      gap: 20px;
+      gap: 15px;
       align-items: center;
     }
 
     .summary-stat {
       flex: 1;
       text-align: center;
-      padding: 16px;
+      padding: 12px;
       background: rgba(255, 165, 120, 0.1);
-      border-radius: 8px;
+      border-radius: 6px;
       border: 1px solid rgba(255, 165, 120, 0.3);
     }
 
@@ -139,15 +139,15 @@
     }
 
     .summary-label {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .summary-value {
-      font-size: 28px;
+      font-size: 22px;
       font-weight: 600;
       color: var(--accent-1);
     }
@@ -160,12 +160,12 @@
     .comparison-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12px;
+      font-size: 11px;
     }
 
     .comparison-table th {
       background: rgba(255, 255, 255, 0.05);
-      padding: 8px;
+      padding: 6px;
       text-align: center;
       color: var(--accent-2);
       font-weight: 600;
@@ -173,7 +173,7 @@
     }
 
     .comparison-table td {
-      padding: 8px;
+      padding: 6px;
       text-align: center;
       border: 1px solid var(--border);
       color: var(--text-secondary);
@@ -189,23 +189,55 @@
     .results-grid {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     .results-panel {
       background: var(--surface-1);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
+      border-radius: 8px;
+      padding: 10px;
     }
 
     .results-panel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
-      padding-bottom: 10px;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
       border-bottom: 1px solid var(--border);
+    }
+
+    .show-table-btn {
+      padding: 6px 14px;
+      background: linear-gradient(135deg, var(--accent-1), rgb(255,140,90));
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .show-table-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 12px rgba(255, 165, 120, 0.5);
+    }
+
+    .show-table-btn i {
+      font-size: 12px;
+    }
+
+    .table-panel {
+      display: none;
+    }
+
+    .table-panel.visible {
+      display: block;
     }
 
     .order-toggle {
@@ -302,11 +334,11 @@
 
     /* Chart Container */
     .chart-container {
-      min-height: 350px;
-      max-height: 400px;
+      min-height: 280px;
+      max-height: 320px;
       background: rgba(255, 255, 255, 0.02);
       border-radius: 6px;
-      padding: 8px;
+      padding: 6px;
     }
 
     @media (max-width: 900px) {
@@ -317,8 +349,8 @@
 
     @media (max-height: 800px) {
       .chart-container {
-        min-height: 280px;
-        max-height: 320px;
+        min-height: 240px;
+        max-height: 280px;
       }
     }
   </style>
@@ -372,18 +404,7 @@
 
     <!-- Results Grid -->
     <div class="results-grid">
-      <!-- Detected Outliers Table -->
-      <div class="results-panel">
-        <div class="results-panel-header">
-          <div class="panel-title">
-            <i class="fa-solid fa-table"></i>
-            Detected Outliers
-          </div>
-        </div>
-        <div id="outliersTableContainer"></div>
-      </div>
-
-      <!-- Visualization Chart -->
+      <!-- Visualization Chart - MOVED FIRST -->
       <div class="results-panel">
         <div class="results-panel-header">
           <div class="panel-title">
@@ -396,6 +417,21 @@
           </div>
         </div>
         <div id="outliersChart" class="chart-container"></div>
+      </div>
+
+      <!-- Detected Outliers Table - MOVED SECOND with Show/Hide Button -->
+      <div class="results-panel">
+        <div class="results-panel-header">
+          <div class="panel-title">
+            <i class="fa-solid fa-table"></i>
+            Detected Outliers
+          </div>
+          <button class="show-table-btn" onclick="toggleOutliersTable()" id="toggleTableBtn">
+            <i class="fa-solid fa-eye"></i>
+            <span id="toggleTableText">Show Details</span>
+          </button>
+        </div>
+        <div id="outliersTableContainer" class="table-panel"></div>
       </div>
     </div>
   </div>
@@ -445,6 +481,24 @@
       document.getElementById(`order-${order}`).classList.add('active');
       if (outlierResults) {
         createChart();
+      }
+    }
+
+    // Toggle outliers table visibility
+    function toggleOutliersTable() {
+      const tableContainer = document.getElementById('outliersTableContainer');
+      const toggleBtn = document.getElementById('toggleTableBtn');
+      const toggleText = document.getElementById('toggleTableText');
+      const toggleIcon = toggleBtn.querySelector('i');
+      
+      tableContainer.classList.toggle('visible');
+      
+      if (tableContainer.classList.contains('visible')) {
+        toggleText.textContent = 'Hide Details';
+        toggleIcon.className = 'fa-solid fa-eye-slash';
+      } else {
+        toggleText.textContent = 'Show Details';
+        toggleIcon.className = 'fa-solid fa-eye';
       }
     }
 
@@ -724,7 +778,7 @@
         chart: {
           type: 'scatter',
           backgroundColor: 'transparent',
-          height: 340
+          height: 280
         },
         title: null,
         xAxis: {
