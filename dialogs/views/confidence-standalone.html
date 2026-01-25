@@ -351,9 +351,21 @@
               <span>Stdev</span>
             </label>
             <label class="radio-label disabled" id="median-label">
-              <input type="radio" name="parameter" value="median" disabled>
+              <input type="radio" name="parameter" value="median" disabled onchange="selectParameter('median')">
               <span>Median</span>
             </label>
+            <label class="radio-label disabled" id="percentile-label">
+              <input type="radio" name="parameter" value="percentile" disabled onchange="selectParameter('percentile')">
+              <span>Percentile</span>
+            </label>
+            <div class="inline-control" id="percentile-control" style="display:none;">
+              <label>Value:</label>
+              <input type="number" id="percentile-value" value="50" min="1" max="99" step="1">
+              <span>%</span>
+              <button class="refresh-btn" onclick="calculate()">
+                <i class="fa-solid fa-rotate-right"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -548,6 +560,9 @@
           bootstrapStats.push(calculateStdev(sample, m));
         } else if (currentParameter === 'median') {
           bootstrapStats.push(calculateMedian(sample));
+        } else if (currentParameter === 'percentile') {
+          const p = parseFloat(document.getElementById('percentile-value').value) / 100;
+          bootstrapStats.push(calculatePercentile(sample, p));
         }
       }
       
@@ -562,6 +577,15 @@
         lcl: bootstrapStats[lclIndex],
         ucl: bootstrapStats[uclIndex]
       };
+    }
+
+    function calculatePercentile(data, p) {
+      const sorted = [...data].sort((a, b) => a - b);
+      const index = (sorted.length - 1) * p;
+      const lower = Math.floor(index);
+      const upper = Math.ceil(index);
+      const weight = index - lower;
+      return sorted[lower] * (1 - weight) + sorted[upper] * weight;
     }
 
     // Calculate and display
@@ -595,7 +619,13 @@
 
     function updateConfidenceBar(result) {
       const range = result.ucl - result.lcl;
-      const visualHalfRange = range * 1.5;
+      
+      // Adaptive scaling (matching working version)
+      // Base multiplier + alpha adjustment for clear visual changes
+      const baseMultiplier = 0.9;
+      const alphaAdjustment = currentAlpha * 2.0;
+      const visualHalfRange = range * (baseMultiplier + alphaAdjustment);
+      
       const visualMin = result.center - visualHalfRange;
       const visualMax = result.center + visualHalfRange;
       const totalRange = visualMax - visualMin;
@@ -605,13 +635,34 @@
       const width = Math.max(0, Math.min(100, uclPercent - lclPercent));
       
       const bar = document.getElementById('confidence-bar');
-      bar.style.left = Math.max(0, Math.min(100 - width, lclPercent)) + '%';
-      bar.style.width = width + '%';
+      const leftPos = Math.max(0, Math.min(100 - width, lclPercent));
+      
+      // Force style update
+      bar.style.setProperty('left', leftPos + '%', 'important');
+      bar.style.setProperty('width', width + '%', 'important');
+      
+      // Force reflow
+      void bar.offsetWidth;
+      
+      // Update bar color based on method
+      if (currentMethod === 'bootstrap') {
+        bar.style.background = 'linear-gradient(90deg, rgba(255,165,120,0.2), rgba(255,165,120,0.4), rgba(255,165,120,0.2))';
+        bar.style.borderColor = 'rgb(255,165,120)';
+      } else {
+        bar.style.background = 'linear-gradient(90deg, rgba(120,200,255,0.2), rgba(120,200,255,0.4), rgba(120,200,255,0.2))';
+        bar.style.borderColor = 'rgb(120,200,255)';
+      }
       
       const deltaLeft = Math.abs(result.center - result.lcl);
       const deltaRight = Math.abs(result.ucl - result.center);
       document.getElementById('bar-label-left').textContent = '−' + deltaLeft.toFixed(2);
       document.getElementById('bar-label-right').textContent = '+' + deltaRight.toFixed(2);
+      
+      console.log('📊 Bar updated:', {
+        width: width.toFixed(2) + '%',
+        left: leftPos.toFixed(2) + '%',
+        alpha: currentAlpha.toFixed(3)
+      });
     }
 
     // UI controls
@@ -623,10 +674,21 @@
       
       if (method === 'bootstrap') {
         document.getElementById('median-label').classList.remove('disabled');
+        document.getElementById('percentile-label').classList.remove('disabled');
         document.querySelector('input[value="median"]').disabled = false;
+        document.querySelector('input[value="percentile"]').disabled = false;
       } else {
         document.getElementById('median-label').classList.add('disabled');
+        document.getElementById('percentile-label').classList.add('disabled');
         document.querySelector('input[value="median"]').disabled = true;
+        document.querySelector('input[value="percentile"]').disabled = true;
+        // Hide percentile control
+        document.getElementById('percentile-control').style.display = 'none';
+        // Reset to mean if median/percentile selected
+        if (currentParameter === 'median' || currentParameter === 'percentile') {
+          document.querySelector('input[value="mean"]').checked = true;
+          currentParameter = 'mean';
+        }
       }
       
       calculate();
@@ -635,6 +697,10 @@
     window.selectParameter = function(param) {
       currentParameter = param;
       document.getElementById('popsize-section').style.opacity = currentMethod === 'classical' && param === 'mean' ? '1' : '0.5';
+      
+      // Show/hide percentile control
+      document.getElementById('percentile-control').style.display = param === 'percentile' ? 'flex' : 'none';
+      
       calculate();
     };
 
@@ -661,7 +727,14 @@
         onMessageReceived
       );
       setTimeout(() => sendMessageToParent({ status: 'ready' }), 500);
-      setTimeout(() => { if (!dataReady) loadSampleData(); }, 2000);
+      // Don't load sample data immediately - wait for real data from parent
+      // Only load sample data after 5 seconds if no data received
+      setTimeout(() => { 
+        if (!dataReady) {
+          console.log('⚠️ No data received after 5s, loading sample data');
+          loadSampleData();
+        }
+      }, 5000);
     };
 
     window.addEventListener('DOMContentLoaded', function() {
@@ -675,6 +748,7 @@
       };
       initHeader();
       
+      // Only load sample data if Office.js is not available
       if (typeof Office === 'undefined') {
         setTimeout(loadSampleData, 500);
       }
