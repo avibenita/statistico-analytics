@@ -234,6 +234,10 @@
 
     #outliersTableContainer {
       display: none;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
     }
 
     #outliersTableContainer.visible {
@@ -425,8 +429,8 @@
         <div id="outliersChart" class="chart-container"></div>
       </div>
 
-      <!-- Detected Outliers Table - MOVED SECOND (button moved to Visualization header) -->
-      <div class="results-panel table-panel" id="outliersTableContainer">
+      <!-- Detected Outliers Table - Hidden by default, controlled by Show Details button -->
+      <div id="outliersTableContainer">
         <div class="results-panel-header">
           <div class="panel-title">
             <i class="fa-solid fa-table"></i>
