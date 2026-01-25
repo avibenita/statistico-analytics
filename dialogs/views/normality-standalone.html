@@ -559,9 +559,17 @@
     // RUN ALL TESTS & UPDATE UI
     // ===========================================
     function runNormalityTests() {
-      if (!dataReady || !librariesLoaded || originalData.length === 0) return;
+      console.log('🧪 runNormalityTests called');
+      console.log('   dataReady:', dataReady);
+      console.log('   librariesLoaded:', librariesLoaded);
+      console.log('   originalData.length:', originalData.length);
       
-      console.log('🧪 Running all 6 normality tests...');
+      if (!dataReady || !librariesLoaded || originalData.length === 0) {
+        console.warn('⚠️ Cannot run tests - missing requirements');
+        return;
+      }
+      
+      console.log('✅ Running all 6 normality tests on', originalData.length, 'values...');
       
       const sw = shapiroWilkTest(originalData);
       const jb = jarqueBeraTest(originalData);
@@ -569,6 +577,15 @@
       const ad = andersonDarlingTest(originalData);
       const cvm = cramerVonMisesTest(originalData);
       const dp = dagostinoPearsonTest(originalData);
+      
+      console.log('✅ All tests completed:', {
+        'Shapiro-Wilk': sw.pValue,
+        'Jarque-Bera': jb.pValue,
+        'Kolmogorov-Smirnov': ks.pValue,
+        'Anderson-Darling': ad.pValue,
+        'Cramer-von Mises': cvm.pValue,
+        "D'Agostino-Pearson": dp.pValue
+      });
       
       const tests = [
         { name: 'Shapiro-Wilk', id: 'sw', ...sw, weight: 1.0 },
@@ -581,6 +598,7 @@
       
       displayResults(tests);
       calculateNSI(tests);
+      console.log('✅ Results displayed and NSI calculated');
     }
 
     function displayResults(tests) {
@@ -709,12 +727,28 @@
     // OFFICE.JS & DATA HANDLING
     // ===========================================
     Office.initialize = function (reason) {
-      console.log('✅ Normality Tests - Office.js initialized');
+      console.log('✅ Normality Tests - Office.js initialized:', reason);
+      
+      // Add message handler
       Office.context.ui.addHandlerAsync(
         Office.EventType.DialogParentMessageReceived,
-        onMessageReceived
+        onMessageReceived,
+        (result) => {
+          if (result.status === Office.AsyncResultStatus.Succeeded) {
+            console.log('✅ Message handler added successfully');
+          } else {
+            console.error('❌ Failed to add message handler:', result.error);
+          }
+        }
       );
-      setTimeout(() => sendMessageToParent({ status: 'ready' }), 500);
+      
+      // Send ready status to parent
+      setTimeout(() => {
+        sendMessageToParent({ status: 'ready' });
+        console.log('📤 Sent ready status to parent');
+      }, 500);
+      
+      // Fallback to sample data after 5 seconds if no real data
       setTimeout(() => { 
         if (!dataReady) {
           console.log('⚠️ No data received after 5s, loading sample data');
@@ -749,11 +783,13 @@
     function onMessageReceived(arg) {
       try {
         const message = JSON.parse(arg.message);
-        if (message.action === 'sendData' && message.data) {
+        console.log('📩 Normality received message:', message);
+        if ((message.action === 'sendData' || message.action === 'loadData') && message.data) {
+          console.log('✅ Data message received, handling data...');
           handleDataReceived(message.data);
         }
       } catch (e) {
-        console.error('Error:', e);
+        console.error('❌ Error handling message:', e);
       }
     }
 
@@ -796,7 +832,10 @@
 
     function handleDataReceived(data) {
       try {
+        console.log('📊 handleDataReceived called with data:', data);
+        
         if (!checkLibraries()) {
+          console.log('⚠️ Libraries not ready, retrying...');
           setTimeout(() => handleDataReceived(data), 200);
           return;
         }
@@ -805,9 +844,16 @@
         varName = data.variableName || data.column || 'Variable';
         dataReady = true;
         
+        console.log('✅ Data loaded:', {
+          varName,
+          dataLength: originalData.length,
+          firstFewValues: originalData.slice(0, 5)
+        });
+        
         const updateHeader = () => {
           if (typeof StatisticoHeader !== 'undefined') {
             StatisticoHeader.updateVariable(varName, originalData.length);
+            console.log('✅ Header updated:', varName, 'n=' + originalData.length);
           } else {
             setTimeout(updateHeader, 100);
           }
@@ -816,7 +862,7 @@
         
         runNormalityTests();
       } catch (e) {
-        console.error('Error:', e);
+        console.error('❌ Error in handleDataReceived:', e);
       }
     }
   </script>
