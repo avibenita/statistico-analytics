@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hypothesis Testing - Statistico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <link rel="stylesheet" href="./shared-header.css">
+  <script src="./shared-header.js"></script>
+  
+  <style>
+    :root {
+      --surface-0: #0c1624;
+      --surface-1: #1a1f2e;
+      --surface-2: #242938;
+      --border: #2d3748;
+      --accent-1: rgb(255,165,120);
+      --accent-2: rgb(120,200,255);
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255,255,255,0.8);
+      --text-muted: rgba(255,255,255,0.6);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--surface-0);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text-primary);
+    }
+
+    .results-container {
+      padding: 10px;
+      max-width: 100%;
+    }
+
+    .panel {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .config-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .config-section {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .section-title {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .radio-label input[type="radio"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent-1);
+    }
+
+    .radio-label.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .input-row label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      min-width: 80px;
+    }
+
+    .input-row input {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      color: white;
+      padding: 5px 10px;
+      font-size: 12px;
+      flex: 1;
+    }
+
+    .run-btn {
+      background: linear-gradient(135deg, var(--accent-1), rgb(255,140,90));
+      border: none;
+      color: white;
+      padding: 8px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 10px;
+      width: 100%;
+      transition: all 0.2s;
+    }
+
+    .run-btn:hover {
+      transform: scale(1.02);
+    }
+
+    .result-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 10px;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .result-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .result-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .conclusion {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .conclusion.reject {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .conclusion.fail-to-reject {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .vis-btn {
+      background: rgba(120,200,255,0.15);
+      border: 1px solid var(--accent-2);
+      color: var(--accent-2);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      width: 100%;
+      margin-top: 10px;
+      transition: all 0.2s;
+    }
+
+    .vis-btn:hover {
+      background: rgba(120,200,255,0.25);
+    }
+
+    .chart-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .chart-modal.active {
+      display: flex;
+    }
+
+    .chart-modal-content {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 90%;
+      max-height: 90%;
+      overflow: auto;
+      position: relative;
+    }
+
+    .chart-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #chartContainer {
+      width: 600px;
+      height: 400px;
+    }
+
+    @media (max-width: 768px) {
+      .config-row {
+        flex-direction: column;
+      }
+      #chartContainer {
+        width: 100%;
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <statistico-header view-name="Hypothesis Testing" module-name="Univariate Analysis"></statistico-header>
+  
+  <div class="results-container">
+    <!-- Configuration Panel -->
+    <div class="panel">
+      <!-- Row 1: Method & Parameter -->
+      <div class="config-row">
+        <div class="config-section">
+          <div class="section-title">Method</div>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="method" value="classical" checked onchange="selectMethod('classical')">
+              <span>Classical</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="method" value="bootstrap" onchange="selectMethod('bootstrap')">
+              <span>Bootstrap</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <div class="section-title">Parameter</div>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="parameter" value="mean" checked onchange="selectParameter('mean')">
+              <span>Mean</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="parameter" value="variance" onchange="selectParameter('variance')">
+              <span>Variance</span>
+            </label>
+            <label class="radio-label disabled" id="median-label">
+              <input type="radio" name="parameter" value="median" disabled>
+              <span>Median</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Test Type & Alpha -->
+      <div class="config-row">
+        <div class="config-section">
+          <div class="section-title">Test Type</div>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="testType" value="two-tailed" checked>
+              <span>Two-Tailed</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="testType" value="greater">
+              <span>Greater Than</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="testType" value="less">
+              <span>Less Than</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <div class="section-title">Significance (α)</div>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="alpha" value="0.01">
+              <span>0.01</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="alpha" value="0.05" checked>
+              <span>0.05</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="alpha" value="0.10">
+              <span>0.10</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hypothesis Values -->
+      <div class="config-section">
+        <div class="section-title">Hypothesis Values</div>
+        <div class="input-row">
+          <label id="h0-label">H₀ (Mean):</label>
+          <input type="number" id="h0-value" value="50" step="any">
+        </div>
+      </div>
+
+      <button class="run-btn" onclick="runTest()">
+        <i class="fa-solid fa-play"></i> Run Test
+      </button>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="panel" id="resultsPanel" style="display:none;">
+      <div class="result-card">
+        <div class="result-row">
+          <span class="result-label">Test Statistic:</span>
+          <span class="result-value" id="test-stat">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">P-Value:</span>
+          <span class="result-value" id="p-value">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Critical Value:</span>
+          <span class="result-value" id="critical-value">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Sample Mean:</span>
+          <span class="result-value" id="sample-mean">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Sample Size:</span>
+          <span class="result-value" id="sample-size">—</span>
+        </div>
+      </div>
+
+      <div id="conclusion" class="conclusion"></div>
+
+      <button class="vis-btn" onclick="showVisualization()">
+        <i class="fa-solid fa-chart-line"></i> Show Visualization
+      </button>
+    </div>
+  </div>
+
+  <!-- Chart Modal -->
+  <div class="chart-modal" id="chartModal">
+    <div class="chart-modal-content">
+      <button class="chart-close" onclick="closeModal()">×</button>
+      <div id="chartContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    let originalData = [];
+    let varName = 'Variable';
+    let currentMethod = 'classical';
+    let currentParameter = 'mean';
+    let dataReady = false;
+    let lastResult = null;
+
+    // Statistical functions
+    function calculateMean(data) {
+      return data.reduce((a, b) => a + b, 0) / data.length;
+    }
+
+    function calculateVariance(data, mean) {
+      if (data.length < 2) return 0;
+      return data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (data.length - 1);
+    }
+
+    function calculateMedian(data) {
+      const sorted = [...data].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+
+    // T-distribution inverse (simplified)
+    function getTValue(alpha, df) {
+      if (df > 30) return normalInv(1 - alpha);
+      const z = normalInv(1 - alpha);
+      const g1 = (z * z * z + z) / 4;
+      return z + g1 / df;
+    }
+
+    function normalInv(p) {
+      if (p <= 0 || p >= 1) return 0;
+      const a1 = -3.969683028665376e+01;
+      const a2 =  2.209460984245205e+02;
+      const a3 = -2.759285104469687e+02;
+      const a4 =  1.383577518672690e+02;
+      const a5 = -3.066479806614716e+01;
+      const a6 =  2.506628277459239e+00;
+      const b1 = -5.447609879822406e+01;
+      const b2 =  1.615858368580409e+02;
+      const b3 = -1.556989798598866e+02;
+      const b4 =  6.680131188771972e+01;
+      const b5 = -1.328068155288572e+01;
+      
+      const q = p - 0.5;
+      const r = q * q;
+      return (((((a1 * r + a2) * r + a3) * r + a4) * r + a5) * r + a6) * q /
+             (((((b1 * r + b2) * r + b3) * r + b4) * r + b5) * r + 1);
+    }
+
+    // Chi-square inverse (simplified)
+    function getChiSquareValue(p, df) {
+      if (p <= 0 || p >= 1) return df;
+      const z = normalInv(p);
+      const h = 2 / (9 * df);
+      return df * Math.pow(1 - h + z * Math.sqrt(h), 3);
+    }
+
+    // Classical t-test for mean
+    function classicalMeanTest(data, h0, alpha, testType) {
+      const n = data.length;
+      const mean = calculateMean(data);
+      const variance = calculateVariance(data, mean);
+      const stdev = Math.sqrt(variance);
+      const tStat = (mean - h0) / (stdev / Math.sqrt(n));
+      
+      let criticalValue, pValue;
+      if (testType === 'two-tailed') {
+        criticalValue = getTValue(alpha / 2, n - 1);
+        pValue = 2 * (1 - (tStat > 0 ? normalCDF(tStat) : (1 - normalCDF(-tStat))));
+      } else if (testType === 'greater') {
+        criticalValue = getTValue(alpha, n - 1);
+        pValue = 1 - normalCDF(tStat);
+      } else {
+        criticalValue = -getTValue(alpha, n - 1);
+        pValue = normalCDF(tStat);
+      }
+      
+      return {
+        statistic: tStat,
+        pValue: Math.max(0, Math.min(1, pValue)),
+        criticalValue: criticalValue,
+        sampleMean: mean,
+        reject: Math.abs(tStat) > Math.abs(criticalValue)
+      };
+    }
+
+    function normalCDF(x) {
+      const t = 1 / (1 + 0.2316419 * Math.abs(x));
+      const d = 0.3989423 * Math.exp(-x * x / 2);
+      const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+      return x > 0 ? 1 - p : p;
+    }
+
+    // Classical chi-square test for variance
+    function classicalVarianceTest(data, h0Variance, alpha, testType) {
+      const n = data.length;
+      const mean = calculateMean(data);
+      const variance = calculateVariance(data, mean);
+      const chiStat = ((n - 1) * variance) / h0Variance;
+      
+      let criticalValue;
+      if (testType === 'two-tailed') {
+        criticalValue = getChiSquareValue(1 - alpha / 2, n - 1);
+      } else if (testType === 'greater') {
+        criticalValue = getChiSquareValue(1 - alpha, n - 1);
+      } else {
+        criticalValue = getChiSquareValue(alpha, n - 1);
+      }
+      
+      return {
+        statistic: chiStat,
+        pValue: 0.05,
+        criticalValue: criticalValue,
+        sampleMean: mean,
+        reject: chiStat > criticalValue
+      };
+    }
+
+    // Bootstrap test
+    function bootstrapTest(data, h0, testType) {
+      const n = data.length;
+      const iterations = 1000;
+      let stat;
+      
+      if (currentParameter === 'mean') {
+        stat = calculateMean(data);
+      } else if (currentParameter === 'median') {
+        stat = calculateMedian(data);
+      }
+      
+      const bootstrapStats = [];
+      for (let i = 0; i < iterations; i++) {
+        const sample = [];
+        for (let j = 0; j < n; j++) {
+          sample.push(data[Math.floor(Math.random() * n)]);
+        }
+        bootstrapStats.push(currentParameter === 'mean' ? calculateMean(sample) : calculateMedian(sample));
+      }
+      
+      bootstrapStats.sort((a, b) => a - b);
+      const pValue = bootstrapStats.filter(s => Math.abs(s - h0) >= Math.abs(stat - h0)).length / iterations;
+      
+      return {
+        statistic: stat,
+        pValue: pValue,
+        criticalValue: bootstrapStats[Math.floor(iterations * 0.975)],
+        sampleMean: stat,
+        reject: pValue < 0.05
+      };
+    }
+
+    // Run test
+    window.runTest = function() {
+      if (!dataReady || originalData.length === 0) {
+        alert('No data available. Please load data first.');
+        return;
+      }
+      
+      const h0 = parseFloat(document.getElementById('h0-value').value);
+      const alpha = parseFloat(document.querySelector('input[name="alpha"]:checked').value);
+      const testType = document.querySelector('input[name="testType"]:checked').value;
+      
+      let result;
+      if (currentMethod === 'classical') {
+        if (currentParameter === 'mean') {
+          result = classicalMeanTest(originalData, h0, alpha, testType);
+        } else {
+          result = classicalVarianceTest(originalData, h0, alpha, testType);
+        }
+      } else {
+        result = bootstrapTest(originalData, h0, testType);
+      }
+      
+      lastResult = result;
+      displayResults(result, alpha);
+    };
+
+    function displayResults(result, alpha) {
+      document.getElementById('resultsPanel').style.display = 'block';
+      document.getElementById('test-stat').textContent = result.statistic.toFixed(4);
+      document.getElementById('p-value').textContent = result.pValue.toFixed(4);
+      document.getElementById('critical-value').textContent = result.criticalValue.toFixed(4);
+      document.getElementById('sample-mean').textContent = result.sampleMean.toFixed(4);
+      document.getElementById('sample-size').textContent = originalData.length;
+      
+      const conclusionEl = document.getElementById('conclusion');
+      if (result.reject) {
+        conclusionEl.textContent = `Reject H₀: Significant difference detected (p < ${alpha})`;
+        conclusionEl.className = 'conclusion reject';
+      } else {
+        conclusionEl.textContent = `Fail to Reject H₀: No significant difference (p ≥ ${alpha})`;
+        conclusionEl.className = 'conclusion fail-to-reject';
+      }
+    }
+
+    window.showVisualization = function() {
+      if (!lastResult) return;
+      document.getElementById('chartModal').classList.add('active');
+      
+      const x = [];
+      const y = [];
+      for (let i = -4; i <= 4; i += 0.1) {
+        x.push(i);
+        y.push(Math.exp(-i * i / 2) / Math.sqrt(2 * Math.PI));
+      }
+      
+      Plotly.newPlot('chartContainer', [{
+        x: x,
+        y: y,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Distribution',
+        line: { color: 'rgb(120,200,255)', width: 2 }
+      }, {
+        x: [lastResult.statistic, lastResult.statistic],
+        y: [0, 0.4],
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Test Statistic',
+        line: { color: 'rgb(255,165,120)', width: 3 }
+      }], {
+        title: 'Hypothesis Test Visualization',
+        paper_bgcolor: '#1a1f2e',
+        plot_bgcolor: '#242938',
+        font: { color: '#ffffff' },
+        xaxis: { title: 'Test Statistic', gridcolor: '#2d3748' },
+        yaxis: { title: 'Density', gridcolor: '#2d3748' }
+      });
+    };
+
+    window.closeModal = function() {
+      document.getElementById('chartModal').classList.remove('active');
+    };
+
+    window.selectMethod = function(method) {
+      currentMethod = method;
+      if (method === 'bootstrap') {
+        document.getElementById('median-label').classList.remove('disabled');
+        document.querySelector('input[value="median"]').disabled = false;
+      } else {
+        document.getElementById('median-label').classList.add('disabled');
+        document.querySelector('input[value="median"]').disabled = true;
+      }
+    };
+
+    window.selectParameter = function(param) {
+      currentParameter = param;
+      const label = param === 'mean' ? 'H₀ (Mean):' : 'H₀ (Variance):';
+      document.getElementById('h0-label').textContent = label;
+    };
+
+    // Office.js initialization
+    Office.initialize = function (reason) {
+      console.log('✅ Hypothesis Testing - Office.js initialized');
+      Office.context.ui.addHandlerAsync(
+        Office.EventType.DialogParentMessageReceived,
+        onMessageReceived
+      );
+      setTimeout(() => sendMessageToParent({ status: 'ready' }), 500);
+      setTimeout(() => { if (!dataReady) loadSampleData(); }, 2000);
+    };
+
+    window.addEventListener('DOMContentLoaded', function() {
+      const initHeader = () => {
+        if (typeof StatisticoHeader !== 'undefined') {
+          StatisticoHeader.init('hypothesis', 'Variable', 0);
+        } else {
+          setTimeout(initHeader, 100);
+        }
+      };
+      initHeader();
+      
+      if (typeof Office === 'undefined') {
+        setTimeout(loadSampleData, 500);
+      }
+    });
+
+    function onMessageReceived(arg) {
+      try {
+        const message = JSON.parse(arg.message);
+        if (message.action === 'sendData' && message.data) {
+          handleDataReceived(message.data);
+        }
+      } catch (e) {
+        console.error('Error:', e);
+      }
+    }
+
+    function sendMessageToParent(message) {
+      if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+        Office.context.ui.messageParent(JSON.stringify(message));
+      }
+    }
+
+    function loadSampleData() {
+      console.log('📊 Loading sample data...');
+      const sampleData = [];
+      for (let i = 0; i < 100; i++) {
+        const u1 = Math.random();
+        const u2 = Math.random();
+        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        sampleData.push(50 + z * 10);
+      }
+      
+      originalData = sampleData;
+      varName = 'Sample Data';
+      dataReady = true;
+      
+      const updateHeader = () => {
+        if (typeof StatisticoHeader !== 'undefined') {
+          StatisticoHeader.updateVariable(varName, originalData.length);
+        } else {
+          setTimeout(updateHeader, 100);
+        }
+      };
+      updateHeader();
+    }
+
+    function handleDataReceived(data) {
+      try {
+        originalData = data.values || data.data || [];
+        varName = data.variableName || data.column || 'Variable';
+        dataReady = true;
+        
+        const updateHeader = () => {
+          if (typeof StatisticoHeader !== 'undefined') {
+            StatisticoHeader.updateVariable(varName, originalData.length);
+          } else {
+            setTimeout(updateHeader, 100);
+          }
+        };
+        updateHeader();
+      } catch (e) {
+        console.error('Error:', e);
+      }
+    }
+  </script>
+</body>
+</html>
