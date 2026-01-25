@@ -285,28 +285,33 @@
     .stats-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 15px;
       margin-bottom: 15px;
     }
 
     .stat-box {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
+      background: linear-gradient(135deg, var(--surface-2), var(--surface-1));
+      border: 2px solid var(--accent-1);
+      border-radius: 10px;
+      padding: 20px;
       text-align: center;
+      box-shadow: 0 4px 15px rgba(255,165,120,0.2);
     }
 
     .stat-label {
-      font-size: 12px;
+      font-size: 13px;
       color: var(--text-muted);
-      margin-bottom: 6px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 600;
     }
 
     .stat-value {
-      font-size: 20px;
+      font-size: 32px;
       font-weight: 700;
-      color: var(--text-primary);
+      color: var(--accent-1);
+      text-shadow: 0 0 10px rgba(255,165,120,0.3);
     }
 
     /* Decision Card */
@@ -331,19 +336,36 @@
     }
 
     .decision-result {
-      background: linear-gradient(135deg, #f87171, #ef4444);
       color: white;
-      padding: 12px 20px;
+      padding: 15px 25px;
       border-radius: 8px;
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 700;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      background: linear-gradient(135deg, rgba(248,113,113,0.2), rgba(239,68,68,0.2));
+      border: 2px solid #f87171;
     }
 
     .decision-result.fail-to-reject {
-      background: linear-gradient(135deg, #4ade80, #22c55e);
+      background: linear-gradient(135deg, rgba(74,222,128,0.2), rgba(34,197,94,0.2));
+      border: 2px solid #4ade80;
+    }
+
+    /* Awaiting State */
+    .awaiting-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .awaiting-state i {
+      font-size: 48px;
+      color: var(--accent-2);
+      margin-bottom: 15px;
+      opacity: 0.5;
     }
 
     /* Alpha Control */
@@ -443,7 +465,7 @@
         <div class="h0-panel">
           <div class="h-label">
             <span>H₀: <span id="h0-param">mean</span> =</span>
-            <input type="number" id="h0-value" class="h0-input" value="0" step="any">
+            <input type="number" id="h0-value" class="h0-input" value="0" step="any" oninput="updateH1Values()">
           </div>
         </div>
 
@@ -452,16 +474,16 @@
           <div class="h-label">H₁: <span id="h1-param">mean</span></div>
           <div class="h1-options">
             <label class="radio-label">
-              <input type="radio" name="h1-type" value="less">
-              <span>< 0</span>
+              <input type="radio" name="h1-type" value="less" onchange="setAwaitingState()">
+              <span>< <span id="h1-value-less">0</span></span>
             </label>
             <label class="radio-label">
-              <input type="radio" name="h1-type" value="not-equal" checked>
-              <span>≠ 0</span>
+              <input type="radio" name="h1-type" value="not-equal" checked onchange="setAwaitingState()">
+              <span>≠ <span id="h1-value-ne">0</span></span>
             </label>
             <label class="radio-label">
-              <input type="radio" name="h1-type" value="greater">
-              <span>> 0</span>
+              <input type="radio" name="h1-type" value="greater" onchange="setAwaitingState()">
+              <span>> <span id="h1-value-greater">0</span></span>
             </label>
           </div>
         </div>
@@ -487,6 +509,15 @@
         </div>
       </div>
 
+      <!-- Awaiting State (shown initially) -->
+      <div id="awaiting-results" class="awaiting-state">
+        <i class="fa-solid fa-flask"></i>
+        <p>Configure parameters and click "Run the Test" to see results.</p>
+      </div>
+
+      <!-- Actual Results (hidden initially) -->
+      <div id="actual-results" style="display: none;">
+
       <div class="results-grid">
         <div class="result-card highlight">
           <div class="card-icon"><i class="fa-solid fa-flask"></i> TEST PARAMETER</div>
@@ -505,10 +536,12 @@
 
       <div class="stats-row">
         <div class="stat-box">
-          <div class="stat-label">Test Statistic: <span id="result-stat-value">—</span></div>
+          <div class="stat-label">Test Statistic</div>
+          <div class="stat-value" id="result-stat-value">—</div>
         </div>
         <div class="stat-box">
-          <div class="stat-label">P-Value: <span id="result-pvalue">—</span></div>
+          <div class="stat-label">P-Value</div>
+          <div class="stat-value" id="result-pvalue">—</div>
         </div>
       </div>
 
@@ -527,7 +560,8 @@
           <label>Alpha</label>
         </div>
       </div>
-    </div>
+      </div> <!-- end actual-results -->
+    </div> <!-- end results-section -->
   </div>
 
   <script>
@@ -594,6 +628,8 @@
           selectParameter('mean');
         }
       }
+      
+      setAwaitingState();
     };
 
     // Parameter selection
@@ -605,7 +641,27 @@
       document.getElementById('h0-param').textContent = param;
       document.getElementById('h1-param').textContent = param;
       document.getElementById('result-parameter').textContent = param.charAt(0).toUpperCase() + param.slice(1);
+      
+      setAwaitingState();
     };
+
+    // Update H1 values when H0 changes
+    window.updateH1Values = function() {
+      const h0Value = document.getElementById('h0-value').value || '0';
+      document.getElementById('h1-value-less').textContent = h0Value;
+      document.getElementById('h1-value-ne').textContent = h0Value;
+      document.getElementById('h1-value-greater').textContent = h0Value;
+      setAwaitingState();
+    };
+
+    // Set awaiting state (hide results, show awaiting message)
+    function setAwaitingState() {
+      const resultsSection = document.getElementById('results-section');
+      if (resultsSection.style.display !== 'none') {
+        document.getElementById('awaiting-results').style.display = 'block';
+        document.getElementById('actual-results').style.display = 'none';
+      }
+    }
 
     // Run test
     window.runTest = function() {
@@ -698,6 +754,10 @@
         decisionEl.innerHTML = '<i class="fa-solid fa-check"></i> Fail to Reject H₀';
         decisionEl.className = 'decision-result fail-to-reject';
       }
+      
+      // Show actual results, hide awaiting
+      document.getElementById('awaiting-results').style.display = 'none';
+      document.getElementById('actual-results').style.display = 'block';
     }
 
     // Office.js initialization
