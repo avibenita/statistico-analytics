@@ -232,11 +232,11 @@
       font-size: 12px;
     }
 
-    .table-panel {
+    #outliersTableContainer {
       display: none;
     }
 
-    .table-panel.visible {
+    #outliersTableContainer.visible {
       display: block;
     }
 
@@ -411,27 +411,29 @@
             <i class="fa-solid fa-chart-scatter"></i>
             Visualization
           </div>
-          <div class="order-toggle">
-            <button class="order-btn active" onclick="toggleOrder('index')" id="order-index">By Index</button>
-            <button class="order-btn" onclick="toggleOrder('value')" id="order-value">By Value</button>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="order-toggle">
+              <button class="order-btn active" onclick="toggleOrder('index')" id="order-index">By Index</button>
+              <button class="order-btn" onclick="toggleOrder('value')" id="order-value">By Value</button>
+            </div>
+            <button class="show-table-btn" onclick="toggleOutliersTable()" id="toggleTableBtn">
+              <i class="fa-solid fa-eye"></i>
+              <span id="toggleTableText">Show Details</span>
+            </button>
           </div>
         </div>
         <div id="outliersChart" class="chart-container"></div>
       </div>
 
-      <!-- Detected Outliers Table - MOVED SECOND with Show/Hide Button -->
-      <div class="results-panel">
+      <!-- Detected Outliers Table - MOVED SECOND (button moved to Visualization header) -->
+      <div class="results-panel table-panel" id="outliersTableContainer">
         <div class="results-panel-header">
           <div class="panel-title">
             <i class="fa-solid fa-table"></i>
             Detected Outliers
           </div>
-          <button class="show-table-btn" onclick="toggleOutliersTable()" id="toggleTableBtn">
-            <i class="fa-solid fa-eye"></i>
-            <span id="toggleTableText">Show Details</span>
-          </button>
         </div>
-        <div id="outliersTableContainer" class="table-panel"></div>
+        <div id="outliersTableContent"></div>
       </div>
     </div>
   </div>
@@ -708,7 +710,7 @@
       // Outliers table
       if (outlierCount > 0) {
         const sortedOutliers = [...outliers].sort((a, b) => a.index - b.index);
-        document.getElementById('outliersTableContainer').innerHTML = `
+        document.getElementById('outliersTableContent').innerHTML = `
           <div class="outliers-table-container">
             <table class="outliers-table">
               <thead>
@@ -733,7 +735,7 @@
           </div>
         `;
       } else {
-        document.getElementById('outliersTableContainer').innerHTML = `
+        document.getElementById('outliersTableContent').innerHTML = `
           <div class="no-outliers">
             <i class="fa-solid fa-circle-check"></i>
             <div>No outliers detected</div>
