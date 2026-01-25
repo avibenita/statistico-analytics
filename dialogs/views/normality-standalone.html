@@ -674,7 +674,10 @@
       let Ksq = zb1 * zb1 + zb2 * zb2;
 
       // Royston adjustment (adjust = True in VB6)
-      const Zc = -jStat.normal.inv(Math.exp(-0.5 * Ksq), 0, 1);
+      // Guard against underflow when Ksq is huge
+      const expTerm = Math.exp(-0.5 * Ksq);
+      const boundedExp = Math.min(Math.max(expTerm, 1e-300), 1 - 1e-16);
+      const Zc = -jStat.normal.inv(boundedExp, 0, 1);
       const Zt = 0.55 * Math.pow(n, 0.2) - 0.21;
       const lnn = Math.log(n);
       const a1 = (-5 + 3.46 * lnn) * Math.exp(-1.37 * lnn);
@@ -687,7 +690,9 @@
       else if (Zc < Zt) z = a1 + b1 * Zc;
       else z = a2 + b2 * Zc;
 
-      const P = 1 - jStat.normal.cdf(z, 0, 1);
+      // Guard against 0/1 to avoid Infinity/NaN
+      const Praw = 1 - jStat.normal.cdf(z, 0, 1);
+      const P = Math.min(Math.max(Praw, 1e-300), 1 - 1e-16);
       Ksq = -2 * Math.log(P);
 
       // VB6: Pval = 1 - probchi(Ksq, df, lower_tail:=False)
