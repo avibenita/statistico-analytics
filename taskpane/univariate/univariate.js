@@ -668,3 +668,41 @@ function showStatus(type, message) {
 function showError(message) {
     showStatus('error', message);
 }
+
+// Quick test functions for development
+function quickTestHistogram() {
+    console.log('🧪 Quick test: Histogram');
+    
+    // Generate sample data
+    const sampleData = [];
+    for (let i = 0; i < 369; i++) {
+        const u1 = Math.random();
+        const u2 = Math.random();
+        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        sampleData.push(201.17 + z * 60.64);
+    }
+    
+    const results = calculateStatistics(sampleData, 'Test Data', 'none');
+    openResultsDialog(results);
+    showStatus('success', 'Test histogram opened!');
+}
+
+function quickTestBoxPlot() {
+    console.log('🧪 Quick test: Box Plot');
+    
+    // Generate sample data
+    const sampleData = [];
+    for (let i = 0; i < 369; i++) {
+        const u1 = Math.random();
+        const u2 = Math.random();
+        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        sampleData.push(201.17 + z * 60.64);
+    }
+    
+    const results = calculateStatistics(sampleData, 'Test Data', 'none');
+    currentResults = results;
+    
+    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/boxplot-standalone.html';
+    openNewView(dialogUrl, results);
+    showStatus('success', 'Test box plot opened!');
+}

@@ -182,6 +182,18 @@
                 <i class="fa-solid fa-play"></i>
                 Run Full Analysis
             </button>
+            
+            <!-- Quick Test Buttons (for development) -->
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button class="btn-secondary" onclick="quickTestHistogram()" title="Quick test with sample data">
+                    <i class="fa-solid fa-chart-column"></i>
+                    Test Histogram
+                </button>
+                <button class="btn-secondary" onclick="quickTestBoxPlot()" title="Quick test with sample data">
+                    <i class="fa-solid fa-box"></i>
+                    Test Box Plot
+                </button>
+            </div>
 
             <!-- Status -->
             <div class="status-msg" id="statusMessage"></div>

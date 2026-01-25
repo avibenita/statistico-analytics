@@ -70,6 +70,9 @@ const StatisticoHeader = {
         
         <!-- Right: Dropdown Menu -->
         <div class="header-right">
+          <button class="refresh-btn" onclick="StatisticoHeader.refreshView()" title="Refresh View (Ctrl+R)">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
           <button class="dropdown-btn" onclick="StatisticoHeader.toggleDropdown()">
             <i class="fa-solid fa-chart-simple"></i>
             <span>Views</span>
@@ -139,6 +142,14 @@ const StatisticoHeader = {
   },
   
   /**
+   * Refresh current view
+   */
+  refreshView() {
+    console.log('🔄 Refreshing view...');
+    window.location.reload();
+  },
+  
+  /**
    * Navigate to another view
    */
   navigateTo(filename) {
@@ -181,4 +192,16 @@ const StatisticoHeader = {
 // Auto-initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
   console.log('✅ StatisticoHeader loaded and ready');
+  
+  // Add keyboard shortcut for refresh
+  document.addEventListener('keydown', (e) => {
+    // Ctrl+R or Cmd+R or F5
+    if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+      e.preventDefault();
+      StatisticoHeader.refreshView();
+    } else if (e.key === 'F5') {
+      e.preventDefault();
+      StatisticoHeader.refreshView();
+    }
+  });
 });
