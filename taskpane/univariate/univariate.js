@@ -729,3 +729,26 @@ function quickTestQQPlot() {
     openNewView(dialogUrl, results);
     showStatus('success', 'Test QQ/PP plot opened!');
 }
+
+/**
+ * Quick test function for Kernel Density with sample data
+ */
+function quickTestKernel() {
+    console.log('🧪 Quick test: Kernel Density');
+    
+    // Generate sample data (normal distribution)
+    const sampleData = [];
+    for (let i = 0; i < 100; i++) {
+        const u1 = Math.random();
+        const u2 = Math.random();
+        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        sampleData.push(50 + z * 10);
+    }
+    
+    const results = calculateStatistics(sampleData, 'Test Data', 'none');
+    currentResults = results;
+    
+    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/kernel-standalone.html';
+    openNewView(dialogUrl, results);
+    showStatus('success', 'Test Kernel Density opened!');
+}
