@@ -49,15 +49,59 @@
       margin-bottom: 10px;
     }
 
-    /* Summary Stats */
+    /* Dashboard (VB6 layout) */
+    .dashboard {
+      background: #0b0b0b;
+      border-radius: 8px;
+      border: 1px solid #1e2533;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0b0b0b;
+      padding: 8px 12px;
+      border-bottom: 1px solid #1e2533;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-1);
+    }
+
+    .dashboard-actions {
+      display: flex;
+      gap: 10px;
+      color: #e5e7eb;
+      font-size: 12px;
+    }
+
+    .dashboard-actions i {
+      opacity: 0.8;
+    }
+
+    .dashboard-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 12px;
+      background: #0b0b0b;
+    }
+
+    /* Summary panel */
+    .summary-panel {
+      background: #000;
+      border-radius: 6px;
+      padding: 10px;
+      min-height: 120px;
+      border: 1px solid #1e2533;
+    }
+
     .summary-stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
-      padding: 10px;
-      background: #000;
-      border-radius: 6px;
-      margin-bottom: 10px;
     }
 
     .stat-item {
@@ -76,12 +120,16 @@
       margin-top: 2px;
     }
 
-    /* Gauge */
+    .alpha-slider {
+      margin-top: 4px;
+    }
+
+    /* Gauge panel */
     .gauge-panel {
       background: #000;
       border-radius: 6px;
       padding: 10px;
-      margin-bottom: 10px;
+      border: 1px solid #1e2533;
     }
 
     .gauge-title {
@@ -99,12 +147,12 @@
     /* Tests Grid */
     .tests-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
     }
 
     .test-card {
-      background: grey;
+      background: #7a7a7a;
       border-radius: 6px;
       padding: 12px;
     }
@@ -158,7 +206,16 @@
       font-weight: 600;
     }
 
+    @media (max-width: 1100px) {
+      .tests-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
     @media (max-width: 768px) {
+      .dashboard-body {
+        grid-template-columns: 1fr;
+      }
       .tests-grid {
         grid-template-columns: 1fr;
       }
@@ -172,36 +229,47 @@
   <statistico-header view-name="Tests of Normality" module-name="Univariate Analysis"></statistico-header>
   
   <div class="results-container">
-    <!-- Summary Stats -->
-    <div class="summary-stats">
-      <div class="stat-item">
-        <div class="stat-value" id="pass-count">0</div>
-        <div class="stat-label">Tests Passed</div>
+    <div class="dashboard">
+      <div class="dashboard-header">
+        Tests of Normality Dashboard
+        <div class="dashboard-actions">
+          <i class="fa-solid fa-expand"></i>
+          <i class="fa-solid fa-rotate-right"></i>
+          <i class="fa-solid fa-xmark"></i>
+        </div>
       </div>
-      <div class="stat-item">
-        <div class="stat-value" id="fail-count">0</div>
-        <div class="stat-label">Tests Failed</div>
+      <div class="dashboard-body">
+        <div class="summary-panel">
+          <div class="summary-stats">
+            <div class="stat-item">
+              <div class="stat-value" id="pass-count">0</div>
+              <div class="stat-label">Tests Passed</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="fail-count">0</div>
+              <div class="stat-label">Tests Failed</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="sample-size">—</div>
+              <div class="stat-label">Sample Size</div>
+            </div>
+            <div class="stat-item" style="position: relative;">
+              <div class="stat-value" id="significance">0.05</div>
+              <div class="stat-label">Significance</div>
+              <input class="alpha-slider" type="range" id="alpha-slider" min="0.01" max="0.15" step="0.01" value="0.05" 
+                     style="width: 100%; margin-top: 5px; accent-color: #ffd700;"
+                     oninput="updateAlpha(this.value)">
+              <div style="font-size: 9px; color: rgba(255,255,255,0.5); margin-top: 2px;">Adjust</div>
+            </div>
+          </div>
+        </div>
+        <div class="gauge-panel">
+          <div class="gauge-title">
+            NSI<sup style="font-size:8px;">™</sup> -Normality Strength Index
+          </div>
+          <div id="normalityGauge" class="gauge-container"></div>
+        </div>
       </div>
-      <div class="stat-item">
-        <div class="stat-value" id="sample-size">—</div>
-        <div class="stat-label">Sample Size</div>
-      </div>
-      <div class="stat-item" style="position: relative;">
-        <div class="stat-value" id="significance">0.05</div>
-        <div class="stat-label">Significance</div>
-        <input type="range" id="alpha-slider" min="0.01" max="0.15" step="0.01" value="0.05" 
-               style="width: 100%; margin-top: 5px; accent-color: #ffd700;"
-               oninput="updateAlpha(this.value)">
-        <div style="font-size: 9px; color: rgba(255,255,255,0.5); margin-top: 2px;">Adjust</div>
-      </div>
-    </div>
-
-    <!-- NSI Gauge -->
-    <div class="gauge-panel">
-      <div class="gauge-title">
-        NSI<sup style="font-size:8px;">™</sup> -Normality Strength Index
-      </div>
-      <div id="normalityGauge" class="gauge-container"></div>
     </div>
 
     <!-- Test Cards -->
@@ -833,24 +901,24 @@
           yAxis: {
             min: 0,
             max: 100,
-            stops: [
-              [0.3, '#ef4444'],
-              [0.6, '#f59e0b'],
-              [1, '#22c55e']
-            ],
             lineWidth: 0,
             tickWidth: 0,
             minorTickInterval: null,
-            tickAmount: 2,
+            tickAmount: 3,
             labels: {
               y: 16,
               style: { fontSize: '10px', color: '#fff' }
-            }
+            },
+            plotBands: [
+              { from: 0, to: 33.33, color: '#ef4444' },
+              { from: 33.33, to: 66.66, color: '#f59e0b' },
+              { from: 66.66, to: 100, color: '#22c55e' }
+            ]
           },
           plotOptions: {
             solidgauge: {
               dataLabels: {
-                y: -25,
+                y: -20,
                 borderWidth: 0,
                 useHTML: true
               }
@@ -862,8 +930,8 @@
             data: [score],
             dataLabels: {
               format: '<div style="text-align:center">' +
-                '<span style="font-size:32px;color:#fff;font-weight:700">{y}</span><br/>' +
-                '<span style="font-size:11px;opacity:0.7">Normality Score</span>' +
+                '<span style="font-size:30px;color:#fff;font-weight:700">{y}</span><br/>' +
+                '<span style="font-size:11px;opacity:0.7">NSI</span>' +
                 '</div>'
             }
           }]
