@@ -429,6 +429,46 @@
       opacity: 0.5;
     }
 
+    /* Calculating State (Bootstrap) */
+    .calculating-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      border-radius: 6px;
+    }
+
+    .calculating-overlay.active {
+      display: flex;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255,165,120,0.2);
+      border-top: 4px solid var(--accent-1);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .calculating-text {
+      margin-left: 15px;
+      color: var(--accent-1);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
     /* Alpha Control (removed old button version) */
     .alpha-control {
       display: none;
@@ -525,8 +565,9 @@
           <div id="bootstrap-iterations-inline" style="display: none; margin-top: 8px; align-items: center; gap: 8px;">
             <label style="color: var(--text-secondary); font-size: 12px;">Iterations:</label>
             <input type="number" id="bootstrap-iterations-input" value="500" min="100" max="10000" step="100" 
-                   style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: white; padding: 4px 8px; width: 80px; font-size: 12px;">
-            <button onclick="setAwaitingState()" 
+                   style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: white; padding: 4px 8px; width: 80px; font-size: 12px;"
+                   oninput="setAwaitingState()">
+            <button onclick="refreshBootstrap()" 
                     style="background: linear-gradient(135deg, var(--accent-1), rgb(255,140,90)); border: none; color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.3s ease;">
               <i class="fa-solid fa-sync-alt"></i> Refresh
             </button>
@@ -596,7 +637,12 @@
       </div>
 
       <!-- Actual Results (hidden initially) -->
-      <div id="actual-results" style="display: none;">
+      <div id="actual-results" style="display: none; position: relative;">
+        <!-- Calculating Overlay (for Bootstrap) -->
+        <div id="calculating-overlay" class="calculating-overlay">
+          <div class="spinner"></div>
+          <div class="calculating-text">Calculating...</div>
+        </div>
 
       <div class="results-grid">
         <div class="result-card highlight">
@@ -786,6 +832,43 @@
       }
     }
 
+    // Refresh bootstrap (re-run with new random seed)
+    window.refreshBootstrap = function() {
+      if (!resultsData || !resultsData.values || resultsData.values.length === 0) {
+        alert('No data available. Please load data first.');
+        return;
+      }
+      
+      // If results are showing, recalculate
+      if (document.getElementById('actual-results').style.display !== 'none') {
+        const overlay = document.getElementById('calculating-overlay');
+        overlay.classList.add('active');
+        
+        setTimeout(() => {
+          const result = performHypothesisTest();
+          displayResults(result);
+          overlay.classList.remove('active');
+          
+          // Add blink effect
+          const statBoxes = document.querySelectorAll('.stat-box');
+          const decisionCard = document.querySelector('.decision-card');
+          
+          statBoxes.forEach(box => {
+            box.classList.add('blink');
+            setTimeout(() => box.classList.remove('blink'), 600);
+          });
+          
+          if (decisionCard) {
+            decisionCard.classList.add('blink');
+            setTimeout(() => decisionCard.classList.remove('blink'), 600);
+          }
+        }, 50);
+      } else {
+        // No results yet, just set awaiting
+        setAwaitingState();
+      }
+    };
+
     // Run test
     window.runTest = function() {
       currentH0 = parseFloat(document.getElementById('h0-value').value) || 0;
@@ -803,12 +886,27 @@
         return;
       }
       
-      // Perform test
-      const result = performHypothesisTest();
-      displayResults(result);
-      
-      // Show results section
+      // Show results section and actual results immediately
       document.getElementById('results-section').style.display = 'block';
+      document.getElementById('awaiting-results').style.display = 'none';
+      document.getElementById('actual-results').style.display = 'block';
+      
+      // If bootstrap, show calculating overlay
+      if (currentMethod === 'bootstrap') {
+        const overlay = document.getElementById('calculating-overlay');
+        overlay.classList.add('active');
+        
+        // Use setTimeout to allow UI to update before heavy calculation
+        setTimeout(() => {
+          const result = performHypothesisTest();
+          displayResults(result);
+          overlay.classList.remove('active');
+        }, 50);
+      } else {
+        // Classical - calculate immediately
+        const result = performHypothesisTest();
+        displayResults(result);
+      }
     };
 
     // Perform hypothesis test
@@ -853,64 +951,67 @@
           testType = 'Chi-Square Test';
         }
       } else if (currentMethod === 'bootstrap') {
-        // Bootstrap test
+        // Bootstrap hypothesis test (proper implementation)
         const iterations = parseInt(document.getElementById('bootstrap-iterations-input').value) || 500;
         testType = 'Bootstrap Test';
         
-        // Calculate sample statistic
-        let sampleStat;
+        // Calculate observed sample statistic
+        let observedStat;
+        const mean = data.reduce((a, b) => a + b, 0) / n;
+        
         if (currentParameter === 'mean') {
-          sampleStat = data.reduce((a, b) => a + b, 0) / n;
+          observedStat = mean;
         } else if (currentParameter === 'median') {
           const sorted = [...data].sort((a, b) => a - b);
           const mid = Math.floor(sorted.length / 2);
-          sampleStat = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-        } else if (currentParameter === 'percentile') {
-          // Use 50th percentile for now
-          const sorted = [...data].sort((a, b) => a - b);
-          const index = Math.floor(sorted.length * 0.5);
-          sampleStat = sorted[index];
+          observedStat = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
         } else if (currentParameter === 'variance') {
-          const mean = data.reduce((a, b) => a + b, 0) / n;
-          sampleStat = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1);
+          observedStat = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1);
         }
         
-        // Bootstrap resampling
-        const bootstrapStats = [];
+        // Calculate test statistic (difference from H0)
+        testStat = observedStat - currentH0;
+        
+        // Center data under null hypothesis
+        const shift = currentH0 - observedStat;
+        const centeredData = data.map(x => x + shift);
+        
+        // Bootstrap resampling from centered data
+        let moreExtreme = 0;
+        
         for (let i = 0; i < iterations; i++) {
           const resample = [];
           for (let j = 0; j < n; j++) {
-            resample.push(data[Math.floor(Math.random() * n)]);
+            resample.push(centeredData[Math.floor(Math.random() * n)]);
           }
           
-          let stat;
+          let bootStat;
           if (currentParameter === 'mean') {
-            stat = resample.reduce((a, b) => a + b, 0) / n;
+            bootStat = resample.reduce((a, b) => a + b, 0) / n;
           } else if (currentParameter === 'median') {
             const sorted = [...resample].sort((a, b) => a - b);
             const mid = Math.floor(sorted.length / 2);
-            stat = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+            bootStat = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
           } else if (currentParameter === 'variance') {
-            const mean = resample.reduce((a, b) => a + b, 0) / n;
-            stat = resample.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1);
+            const resampleMean = resample.reduce((a, b) => a + b, 0) / n;
+            bootStat = resample.reduce((acc, val) => acc + Math.pow(val - resampleMean, 2), 0) / (n - 1);
           }
           
-          bootstrapStats.push(stat);
-        }
-        
-        // Calculate p-value based on how many bootstrap stats are more extreme than H0
-        let moreExtreme = 0;
-        if (currentH1Type === 'not-equal') {
-          const diff = Math.abs(sampleStat - currentH0);
-          moreExtreme = bootstrapStats.filter(s => Math.abs(s - currentH0) >= diff).length;
-        } else if (currentH1Type === 'greater') {
-          moreExtreme = bootstrapStats.filter(s => s >= sampleStat).length;
-        } else { // less
-          moreExtreme = bootstrapStats.filter(s => s <= sampleStat).length;
+          // Calculate test statistic for this bootstrap sample
+          const bootTestStat = bootStat - currentH0;
+          
+          // Count more extreme
+          if (currentH1Type === 'not-equal') {
+            if (Math.abs(bootTestStat) >= Math.abs(testStat)) moreExtreme++;
+          } else if (currentH1Type === 'greater') {
+            if (bootTestStat >= testStat) moreExtreme++;
+          } else { // less
+            if (bootTestStat <= testStat) moreExtreme++;
+          }
         }
         
         pValue = moreExtreme / iterations;
-        testStat = sampleStat; // Use sample statistic as test statistic
+        testStat = observedStat; // Display the observed statistic
       }
       
       const reject = pValue < currentAlpha;
