@@ -7,6 +7,7 @@
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.4/jstat.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
   <link rel="stylesheet" href="./shared-header.css">
   <script src="./shared-header.js"></script>
   
@@ -591,6 +592,166 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* Modal/Popup Styles for Visualization */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(3px);
+    }
+
+    .modal-overlay.show {
+      display: flex !important;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: var(--surface-1);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 1200px;
+      max-height: 90vh;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      border: 2px solid var(--border);
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      background: linear-gradient(135deg, var(--surface-2), var(--surface-1));
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .modal-header span {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent-1);
+      display: flex;
+      align-items: center;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-close-btn {
+      background: linear-gradient(135deg, rgba(255,100,100,0.2), rgba(255,50,50,0.2));
+      border: 1px solid rgba(255,100,100,0.4);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close-btn:hover {
+      background: linear-gradient(135deg, rgba(255,100,100,0.3), rgba(255,50,50,0.3));
+      transform: scale(1.05);
+    }
+
+    .modal-close-btn i {
+      font-size: 14px;
+    }
+
+    /* Chart specific styles */
+    #chart {
+      min-height: 400px;
+      background: var(--surface-2);
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .chart-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding: 12px;
+      background: var(--surface-2);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .chart-slider-row label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 100px;
+    }
+
+    .chart-slider-row .slider {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.2);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .chart-slider-row .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-1);
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(255,165,120,0.5);
+    }
+
+    .chart-slider-row .slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-1);
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(255,165,120,0.5);
+      border: none;
+    }
+
+    #alphaChartValue {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-1);
+      min-width: 50px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -711,10 +872,10 @@
             <input type="range" id="alpha-slider" min="0.01" max="0.15" step="0.01" value="0.05" oninput="updateAlpha()">
             <span class="alpha-value" id="alpha-value">0.05</span>
           </div>
-          <button class="action-btn">
+          <button class="action-btn" onclick="showPowerAnalysis()">
             <i class="fa-solid fa-chart-line"></i> Power
           </button>
-          <button class="action-btn">
+          <button class="action-btn" id="toggleVisualBtn" onclick="openVisualization()">
             <i class="fa-solid fa-chart-area"></i> Visualize
           </button>
         </div>
@@ -771,6 +932,31 @@
       </div>
       </div> <!-- end actual-results -->
     </div> <!-- end results-section -->
+  </div>
+
+  <!-- VISUALIZATION MODAL POPUP -->
+  <div class="modal-overlay" id="visualModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span>
+          <i class="fa-solid fa-chart-line" style="margin-right: 10px;"></i>Hypothesis Test Visualization
+        </span>
+        <button id="closeVisualBtn" class="modal-close-btn" onclick="closeVisualization()">
+          <i class="fa-solid fa-times"></i> Close
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="chart-slider-row">
+          <label for="alphaChartSlider">
+            <i class="fa-solid fa-sliders-h"></i>
+            Alpha: <span id="alphaChartValue">0.05</span>
+          </label>
+          <input class="slider" id="alphaChartSlider" max="0.15" min="0.01" step="0.01" type="range" value="0.05" oninput="updateChartAlpha()"/>
+        </div>
+        <div id="chart"></div>
+        <div id="chartExplanation" style="margin-top: 12px; padding: 12px 16px; background: var(--surface-2); border-radius: 8px; border: 1px solid var(--border); line-height: 1.5; font-size: 13px;"></div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -1330,6 +1516,262 @@
       const weight = index - lower;
       return sorted[lower] * (1 - weight) + sorted[upper] * weight;
     }
+
+    // ========================================
+    // VISUALIZATION FUNCTIONS
+    // ========================================
+    
+    window.openVisualization = function() {
+      const modal = document.getElementById('visualModal');
+      if (!modal) return;
+      
+      // Check if we have results to visualize
+      if (document.getElementById('actual-results').style.display === 'none') {
+        alert('Please run a hypothesis test first before visualizing.');
+        return;
+      }
+      
+      modal.classList.add('show');
+      setTimeout(() => updateChart(), 200); // Wait for animation to start
+    };
+
+    window.closeVisualization = function() {
+      const modal = document.getElementById('visualModal');
+      if (modal) {
+        modal.classList.remove('show');
+      }
+    };
+
+    window.updateChartAlpha = function() {
+      const slider = document.getElementById('alphaChartSlider');
+      const alphaValue = parseFloat(slider.value);
+      document.getElementById('alphaChartValue').textContent = alphaValue.toFixed(2);
+      updateChart();
+    };
+
+    // Standard normal PDF
+    function normalPDF(x) {
+      return Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
+    }
+
+    // Inverse normal CDF (simple approximation)
+    function normalInv(p) {
+      if (p <= 0 || p >= 1) return 0;
+      const c = [2.515517, 0.802853, 0.010328];
+      const d = [1.432788, 0.189269, 0.001308];
+      const t = Math.sqrt(-2 * Math.log(Math.min(p, 1 - p)));
+      const z = t - ((c[2] * t + c[1]) * t + c[0]) / (((d[2] * t + d[1]) * t + d[0]) * t + 1);
+      return p < 0.5 ? -z : z;
+    }
+
+    function updateChart() {
+      if (typeof Plotly === 'undefined') {
+        console.error('Plotly not available');
+        return;
+      }
+
+      const slider = document.getElementById('alphaChartSlider');
+      const alpha = slider ? parseFloat(slider.value) : currentAlpha;
+      
+      // Get current test results
+      const testStat = parseFloat(document.getElementById('result-stat-value').textContent) || 0;
+      const pValue = parseFloat(document.getElementById('result-pvalue').textContent) || 0;
+      const orientation = document.getElementById('result-orientation').textContent || 'Two-tailed';
+      const testType = document.getElementById('result-test-type').textContent || '';
+      
+      // Calculate critical values for the given alpha
+      let critLeft, critRight;
+      if (orientation === 'Two-tailed') {
+        critLeft = normalInv(alpha / 2);
+        critRight = normalInv(1 - alpha / 2);
+      } else if (orientation === 'Left-tailed') {
+        critLeft = normalInv(alpha);
+        critRight = null;
+      } else { // Right-tailed
+        critLeft = null;
+        critRight = normalInv(1 - alpha);
+      }
+
+      // Generate distribution curve
+      const x = [];
+      const y = [];
+      for (let i = -4; i <= 4; i += 0.05) {
+        x.push(i);
+        y.push(normalPDF(i));
+      }
+
+      // Create traces
+      const traces = [];
+
+      // Main distribution curve
+      traces.push({
+        x: x,
+        y: y,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Distribution',
+        line: { color: 'rgb(120,200,255)', width: 3 },
+        fill: 'tozeroy',
+        fillcolor: 'rgba(120,200,255,0.1)'
+      });
+
+      // Rejection regions
+      if (orientation === 'Two-tailed') {
+        // Left rejection region
+        const xLeft = x.filter(v => v <= critLeft);
+        const yLeft = xLeft.map(v => normalPDF(v));
+        traces.push({
+          x: xLeft,
+          y: yLeft,
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Rejection Region (Left)',
+          line: { width: 0 },
+          fill: 'tozeroy',
+          fillcolor: 'rgba(255,100,100,0.3)',
+          showlegend: false
+        });
+
+        // Right rejection region
+        const xRight = x.filter(v => v >= critRight);
+        const yRight = xRight.map(v => normalPDF(v));
+        traces.push({
+          x: xRight,
+          y: yRight,
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Rejection Region (Right)',
+          line: { width: 0 },
+          fill: 'tozeroy',
+          fillcolor: 'rgba(255,100,100,0.3)',
+          showlegend: false
+        });
+      } else if (orientation === 'Left-tailed') {
+        const xLeft = x.filter(v => v <= critLeft);
+        const yLeft = xLeft.map(v => normalPDF(v));
+        traces.push({
+          x: xLeft,
+          y: yLeft,
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Rejection Region',
+          line: { width: 0 },
+          fill: 'tozeroy',
+          fillcolor: 'rgba(255,100,100,0.3)',
+          showlegend: false
+        });
+      } else { // Right-tailed
+        const xRight = x.filter(v => v >= critRight);
+        const yRight = xRight.map(v => normalPDF(v));
+        traces.push({
+          x: xRight,
+          y: yRight,
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Rejection Region',
+          line: { width: 0 },
+          fill: 'tozeroy',
+          fillcolor: 'rgba(255,100,100,0.3)',
+          showlegend: false
+        });
+      }
+
+      // Critical value lines
+      if (critLeft !== null) {
+        traces.push({
+          x: [critLeft, critLeft],
+          y: [0, normalPDF(critLeft)],
+          type: 'scatter',
+          mode: 'lines',
+          name: `Critical Left (${critLeft.toFixed(3)})`,
+          line: { color: 'rgb(255,165,120)', width: 2, dash: 'dash' }
+        });
+      }
+
+      if (critRight !== null) {
+        traces.push({
+          x: [critRight, critRight],
+          y: [0, normalPDF(critRight)],
+          type: 'scatter',
+          mode: 'lines',
+          name: `Critical Right (${critRight.toFixed(3)})`,
+          line: { color: 'rgb(255,165,120)', width: 2, dash: 'dash' }
+        });
+      }
+
+      // Test statistic line
+      if (testStat !== 0) {
+        traces.push({
+          x: [testStat, testStat],
+          y: [0, normalPDF(testStat)],
+          type: 'scatter',
+          mode: 'lines+markers',
+          name: `Test Statistic (${testStat.toFixed(3)})`,
+          line: { color: 'rgb(255,215,0)', width: 3 },
+          marker: { size: 10, color: 'rgb(255,215,0)' }
+        });
+      }
+
+      const layout = {
+        title: {
+          text: `${testType}<br><sub>Test Statistic: ${testStat.toFixed(4)} | P-Value: ${pValue.toFixed(4)} | α: ${alpha.toFixed(2)}</sub>`,
+          font: { color: 'white', size: 16 }
+        },
+        xaxis: {
+          title: 'Test Statistic',
+          gridcolor: 'rgba(255,255,255,0.1)',
+          color: 'white'
+        },
+        yaxis: {
+          title: 'Probability Density',
+          gridcolor: 'rgba(255,255,255,0.1)',
+          color: 'white'
+        },
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        legend: {
+          font: { color: 'white' },
+          bgcolor: 'rgba(26,31,46,0.8)'
+        },
+        margin: { t: 80, b: 60, l: 60, r: 40 }
+      };
+
+      Plotly.newPlot('chart', traces, layout, { responsive: true });
+
+      // Update explanation
+      const explanation = document.getElementById('chartExplanation');
+      const reject = pValue < alpha;
+      const decision = reject ? '<strong style="color: rgb(255,100,100);">Reject H₀</strong>' : '<strong style="color: rgb(100,255,100);">Fail to Reject H₀</strong>';
+      
+      explanation.innerHTML = `
+        <strong>Interpretation:</strong><br>
+        Test: ${orientation} ${testType}<br>
+        Alpha Level: α = ${alpha.toFixed(2)} (${(100 * (1 - alpha)).toFixed(0)}% confidence)<br>
+        Test Statistic: ${testStat.toFixed(4)}<br>
+        P-Value: ${pValue.toFixed(4)}<br>
+        Decision: ${decision}<br><br>
+        <em>The shaded red areas represent the rejection region(s). If the test statistic (yellow line) falls within these regions, we reject the null hypothesis.</em>
+      `;
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeVisualization();
+      }
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('visualModal')?.addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeVisualization();
+      }
+    });
+
+    // Placeholder for power analysis
+    window.showPowerAnalysis = function() {
+      alert('Power Analysis feature coming soon!');
+    };
   </script>
 </body>
 </html>
