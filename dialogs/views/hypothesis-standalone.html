@@ -643,6 +643,15 @@
               <input type="radio" name="parameter" value="percentile" disabled onchange="selectParameter('percentile')">
               <span>Percentile</span>
             </label>
+            
+            <!-- Percentile Value Input (inline, only visible when Percentile selected) -->
+            <div id="percentile-value-inline" style="display: none; margin-left: 20px; align-items: center; gap: 8px; background: rgba(120,200,255,0.1); border: 1px solid rgba(120,200,255,0.3); border-radius: 6px; padding: 6px 12px;">
+              <i class="fa-solid fa-percent" style="color: var(--accent-2); font-size: 11px;"></i>
+              <input type="number" id="percentile-value-input" value="50" min="1" max="99" step="1" 
+                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: white; padding: 4px 8px; width: 60px; font-size: 12px; text-align: center;"
+                     oninput="updatePercentileDisplay(); setAwaitingState()">
+              <span style="color: var(--text-secondary); font-size: 12px; font-weight: 600;">%</span>
+            </div>
           </div>
           <!-- Bootstrap Iterations (inline, only visible when Bootstrap selected) -->
           <div id="bootstrap-iterations-inline" style="display: none; margin-top: 8px; align-items: center; gap: 8px;">
@@ -851,14 +860,43 @@
       currentParameter = param;
       console.log('Parameter changed to:', param);
       
+      // Show/hide percentile value input
+      const percentileInput = document.getElementById('percentile-value-inline');
+      if (param === 'percentile') {
+        percentileInput.style.display = 'flex';
+        updatePercentileDisplay(); // Update display with current percentile value
+      } else {
+        percentileInput.style.display = 'none';
+      }
+      
       // Update H0 and H1 labels
       document.getElementById('h0-param').textContent = param;
       document.getElementById('h1-param').textContent = param;
-      document.getElementById('result-parameter').textContent = param.charAt(0).toUpperCase() + param.slice(1);
+      
+      // Update result parameter display
+      updatePercentileDisplay();
       
       updatePopSizeState();
       setAwaitingState();
     };
+
+    // Update percentile display (e.g., "50th Percentile")
+    function updatePercentileDisplay() {
+      if (currentParameter === 'percentile') {
+        const percentileValue = parseInt(document.getElementById('percentile-value-input').value) || 50;
+        const suffix = getOrdinalSuffix(percentileValue);
+        document.getElementById('result-parameter').textContent = `${percentileValue}${suffix} Percentile`;
+      } else {
+        document.getElementById('result-parameter').textContent = currentParameter.charAt(0).toUpperCase() + currentParameter.slice(1);
+      }
+    }
+
+    // Get ordinal suffix (1st, 2nd, 3rd, 4th, etc.)
+    function getOrdinalSuffix(n) {
+      const s = ["th", "st", "nd", "rd"];
+      const v = n % 100;
+      return s[(v - 20) % 10] || s[v] || s[0];
+    }
 
     // Update alpha from slider
     window.updateAlpha = function() {
@@ -1042,7 +1080,14 @@
       } else if (currentMethod === 'bootstrap') {
         // Bootstrap hypothesis test (proper implementation with forced randomness)
         const iterations = parseInt(document.getElementById('bootstrap-iterations-input').value) || 500;
-        testType = 'Bootstrap Test';
+        
+        // Set test type based on parameter
+        if (currentParameter === 'percentile') {
+          const percentileValue = parseInt(document.getElementById('percentile-value-input').value) || 50;
+          testType = `Bootstrap Percentile Test`;
+        } else {
+          testType = `Bootstrap ${currentParameter.charAt(0).toUpperCase() + currentParameter.slice(1)} Test`;
+        }
         
         // Force new random seed by using timestamp
         const randomSeed = Date.now() + Math.random() * 1000000;
@@ -1060,6 +1105,9 @@
           observedStat = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
         } else if (currentParameter === 'variance') {
           observedStat = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1);
+        } else if (currentParameter === 'percentile') {
+          const p = parseFloat(document.getElementById('percentile-value-input').value) / 100;
+          observedStat = calculatePercentile(data, p);
         }
         
         // Calculate test statistic (difference from H0)
@@ -1091,6 +1139,9 @@
           } else if (currentParameter === 'variance') {
             const resampleMean = resample.reduce((a, b) => a + b, 0) / n;
             bootStat = resample.reduce((acc, val) => acc + Math.pow(val - resampleMean, 2), 0) / (n - 1);
+          } else if (currentParameter === 'percentile') {
+            const p = parseFloat(document.getElementById('percentile-value-input').value) / 100;
+            bootStat = calculatePercentile(resample, p);
           }
           
           // Calculate test statistic for this bootstrap sample
@@ -1269,6 +1320,17 @@
       if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
         Office.context.ui.messageParent(JSON.stringify(message));
       }
+    }
+
+    // Calculate percentile from data
+    function calculatePercentile(data, p) {
+      if (!data || data.length === 0) return 0;
+      const sorted = [...data].sort((a, b) => a - b);
+      const index = (sorted.length - 1) * p;
+      const lower = Math.floor(index);
+      const upper = Math.ceil(index);
+      const weight = index - lower;
+      return sorted[lower] * (1 - weight) + sorted[upper] * weight;
     }
   </script>
 </body>
