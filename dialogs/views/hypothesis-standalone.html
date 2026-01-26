@@ -434,6 +434,26 @@
       display: none;
     }
 
+    /* Blink animation for diagnostic update */
+    @keyframes diagnostic-blink {
+      0%, 100% {
+        box-shadow: 0 4px 15px rgba(255,165,120,0.2);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 25px rgba(255,165,120,0.6), 0 0 15px rgba(255,165,120,0.4);
+        transform: scale(1.02);
+      }
+    }
+
+    .stat-box.blink {
+      animation: diagnostic-blink 0.6s ease-in-out;
+    }
+
+    .decision-card.blink {
+      animation: diagnostic-blink 0.6s ease-in-out;
+    }
+
     @media (max-width: 768px) {
       .config-grid {
         grid-template-columns: 1fr;
@@ -492,6 +512,24 @@
               <input type="radio" name="parameter" value="variance" onchange="selectParameter('variance')">
               <span>Variance</span>
             </label>
+            <label class="radio-label disabled" id="median-option">
+              <input type="radio" name="parameter" value="median" disabled onchange="selectParameter('median')">
+              <span>Median</span>
+            </label>
+            <label class="radio-label disabled" id="percentile-option">
+              <input type="radio" name="parameter" value="percentile" disabled onchange="selectParameter('percentile')">
+              <span>Percentile</span>
+            </label>
+          </div>
+          <!-- Bootstrap Iterations (inline, only visible when Bootstrap selected) -->
+          <div id="bootstrap-iterations-inline" style="display: none; margin-top: 8px; align-items: center; gap: 8px;">
+            <label style="color: var(--text-secondary); font-size: 12px;">Iterations:</label>
+            <input type="number" id="bootstrap-iterations-input" value="500" min="100" max="10000" step="100" 
+                   style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: white; padding: 4px 8px; width: 80px; font-size: 12px;">
+            <button onclick="setAwaitingState()" 
+                    style="background: linear-gradient(135deg, var(--accent-1), rgb(255,140,90)); border: none; color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.3s ease;">
+              <i class="fa-solid fa-sync-alt"></i> Refresh
+            </button>
           </div>
         </div>
       </div>
@@ -641,6 +679,34 @@
       currentMethod = method;
       console.log('Method changed to:', method);
       
+      // Enable/disable median and percentile based on bootstrap
+      const medianOption = document.getElementById('median-option');
+      const percentileOption = document.getElementById('percentile-option');
+      const medianRadio = document.querySelector('input[name="parameter"][value="median"]');
+      const percentileRadio = document.querySelector('input[name="parameter"][value="percentile"]');
+      const bootstrapIterations = document.getElementById('bootstrap-iterations-inline');
+      
+      if (method === 'bootstrap') {
+        medianOption.classList.remove('disabled');
+        percentileOption.classList.remove('disabled');
+        medianRadio.disabled = false;
+        percentileRadio.disabled = false;
+        bootstrapIterations.style.display = 'flex';
+      } else {
+        medianOption.classList.add('disabled');
+        percentileOption.classList.add('disabled');
+        medianRadio.disabled = true;
+        percentileRadio.disabled = true;
+        bootstrapIterations.style.display = 'none';
+        
+        // Reset to mean if median or percentile was selected
+        if (currentParameter === 'median' || currentParameter === 'percentile') {
+          document.querySelector('input[name="parameter"][value="mean"]').checked = true;
+          selectParameter('mean');
+          return; // selectParameter will call setAwaitingState
+        }
+      }
+      
       updatePopSizeState();
       setAwaitingState();
     };
@@ -670,6 +736,20 @@
       if (document.getElementById('actual-results').style.display !== 'none' && resultsData) {
         const result = performHypothesisTest();
         displayResults(result);
+        
+        // Add blink effect to diagnostic elements
+        const statBoxes = document.querySelectorAll('.stat-box');
+        const decisionCard = document.querySelector('.decision-card');
+        
+        statBoxes.forEach(box => {
+          box.classList.add('blink');
+          setTimeout(() => box.classList.remove('blink'), 600);
+        });
+        
+        if (decisionCard) {
+          decisionCard.classList.add('blink');
+          setTimeout(() => decisionCard.classList.remove('blink'), 600);
+        }
       }
     };
 
@@ -735,40 +815,102 @@
     function performHypothesisTest() {
       const data = resultsData.values;
       const n = data.length;
-      const mean = data.reduce((a, b) => a + b, 0) / n;
-      const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1);
-      const stdev = Math.sqrt(variance);
       
       let testStat, pValue, testType;
       
-      if (currentParameter === 'mean') {
-        // One-sample t-test
-        testStat = (mean - currentH0) / (stdev / Math.sqrt(n));
+      if (currentMethod === 'classical') {
+        const mean = data.reduce((a, b) => a + b, 0) / n;
+        const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1);
+        const stdev = Math.sqrt(variance);
         
-        if (currentH1Type === 'not-equal') {
-          pValue = 2 * (1 - jStat.studentt.cdf(Math.abs(testStat), n - 1));
-        } else if (currentH1Type === 'greater') {
-          pValue = 1 - jStat.studentt.cdf(testStat, n - 1);
-        } else { // less
-          pValue = jStat.studentt.cdf(testStat, n - 1);
+        if (currentParameter === 'mean') {
+          // One-sample t-test
+          testStat = (mean - currentH0) / (stdev / Math.sqrt(n));
+          
+          if (currentH1Type === 'not-equal') {
+            pValue = 2 * (1 - jStat.studentt.cdf(Math.abs(testStat), n - 1));
+          } else if (currentH1Type === 'greater') {
+            pValue = 1 - jStat.studentt.cdf(testStat, n - 1);
+          } else { // less
+            pValue = jStat.studentt.cdf(testStat, n - 1);
+          }
+          
+          testType = 'One-Sample t-Test';
+        } else if (currentParameter === 'variance') {
+          // Chi-square test for variance
+          testStat = (n - 1) * variance / (currentH0 || 1);
+          
+          if (currentH1Type === 'not-equal') {
+            const pLower = jStat.chisquare.cdf(testStat, n - 1);
+            const pUpper = 1 - jStat.chisquare.cdf(testStat, n - 1);
+            pValue = 2 * Math.min(pLower, pUpper);
+          } else if (currentH1Type === 'greater') {
+            pValue = 1 - jStat.chisquare.cdf(testStat, n - 1);
+          } else { // less
+            pValue = jStat.chisquare.cdf(testStat, n - 1);
+          }
+          
+          testType = 'Chi-Square Test';
+        }
+      } else if (currentMethod === 'bootstrap') {
+        // Bootstrap test
+        const iterations = parseInt(document.getElementById('bootstrap-iterations-input').value) || 500;
+        testType = 'Bootstrap Test';
+        
+        // Calculate sample statistic
+        let sampleStat;
+        if (currentParameter === 'mean') {
+          sampleStat = data.reduce((a, b) => a + b, 0) / n;
+        } else if (currentParameter === 'median') {
+          const sorted = [...data].sort((a, b) => a - b);
+          const mid = Math.floor(sorted.length / 2);
+          sampleStat = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+        } else if (currentParameter === 'percentile') {
+          // Use 50th percentile for now
+          const sorted = [...data].sort((a, b) => a - b);
+          const index = Math.floor(sorted.length * 0.5);
+          sampleStat = sorted[index];
+        } else if (currentParameter === 'variance') {
+          const mean = data.reduce((a, b) => a + b, 0) / n;
+          sampleStat = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1);
         }
         
-        testType = 'One-Sample t-Test';
-      } else if (currentParameter === 'variance') {
-        // Chi-square test for variance
-        testStat = (n - 1) * variance / (currentH0 || 1);
-        
-        if (currentH1Type === 'not-equal') {
-          const pLower = jStat.chisquare.cdf(testStat, n - 1);
-          const pUpper = 1 - jStat.chisquare.cdf(testStat, n - 1);
-          pValue = 2 * Math.min(pLower, pUpper);
-        } else if (currentH1Type === 'greater') {
-          pValue = 1 - jStat.chisquare.cdf(testStat, n - 1);
-        } else { // less
-          pValue = jStat.chisquare.cdf(testStat, n - 1);
+        // Bootstrap resampling
+        const bootstrapStats = [];
+        for (let i = 0; i < iterations; i++) {
+          const resample = [];
+          for (let j = 0; j < n; j++) {
+            resample.push(data[Math.floor(Math.random() * n)]);
+          }
+          
+          let stat;
+          if (currentParameter === 'mean') {
+            stat = resample.reduce((a, b) => a + b, 0) / n;
+          } else if (currentParameter === 'median') {
+            const sorted = [...resample].sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            stat = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+          } else if (currentParameter === 'variance') {
+            const mean = resample.reduce((a, b) => a + b, 0) / n;
+            stat = resample.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (n - 1);
+          }
+          
+          bootstrapStats.push(stat);
         }
         
-        testType = 'Chi-Square Test';
+        // Calculate p-value based on how many bootstrap stats are more extreme than H0
+        let moreExtreme = 0;
+        if (currentH1Type === 'not-equal') {
+          const diff = Math.abs(sampleStat - currentH0);
+          moreExtreme = bootstrapStats.filter(s => Math.abs(s - currentH0) >= diff).length;
+        } else if (currentH1Type === 'greater') {
+          moreExtreme = bootstrapStats.filter(s => s >= sampleStat).length;
+        } else { // less
+          moreExtreme = bootstrapStats.filter(s => s <= sampleStat).length;
+        }
+        
+        pValue = moreExtreme / iterations;
+        testStat = sampleStat; // Use sample statistic as test statistic
       }
       
       const reject = pValue < currentAlpha;
