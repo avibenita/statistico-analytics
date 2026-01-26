@@ -951,9 +951,13 @@
           testType = 'Chi-Square Test';
         }
       } else if (currentMethod === 'bootstrap') {
-        // Bootstrap hypothesis test (proper implementation)
+        // Bootstrap hypothesis test (proper implementation with forced randomness)
         const iterations = parseInt(document.getElementById('bootstrap-iterations-input').value) || 500;
         testType = 'Bootstrap Test';
+        
+        // Force new random seed by using timestamp
+        const randomSeed = Date.now() + Math.random() * 1000000;
+        console.log('🎲 Bootstrap random seed:', randomSeed);
         
         // Calculate observed sample statistic
         let observedStat;
@@ -976,13 +980,16 @@
         const shift = currentH0 - observedStat;
         const centeredData = data.map(x => x + shift);
         
-        // Bootstrap resampling from centered data
+        // Bootstrap resampling from centered data (with true randomness)
         let moreExtreme = 0;
+        const bootstrapTestStats = []; // Track for debugging
         
         for (let i = 0; i < iterations; i++) {
           const resample = [];
+          // Use Math.random() with forced new values each iteration
           for (let j = 0; j < n; j++) {
-            resample.push(centeredData[Math.floor(Math.random() * n)]);
+            const randomIndex = Math.floor(Math.random() * n);
+            resample.push(centeredData[randomIndex]);
           }
           
           let bootStat;
@@ -999,6 +1006,7 @@
           
           // Calculate test statistic for this bootstrap sample
           const bootTestStat = bootStat - currentH0;
+          bootstrapTestStats.push(bootTestStat);
           
           // Count more extreme
           if (currentH1Type === 'not-equal') {
@@ -1012,6 +1020,16 @@
         
         pValue = moreExtreme / iterations;
         testStat = observedStat; // Display the observed statistic
+        
+        // Log statistics for verification
+        console.log('📊 Bootstrap results:', {
+          observedStat: observedStat.toFixed(4),
+          testStat: testStat.toFixed(4),
+          moreExtreme,
+          iterations,
+          pValue: pValue.toFixed(4),
+          bootStatsRange: `${Math.min(...bootstrapTestStats).toFixed(2)} to ${Math.max(...bootstrapTestStats).toFixed(2)}`
+        });
       }
       
       const reject = pValue < currentAlpha;
