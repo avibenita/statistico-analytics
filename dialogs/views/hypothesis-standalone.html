@@ -607,67 +607,61 @@
         </div>
       </div>
 
-      <div class="config-grid" style="grid-template-columns: auto 1fr;">
-        <!-- METHOD Panel (Compact) -->
-        <div class="config-panel" style="min-width: 140px;">
-          <div class="panel-label">METHOD:</div>
-          <div class="radio-group" style="flex-direction: column; gap: 8px;">
-            <label class="radio-label">
-              <input type="radio" name="method" value="classical" checked onchange="selectMethod('classical')">
-              <span>Classical</span>
-            </label>
-            <label class="radio-label">
-              <input type="radio" name="method" value="bootstrap" onchange="selectMethod('bootstrap')">
-              <span>Bootstrap</span>
-            </label>
-          </div>
+      <!-- Single Row Configuration -->
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+        <!-- METHOD Section -->
+        <div style="display: flex; align-items: center; gap: 10px; padding-right: 12px; border-right: 1px solid var(--border);">
+          <div class="panel-label" style="margin: 0;">METHOD:</div>
+          <label class="radio-label">
+            <input type="radio" name="method" value="classical" checked onchange="selectMethod('classical')">
+            <span>Classical</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="method" value="bootstrap" onchange="selectMethod('bootstrap')">
+            <span>Bootstrap</span>
+          </label>
         </div>
 
-        <!-- PARAMETER Panel (Expanded with inline controls) -->
-        <div class="config-panel">
-          <div class="panel-label">PARAMETER:</div>
-          <div class="radio-group" style="margin-bottom: 8px;">
-            <label class="radio-label">
-              <input type="radio" name="parameter" value="mean" checked onchange="selectParameter('mean')">
-              <span>Mean</span>
-            </label>
-            <label class="radio-label">
-              <input type="radio" name="parameter" value="variance" onchange="selectParameter('variance')">
-              <span>Variance</span>
-            </label>
-            <label class="radio-label disabled" id="median-option">
-              <input type="radio" name="parameter" value="median" disabled onchange="selectParameter('median')">
-              <span>Median</span>
-            </label>
-            <label class="radio-label disabled" id="percentile-option">
-              <input type="radio" name="parameter" value="percentile" disabled onchange="selectParameter('percentile')">
-              <span>Percentile</span>
-            </label>
-          </div>
-          
-          <!-- Controls Row: Percentile Input + Iterations + Refresh -->
-          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <!-- Percentile Value Input (only visible when Percentile selected) -->
-            <div id="percentile-value-inline" style="display: none; align-items: center; gap: 8px; background: rgba(120,200,255,0.1); border: 1px solid rgba(120,200,255,0.3); border-radius: 6px; padding: 6px 12px;">
-              <i class="fa-solid fa-percent" style="color: var(--accent-2); font-size: 11px;"></i>
-              <input type="number" id="percentile-value-input" value="50" min="1" max="99" step="1" 
-                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: white; padding: 4px 8px; width: 60px; font-size: 12px; text-align: center;"
-                     oninput="updatePercentileDisplay(); setAwaitingState()">
-              <span style="color: var(--text-secondary); font-size: 12px; font-weight: 600;">%</span>
-            </div>
-            
-            <!-- Bootstrap Iterations (only visible when Bootstrap selected) -->
-            <div id="bootstrap-iterations-inline" style="display: none; align-items: center; gap: 8px;">
-              <label style="color: var(--text-secondary); font-size: 12px; font-weight: 600;">Iterations:</label>
-              <input type="number" id="bootstrap-iterations-input" value="500" min="100" max="10000" step="100" 
-                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: white; padding: 4px 8px; width: 80px; font-size: 12px;"
-                     oninput="setAwaitingState()">
-              <button onclick="refreshBootstrap()" 
-                      style="background: linear-gradient(135deg, var(--accent-1), rgb(255,140,90)); border: none; color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.3s ease;">
-                <i class="fa-solid fa-sync-alt"></i> Refresh
-              </button>
-            </div>
-          </div>
+        <!-- PARAMETER Section -->
+        <div style="display: flex; align-items: center; gap: 10px; padding-right: 12px; border-right: 1px solid var(--border);">
+          <div class="panel-label" style="margin: 0;">PARAMETER:</div>
+          <label class="radio-label">
+            <input type="radio" name="parameter" value="mean" checked onchange="selectParameter('mean')">
+            <span>Mean</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="parameter" value="variance" onchange="selectParameter('variance')">
+            <span>Variance</span>
+          </label>
+          <label class="radio-label disabled" id="median-option">
+            <input type="radio" name="parameter" value="median" disabled onchange="selectParameter('median')">
+            <span>Median</span>
+          </label>
+          <label class="radio-label disabled" id="percentile-option">
+            <input type="radio" name="parameter" value="percentile" disabled onchange="selectParameter('percentile')">
+            <span>Percentile</span>
+          </label>
+        </div>
+        
+        <!-- Percentile Value Input (framed clearly) -->
+        <div id="percentile-value-inline" style="display: none; align-items: center; gap: 8px; background: linear-gradient(135deg, rgba(120,200,255,0.15), rgba(120,200,255,0.08)); border: 2px solid var(--accent-2); border-radius: 8px; padding: 8px 14px; box-shadow: 0 0 15px rgba(120,200,255,0.3);">
+          <i class="fa-solid fa-percent" style="color: var(--accent-2); font-size: 13px;"></i>
+          <input type="number" id="percentile-value-input" value="50" min="1" max="99" step="1" 
+                 style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; color: white; padding: 6px 10px; width: 65px; font-size: 13px; font-weight: 600; text-align: center;"
+                 oninput="updatePercentileDisplay(); setAwaitingState()">
+          <span style="color: var(--accent-2); font-size: 13px; font-weight: 700;">%</span>
+        </div>
+        
+        <!-- Bootstrap Iterations -->
+        <div id="bootstrap-iterations-inline" style="display: none; align-items: center; gap: 8px;">
+          <label style="color: var(--text-secondary); font-size: 12px; font-weight: 600;">Iterations:</label>
+          <input type="number" id="bootstrap-iterations-input" value="500" min="100" max="10000" step="100" 
+                 style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: white; padding: 5px 10px; width: 80px; font-size: 12px;"
+                 oninput="setAwaitingState()">
+          <button onclick="refreshBootstrap()" 
+                  style="background: linear-gradient(135deg, var(--accent-1), rgb(255,140,90)); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(255,165,120,0.3);">
+            <i class="fa-solid fa-sync-alt"></i> Refresh
+          </button>
         </div>
       </div>
 
