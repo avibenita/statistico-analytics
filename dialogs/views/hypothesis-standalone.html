@@ -494,6 +494,89 @@
       animation: diagnostic-blink 0.6s ease-in-out;
     }
 
+    /* Bootstrap Mode Styling */
+    .stat-box.bootstrap-mode {
+      background: linear-gradient(135deg, rgba(255, 140, 0, 0.15), rgba(255, 90, 50, 0.15));
+      border: 2px solid rgb(255, 140, 60);
+      box-shadow: 0 4px 15px rgba(255, 140, 60, 0.3);
+    }
+
+    .stat-box.bootstrap-mode .stat-value {
+      color: rgb(255, 160, 90);
+      text-shadow: 0 0 10px rgba(255, 140, 60, 0.4);
+    }
+
+    .result-card.bootstrap-mode {
+      background: rgba(255, 140, 0, 0.1);
+      border: 1px solid rgb(255, 140, 60);
+    }
+
+    .result-card.bootstrap-mode.highlight {
+      border: 2px solid rgb(255, 140, 60);
+    }
+
+    .result-card.bootstrap-mode .card-value {
+      color: rgb(255, 160, 90);
+    }
+
+    .decision-card.bootstrap-mode {
+      background: rgba(255, 140, 0, 0.08);
+      border: 1px solid rgb(255, 140, 60);
+    }
+
+    .decision-card.bootstrap-mode .decision-result {
+      background: linear-gradient(135deg, rgba(248,113,113,0.25), rgba(239,68,68,0.25));
+      border: 2px solid #ff8c3c;
+    }
+
+    .decision-card.bootstrap-mode .decision-result.fail-to-reject {
+      background: linear-gradient(135deg, rgba(74,222,128,0.25), rgba(34,197,94,0.25));
+      border: 2px solid #ff8c3c;
+    }
+
+    .bootstrap-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(135deg, rgba(255, 140, 0, 0.3), rgba(255, 90, 50, 0.3));
+      border: 1px solid rgb(255, 140, 60);
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgb(255, 160, 90);
+      margin-left: 8px;
+    }
+
+    .bootstrap-badge i {
+      font-size: 12px;
+      animation: spin-slow 3s linear infinite;
+    }
+
+    @keyframes spin-slow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes diagnostic-blink-bootstrap {
+      0%, 100% {
+        box-shadow: 0 4px 15px rgba(255, 140, 60, 0.3);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 25px rgba(255, 140, 60, 0.7), 0 0 15px rgba(255, 140, 60, 0.5);
+        transform: scale(1.02);
+      }
+    }
+
+    .stat-box.bootstrap-mode.blink {
+      animation: diagnostic-blink-bootstrap 0.6s ease-in-out;
+    }
+
+    .decision-card.bootstrap-mode.blink {
+      animation: diagnostic-blink-bootstrap 0.6s ease-in-out;
+    }
+
     @media (max-width: 768px) {
       .config-grid {
         grid-template-columns: 1fr;
@@ -738,12 +821,18 @@
         medianRadio.disabled = false;
         percentileRadio.disabled = false;
         bootstrapIterations.style.display = 'flex';
+        
+        // Apply Bootstrap styling to results (if results are visible)
+        applyBootstrapStyling(true);
       } else {
         medianOption.classList.add('disabled');
         percentileOption.classList.add('disabled');
         medianRadio.disabled = true;
         percentileRadio.disabled = true;
         bootstrapIterations.style.display = 'none';
+        
+        // Remove Bootstrap styling
+        applyBootstrapStyling(false);
         
         // Reset to mean if median or percentile was selected
         if (currentParameter === 'median' || currentParameter === 'percentile') {
@@ -1043,6 +1132,45 @@
       };
     }
 
+    // Apply Bootstrap styling to result elements
+    function applyBootstrapStyling(enable) {
+      const statBoxes = document.querySelectorAll('.stat-box');
+      const resultCards = document.querySelectorAll('.result-card');
+      const decisionCard = document.querySelector('.decision-card');
+      const testTypeCard = document.querySelector('.result-card:nth-child(2)');
+      
+      if (enable) {
+        // Add Bootstrap styling classes
+        statBoxes.forEach(box => box.classList.add('bootstrap-mode'));
+        resultCards.forEach(card => card.classList.add('bootstrap-mode'));
+        if (decisionCard) decisionCard.classList.add('bootstrap-mode');
+        
+        // Add Bootstrap badge to test type card
+        if (testTypeCard && !testTypeCard.querySelector('.bootstrap-badge')) {
+          const testTypeValue = testTypeCard.querySelector('.card-value');
+          if (testTypeValue) {
+            const badge = document.createElement('span');
+            badge.className = 'bootstrap-badge';
+            badge.innerHTML = '<i class="fa-solid fa-rotate"></i> Bootstrap';
+            testTypeValue.appendChild(badge);
+          }
+        }
+        
+        console.log('✅ Bootstrap styling applied');
+      } else {
+        // Remove Bootstrap styling classes
+        statBoxes.forEach(box => box.classList.remove('bootstrap-mode'));
+        resultCards.forEach(card => card.classList.remove('bootstrap-mode'));
+        if (decisionCard) decisionCard.classList.remove('bootstrap-mode');
+        
+        // Remove Bootstrap badge
+        const badge = document.querySelector('.bootstrap-badge');
+        if (badge) badge.remove();
+        
+        console.log('✅ Bootstrap styling removed');
+      }
+    }
+
     // Display results
     function displayResults(result) {
       document.getElementById('result-test-type').textContent = result.testType;
@@ -1058,6 +1186,9 @@
         decisionEl.innerHTML = '<i class="fa-solid fa-check"></i> Fail to Reject H₀';
         decisionEl.className = 'decision-result fail-to-reject';
       }
+      
+      // Apply Bootstrap styling if in bootstrap mode
+      applyBootstrapStyling(currentMethod === 'bootstrap');
       
       // Show actual results, hide awaiting
       document.getElementById('awaiting-results').style.display = 'none';
