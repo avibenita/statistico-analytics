@@ -482,7 +482,8 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 25px;
+      position: relative;
     }
 
     .stat-box {
@@ -492,6 +493,36 @@
       padding: 15px;
       text-align: center;
       box-shadow: 0 4px 15px rgba(255,165,120,0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .stat-box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255,165,120,0.4);
+      border-color: var(--accent-2);
+    }
+
+    .stat-box:active {
+      transform: translateY(0);
+    }
+
+    .stat-box::after {
+      content: '💡 Click for interpretation';
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: var(--text-muted);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .stat-box:hover::after {
+      opacity: 1;
     }
 
     .stat-label {
@@ -792,6 +823,7 @@
       padding: 12px 16px;
       overflow-y: auto;
       flex: 1;
+      scroll-behavior: smooth;
     }
 
     .modal-close-btn {
@@ -929,9 +961,10 @@
     }
 
     #chartExplanation.show {
-      max-height: 300px;
+      max-height: 500px;
       margin-top: 12px;
       padding: 12px 16px;
+      overflow-y: auto;
     }
   </style>
 </head>
@@ -1093,11 +1126,11 @@
       </div>
 
       <div class="stats-row">
-        <div class="stat-box">
+        <div class="stat-box" onclick="openVisualizationWithInterpretation()" title="Click to view detailed interpretation and visualization">
           <div class="stat-label">Test Statistic</div>
           <div class="stat-value" id="result-stat-value">—</div>
         </div>
-        <div class="stat-box">
+        <div class="stat-box" onclick="openVisualizationWithInterpretation()" title="Click to view detailed interpretation and visualization">
           <div class="stat-label">P-Value</div>
           <div class="stat-value" id="result-pvalue">—</div>
         </div>
@@ -1750,6 +1783,48 @@
         btn.classList.add('expanded');
         btnText.textContent = 'Hide Interpretation';
       }
+    };
+
+    // Open visualization modal with interpretation expanded
+    window.openVisualizationWithInterpretation = function() {
+      // First, open the visualization modal
+      const modal = document.getElementById('visualModal');
+      if (!modal) return;
+      
+      // Check if we have results to visualize
+      if (document.getElementById('actual-results').style.display === 'none') {
+        alert('Please run a hypothesis test first before visualizing.');
+        return;
+      }
+      
+      // Open modal
+      modal.classList.add('show');
+      
+      // Update chart after a short delay to ensure modal is visible
+      setTimeout(() => {
+        updateChart();
+        
+        // Expand interpretation section after chart loads
+        setTimeout(() => {
+          const explanation = document.getElementById('chartExplanation');
+          const btn = document.getElementById('toggleInterpretationBtn');
+          const btnText = document.getElementById('toggleInterpretationText');
+          
+          if (explanation && !explanation.classList.contains('show')) {
+            explanation.classList.add('show');
+            btn.classList.add('expanded');
+            btnText.textContent = 'Hide Interpretation';
+          }
+          
+          // Smooth scroll to interpretation section
+          setTimeout(() => {
+            const toggleBtn = document.getElementById('toggleInterpretationBtn');
+            if (toggleBtn) {
+              toggleBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 300);
+        }, 500);
+      }, 100);
     };
 
     window.updateChartAlpha = function() {
