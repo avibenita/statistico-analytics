@@ -12,6 +12,140 @@
   <script src="./shared-header.js"></script>
   
   <style>
+    /* AI Button Styles */
+    .ai-interpret-btn {
+      position: absolute;
+      bottom: -10px;
+      right: -10px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: transparent;
+      color: yellow;
+      border: none;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.5), 0 0 20px rgba(139, 92, 246, 0.3);
+      transition: all 0.3s ease;
+      animation: ai-pulse 3s ease-in-out infinite;
+      z-index: 10;
+    }
+
+    .ai-interpret-btn::before {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      right: -6px;
+      bottom: -6px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8b5cf6, #6366f1, #3b82f6);
+      opacity: 0.4;
+      animation: ai-glow 2.5s ease-in-out infinite;
+      z-index: -1;
+      filter: blur(12px);
+    }
+
+    .ai-interpret-btn::after {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      border-radius: 50%;
+      border: 2px solid rgba(139, 92, 246, 0.5);
+      animation: ai-ring 3s ease-in-out infinite;
+      z-index: -1;
+    }
+
+    .ai-interpret-btn i {
+      font-size: 16px;
+      animation: ai-sparkle-rotate 4s ease-in-out infinite;
+    }
+
+    .ai-interpret-btn span {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+
+    .ai-interpret-btn:hover {
+      transform: scale(1.15);
+      box-shadow: 0 6px 25px rgba(139, 92, 246, 0.7), 0 0 30px rgba(139, 92, 246, 0.5);
+      background: linear-gradient(135deg, #9d6eff 0%, #7c7fff 50%, #5b9cff 100%);
+    }
+
+    .ai-interpret-btn:hover::before {
+      opacity: 0.7;
+    }
+
+    .ai-interpret-btn:active {
+      transform: scale(1.0);
+    }
+
+    .ai-interpret-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      animation: none;
+    }
+
+    .ai-interpret-btn:disabled::before,
+    .ai-interpret-btn:disabled::after {
+      animation: none;
+    }
+
+    @keyframes ai-glow {
+      0%, 100% {
+        opacity: 0.4;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.7;
+        transform: scale(1.08);
+      }
+    }
+
+    @keyframes ai-pulse {
+      0%, 100% {
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.5), 0 0 20px rgba(139, 92, 246, 0.3);
+      }
+      50% {
+        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.7), 0 0 30px rgba(139, 92, 246, 0.5);
+      }
+    }
+
+    @keyframes ai-ring {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.5;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+      }
+    }
+
+    @keyframes ai-sparkle-rotate {
+      0%, 100% {
+        transform: rotate(0deg);
+      }
+      25% {
+        transform: rotate(-10deg);
+      }
+      75% {
+        transform: rotate(10deg);
+      }
+    }
+  </style>
+  
+  <style>
     :root {
       --surface-0: #0c1624;
       --surface-1: #1a1f2e;
@@ -919,8 +1053,8 @@
             <input type="range" id="alpha-slider" min="0.01" max="0.15" step="0.01" value="0.05" oninput="updateAlpha()">
             <span class="alpha-value" id="alpha-value">0.05</span>
           </div>
-          <button class="action-btn" onclick="showPowerAnalysis()">
-            <i class="fa-solid fa-chart-line"></i> Power
+          <button class="action-btn" onclick="openPowerAnalysis()">
+            <i class="fas fa-brain"></i> Power Analysis
           </button>
           <button class="action-btn" id="toggleVisualBtn" onclick="openVisualization()">
             <i class="fa-solid fa-chart-area"></i> Visualize
@@ -977,6 +1111,13 @@
           <i class="fa-solid fa-xmark"></i> Reject H₀
         </div>
       </div>
+
+      <!-- AI Interpretation Button -->
+      <button id="aiInterpretBtn" class="ai-interpret-btn" title="AI Interpretation (Beta)" onclick="requestAIInterpretation()">
+        <i class="fas fa-lightbulb"></i>
+        <span>AI</span>
+      </button>
+      
       </div> <!-- end actual-results -->
     </div> <!-- end results-section -->
   </div>
@@ -1857,9 +1998,145 @@
       }
     });
 
-    // Placeholder for power analysis
-    window.showPowerAnalysis = function() {
-      alert('Power Analysis feature coming soon!');
+    // =================================================================
+    // AI INTERPRETATION
+    // =================================================================
+    window.requestAIInterpretation = function() {
+      if (!window.currentTestResults) {
+        alert('No test results available. Please run a test first.');
+        return;
+      }
+
+      try {
+        console.log('🤖 AI Interpretation requested');
+
+        // Build test data for AI
+        const testData = {
+          testParameter: window.currentTestResults.parameter || 'Unknown',
+          testName: window.currentTestResults.testType || 'Hypothesis Test',
+          testOrientation: window.currentTestResults.orientation || 'Two-tailed',
+          method: window.currentTestResults.method || 'classical',
+          testStatistic: window.currentTestResults.testStat || 0,
+          pValue: window.currentTestResults.pValue || 0,
+          alpha: window.currentTestResults.alpha || 0.05,
+          variableName: 'Variable',
+          sampleSize: window.currentTestResults.n || 0,
+          h0Value: window.currentTestResults.h0Value || 0,
+          decision: window.currentTestResults.decision || 'Unknown'
+        };
+
+        console.log('📊 Test data for AI:', testData);
+        console.log('📋 JSON:', JSON.stringify(testData, null, 2));
+
+        // Try Office.js dialog messaging
+        if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+          Office.context.ui.messageParent(JSON.stringify({
+            action: 'RequestAIInterpretation',
+            data: testData
+          }));
+          console.log('📤 AI interpretation request sent via Office.js');
+        } else {
+          // Fallback: show info dialog
+          alert('AI Interpretation\n\n' + 
+                'Test: ' + testData.testName + '\n' +
+                'Method: ' + testData.method + '\n' +
+                'Test Statistic: ' + testData.testStatistic.toFixed(4) + '\n' +
+                'P-Value: ' + testData.pValue.toFixed(4) + '\n' +
+                'Decision: ' + testData.decision + '\n\n' +
+                'AI interpretation would be displayed here in the full version.');
+        }
+
+      } catch (error) {
+        console.error('❌ Error sending AI request:', error);
+        alert('Error sending AI request: ' + error.message);
+      }
+    };
+
+    // =================================================================
+    // POWER ANALYSIS
+    // =================================================================
+    window.openPowerAnalysis = function() {
+      if (!window.currentTestResults) {
+        alert('No test results available. Please run a test first.');
+        return;
+      }
+
+      try {
+        console.log('⚡ Power Analysis requested');
+
+        // Calculate observed power and effect size
+        const testStat = window.currentTestResults.testStat || 0;
+        const n = window.currentTestResults.n || 0;
+        const alpha = window.currentTestResults.alpha || 0.05;
+        
+        // Cohen's d (rough estimate from t-statistic)
+        let cohenD = 0;
+        let effectSizeLabel = 'Effect Size (d)';
+        if (window.currentTestResults.parameter === 'Mean') {
+          cohenD = Math.abs(testStat / Math.sqrt(n));
+        }
+
+        // Calculate observed power (rough estimate using normal approximation)
+        let observedPower = 0;
+        if (window.currentTestResults.orientation === 'Two-tailed') {
+          const criticalZ = 1.96; // For alpha = 0.05
+          const ncp = cohenD * Math.sqrt(n); // Non-centrality parameter
+          observedPower = 1 - jStat.normal.cdf(criticalZ - ncp, 0, 1) + 
+                            jStat.normal.cdf(-criticalZ - ncp, 0, 1);
+        } else {
+          const criticalZ = 1.645; // For alpha = 0.05, one-tailed
+          const ncp = cohenD * Math.sqrt(n);
+          observedPower = 1 - jStat.normal.cdf(criticalZ - ncp, 0, 1);
+        }
+        observedPower = Math.max(0, Math.min(1, observedPower));
+
+        // Calculate required sample size for 80% power (rough estimate)
+        const targetPower = 0.80;
+        let requiredN = 0;
+        if (cohenD > 0.01) {
+          const zAlpha = window.currentTestResults.orientation === 'Two-tailed' ? 1.96 : 1.645;
+          const zBeta = 0.84; // For 80% power
+          requiredN = Math.ceil(Math.pow((zAlpha + zBeta) / cohenD, 2));
+        } else {
+          requiredN = Infinity;
+        }
+
+        // Display power analysis results
+        let message = '⚡ POWER ANALYSIS\n\n';
+        message += '═══════════════════════════════════\n';
+        message += '📊 OBSERVED STATISTICS\n';
+        message += '═══════════════════════════════════\n';
+        message += 'Sample Size: ' + n + '\n';
+        message += 'Test Statistic: ' + testStat.toFixed(4) + '\n';
+        message += 'Effect Size (d): ' + cohenD.toFixed(4) + '\n';
+        message += 'Observed Power: ' + (observedPower * 100).toFixed(1) + '%\n';
+        message += 'Alpha: ' + alpha + '\n\n';
+        message += '═══════════════════════════════════\n';
+        message += '🎯 TARGET SCENARIO (80% Power)\n';
+        message += '═══════════════════════════════════\n';
+        if (requiredN === Infinity || requiredN > 1000000) {
+          message += 'Required Sample Size: Not Feasible\n';
+          message += '(Effect size too small to detect)\n';
+        } else {
+          message += 'Required Sample Size: ' + requiredN.toLocaleString() + '\n';
+          if (requiredN > n) {
+            message += '\n💡 Need ' + (requiredN - n).toLocaleString() + ' more observations\n';
+          } else {
+            message += '\n✅ Current sample size is sufficient\n';
+          }
+        }
+        message += '\n═══════════════════════════════════\n';
+        message += 'Note: Estimates based on normal approximation.\n';
+        message += 'For precise power analysis, use statistical software.';
+
+        alert(message);
+
+        console.log('✅ Power Analysis displayed');
+
+      } catch (error) {
+        console.error('❌ Error calculating power:', error);
+        alert('Error calculating power analysis: ' + error.message);
+      }
     };
   </script>
 </body>
