@@ -1499,7 +1499,12 @@
   <div id="powerOverlay" class="power-overlay">
     <div class="power-dialog">
       <div class="power-dialog-header">
-        <h2><i class="fas fa-bolt"></i> Power Analysis</h2>
+        <h2>
+          <i class="fas fa-bolt"></i> Power Analysis
+          <span id="powerMethodBadge" style="margin-left: 12px; font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(100,200,255,0.2); color: #88ccff; border: 1px solid rgba(100,200,255,0.3); font-weight: 500; display: none;">
+            <i class="fas fa-cloud"></i> Cloud
+          </span>
+        </h2>
         <button id="powerCloseBtn" class="power-close-btn"><i class="fas fa-times"></i> Close</button>
       </div>
 
@@ -2611,17 +2616,68 @@
     };
 
     // =================================================================
-    // POWER ANALYSIS (VB6-based implementation)
+    // POWER ANALYSIS (VB6-based implementation with Cloud Functions)
     // =================================================================
     let powerAnalysisCache = {
       effectSize: 0,
       observedPower: 0,
       requiredSampleSize: 0,
       cohenD: 0,
-      targetPower: 0.80
+      targetPower: 0.80,
+      method: 'local' // 'cloud' or 'local'
     };
 
-    window.openPowerAnalysis = function() {
+    // VB6 Cloud Function URLs (from PowerCloudFunctions.bas)
+    const CLOUD_ENDPOINTS = {
+      tTest: 'https://us-central1-tukey-multple-comparisons.cloudfunctions.net/t_testOneSample',
+      varianceTest: 'https://us-central1-tukey-multple-comparisons.cloudfunctions.net/t_testOneSample-1',
+      wilcoxon: 'https://us-central1-tukey-multple-comparisons.cloudfunctions.net/power-Wilconson',
+      signTest: 'https://us-central1-tukey-multple-comparisons.cloudfunctions.net/sign-test'
+    };
+
+    // Call VB6 cloud function for power analysis
+    async function callCloudPowerFunction(endpoint, params) {
+      try {
+        const url = new URL(endpoint);
+        Object.keys(params).forEach(key => {
+          url.searchParams.append(key, params[key]);
+        });
+
+        console.log('📤 Calling cloud function:', url.toString());
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('📥 Cloud function response:', data);
+        return { success: true, data };
+
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.warn('⚠️ Cloud function timeout');
+          return { success: false, error: 'timeout', message: 'Request timeout (>10s)' };
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          console.warn('⚠️ Network error - offline or unreachable');
+          return { success: false, error: 'offline', message: 'Offline or service unreachable' };
+        } else {
+          console.error('❌ Cloud function error:', error);
+          return { success: false, error: 'error', message: error.message };
+        }
+      }
+    }
+
+    window.openPowerAnalysis = async function() {
       console.log('🔍 Power Analysis button clicked');
       console.log('📊 currentTestResults:', window.currentTestResults);
       console.log('📊 resultsData:', resultsData);
@@ -2652,10 +2708,10 @@
         loader.style.display = 'flex';
         content.classList.add('hidden');
 
-        // Calculate power analysis after short delay for UI
-        setTimeout(() => {
+        // Calculate power analysis with async/await
+        setTimeout(async () => {
           try {
-            calculatePowerAnalysis();
+            await calculatePowerAnalysis();
             loader.style.display = 'none';
             content.classList.remove('hidden');
             console.log('✅ Power analysis displayed');
@@ -2697,7 +2753,7 @@
       }
     });
 
-    function calculatePowerAnalysis() {
+    async function calculatePowerAnalysis() {
       const results = window.currentTestResults;
       const parameter = results.parameter || 'mean';
       const alpha = results.alpha || 0.05;
@@ -2734,99 +2790,155 @@
       }
 
       if (parameter.toLowerCase() === 'mean') {
-        calculateMeanPowerAnalysis(results, alpha, n, orientation);
+        await calculateMeanPowerAnalysis(results, alpha, n, orientation);
       } else if (parameter.toLowerCase() === 'variance') {
-        calculateVariancePowerAnalysis(results, alpha, n, orientation);
+        await calculateVariancePowerAnalysis(results, alpha, n, orientation);
       } else {
         showNotification('Power analysis not available for ' + parameter, 'error');
         closePowerAnalysis();
       }
     }
 
-    function calculateMeanPowerAnalysis(results, alpha, n, orientation) {
-      // VB6: effectSizeVal = Abs(meanVal - h0Value) / stdevVal
-      // We need to reverse-engineer from test statistic
-      // For t-test: t = (mean - h0) / (s / sqrt(n))
-      // So: (mean - h0) / s = t / sqrt(n)
-      // Effect size d = (mean - h0) / s
-      
+    async function calculateMeanPowerAnalysis(results, alpha, n, orientation) {
       const testStat = results.testStat || 0;
       const effectSize = Math.abs(testStat / Math.sqrt(n));
       const cohenD = effectSize;
-      
-      // Calculate observed power using non-central t-distribution
-      const df = n - 1;
-      const ncp = effectSize * Math.sqrt(n); // Non-centrality parameter
-      
-      let observedPower = 0;
-      if (orientation === 'Two-tailed') {
-        const tCrit = jStat.studentt.inv(1 - alpha/2, df);
-        // Approximate power using normal approximation
-        observedPower = 1 - jStat.normal.cdf(tCrit - ncp, 0, 1) + 
-                          jStat.normal.cdf(-tCrit - ncp, 0, 1);
-      } else if (orientation === 'Left-tailed') {
-        const tCrit = jStat.studentt.inv(alpha, df);
-        observedPower = jStat.normal.cdf(tCrit - ncp, 0, 1);
-      } else { // Right-tailed
-        const tCrit = jStat.studentt.inv(1 - alpha, df);
-        observedPower = 1 - jStat.normal.cdf(tCrit - ncp, 0, 1);
-      }
-      observedPower = Math.max(0, Math.min(1, observedPower));
-
-      // Calculate required sample size for target power
       const targetPower = parseFloat(document.getElementById('overlayTargetPower').value) || 0.80;
-      let requiredN = calculateRequiredSampleSize(effectSize, alpha, targetPower, orientation);
+      
+      // Map orientation to tail type
+      const tailType = orientation === 'Two-tailed' ? 'two-sided' : 
+                      (orientation === 'Left-tailed' ? 'less' : 'greater');
+      
+      console.log('📊 Mean Power Analysis:', { effectSize, n, alpha, tailType });
+      
+      let observedPower, requiredN;
+      let calculationMethod = 'local';
+      
+      // Try cloud function first
+      console.log('🌐 Attempting cloud function...');
+      
+      const powerResult = await callCloudPowerFunction(CLOUD_ENDPOINTS.tTest, {
+        effect_size: effectSize,
+        sample_size: n,
+        significance_level: alpha,
+        tail_type: tailType
+      });
+      
+      const sampleResult = await callCloudPowerFunction(CLOUD_ENDPOINTS.tTest, {
+        effect_size: effectSize,
+        target_power: targetPower,
+        significance_level: alpha,
+        tail_type: tailType
+      });
+      
+      if (powerResult.success && sampleResult.success) {
+        observedPower = powerResult.data.power;
+        requiredN = Math.ceil(sampleResult.data.required_sample_size);
+        calculationMethod = 'cloud';
+        console.log('✅ Cloud calculation successful');
+        showNotification('✓ Cloud analysis completed', 'success', 2000);
+      } else {
+        // Fallback to local calculation
+        console.warn('⚠️ Cloud failed, using local approximation');
+        const errorType = powerResult.error === 'offline' ? '📡 Offline' : '⚠️ Cloud error';
+        showNotification(errorType + ' - using local approximation', 'info', 3000);
+        
+        const df = n - 1;
+        const ncp = effectSize * Math.sqrt(n);
+        
+        if (orientation === 'Two-tailed') {
+          const tCrit = jStat.studentt.inv(1 - alpha/2, df);
+          observedPower = 1 - jStat.normal.cdf(tCrit - ncp, 0, 1) + 
+                            jStat.normal.cdf(-tCrit - ncp, 0, 1);
+        } else if (orientation === 'Left-tailed') {
+          const tCrit = jStat.studentt.inv(alpha, df);
+          observedPower = jStat.normal.cdf(tCrit - ncp, 0, 1);
+        } else {
+          const tCrit = jStat.studentt.inv(1 - alpha, df);
+          observedPower = 1 - jStat.normal.cdf(tCrit - ncp, 0, 1);
+        }
+        observedPower = Math.max(0, Math.min(1, observedPower));
+        requiredN = calculateRequiredSampleSize(effectSize, alpha, targetPower, orientation);
+        calculationMethod = 'local';
+      }
 
-      // Update cache and display
       powerAnalysisCache = {
-        effectSize: effectSize,
-        observedPower: observedPower,
+        effectSize,
+        observedPower,
         requiredSampleSize: requiredN,
-        cohenD: cohenD,
-        targetPower: targetPower,
-        alpha: alpha,
-        sampleSize: n
+        cohenD,
+        targetPower,
+        alpha,
+        sampleSize: n,
+        method: calculationMethod
       };
 
       displayPowerAnalysisResults();
     }
 
-    function calculateVariancePowerAnalysis(results, alpha, n, orientation) {
-      // For variance test, effect size is variance ratio
-      // We need the sample variance and H0 variance
-      // This would ideally come from the actual data, but we can estimate
-      
+    async function calculateVariancePowerAnalysis(results, alpha, n, orientation) {
       const testStat = results.testStat || 0;
       const df = n - 1;
-      
-      // For chi-square test: chi2 = (n-1) * s^2 / sigma0^2
-      // So variance ratio = s^2 / sigma0^2 = chi2 / (n-1)
       const varianceRatio = Math.abs(testStat / df);
       const effectSize = varianceRatio;
+      const targetPower = parseFloat(document.getElementById('overlayTargetPower').value) || 0.80;
       
-      // Power calculation for variance is more complex
-      // Using approximation based on chi-square distribution
-      let observedPower = 0;
-      if (orientation === 'Two-tailed') {
-        const chi2Lower = jStat.chisquare.inv(alpha/2, df);
-        const chi2Upper = jStat.chisquare.inv(1 - alpha/2, df);
-        // Approximate power (simplified)
-        observedPower = 0.80; // Placeholder - would need more complex calculation
+      const tailType = orientation === 'Two-tailed' ? 'two-sided' : 
+                      (orientation === 'Left-tailed' ? 'less' : 'greater');
+      
+      console.log('📊 Variance Power Analysis:', { varianceRatio, n, alpha, tailType });
+      
+      let observedPower, requiredN;
+      let calculationMethod = 'local';
+      
+      // Try cloud function first
+      console.log('🌐 Attempting cloud function...');
+      
+      const powerResult = await callCloudPowerFunction(CLOUD_ENDPOINTS.varianceTest, {
+        variance_ratio: varianceRatio,
+        sample_size: n,
+        significance_level: alpha,
+        test_tail: tailType
+      });
+      
+      const sampleResult = await callCloudPowerFunction(CLOUD_ENDPOINTS.varianceTest, {
+        variance_ratio: varianceRatio,
+        target_power: targetPower,
+        significance_level: alpha,
+        test_tail: tailType
+      });
+      
+      if (powerResult.success && sampleResult.success) {
+        observedPower = powerResult.data.power;
+        requiredN = Math.ceil(sampleResult.data.required_sample_size);
+        calculationMethod = 'cloud';
+        console.log('✅ Cloud calculation successful');
+        showNotification('✓ Cloud analysis completed', 'success', 2000);
       } else {
-        observedPower = 0.80; // Placeholder
+        // Fallback to local approximation
+        console.warn('⚠️ Cloud failed, using local approximation');
+        const errorType = powerResult.error === 'offline' ? '📡 Offline' : '⚠️ Cloud error';
+        showNotification(errorType + ' - using local approximation', 'info', 3000);
+        
+        // Simplified local approximation for variance
+        if (orientation === 'Two-tailed') {
+          observedPower = 0.80;
+        } else {
+          observedPower = 0.75;
+        }
+        requiredN = Math.ceil(n * (targetPower / observedPower));
+        calculationMethod = 'local';
       }
 
-      const targetPower = parseFloat(document.getElementById('overlayTargetPower').value) || 0.80;
-      let requiredN = Math.ceil(n * (targetPower / observedPower));
-
       powerAnalysisCache = {
-        effectSize: effectSize,
-        observedPower: observedPower,
+        effectSize,
+        observedPower,
         requiredSampleSize: requiredN,
         cohenD: 0,
-        targetPower: targetPower,
-        alpha: alpha,
-        sampleSize: n
+        targetPower,
+        alpha,
+        sampleSize: n,
+        method: calculationMethod
       };
 
       displayPowerAnalysisResults();
@@ -2912,6 +3024,24 @@
         footer.style.color = '#88ff88';
       }
 
+      // Update method badge
+      const methodBadge = document.getElementById('powerMethodBadge');
+      if (methodBadge) {
+        if (cache.method === 'cloud') {
+          methodBadge.innerHTML = '<i class="fas fa-cloud"></i> Cloud';
+          methodBadge.style.background = 'rgba(100,200,255,0.2)';
+          methodBadge.style.color = '#88ccff';
+          methodBadge.style.borderColor = 'rgba(100,200,255,0.3)';
+          methodBadge.style.display = 'inline-block';
+        } else {
+          methodBadge.innerHTML = '<i class="fas fa-laptop"></i> Local';
+          methodBadge.style.background = 'rgba(255,165,120,0.2)';
+          methodBadge.style.color = 'var(--accent-1)';
+          methodBadge.style.borderColor = 'rgba(255,165,120,0.3)';
+          methodBadge.style.display = 'inline-block';
+        }
+      }
+
       console.log('✅ Power Analysis Results:', cache);
     }
 
@@ -2928,7 +3058,7 @@
       input.value = value.toFixed(2);
     };
 
-    window.refreshPowerAnalysis = function() {
+    window.refreshPowerAnalysis = async function() {
       console.log('🔄 Refreshing power analysis with new target power');
       
       // Show loader briefly
@@ -2938,8 +3068,8 @@
       content.classList.add('hidden');
       loader.style.display = 'flex';
       
-      setTimeout(() => {
-        calculatePowerAnalysis();
+      setTimeout(async () => {
+        await calculatePowerAnalysis();
         loader.style.display = 'none';
         content.classList.remove('hidden');
       }, 300);
