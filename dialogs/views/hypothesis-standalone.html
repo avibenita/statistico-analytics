@@ -2702,17 +2702,32 @@
       const parameter = results.parameter || 'mean';
       const alpha = results.alpha || 0.05;
       
-      // Get sample size from resultsData or currentTestResults
+      // Get sample size from multiple sources
       let n = results.n || 0;
-      if (n === 0 && resultsData && resultsData.length) {
+      
+      // Try resultsData.n (object property)
+      if (n === 0 && resultsData && resultsData.n) {
+        n = resultsData.n;
+        console.log('📊 Got n from resultsData.n:', n);
+      }
+      
+      // Try resultsData.values.length (array length)
+      if (n === 0 && resultsData && resultsData.values && resultsData.values.length) {
+        n = resultsData.values.length;
+        console.log('📊 Got n from resultsData.values.length:', n);
+      }
+      
+      // Try resultsData.length (direct array)
+      if (n === 0 && resultsData && Array.isArray(resultsData) && resultsData.length) {
         n = resultsData.length;
+        console.log('📊 Got n from resultsData.length:', n);
       }
       
       const orientation = results.orientation || 'Two-tailed';
       
       console.log('📊 Computing Power Analysis for:', parameter, 'n:', n);
 
-      if (n === 0) {
+      if (n === 0 || !n) {
         showNotification('No data available for power analysis', 'error');
         closePowerAnalysis();
         return;
