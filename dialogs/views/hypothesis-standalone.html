@@ -2637,13 +2637,26 @@
 
     // Call VB6 cloud function for power analysis
     async function callCloudPowerFunction(endpoint, params) {
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('🔍 CLOUD FUNCTION DEBUG');
+      console.log('═══════════════════════════════════════════════════════');
+      
       try {
         const url = new URL(endpoint);
+        
+        // Log parameters BEFORE adding to URL
+        console.log('📋 Input Parameters:', JSON.stringify(params, null, 2));
+        console.log('📋 Parameter Types:');
+        Object.keys(params).forEach(key => {
+          console.log(`   ${key}: ${typeof params[key]} = ${params[key]}`);
+        });
+        
         Object.keys(params).forEach(key => {
           url.searchParams.append(key, params[key]);
         });
 
-        console.log('📤 Calling cloud function:', url.toString());
+        console.log('🌐 Full URL:', url.toString());
+        console.log('📤 Sending request...');
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
@@ -2655,23 +2668,38 @@
 
         clearTimeout(timeoutId);
 
+        console.log('📡 Response Status:', response.status, response.statusText);
+        console.log('📡 Response Headers:', Object.fromEntries(response.headers.entries()));
+
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          // Try to get error body for debugging
+          let errorBody = '';
+          try {
+            errorBody = await response.text();
+            console.error('❌ Error Response Body:', errorBody);
+          } catch (e) {
+            console.error('❌ Could not read error body');
+          }
+          
+          throw new Error(`HTTP ${response.status}: ${response.statusText}\nBody: ${errorBody.substring(0, 500)}`);
         }
 
         const data = await response.json();
-        console.log('📥 Cloud function response:', data);
+        console.log('✅ Success! Response Data:', JSON.stringify(data, null, 2));
+        console.log('═══════════════════════════════════════════════════════');
         return { success: true, data };
 
       } catch (error) {
+        console.log('═══════════════════════════════════════════════════════');
         if (error.name === 'AbortError') {
-          console.warn('⚠️ Cloud function timeout');
+          console.warn('⚠️ Cloud function timeout (>10s)');
           return { success: false, error: 'timeout', message: 'Request timeout (>10s)' };
         } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
           console.warn('⚠️ Network error - offline or unreachable');
           return { success: false, error: 'offline', message: 'Offline or service unreachable' };
         } else {
           console.error('❌ Cloud function error:', error);
+          console.error('❌ Error stack:', error.stack);
           return { success: false, error: 'error', message: error.message };
         }
       }
@@ -2800,6 +2828,11 @@
     }
 
     async function calculateMeanPowerAnalysis(results, alpha, n, orientation) {
+      console.log('');
+      console.log('╔═══════════════════════════════════════════════════════╗');
+      console.log('║           MEAN POWER ANALYSIS CALCULATION             ║');
+      console.log('╚═══════════════════════════════════════════════════════╝');
+      
       const testStat = results.testStat || 0;
       const effectSize = Math.abs(testStat / Math.sqrt(n));
       const cohenD = effectSize;
@@ -2809,24 +2842,64 @@
       const tailType = orientation === 'Two-tailed' ? 'two-sided' : 
                       (orientation === 'Left-tailed' ? 'less' : 'greater');
       
-      console.log('📊 Mean Power Analysis:', { effectSize, n, alpha, tailType });
+      console.log('📊 Input Values:');
+      console.log('   Test Statistic:', testStat);
+      console.log('   Sample Size (n):', n);
+      console.log('   Alpha (α):', alpha);
+      console.log('   Orientation:', orientation);
+      console.log('   Target Power:', targetPower);
+      console.log('');
+      console.log('🔢 Calculated Values:');
+      console.log('   Effect Size (d) = |t| / √n');
+      console.log('   Effect Size (d) = |' + testStat + '| / √' + n);
+      console.log('   Effect Size (d) =', effectSize.toFixed(6));
+      console.log('   Cohen\'s d:', cohenD.toFixed(6));
+      console.log('   Tail Type:', tailType);
+      console.log('');
       
       // CLOUD-ONLY: Call VB6 cloud function (no local fallback)
-      console.log('🌐 Calling cloud function for power analysis...');
-      
-      const powerResult = await callCloudPowerFunction(CLOUD_ENDPOINTS.tTest, {
+      console.log('🌐 Preparing cloud function calls...');
+      console.log('');
+      console.log('📋 VB6 Comparison (from PowerCloudFunctions.bas):');
+      console.log('   VB6 Function: GetPowerAndSampleSizeTtest()');
+      console.log('   VB6 Parameters:');
+      console.log('     - effect_size (Double)');
+      console.log('     - sample_size or target_power (Variant)');
+      console.log('     - significance_level (Double)');
+      console.log('     - tail_type (String): "two-sided", "less", or "greater"');
+      console.log('');
+      console.log('📋 Our Parameters for POWER calculation:');
+      const powerParams = {
         effect_size: effectSize,
         sample_size: n,
         significance_level: alpha,
         tail_type: tailType
-      });
-      
-      const sampleResult = await callCloudPowerFunction(CLOUD_ENDPOINTS.tTest, {
+      };
+      console.log('   ', JSON.stringify(powerParams, null, 4));
+      console.log('');
+      console.log('📋 Our Parameters for SAMPLE SIZE calculation:');
+      const sampleParams = {
         effect_size: effectSize,
         target_power: targetPower,
         significance_level: alpha,
         tail_type: tailType
-      });
+      };
+      console.log('   ', JSON.stringify(sampleParams, null, 4));
+      console.log('');
+      console.log('🔗 Test URLs (copy & paste into browser):');
+      const testUrl1 = CLOUD_ENDPOINTS.tTest + 
+        `?effect_size=${effectSize}&sample_size=${n}&significance_level=${alpha}&tail_type=${tailType}`;
+      const testUrl2 = CLOUD_ENDPOINTS.tTest + 
+        `?effect_size=${effectSize}&target_power=${targetPower}&significance_level=${alpha}&tail_type=${tailType}`;
+      console.log('   Power URL:', testUrl1);
+      console.log('   Sample URL:', testUrl2);
+      console.log('');
+      console.log('🚀 Calling cloud functions now...');
+      console.log('');
+      
+      const powerResult = await callCloudPowerFunction(CLOUD_ENDPOINTS.tTest, powerParams);
+      
+      const sampleResult = await callCloudPowerFunction(CLOUD_ENDPOINTS.tTest, sampleParams);
       
       if (powerResult.success && sampleResult.success) {
         // SUCCESS: Cloud function returned results
@@ -2873,6 +2946,11 @@
     }
 
     async function calculateVariancePowerAnalysis(results, alpha, n, orientation) {
+      console.log('');
+      console.log('╔═══════════════════════════════════════════════════════╗');
+      console.log('║         VARIANCE POWER ANALYSIS CALCULATION           ║');
+      console.log('╚═══════════════════════════════════════════════════════╝');
+      
       const testStat = results.testStat || 0;
       const df = n - 1;
       const varianceRatio = Math.abs(testStat / df);
@@ -2882,24 +2960,65 @@
       const tailType = orientation === 'Two-tailed' ? 'two-sided' : 
                       (orientation === 'Left-tailed' ? 'less' : 'greater');
       
-      console.log('📊 Variance Power Analysis:', { varianceRatio, n, alpha, tailType });
+      console.log('📊 Input Values:');
+      console.log('   Test Statistic:', testStat);
+      console.log('   Sample Size (n):', n);
+      console.log('   Degrees of Freedom (df):', df);
+      console.log('   Alpha (α):', alpha);
+      console.log('   Orientation:', orientation);
+      console.log('   Target Power:', targetPower);
+      console.log('');
+      console.log('🔢 Calculated Values:');
+      console.log('   Variance Ratio = |χ²| / df');
+      console.log('   Variance Ratio = |' + testStat + '| / ' + df);
+      console.log('   Variance Ratio =', varianceRatio.toFixed(6));
+      console.log('   Effect Size:', effectSize.toFixed(6));
+      console.log('   Tail Type:', tailType);
+      console.log('');
       
       // CLOUD-ONLY: Call VB6 cloud function (no local fallback)
-      console.log('🌐 Calling cloud function for power analysis...');
-      
-      const powerResult = await callCloudPowerFunction(CLOUD_ENDPOINTS.varianceTest, {
+      console.log('🌐 Preparing cloud function calls...');
+      console.log('');
+      console.log('📋 VB6 Comparison (from PowerCloudFunctions.bas):');
+      console.log('   VB6 Function: GetPowerAndSampleSizeVariainceTest()');
+      console.log('   VB6 Parameters:');
+      console.log('     - variance_ratio (Double)');
+      console.log('     - sample_size or target_power (Variant)');
+      console.log('     - significance_level (Variant)');
+      console.log('     - test_tail (String): "two-sided", "less", or "greater"');
+      console.log('');
+      console.log('📋 Our Parameters for POWER calculation:');
+      const powerParams = {
         variance_ratio: varianceRatio,
         sample_size: n,
         significance_level: alpha,
         test_tail: tailType
-      });
-      
-      const sampleResult = await callCloudPowerFunction(CLOUD_ENDPOINTS.varianceTest, {
+      };
+      console.log('   ', JSON.stringify(powerParams, null, 4));
+      console.log('');
+      console.log('📋 Our Parameters for SAMPLE SIZE calculation:');
+      const sampleParams = {
         variance_ratio: varianceRatio,
         target_power: targetPower,
         significance_level: alpha,
         test_tail: tailType
-      });
+      };
+      console.log('   ', JSON.stringify(sampleParams, null, 4));
+      console.log('');
+      console.log('🔗 Test URLs (copy & paste into browser):');
+      const testUrl1 = CLOUD_ENDPOINTS.varianceTest + 
+        `?variance_ratio=${varianceRatio}&sample_size=${n}&significance_level=${alpha}&test_tail=${tailType}`;
+      const testUrl2 = CLOUD_ENDPOINTS.varianceTest + 
+        `?variance_ratio=${varianceRatio}&target_power=${targetPower}&significance_level=${alpha}&test_tail=${tailType}`;
+      console.log('   Power URL:', testUrl1);
+      console.log('   Sample URL:', testUrl2);
+      console.log('');
+      console.log('🚀 Calling cloud functions now...');
+      console.log('');
+      
+      const powerResult = await callCloudPowerFunction(CLOUD_ENDPOINTS.varianceTest, powerParams);
+      
+      const sampleResult = await callCloudPowerFunction(CLOUD_ENDPOINTS.varianceTest, sampleParams);
       
       if (powerResult.success && sampleResult.success) {
         // SUCCESS: Cloud function returned results
