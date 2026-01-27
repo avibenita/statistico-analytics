@@ -143,6 +143,121 @@
         transform: rotate(10deg);
       }
     }
+
+    /* Custom Notification System (Office.js compatible) */
+    .notification-toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--surface-1), var(--surface-2));
+      color: var(--text-primary);
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: 2px solid var(--accent-1);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 100000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      max-width: 80%;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .notification-toast.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .notification-toast.error {
+      border-color: #ff4444;
+      background: linear-gradient(135deg, #3a1a1a, #2a1515);
+    }
+
+    .notification-toast.success {
+      border-color: #44ff44;
+      background: linear-gradient(135deg, #1a3a1a, #152a15);
+    }
+
+    .notification-toast.info {
+      border-color: var(--accent-2);
+      background: linear-gradient(135deg, #1a2a3a, #152535);
+    }
+
+    /* Custom Dialog Modal */
+    .custom-dialog-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .custom-dialog-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .custom-dialog-content {
+      background: var(--surface-1);
+      border: 2px solid var(--accent-1);
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 500px;
+      max-height: 70vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+
+    .custom-dialog-header {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent-1);
+      margin-bottom: 15px;
+    }
+
+    .custom-dialog-message {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 20px;
+      white-space: pre-line;
+    }
+
+    .custom-dialog-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .custom-dialog-btn {
+      padding: 8px 20px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .custom-dialog-btn-primary {
+      background: linear-gradient(135deg, var(--accent-1), rgb(255,140,90));
+      color: white;
+    }
+
+    .custom-dialog-btn-primary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(255,165,120,0.4);
+    }
   </style>
   
   <style>
@@ -969,6 +1084,19 @@
   </style>
 </head>
 <body>
+  <!-- Custom Notification System (Office.js compatible) -->
+  <div id="notificationToast" class="notification-toast"></div>
+  
+  <div id="customDialogOverlay" class="custom-dialog-overlay">
+    <div class="custom-dialog-content">
+      <div class="custom-dialog-header" id="dialogHeader">Notice</div>
+      <div class="custom-dialog-message" id="dialogMessage"></div>
+      <div class="custom-dialog-buttons">
+        <button class="custom-dialog-btn custom-dialog-btn-primary" onclick="closeCustomDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
   <statistico-header view-name="Hypothesis Testing" module-name="Univariate Analysis"></statistico-header>
   
   <div class="results-container">
@@ -1187,6 +1315,72 @@
   </div>
 
   <script>
+    // ========================================
+    // CUSTOM NOTIFICATION SYSTEM (Office.js compatible)
+    // ========================================
+    
+    let notificationTimeout = null;
+
+    // Show toast notification (for simple messages)
+    function showNotification(message, type = 'info', duration = 3000) {
+      const toast = document.getElementById('notificationToast');
+      if (!toast) return;
+      
+      // Clear existing timeout
+      if (notificationTimeout) {
+        clearTimeout(notificationTimeout);
+      }
+      
+      // Set message and type
+      toast.textContent = message;
+      toast.className = 'notification-toast show ' + type;
+      
+      // Auto-hide after duration
+      notificationTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, duration);
+    }
+
+    // Show dialog modal (for longer messages or formatted content)
+    function showDialog(message, title = 'Notice') {
+      const overlay = document.getElementById('customDialogOverlay');
+      const header = document.getElementById('dialogHeader');
+      const messageEl = document.getElementById('dialogMessage');
+      
+      if (!overlay || !header || !messageEl) {
+        console.error('Dialog elements not found');
+        return;
+      }
+      
+      header.textContent = title;
+      messageEl.textContent = message;
+      overlay.classList.add('show');
+    }
+
+    // Close dialog modal
+    window.closeCustomDialog = function() {
+      const overlay = document.getElementById('customDialogOverlay');
+      if (overlay) {
+        overlay.classList.remove('show');
+      }
+    };
+
+    // Close dialog when clicking outside
+    document.addEventListener('DOMContentLoaded', function() {
+      const overlay = document.getElementById('customDialogOverlay');
+      if (overlay) {
+        overlay.addEventListener('click', function(e) {
+          if (e.target === this) {
+            closeCustomDialog();
+          }
+        });
+      }
+    });
+
+    // ========================================
+    // GLOBAL STATE
+    // ========================================
+    
     let resultsData = null;
     let currentMethod = 'classical';
     let currentParameter = 'mean';
@@ -1373,7 +1567,7 @@
     // Refresh bootstrap (re-run with new random seed)
     window.refreshBootstrap = function() {
       if (!resultsData || !resultsData.values || resultsData.values.length === 0) {
-        alert('No data available. Please load data first.');
+        showNotification('No data available. Please load data first.', 'error');
         return;
       }
       
@@ -1420,7 +1614,7 @@
       });
       
       if (!resultsData || !resultsData.values || resultsData.values.length === 0) {
-        alert('No data available. Please load data first.');
+        showNotification('No data available. Please load data first.', 'error');
         return;
       }
       
@@ -1754,7 +1948,7 @@
       
       // Check if we have results to visualize
       if (document.getElementById('actual-results').style.display === 'none') {
-        alert('Please run a hypothesis test first before visualizing.');
+        showNotification('Please run a hypothesis test first before visualizing.', 'error');
         return;
       }
       
@@ -1793,7 +1987,7 @@
       
       // Check if we have results to visualize
       if (document.getElementById('actual-results').style.display === 'none') {
-        alert('Please run a hypothesis test first before visualizing.');
+        showNotification('Please run a hypothesis test first before visualizing.', 'error');
         return;
       }
       
@@ -2078,7 +2272,7 @@
     // =================================================================
     window.requestAIInterpretation = function() {
       if (!window.currentTestResults) {
-        alert('No test results available. Please run a test first.');
+        showNotification('No test results available. Please run a test first.', 'error');
         return;
       }
 
@@ -2112,18 +2306,18 @@
           console.log('📤 AI interpretation request sent via Office.js');
         } else {
           // Fallback: show info dialog
-          alert('AI Interpretation\n\n' + 
-                'Test: ' + testData.testName + '\n' +
+          const aiMessage = 'Test: ' + testData.testName + '\n' +
                 'Method: ' + testData.method + '\n' +
                 'Test Statistic: ' + testData.testStatistic.toFixed(4) + '\n' +
                 'P-Value: ' + testData.pValue.toFixed(4) + '\n' +
                 'Decision: ' + testData.decision + '\n\n' +
-                'AI interpretation would be displayed here in the full version.');
+                'AI interpretation would be displayed here in the full version.';
+          showDialog(aiMessage, '🤖 AI Interpretation');
         }
 
       } catch (error) {
         console.error('❌ Error sending AI request:', error);
-        alert('Error sending AI request: ' + error.message);
+        showNotification('Error sending AI request: ' + error.message, 'error', 5000);
       }
     };
 
@@ -2132,7 +2326,7 @@
     // =================================================================
     window.openPowerAnalysis = function() {
       if (!window.currentTestResults) {
-        alert('No test results available. Please run a test first.');
+        showNotification('No test results available. Please run a test first.', 'error');
         return;
       }
 
@@ -2204,13 +2398,13 @@
         message += 'Note: Estimates based on normal approximation.\n';
         message += 'For precise power analysis, use statistical software.';
 
-        alert(message);
+        showDialog(message, '⚡ Power Analysis');
 
         console.log('✅ Power Analysis displayed');
 
       } catch (error) {
         console.error('❌ Error calculating power:', error);
-        alert('Error calculating power analysis: ' + error.message);
+        showNotification('Error calculating power analysis: ' + error.message, 'error', 5000);
       }
     };
   </script>
