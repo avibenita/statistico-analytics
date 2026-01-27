@@ -623,7 +623,7 @@
       border-radius: 12px;
       width: 90%;
       max-width: 1200px;
-      max-height: 90vh;
+      max-height: 85vh;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
       display: flex;
       flex-direction: column;
@@ -655,7 +655,7 @@
     }
 
     .modal-body {
-      padding: 16px;
+      padding: 12px 16px;
       overflow-y: auto;
       flex: 1;
     }
@@ -686,19 +686,19 @@
 
     /* Chart specific styles */
     #chart {
-      height: 450px;
+      height: 380px;
       background: var(--surface-2);
       border-radius: 8px;
-      padding: 10px;
+      padding: 8px;
       border: 1px solid var(--border);
     }
 
     .chart-slider-row {
       display: flex;
       align-items: center;
-      gap: 15px;
-      margin-bottom: 12px;
-      padding: 10px 12px;
+      gap: 12px;
+      margin-bottom: 10px;
+      padding: 8px 12px;
       background: var(--surface-2);
       border-radius: 8px;
       border: 1px solid var(--border);
@@ -755,21 +755,21 @@
 
     .interpretation-toggle {
       text-align: center;
-      margin-top: 12px;
+      margin-top: 8px;
     }
 
     .interpretation-toggle-btn {
       background: linear-gradient(135deg, rgba(120,200,255,0.2), rgba(120,200,255,0.1));
       border: 1px solid var(--accent-2);
       color: var(--accent-2);
-      padding: 8px 20px;
+      padding: 6px 16px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       transition: all 0.2s ease;
     }
 
@@ -1784,25 +1784,27 @@
       const layout = {
         title: {
           text: `${testType}<br><sub>Test Statistic: ${testStat.toFixed(4)} | P-Value: ${pValue.toFixed(4)} | α: ${alpha.toFixed(2)}</sub>`,
-          font: { color: 'white', size: 16 }
+          font: { color: 'white', size: 15 }
         },
         xaxis: {
           title: 'Test Statistic',
           gridcolor: 'rgba(255,255,255,0.1)',
-          color: 'white'
+          color: 'white',
+          titlefont: { size: 12 }
         },
         yaxis: {
           title: 'Probability Density',
           gridcolor: 'rgba(255,255,255,0.1)',
-          color: 'white'
+          color: 'white',
+          titlefont: { size: 12 }
         },
         plot_bgcolor: 'rgba(0,0,0,0)',
         paper_bgcolor: 'rgba(0,0,0,0)',
         legend: {
-          font: { color: 'white' },
+          font: { color: 'white', size: 11 },
           bgcolor: 'rgba(26,31,46,0.8)'
         },
-        margin: { t: 80, b: 60, l: 60, r: 40 }
+        margin: { t: 70, b: 50, l: 55, r: 35 }
       };
 
       Plotly.newPlot('chart', traces, layout, { responsive: true });
