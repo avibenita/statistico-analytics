@@ -637,7 +637,7 @@
     }
 
     .modal-header {
-      padding: 16px 20px;
+      padding: 12px 16px;
       background: linear-gradient(135deg, var(--surface-2), var(--surface-1));
       border-bottom: 1px solid var(--border);
       display: flex;
@@ -655,7 +655,7 @@
     }
 
     .modal-body {
-      padding: 20px;
+      padding: 16px;
       overflow-y: auto;
       flex: 1;
     }
@@ -686,7 +686,7 @@
 
     /* Chart specific styles */
     #chart {
-      min-height: 400px;
+      height: 450px;
       background: var(--surface-2);
       border-radius: 8px;
       padding: 10px;
@@ -697,8 +697,8 @@
       display: flex;
       align-items: center;
       gap: 15px;
-      margin-bottom: 20px;
-      padding: 12px;
+      margin-bottom: 12px;
+      padding: 10px 12px;
       background: var(--surface-2);
       border-radius: 8px;
       border: 1px solid var(--border);
@@ -751,6 +751,53 @@
       color: var(--accent-1);
       min-width: 50px;
       text-align: center;
+    }
+
+    .interpretation-toggle {
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    .interpretation-toggle-btn {
+      background: linear-gradient(135deg, rgba(120,200,255,0.2), rgba(120,200,255,0.1));
+      border: 1px solid var(--accent-2);
+      color: var(--accent-2);
+      padding: 8px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .interpretation-toggle-btn:hover {
+      background: linear-gradient(135deg, rgba(120,200,255,0.3), rgba(120,200,255,0.2));
+      transform: scale(1.02);
+    }
+
+    .interpretation-toggle-btn i {
+      transition: transform 0.3s ease;
+    }
+
+    .interpretation-toggle-btn.expanded i {
+      transform: rotate(180deg);
+    }
+
+    #chartExplanation {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, margin-top 0.3s ease, padding 0.3s ease;
+      margin-top: 0;
+      padding: 0 16px;
+    }
+
+    #chartExplanation.show {
+      max-height: 300px;
+      margin-top: 12px;
+      padding: 12px 16px;
     }
   </style>
 </head>
@@ -954,7 +1001,13 @@
           <input class="slider" id="alphaChartSlider" max="0.15" min="0.01" step="0.01" type="range" value="0.05" oninput="updateChartAlpha()"/>
         </div>
         <div id="chart"></div>
-        <div id="chartExplanation" style="margin-top: 12px; padding: 12px 16px; background: var(--surface-2); border-radius: 8px; border: 1px solid var(--border); line-height: 1.5; font-size: 13px;"></div>
+        <div class="interpretation-toggle">
+          <button class="interpretation-toggle-btn" id="toggleInterpretationBtn" onclick="toggleInterpretation()">
+            <i class="fa-solid fa-chevron-down"></i>
+            <span id="toggleInterpretationText">Show Interpretation</span>
+          </button>
+        </div>
+        <div id="chartExplanation" style="background: var(--surface-2); border-radius: 8px; border: 1px solid var(--border); line-height: 1.5; font-size: 13px;"></div>
       </div>
     </div>
   </div>
@@ -1542,6 +1595,22 @@
       }
     };
 
+    window.toggleInterpretation = function() {
+      const explanation = document.getElementById('chartExplanation');
+      const btn = document.getElementById('toggleInterpretationBtn');
+      const btnText = document.getElementById('toggleInterpretationText');
+      
+      if (explanation.classList.contains('show')) {
+        explanation.classList.remove('show');
+        btn.classList.remove('expanded');
+        btnText.textContent = 'Show Interpretation';
+      } else {
+        explanation.classList.add('show');
+        btn.classList.add('expanded');
+        btnText.textContent = 'Hide Interpretation';
+      }
+    };
+
     window.updateChartAlpha = function() {
       const slider = document.getElementById('alphaChartSlider');
       const alphaValue = parseFloat(slider.value);
@@ -1744,13 +1813,31 @@
       const decision = reject ? '<strong style="color: rgb(255,100,100);">Reject H₀</strong>' : '<strong style="color: rgb(100,255,100);">Fail to Reject H₀</strong>';
       
       explanation.innerHTML = `
-        <strong>Interpretation:</strong><br>
-        Test: ${orientation} ${testType}<br>
-        Alpha Level: α = ${alpha.toFixed(2)} (${(100 * (1 - alpha)).toFixed(0)}% confidence)<br>
-        Test Statistic: ${testStat.toFixed(4)}<br>
-        P-Value: ${pValue.toFixed(4)}<br>
-        Decision: ${decision}<br><br>
-        <em>The shaded red areas represent the rejection region(s). If the test statistic (yellow line) falls within these regions, we reject the null hypothesis.</em>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-size: 14px; font-weight: 700; color: var(--accent-1); margin-bottom: 4px;">
+            <i class="fa-solid fa-info-circle"></i> Interpretation
+          </div>
+          <div style="display: grid; grid-template-columns: 140px 1fr; gap: 8px; font-size: 13px;">
+            <div style="color: var(--text-muted);">Test:</div>
+            <div>${orientation} ${testType}</div>
+            
+            <div style="color: var(--text-muted);">Alpha Level:</div>
+            <div>α = ${alpha.toFixed(2)} <span style="color: var(--accent-2);">(${(100 * (1 - alpha)).toFixed(0)}% confidence)</span></div>
+            
+            <div style="color: var(--text-muted);">Test Statistic:</div>
+            <div style="font-weight: 600; color: rgb(255,215,0);">${testStat.toFixed(4)}</div>
+            
+            <div style="color: var(--text-muted);">P-Value:</div>
+            <div style="font-weight: 600; color: var(--accent-2);">${pValue.toFixed(4)}</div>
+            
+            <div style="color: var(--text-muted);">Decision:</div>
+            <div style="font-size: 14px;">${decision}</div>
+          </div>
+          <div style="margin-top: 8px; padding: 10px; background: rgba(120,200,255,0.05); border-left: 3px solid var(--accent-2); border-radius: 4px; font-size: 12px; font-style: italic; color: var(--text-secondary);">
+            <i class="fa-solid fa-lightbulb" style="color: var(--accent-2); margin-right: 6px;"></i>
+            The shaded red areas represent the rejection region(s). If the test statistic (yellow line) falls within these regions, we reject the null hypothesis.
+          </div>
+        </div>
       `;
     }
 
