@@ -2622,18 +2622,31 @@
     };
 
     window.openPowerAnalysis = function() {
+      console.log('🔍 Power Analysis button clicked');
+      console.log('📊 currentTestResults:', window.currentTestResults);
+      console.log('📊 resultsData:', resultsData);
+      
       if (!window.currentTestResults) {
+        console.warn('⚠️ No test results available');
         showNotification('No test results available. Please run a test first.', 'error');
         return;
       }
 
       try {
-        console.log('⚡ Power Analysis requested');
+        console.log('⚡ Power Analysis requested - opening modal');
 
-        // Open overlay and show loader
+        // Get modal elements
         const overlay = document.getElementById('powerOverlay');
         const loader = document.getElementById('powerOverlayLoader');
         const content = document.getElementById('powerOverlayContent');
+        
+        if (!overlay) {
+          console.error('❌ powerOverlay element not found!');
+          showNotification('Power Analysis modal not found', 'error');
+          return;
+        }
+
+        console.log('✅ Modal elements found, opening...');
         
         overlay.classList.add('open');
         loader.style.display = 'flex';
@@ -2641,9 +2654,16 @@
 
         // Calculate power analysis after short delay for UI
         setTimeout(() => {
-          calculatePowerAnalysis();
-          loader.style.display = 'none';
-          content.classList.remove('hidden');
+          try {
+            calculatePowerAnalysis();
+            loader.style.display = 'none';
+            content.classList.remove('hidden');
+            console.log('✅ Power analysis displayed');
+          } catch (calcError) {
+            console.error('❌ Error calculating power:', calcError);
+            showNotification('Error calculating power: ' + calcError.message, 'error');
+            closePowerAnalysis();
+          }
         }, 300);
 
       } catch (error) {
