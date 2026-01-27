@@ -1829,6 +1829,23 @@
 
     // Display results
     function displayResults(result) {
+      // Store results globally for Power Analysis and AI buttons
+      window.currentTestResults = {
+        testType: result.testType,
+        orientation: result.orientation,
+        testStat: result.testStat,
+        pValue: result.pValue,
+        reject: result.reject,
+        decision: result.reject ? 'Reject H₀' : 'Fail to Reject H₀',
+        parameter: currentParameter,
+        method: currentMethod,
+        alpha: currentAlpha,
+        h0Value: currentH0,
+        n: resultsData ? resultsData.length : 0
+      };
+      
+      console.log('✅ Test results stored:', window.currentTestResults);
+      
       document.getElementById('result-test-type').textContent = result.testType;
       document.getElementById('result-orientation').textContent = result.orientation;
       document.getElementById('result-stat-value').textContent = result.testStat.toFixed(4);
