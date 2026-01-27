@@ -286,8 +286,8 @@
       border: 2px solid var(--accent-1);
       border-radius: 12px;
       width: 90%;
-      max-width: 900px;
-      max-height: 80vh;
+      max-width: 850px;
+      max-height: 85vh;
       overflow-y: auto;
       box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     }
@@ -296,28 +296,28 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 20px;
+      padding: 10px 16px;
       border-bottom: 2px solid var(--border);
       background: linear-gradient(135deg, var(--surface-2), var(--surface-1));
     }
 
     .power-dialog-header h2 {
-      font-size: 20px;
+      font-size: 17px;
       color: var(--accent-1);
       margin: 0;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .power-close-btn {
       background: linear-gradient(135deg, rgba(255,100,100,0.2), rgba(255,50,50,0.2));
       border: 1px solid rgba(255,100,100,0.4);
       color: white;
-      padding: 8px 16px;
-      border-radius: 6px;
+      padding: 6px 12px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 600;
       transition: all 0.2s ease;
     }
@@ -332,14 +332,14 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 60px 20px;
-      gap: 20px;
+      padding: 40px 20px;
+      gap: 15px;
     }
 
     .power-loader .spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid rgba(255,165,120,0.2);
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,165,120,0.2);
       border-top-color: var(--accent-1);
       border-radius: 50%;
       animation: spin 1s linear infinite;
@@ -347,7 +347,7 @@
 
     .power-loader span {
       color: var(--text-secondary);
-      font-size: 16px;
+      font-size: 13px;
     }
 
     @keyframes spin {
@@ -355,7 +355,7 @@
     }
 
     .power-content {
-      padding: 20px;
+      padding: 12px 16px;
     }
 
     .power-content.hidden {
@@ -365,27 +365,28 @@
     .power-columns {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 20px;
+      gap: 12px;
+      margin-bottom: 10px;
     }
 
     .power-panel-card {
       background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
+      border-radius: 6px;
+      padding: 12px;
     }
 
     .power-panel-card h3 {
       color: var(--accent-2);
-      font-size: 16px;
-      margin: 0 0 20px 0;
-      padding-bottom: 10px;
+      font-size: 13px;
+      margin: 0 0 10px 0;
+      padding-bottom: 6px;
       border-bottom: 1px solid var(--border);
+      font-weight: 600;
     }
 
     .power-field {
-      margin-bottom: 16px;
+      margin-bottom: 10px;
     }
 
     .power-field:last-child {
@@ -394,20 +395,20 @@
 
     .power-field label {
       display: block;
-      font-size: 12px;
+      font-size: 10px;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       font-weight: 600;
     }
 
     .power-stat {
       background: rgba(0,0,0,0.3);
       border: 1px solid rgba(255,165,120,0.3);
-      border-radius: 6px;
-      padding: 12px;
-      font-size: 20px;
+      border-radius: 4px;
+      padding: 8px;
+      font-size: 16px;
       font-weight: 600;
       color: var(--accent-1);
       text-align: center;
@@ -419,10 +420,10 @@
       border: 1px solid rgba(255,255,255,0.2);
       border-radius: 4px;
       color: white;
-      padding: 10px;
-      font-size: 16px;
+      padding: 6px;
+      font-size: 14px;
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
 
     .power-field input[type="number"]:focus {
@@ -436,10 +437,10 @@
       background: linear-gradient(135deg, var(--accent-1), rgb(255,140,90));
       border: none;
       color: white;
-      padding: 10px;
-      border-radius: 6px;
+      padding: 7px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 600;
       transition: all 0.2s ease;
     }
@@ -456,12 +457,12 @@
     .power-footer-note {
       background: rgba(120,200,255,0.1);
       border: 1px solid rgba(120,200,255,0.3);
-      border-radius: 6px;
-      padding: 12px;
+      border-radius: 4px;
+      padding: 8px;
       color: var(--accent-2);
-      font-size: 13px;
+      font-size: 11px;
       text-align: center;
-      line-height: 1.5;
+      line-height: 1.4;
     }
 
     @media (max-width: 768px) {
@@ -2680,10 +2681,22 @@
       const results = window.currentTestResults;
       const parameter = results.parameter || 'mean';
       const alpha = results.alpha || 0.05;
-      const n = results.n || 0;
+      
+      // Get sample size from resultsData or currentTestResults
+      let n = results.n || 0;
+      if (n === 0 && resultsData && resultsData.length) {
+        n = resultsData.length;
+      }
+      
       const orientation = results.orientation || 'Two-tailed';
       
-      console.log('📊 Computing Power Analysis for:', parameter);
+      console.log('📊 Computing Power Analysis for:', parameter, 'n:', n);
+
+      if (n === 0) {
+        showNotification('No data available for power analysis', 'error');
+        closePowerAnalysis();
+        return;
+      }
 
       if (parameter.toLowerCase() === 'mean') {
         calculateMeanPowerAnalysis(results, alpha, n, orientation);
@@ -2807,42 +2820,53 @@
     function displayPowerAnalysisResults() {
       const cache = powerAnalysisCache;
       
+      // Helper to format numbers safely
+      function formatSafe(value, decimals) {
+        if (isNaN(value) || !isFinite(value)) return '--';
+        return value.toFixed(decimals);
+      }
+      
       // Observed Statistics
-      document.getElementById('overlayPowerValue').textContent = 
+      const powerValue = isNaN(cache.observedPower) || !isFinite(cache.observedPower) ? '--' : 
         (cache.observedPower * 100).toFixed(1) + '%';
+      document.getElementById('overlayPowerValue').textContent = powerValue;
+      
       document.getElementById('overlayEffectSize').textContent = 
-        cache.effectSize.toFixed(4);
+        formatSafe(cache.effectSize, 4);
+      
       document.getElementById('overlaySampleSize').textContent = 
-        cache.sampleSize;
+        cache.sampleSize || '--';
 
       // Target Power Scenario
       document.getElementById('overlayTargetPower').value = 
-        cache.targetPower.toFixed(2);
+        formatSafe(cache.targetPower, 2);
       
-      if (cache.requiredSampleSize === Infinity || cache.requiredSampleSize > 1000000) {
-        document.getElementById('overlayRequiredSample').textContent = 'Not Feasible';
-        document.getElementById('overlayRequiredSample').style.color = '#ff4444';
+      const reqSampleEl = document.getElementById('overlayRequiredSample');
+      if (isNaN(cache.requiredSampleSize) || cache.requiredSampleSize === Infinity || cache.requiredSampleSize > 1000000 || cache.requiredSampleSize <= 0) {
+        reqSampleEl.textContent = 'Not Feasible';
+        reqSampleEl.style.color = '#ff4444';
       } else {
-        document.getElementById('overlayRequiredSample').textContent = 
-          cache.requiredSampleSize.toLocaleString();
-        document.getElementById('overlayRequiredSample').style.color = 'var(--accent-1)';
+        reqSampleEl.textContent = Math.ceil(cache.requiredSampleSize).toLocaleString();
+        reqSampleEl.style.color = 'var(--accent-1)';
       }
 
       document.getElementById('overlayAlphaValue').textContent = 
-        cache.alpha.toFixed(3);
+        formatSafe(cache.alpha, 3);
+      
       document.getElementById('overlayCohenD').textContent = 
-        cache.cohenD.toFixed(4);
+        formatSafe(cache.cohenD, 4);
 
       // Update footer note
       const diff = cache.requiredSampleSize - cache.sampleSize;
       const footer = document.getElementById('overlayFooterNote');
-      if (cache.requiredSampleSize === Infinity || cache.requiredSampleSize > 1000000) {
+      
+      if (isNaN(cache.requiredSampleSize) || cache.requiredSampleSize === Infinity || cache.requiredSampleSize > 1000000 || cache.requiredSampleSize <= 0) {
         footer.textContent = 'Effect size is too small to detect with practical sample sizes.';
         footer.style.borderColor = 'rgba(255,100,100,0.3)';
         footer.style.background = 'rgba(255,100,100,0.1)';
         footer.style.color = '#ff8888';
       } else if (diff > 0) {
-        footer.textContent = `Need ${diff.toLocaleString()} more observations to achieve ${(cache.targetPower * 100).toFixed(0)}% power.`;
+        footer.textContent = `Need ${Math.ceil(diff).toLocaleString()} more observations to achieve ${(cache.targetPower * 100).toFixed(0)}% power.`;
         footer.style.borderColor = 'rgba(255,165,120,0.3)';
         footer.style.background = 'rgba(255,165,120,0.1)';
         footer.style.color = 'var(--accent-1)';
