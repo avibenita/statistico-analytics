@@ -1546,9 +1546,13 @@
               <label>Alpha</label>
               <div class="power-stat" id="overlayAlphaValue">--</div>
             </div>
-            <div class="power-field">
+            <div class="power-field" id="cohenDField">
               <label>Cohen's d</label>
               <div class="power-stat" id="overlayCohenD">--</div>
+            </div>
+            <div class="power-field" id="varianceRatioField" style="display: none;">
+              <label>Variance Ratio</label>
+              <div class="power-stat" id="overlayVarianceRatio">--</div>
             </div>
           </div>
         </div>
@@ -2914,7 +2918,8 @@
           targetPower,
           alpha,
           sampleSize: n,
-          method: 'cloud'
+          method: 'cloud',
+          testType: 'mean'
         };
         
         console.log('✅ Cloud calculation successful');
@@ -3030,10 +3035,12 @@
           observedPower,
           requiredSampleSize: requiredN,
           cohenD: 0,
+          varianceRatio: varianceRatio,
           targetPower,
           alpha,
           sampleSize: n,
-          method: 'cloud'
+          method: 'cloud',
+          testType: 'variance'
         };
         
         console.log('✅ Cloud calculation successful');
@@ -3101,8 +3108,23 @@
       document.getElementById('overlayAlphaValue').textContent = 
         formatSafe(cache.alpha, 3);
       
-      document.getElementById('overlayCohenD').textContent = 
-        formatSafe(cache.cohenD, 4);
+      // Show/hide effect size fields based on test type
+      const cohenDField = document.getElementById('cohenDField');
+      const varianceRatioField = document.getElementById('varianceRatioField');
+      
+      if (cache.testType === 'variance') {
+        // For variance tests, show variance ratio, hide Cohen's d
+        cohenDField.style.display = 'none';
+        varianceRatioField.style.display = 'block';
+        document.getElementById('overlayVarianceRatio').textContent = 
+          formatSafe(cache.varianceRatio, 4);
+      } else {
+        // For mean tests, show Cohen's d, hide variance ratio
+        cohenDField.style.display = 'block';
+        varianceRatioField.style.display = 'none';
+        document.getElementById('overlayCohenD').textContent = 
+          formatSafe(cache.cohenD, 4);
+      }
 
       // Update footer note
       const diff = cache.requiredSampleSize - cache.sampleSize;
