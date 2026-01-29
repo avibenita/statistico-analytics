@@ -1323,47 +1323,51 @@
       </div>
 
       <!-- Single Row Configuration -->
-      <div style="display: flex; align-items: stretch; gap: 16px; flex-wrap: wrap; padding: 4px;">
+      <div style="display: flex; align-items: stretch; gap: 28px; flex-wrap: wrap; padding: 4px;">
         <!-- METHOD Section - Enhanced Card -->
-        <div style="flex: 0 0 auto; min-width: 240px; background: linear-gradient(135deg, rgba(255,165,120,0.12), rgba(255,140,90,0.06)); border: 2px solid rgba(255,165,120,0.4); border-radius: 10px; padding: 16px 20px; box-shadow: 0 4px 16px rgba(255,165,120,0.2);">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-            <i class="fa-solid fa-layer-group" style="color: var(--accent-1); font-size: 14px;"></i>
-            <div style="font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: var(--accent-1); text-transform: uppercase;">METHOD</div>
+        <div style="flex: 0 0 auto; min-width: 240px; background: rgba(20,25,35,0.6); border: 2px solid rgba(255,165,120,0.5); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(255,165,120,0.25);">
+          <!-- Header with strong contrast -->
+          <div style="background: linear-gradient(135deg, rgba(255,165,120,0.3), rgba(255,140,90,0.2)); padding: 12px 20px; border-bottom: 2px solid rgba(255,165,120,0.4); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-layer-group" style="color: var(--accent-1); font-size: 16px; filter: drop-shadow(0 0 4px rgba(255,165,120,0.5));"></i>
+            <div style="font-size: 11px; font-weight: 900; letter-spacing: 2px; color: var(--accent-1); text-transform: uppercase; text-shadow: 0 0 8px rgba(255,165,120,0.4);">METHOD</div>
           </div>
-          <div style="display: flex; align-items: center; gap: 16px;">
+          <!-- Content with lighter background -->
+          <div style="background: linear-gradient(135deg, rgba(255,165,120,0.08), rgba(255,140,90,0.04)); padding: 18px 20px; display: flex; align-items: center; gap: 18px;">
             <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
-              <input type="radio" name="method" value="classical" checked onchange="selectMethod('classical')" style="accent-color: var(--accent-1); width: 18px; height: 18px; cursor: pointer;">
-              <span style="font-size: 14px; font-weight: 600; color: var(--text-primary);">Classical</span>
+              <input type="radio" name="method" value="classical" checked onchange="selectMethod('classical')" style="accent-color: var(--accent-1); width: 19px; height: 19px; cursor: pointer;">
+              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Classical</span>
             </label>
             <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
-              <input type="radio" name="method" value="bootstrap" onchange="selectMethod('bootstrap')" style="accent-color: var(--accent-1); width: 18px; height: 18px; cursor: pointer;">
-              <span style="font-size: 14px; font-weight: 600; color: var(--text-primary);">Bootstrap</span>
+              <input type="radio" name="method" value="bootstrap" onchange="selectMethod('bootstrap')" style="accent-color: var(--accent-1); width: 19px; height: 19px; cursor: pointer;">
+              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Bootstrap</span>
             </label>
           </div>
         </div>
 
         <!-- PARAMETER Section - Enhanced Card -->
-        <div style="flex: 1 1 auto; min-width: 420px; background: linear-gradient(135deg, rgba(120,200,255,0.12), rgba(100,180,255,0.06)); border: 2px solid rgba(120,200,255,0.4); border-radius: 10px; padding: 16px 20px; box-shadow: 0 4px 16px rgba(120,200,255,0.2);">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-            <i class="fa-solid fa-chart-line" style="color: var(--accent-2); font-size: 14px;"></i>
-            <div style="font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: var(--accent-2); text-transform: uppercase;">Test Parameter</div>
+        <div style="flex: 1 1 auto; min-width: 420px; background: rgba(20,25,35,0.6); border: 2px solid rgba(120,200,255,0.5); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(120,200,255,0.25);">
+          <!-- Header with strong contrast -->
+          <div style="background: linear-gradient(135deg, rgba(120,200,255,0.3), rgba(100,180,255,0.2)); padding: 12px 20px; border-bottom: 2px solid rgba(120,200,255,0.4); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-chart-line" style="color: var(--accent-2); font-size: 16px; filter: drop-shadow(0 0 4px rgba(120,200,255,0.5));"></i>
+            <div style="font-size: 11px; font-weight: 900; letter-spacing: 2px; color: var(--accent-2); text-transform: uppercase; text-shadow: 0 0 8px rgba(120,200,255,0.4);">TEST PARAMETER</div>
           </div>
-          <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <!-- Content with lighter background -->
+          <div style="background: linear-gradient(135deg, rgba(120,200,255,0.08), rgba(100,180,255,0.04)); padding: 18px 20px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
             <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
-              <input type="radio" name="parameter" value="mean" checked onchange="selectParameter('mean')" style="accent-color: var(--accent-2); width: 18px; height: 18px; cursor: pointer;">
-              <span style="font-size: 14px; font-weight: 600; color: var(--text-primary);">Mean</span>
+              <input type="radio" name="parameter" value="mean" checked onchange="selectParameter('mean')" style="accent-color: var(--accent-2); width: 19px; height: 19px; cursor: pointer;">
+              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Mean</span>
             </label>
             <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
-              <input type="radio" name="parameter" value="variance" onchange="selectParameter('variance')" style="accent-color: var(--accent-2); width: 18px; height: 18px; cursor: pointer;">
-              <span style="font-size: 14px; font-weight: 600; color: var(--text-primary);">Variance</span>
+              <input type="radio" name="parameter" value="variance" onchange="selectParameter('variance')" style="accent-color: var(--accent-2); width: 19px; height: 19px; cursor: pointer;">
+              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Variance</span>
             </label>
             <label class="radio-label disabled" id="median-option" style="opacity: 0.4; cursor: not-allowed; display: flex; align-items: center; gap: 8px;">
-              <input type="radio" name="parameter" value="median" disabled onchange="selectParameter('median')" style="accent-color: var(--accent-2); width: 18px; height: 18px; cursor: not-allowed;">
-              <span style="font-size: 14px; font-weight: 600; color: var(--text-primary);">Median</span>
+              <input type="radio" name="parameter" value="median" disabled onchange="selectParameter('median')" style="accent-color: var(--accent-2); width: 19px; height: 19px; cursor: not-allowed;">
+              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Median</span>
             </label>
             <label class="radio-label disabled" id="percentile-option" style="opacity: 0.4; cursor: not-allowed; display: flex; align-items: center; gap: 8px;">
-              <input type="radio" name="parameter" value="percentile" disabled onchange="selectParameter('percentile')" style="accent-color: var(--accent-2); width: 18px; height: 18px; cursor: not-allowed;">
-              <span style="font-size: 14px; font-weight: 600; color: var(--text-primary);">Percentile</span>
+              <input type="radio" name="parameter" value="percentile" disabled onchange="selectParameter('percentile')" style="accent-color: var(--accent-2); width: 19px; height: 19px; cursor: not-allowed;">
+              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Percentile</span>
             </label>
           </div>
         </div>
