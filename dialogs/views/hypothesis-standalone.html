@@ -495,23 +495,25 @@
     }
 
     .results-container {
-      padding: 20px 24px;
+      padding: 12px 16px;
       max-width: 100%;
     }
 
     /* Configuration Section */
     .config-section {
-      margin-bottom: 32px;
-      padding-bottom: 24px;
-      border-bottom: 2px solid rgba(255,255,255,0.08);
-      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      margin-bottom: 16px;
+      padding: 16px;
+      background: rgba(20,25,35,0.5);
+      border: 2px solid rgba(255,165,120,0.3);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
     .section-header {
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 700;
       color: var(--accent-1);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -604,21 +606,23 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .h0-panel, .h1-panel {
-      background: var(--surface-1);
-      border-radius: 6px;
-      padding: 10px;
+      background: rgba(20,25,35,0.6);
+      border-radius: 8px;
+      padding: 10px 12px;
     }
 
     .h0-panel {
-      border: 2px solid var(--accent-1);
+      border: 2px solid rgba(255,165,120,0.5);
+      box-shadow: 0 2px 8px rgba(255,165,120,0.15);
     }
 
     .h1-panel {
-      border: 2px solid var(--accent-2);
+      border: 2px solid rgba(120,200,255,0.5);
+      box-shadow: 0 2px 8px rgba(120,200,255,0.15);
     }
 
     .h-label {
@@ -660,9 +664,9 @@
       background: linear-gradient(135deg, var(--accent-1), rgb(255,140,90));
       border: none;
       color: white;
-      padding: 10px 25px;
+      padding: 8px 22px;
       border-radius: 6px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       cursor: pointer;
       display: flex;
@@ -679,9 +683,12 @@
 
     /* Results Section */
     .results-section {
-      margin-top: 32px;
-      padding-top: 24px;
-      border-top: 2px solid rgba(255,255,255,0.08);
+      margin-top: 16px;
+      padding: 16px;
+      background: rgba(20,25,35,0.5);
+      border: 2px solid rgba(120,200,255,0.3);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
     .results-header {
@@ -774,13 +781,13 @@
     .results-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 10px;
+      gap: 8px;
+      margin-bottom: 8px;
     }
 
     .result-card {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
+      background: rgba(20,25,35,0.6);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 6px;
       padding: 10px;
       text-align: center;
@@ -814,17 +821,17 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-bottom: 25px;
+      margin-bottom: 12px;
       position: relative;
     }
 
     .stat-box {
-      background: linear-gradient(135deg, var(--surface-2), var(--surface-1));
-      border: 2px solid var(--accent-1);
+      background: linear-gradient(135deg, rgba(20,25,35,0.8), rgba(20,25,35,0.6));
+      border: 2px solid rgba(255,165,120,0.6);
       border-radius: 8px;
-      padding: 15px;
+      padding: 12px;
       text-align: center;
-      box-shadow: 0 4px 15px rgba(255,165,120,0.2);
+      box-shadow: 0 3px 12px rgba(255,165,120,0.2);
       cursor: pointer;
       transition: all 0.3s ease;
       position: relative;
@@ -875,10 +882,10 @@
 
     /* Decision Card */
     .decision-card {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
+      background: rgba(20,25,35,0.6);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 6px;
-      padding: 12px;
+      padding: 10px;
       text-align: center;
     }
 
@@ -1328,51 +1335,51 @@
       </div>
 
       <!-- Single Row Configuration -->
-      <div style="display: flex; align-items: stretch; gap: 28px; flex-wrap: wrap; padding: 4px;">
+      <div style="display: flex; align-items: stretch; gap: 16px; flex-wrap: wrap; margin-bottom: 10px;">
         <!-- METHOD Section - Enhanced Card -->
-        <div style="flex: 0 0 auto; min-width: 240px; background: rgba(20,25,35,0.6); border: 2px solid rgba(255,165,120,0.5); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(255,165,120,0.25);">
+        <div style="flex: 0 0 auto; min-width: 220px; background: rgba(20,25,35,0.6); border: 2px solid rgba(255,165,120,0.5); border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(255,165,120,0.2);">
           <!-- Header with strong contrast -->
-          <div style="background: linear-gradient(135deg, rgba(255,165,120,0.3), rgba(255,140,90,0.2)); padding: 12px 20px; border-bottom: 2px solid rgba(255,165,120,0.4); display: flex; align-items: center; gap: 10px;">
-            <i class="fa-solid fa-layer-group" style="color: var(--accent-1); font-size: 16px; filter: drop-shadow(0 0 4px rgba(255,165,120,0.5));"></i>
-            <div style="font-size: 11px; font-weight: 900; letter-spacing: 2px; color: var(--accent-1); text-transform: uppercase; text-shadow: 0 0 8px rgba(255,165,120,0.4);">METHOD</div>
+          <div style="background: linear-gradient(135deg, rgba(255,165,120,0.3), rgba(255,140,90,0.2)); padding: 8px 14px; border-bottom: 2px solid rgba(255,165,120,0.4); display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-layer-group" style="color: var(--accent-1); font-size: 13px; filter: drop-shadow(0 0 3px rgba(255,165,120,0.5));"></i>
+            <div style="font-size: 10px; font-weight: 900; letter-spacing: 1.8px; color: var(--accent-1); text-transform: uppercase; text-shadow: 0 0 6px rgba(255,165,120,0.4);">METHOD</div>
           </div>
           <!-- Content with lighter background -->
-          <div style="background: linear-gradient(135deg, rgba(255,165,120,0.08), rgba(255,140,90,0.04)); padding: 18px 20px; display: flex; align-items: center; gap: 18px;">
-            <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
-              <input type="radio" name="method" value="classical" checked onchange="selectMethod('classical')" style="accent-color: var(--accent-1); width: 19px; height: 19px; cursor: pointer;">
-              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Classical</span>
+          <div style="background: linear-gradient(135deg, rgba(255,165,120,0.08), rgba(255,140,90,0.04)); padding: 12px 14px; display: flex; align-items: center; gap: 14px;">
+            <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <input type="radio" name="method" value="classical" checked onchange="selectMethod('classical')" style="accent-color: var(--accent-1); width: 17px; height: 17px; cursor: pointer;">
+              <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Classical</span>
             </label>
-            <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
-              <input type="radio" name="method" value="bootstrap" onchange="selectMethod('bootstrap')" style="accent-color: var(--accent-1); width: 19px; height: 19px; cursor: pointer;">
-              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Bootstrap</span>
+            <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <input type="radio" name="method" value="bootstrap" onchange="selectMethod('bootstrap')" style="accent-color: var(--accent-1); width: 17px; height: 17px; cursor: pointer;">
+              <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Bootstrap</span>
             </label>
           </div>
         </div>
 
         <!-- PARAMETER Section - Enhanced Card -->
-        <div style="flex: 1 1 auto; min-width: 420px; background: rgba(20,25,35,0.6); border: 2px solid rgba(120,200,255,0.5); border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(120,200,255,0.25);">
+        <div style="flex: 1 1 auto; min-width: 380px; background: rgba(20,25,35,0.6); border: 2px solid rgba(120,200,255,0.5); border-radius: 10px; overflow: hidden; box-shadow: 0 3px 10px rgba(120,200,255,0.2);">
           <!-- Header with strong contrast -->
-          <div style="background: linear-gradient(135deg, rgba(120,200,255,0.3), rgba(100,180,255,0.2)); padding: 12px 20px; border-bottom: 2px solid rgba(120,200,255,0.4); display: flex; align-items: center; gap: 10px;">
-            <i class="fa-solid fa-chart-line" style="color: var(--accent-2); font-size: 16px; filter: drop-shadow(0 0 4px rgba(120,200,255,0.5));"></i>
-            <div style="font-size: 11px; font-weight: 900; letter-spacing: 2px; color: var(--accent-2); text-transform: uppercase; text-shadow: 0 0 8px rgba(120,200,255,0.4);">TEST PARAMETER</div>
+          <div style="background: linear-gradient(135deg, rgba(120,200,255,0.3), rgba(100,180,255,0.2)); padding: 8px 14px; border-bottom: 2px solid rgba(120,200,255,0.4); display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-chart-line" style="color: var(--accent-2); font-size: 13px; filter: drop-shadow(0 0 3px rgba(120,200,255,0.5));"></i>
+            <div style="font-size: 10px; font-weight: 900; letter-spacing: 1.8px; color: var(--accent-2); text-transform: uppercase; text-shadow: 0 0 6px rgba(120,200,255,0.4);">TEST PARAMETER</div>
           </div>
           <!-- Content with lighter background -->
-          <div style="background: linear-gradient(135deg, rgba(120,200,255,0.08), rgba(100,180,255,0.04)); padding: 18px 20px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
-            <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
-              <input type="radio" name="parameter" value="mean" checked onchange="selectParameter('mean')" style="accent-color: var(--accent-2); width: 19px; height: 19px; cursor: pointer;">
-              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Mean</span>
+          <div style="background: linear-gradient(135deg, rgba(120,200,255,0.08), rgba(100,180,255,0.04)); padding: 12px 14px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <input type="radio" name="parameter" value="mean" checked onchange="selectParameter('mean')" style="accent-color: var(--accent-2); width: 17px; height: 17px; cursor: pointer;">
+              <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Mean</span>
             </label>
-            <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
-              <input type="radio" name="parameter" value="variance" onchange="selectParameter('variance')" style="accent-color: var(--accent-2); width: 19px; height: 19px; cursor: pointer;">
-              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Variance</span>
+            <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <input type="radio" name="parameter" value="variance" onchange="selectParameter('variance')" style="accent-color: var(--accent-2); width: 17px; height: 17px; cursor: pointer;">
+              <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Variance</span>
             </label>
-            <label class="radio-label disabled" id="median-option" style="opacity: 0.4; cursor: not-allowed; display: flex; align-items: center; gap: 8px;">
-              <input type="radio" name="parameter" value="median" disabled onchange="selectParameter('median')" style="accent-color: var(--accent-2); width: 19px; height: 19px; cursor: not-allowed;">
-              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Median</span>
+            <label class="radio-label disabled" id="median-option" style="opacity: 0.4; cursor: not-allowed; display: flex; align-items: center; gap: 6px;">
+              <input type="radio" name="parameter" value="median" disabled onchange="selectParameter('median')" style="accent-color: var(--accent-2); width: 17px; height: 17px; cursor: not-allowed;">
+              <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Median</span>
             </label>
-            <label class="radio-label disabled" id="percentile-option" style="opacity: 0.4; cursor: not-allowed; display: flex; align-items: center; gap: 8px;">
-              <input type="radio" name="parameter" value="percentile" disabled onchange="selectParameter('percentile')" style="accent-color: var(--accent-2); width: 19px; height: 19px; cursor: not-allowed;">
-              <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Percentile</span>
+            <label class="radio-label disabled" id="percentile-option" style="opacity: 0.4; cursor: not-allowed; display: flex; align-items: center; gap: 6px;">
+              <input type="radio" name="parameter" value="percentile" disabled onchange="selectParameter('percentile')" style="accent-color: var(--accent-2); width: 17px; height: 17px; cursor: not-allowed;">
+              <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Percentile</span>
             </label>
           </div>
         </div>
