@@ -11,8 +11,13 @@
   <link rel="stylesheet" href="./shared-header.css">
   <script src="./shared-header.js"></script>
   
-  <!-- AI Configuration (load from external config file) -->
-  <script src="./ai-config.js"></script>
+  <!-- AI Configuration -->
+  <script>
+    // API Key injected during deployment via GitHub Actions
+    // See .github/workflows/deploy.yml
+    window.AI_API_KEY = 'YOUR_API_KEY_PLACEHOLDER';
+    console.log('🔑 AI API Key set:', window.AI_API_KEY && window.AI_API_KEY !== 'YOUR_API_KEY_PLACEHOLDER' ? 'YES (***' + window.AI_API_KEY.slice(-4) + ')' : 'NO - Key not configured');
+  </script>
   
   <style>
     /* AI Button Styles */
@@ -2598,15 +2603,19 @@
     // AI INTERPRETATION (VB6-Style Robust & Reusable)
     // =================================================================
     
-    // AI Configuration - API key should be set externally
+    // AI Configuration
     const AI_CONFIG = {
-      apiKey: window.AI_API_KEY || '', // Configure externally
+      apiKey: window.AI_API_KEY || '',
       endpoint: 'https://api.groq.com/openai/v1/chat/completions',
       model: 'llama-3.3-70b-versatile',
       temperature: 0.7,
       maxTokens: 500,
       timeout: 30000
     };
+    
+    console.log('🤖 AI_CONFIG initialized');
+    console.log('   API Key present:', AI_CONFIG.apiKey ? 'YES (length: ' + AI_CONFIG.apiKey.length + ')' : 'NO');
+    console.log('   Endpoint:', AI_CONFIG.endpoint);
 
     // Reusable AI Service Module (works with any statistical test)
     const AIService = {
