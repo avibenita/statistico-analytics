@@ -23,8 +23,8 @@
     /* AI Button Styles */
     .ai-interpret-btn {
       position: absolute;
-      bottom: -10px;
-      right: -10px;
+      bottom: 8px;
+      right: 8px;
       width: 50px;
       height: 50px;
       border-radius: 50%;
@@ -716,11 +716,13 @@
     .alpha-slider-control {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
-      background: var(--surface-1);
-      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(30,45,60,0.8), rgba(20,35,50,0.7));
+      border: 1px solid rgba(120,200,255,0.3);
       border-radius: 6px;
       padding: 4px 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
     .alpha-slider-control label {
@@ -890,11 +892,13 @@
 
     /* Decision Card */
     .decision-card {
-      background: rgba(20,25,35,0.6);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 6px;
+      background: linear-gradient(135deg, rgba(30,45,60,0.7), rgba(20,35,50,0.6));
+      border: 2px solid rgba(120,200,255,0.4);
+      border-radius: 12px;
       padding: 8px;
       text-align: center;
+      box-shadow: 0 4px 12px rgba(120,200,255,0.15);
+      position: relative;
     }
 
     .decision-label {
