@@ -9,16 +9,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Inject API Key
       run: |
-        # Replace placeholder with actual API key from secrets
         sed -i "s/YOUR_API_KEY_PLACEHOLDER/${{ secrets.GROQ_API_KEY }}/g" dialogs/views/hypothesis-standalone.html
+        echo "API key injected successfully"
     
     - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
+      uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./
+        force_orphan: true
