@@ -1393,16 +1393,16 @@
               <input type="radio" name="parameter" value="percentile" disabled onchange="selectParameter('percentile')" style="accent-color: var(--accent-2); width: 17px; height: 17px; cursor: not-allowed;">
               <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Percentile</span>
             </label>
+            
+            <!-- Percentile Value Input (inside parameter frame, always visible) -->
+            <div id="percentile-value-inline" style="display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, rgba(120,200,255,0.15), rgba(120,200,255,0.08)); border: 2px solid rgba(120,200,255,0.5); border-radius: 6px; padding: 5px 10px; margin-left: 8px; opacity: 0.5; pointer-events: none;">
+              <i class="fa-solid fa-percent" style="color: var(--accent-2); font-size: 11px;"></i>
+              <input type="number" id="percentile-value-input" value="50" min="1" max="99" step="1" 
+                     style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; color: white; padding: 4px 8px; width: 55px; font-size: 12px; font-weight: 600; text-align: center;"
+                     oninput="updatePercentileDisplay(); setAwaitingState()">
+              <span style="color: var(--accent-2); font-size: 11px; font-weight: 700;">%</span>
+            </div>
           </div>
-        </div>
-        
-        <!-- Percentile Value Input (framed clearly) -->
-        <div id="percentile-value-inline" style="display: none; align-items: center; gap: 8px; background: linear-gradient(135deg, rgba(120,200,255,0.15), rgba(120,200,255,0.08)); border: 2px solid var(--accent-2); border-radius: 8px; padding: 8px 14px; box-shadow: 0 0 15px rgba(120,200,255,0.3);">
-          <i class="fa-solid fa-percent" style="color: var(--accent-2); font-size: 13px;"></i>
-          <input type="number" id="percentile-value-input" value="50" min="1" max="99" step="1" 
-                 style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; color: white; padding: 6px 10px; width: 65px; font-size: 13px; font-weight: 600; text-align: center;"
-                 oninput="updatePercentileDisplay(); setAwaitingState()">
-          <span style="color: var(--accent-2); font-size: 13px; font-weight: 700;">%</span>
         </div>
         
         <!-- Bootstrap Iterations -->
@@ -1747,27 +1747,61 @@
       const medianRadio = document.querySelector('input[name="parameter"][value="median"]');
       const percentileRadio = document.querySelector('input[name="parameter"][value="percentile"]');
       const bootstrapIterations = document.getElementById('bootstrap-iterations-inline');
+      const percentileInline = document.getElementById('percentile-value-inline');
       
       if (method === 'bootstrap') {
+        // Enable all parameters when Bootstrap is selected
         medianOption.classList.remove('disabled');
-        percentileOption.classList.remove('disabled');
+        medianOption.style.opacity = '1';
+        medianOption.style.cursor = 'pointer';
         medianRadio.disabled = false;
+        medianRadio.style.cursor = 'pointer';
+        
+        percentileOption.classList.remove('disabled');
+        percentileOption.style.opacity = '1';
+        percentileOption.style.cursor = 'pointer';
         percentileRadio.disabled = false;
+        percentileRadio.style.cursor = 'pointer';
+        
         bootstrapIterations.style.display = 'flex';
         
         // Apply Bootstrap styling to results (if results are visible)
         applyBootstrapStyling(true);
       } else {
+        // Disable median and percentile for Classical
         medianOption.classList.add('disabled');
-        percentileOption.classList.add('disabled');
+        medianOption.style.opacity = '0.4';
+        medianOption.style.cursor = 'not-allowed';
         medianRadio.disabled = true;
+        medianRadio.style.cursor = 'not-allowed';
+        
+        percentileOption.classList.add('disabled');
+        percentileOption.style.opacity = '0.4';
+        percentileOption.style.cursor = 'not-allowed';
         percentileRadio.disabled = true;
+        percentileRadio.style.cursor = 'not-allowed';
+        
         bootstrapIterations.style.display = 'none';
         
         // Remove Bootstrap styling
         applyBootstrapStyling(false);
         
         // Reset to mean if median or percentile was selected
+        if (currentParameter === 'median' || currentParameter === 'percentile') {
+          document.querySelector('input[name="parameter"][value="mean"]').checked = true;
+          selectParameter('mean');
+        }
+      }
+      
+      // Update percentile input state based on current parameter
+      updatePercentileInputState();
+      
+      // Set pop size state
+      updatePopSizeState();
+      
+      // Set results to awaiting state
+      setAwaitingState();
+    };
         if (currentParameter === 'median' || currentParameter === 'percentile') {
           document.querySelector('input[name="parameter"][value="mean"]').checked = true;
           selectParameter('mean');
@@ -1784,15 +1818,6 @@
       currentParameter = param;
       console.log('Parameter changed to:', param);
       
-      // Show/hide percentile value input
-      const percentileInput = document.getElementById('percentile-value-inline');
-      if (param === 'percentile') {
-        percentileInput.style.display = 'flex';
-        updatePercentileDisplay(); // Update display with current percentile value
-      } else {
-        percentileInput.style.display = 'none';
-      }
-      
       // Update H0 and H1 labels
       document.getElementById('h0-param').textContent = param;
       document.getElementById('h1-param').textContent = param;
@@ -1800,9 +1825,30 @@
       // Update result parameter display
       updatePercentileDisplay();
       
+      // Update percentile input state
+      updatePercentileInputState();
+      
       updatePopSizeState();
       setAwaitingState();
     };
+
+    // Update percentile input state (always visible, but enabled/disabled based on selection)
+    function updatePercentileInputState() {
+      const percentileInline = document.getElementById('percentile-value-inline');
+      const percentileInput = document.getElementById('percentile-value-input');
+      
+      if (currentParameter === 'percentile') {
+        // Enable when percentile is selected
+        percentileInline.style.opacity = '1';
+        percentileInline.style.pointerEvents = 'auto';
+        percentileInput.disabled = false;
+      } else {
+        // Disable but keep visible when percentile is not selected
+        percentileInline.style.opacity = '0.5';
+        percentileInline.style.pointerEvents = 'none';
+        percentileInput.disabled = true;
+      }
+    }
 
     // Update percentile display (e.g., "50th Percentile")
     function updatePercentileDisplay() {
