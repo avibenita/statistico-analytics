@@ -53,6 +53,10 @@
     .results-container .responsive-panel-body {
       padding: 2px 6px !important;
     }
+    
+    .stats-panel .responsive-panel-body {
+      padding: 0 6px 2px !important;
+    }
 
     .boxplot-panel {
       flex-shrink: 0;
@@ -79,7 +83,7 @@
 
     .chart-container {
       padding: 8px;
-      height: 280px;
+      height: 290px;
     }
 
     .stats-panel {
@@ -90,17 +94,19 @@
     }
     
     .stats-panel .panel-heading {
-      padding: 2px 8px 1px;
+      padding: 1px 8px 0;
       font-size: 0.65em;
       margin: 0;
       line-height: 1;
+      border-bottom: none !important;
     }
 
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
       gap: 3px;
-      padding: 2px 8px 3px;
+      padding: 1px 8px 2px;
+      margin-top: 0;
     }
 
     .stat-box {
