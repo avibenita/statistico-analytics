@@ -404,7 +404,9 @@
         y: l.y,
         dataLabels: {
           enabled: true,
-          formatter() { return `${l.key}: ${this.y.toFixed(1)}`; },
+          formatter() { 
+            return this.y != null ? `${l.key}: ${this.y.toFixed(1)}` : `${l.key}: --`;
+          },
           style: { color: labelColor, fontSize: '10px', fontWeight: 600 },
           align: l.align || 'left',
           verticalAlign: 'middle',
@@ -485,12 +487,13 @@
           ...commonOptions.tooltip,
           formatter: function() {
             const point = this.point;
+            if (!point) return '';
             return `<b>${currentVariableName}</b><br/>` +
-                   `Min: ${point.low.toFixed(2)}<br/>` +
-                   `Q1: ${point.q1.toFixed(2)}<br/>` +
-                   `Median: ${point.median.toFixed(2)}<br/>` +
-                   `Q3: ${point.q3.toFixed(2)}<br/>` +
-                   `Max: ${point.high.toFixed(2)}`;
+                   `Min: ${point.low != null ? point.low.toFixed(2) : '--'}<br/>` +
+                   `Q1: ${point.q1 != null ? point.q1.toFixed(2) : '--'}<br/>` +
+                   `Median: ${point.median != null ? point.median.toFixed(2) : '--'}<br/>` +
+                   `Q3: ${point.q3 != null ? point.q3.toFixed(2) : '--'}<br/>` +
+                   `Max: ${point.high != null ? point.high.toFixed(2) : '--'}`;
           }
         },
         series: [
@@ -537,15 +540,16 @@
           ...commonOptions.tooltip,
           formatter: function() {
             if (this.series.name === 'Outliers') {
-              return `<b>Outlier</b><br/>Value: ${this.y.toFixed(2)}`;
+              return `<b>Outlier</b><br/>Value: ${this.y != null ? this.y.toFixed(2) : '--'}`;
             }
             const point = this.point;
+            if (!point) return '';
             return `<b>${currentVariableName}</b><br/>` +
-                   `Adjusted Low: ${point.low.toFixed(2)}<br/>` +
-                   `Q1: ${point.q1.toFixed(2)}<br/>` +
-                   `Median: ${point.median.toFixed(2)}<br/>` +
-                   `Q3: ${point.q3.toFixed(2)}<br/>` +
-                   `Adjusted High: ${point.high.toFixed(2)}`;
+                   `Adjusted Low: ${point.low != null ? point.low.toFixed(2) : '--'}<br/>` +
+                   `Q1: ${point.q1 != null ? point.q1.toFixed(2) : '--'}<br/>` +
+                   `Median: ${point.median != null ? point.median.toFixed(2) : '--'}<br/>` +
+                   `Q3: ${point.q3 != null ? point.q3.toFixed(2) : '--'}<br/>` +
+                   `Adjusted High: ${point.high != null ? point.high.toFixed(2) : '--'}`;
           }
         },
         series: [
