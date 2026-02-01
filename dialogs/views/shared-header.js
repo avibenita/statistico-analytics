@@ -41,6 +41,7 @@ const StatisticoHeader = {
       'qqplot': 'QQ/PP Plot Analysis',
       'normality': 'Normality Tests',
       'kernel': 'Kernel Density',
+      'cdf': 'Cumulative Distribution',
       'confidence': 'Confidence Intervals',
       'hypothesis': 'Hypothesis Testing',
       'outliers': 'Outliers Detection'
@@ -98,6 +99,7 @@ const StatisticoHeader = {
       { id: 'boxplot', icon: 'fa-box', label: 'Box Plot', file: 'boxplot-standalone.html' },
       { id: 'qqplot', icon: 'fa-chart-scatter', label: 'QQ/PP Plot', file: 'qqplot-standalone.html' },
       { id: 'kernel', icon: 'fa-wave-square', label: 'Kernel Density', file: 'kernel-standalone.html' },
+      { id: 'cdf', icon: 'fa-chart-area', label: 'Cumulative Distribution', file: 'cumulative-distribution.html' },
       { id: 'outliers', icon: 'fa-exclamation-triangle', label: 'Outliers Detection', file: 'outliers-standalone.html' },
       { id: 'confidence', icon: 'fa-chart-line', label: 'Confidence Intervals', file: 'confidence-standalone.html' },
       { id: 'normality', icon: 'fa-vial', label: 'Normality Tests', file: 'normality-standalone.html' },
