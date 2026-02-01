@@ -65,37 +65,15 @@
       box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.4);
       overflow: hidden;
       flex-shrink: 0;
+      padding: 0;
     }
 
-    .panel-heading {
-      background: transparent;
-      color: var(--accent-1);
-      font-weight: 600;
-      padding: 10px 16px;
-      font-size: 1.05rem;
-      letter-spacing: .3px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .panel-body {
-      padding: 12px;
-      background: var(--surface-2);
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      margin: 8px 12px 12px 12px;
-    }
-
-    /* Chart Container */
+    /* Chart Container - Direct in Panel */
     .chart-container {
       width: 100%;
-      height: 320px;
+      height: 300px;
       min-height: 280px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
+      background: transparent;
     }
 
     /* Loading State */
@@ -141,11 +119,13 @@
 
     @media (max-height: 700px) {
       .chart-container {
-        height: 250px;
+        height: 260px;
       }
-      .panel-heading {
-        padding: 8px 12px;
-        font-size: 0.95rem;
+    }
+
+    @media (max-height: 600px) {
+      .chart-container {
+        height: 230px;
       }
     }
   </style>
@@ -170,28 +150,12 @@
       
       <!-- Box Plot With Outliers -->
       <div class="chart-panel">
-        <div class="panel-heading">
-          Box Plot with Outliers
-          <span style="margin-left: auto;">
-            <i class="fas fa-expand" style="margin-left: 10px; cursor: pointer;" title="Expand"></i>
-          </span>
-        </div>
-        <div class="panel-body">
-          <div class="chart-container" id="withOutliers"></div>
-        </div>
+        <div class="chart-container" id="withOutliers"></div>
       </div>
 
       <!-- Box Plot Without Outliers -->
       <div class="chart-panel">
-        <div class="panel-heading">
-          Box Plot Without Outliers
-          <span style="margin-left: auto;">
-            <i class="fas fa-expand" style="margin-left: 10px; cursor: pointer;" title="Expand"></i>
-          </span>
-        </div>
-        <div class="panel-body">
-          <div class="chart-container" id="withoutOutliers"></div>
-        </div>
+        <div class="chart-container" id="withoutOutliers"></div>
       </div>
       
     </div>
@@ -342,20 +306,36 @@
       Highcharts.chart('withOutliers', {
         chart: { 
           type: 'boxplot',
-          backgroundColor: 'transparent'
+          inverted: true,
+          backgroundColor: 'transparent',
+          height: 300,
+          marginTop: 40,
+          marginBottom: 50,
+          marginLeft: 80,
+          marginRight: 20
         },
-        title: { text: '' },
+        title: { 
+          text: 'Box Plot with Outliers',
+          style: { color: 'rgb(255,165,120)', fontSize: '16px', fontWeight: '600' },
+          margin: 20
+        },
         legend: { enabled: false },
         credits: { enabled: false },
         xAxis: {
           categories: [currentVariableName],
-          title: { text: null },
-          labels: { style: { color: '#ffffff', fontSize: '14px' } },
+          title: { 
+            text: 'Distribution',
+            style: { color: '#ffffff', fontSize: '12px' }
+          },
+          labels: { style: { color: '#ffffff', fontSize: '12px' } },
           gridLineColor: 'rgba(255, 255, 255, 0.1)'
         },
         yAxis: {
-          title: { text: 'Values', style: { color: '#ffffff' } },
-          labels: { style: { color: '#ffffff' } },
+          title: { 
+            text: 'Values',
+            style: { color: '#ffffff', fontSize: '12px' }
+          },
+          labels: { style: { color: '#ffffff', fontSize: '11px' } },
           gridLineColor: 'rgba(255, 255, 255, 0.1)'
         },
         plotOptions: {
@@ -433,20 +413,36 @@
       Highcharts.chart('withoutOutliers', {
         chart: { 
           type: 'boxplot',
-          backgroundColor: 'transparent'
+          inverted: true,
+          backgroundColor: 'transparent',
+          height: 300,
+          marginTop: 40,
+          marginBottom: 50,
+          marginLeft: 80,
+          marginRight: 20
         },
-        title: { text: '' },
+        title: { 
+          text: 'Box Plot Without Outliers + Outlier Points',
+          style: { color: 'rgb(255,165,120)', fontSize: '16px', fontWeight: '600' },
+          margin: 20
+        },
         legend: { enabled: false },
         credits: { enabled: false },
         xAxis: {
           categories: [currentVariableName],
-          title: { text: null },
-          labels: { style: { color: '#ffffff', fontSize: '14px' } },
+          title: { 
+            text: 'Distribution',
+            style: { color: '#ffffff', fontSize: '12px' }
+          },
+          labels: { style: { color: '#ffffff', fontSize: '12px' } },
           gridLineColor: 'rgba(255, 255, 255, 0.1)'
         },
         yAxis: {
-          title: { text: 'Values', style: { color: '#ffffff' } },
-          labels: { style: { color: '#ffffff' } },
+          title: { 
+            text: 'Values',
+            style: { color: '#ffffff', fontSize: '12px' }
+          },
+          labels: { style: { color: '#ffffff', fontSize: '11px' } },
           gridLineColor: 'rgba(255, 255, 255, 0.1)'
         },
         plotOptions: {
