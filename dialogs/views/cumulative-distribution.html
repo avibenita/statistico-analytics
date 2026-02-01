@@ -44,7 +44,7 @@
     }
     
     .container {
-      padding: 16px 20px;
+      padding: 8px 16px;
       max-width: 1200px;
       margin: 0 auto;
     }
@@ -54,31 +54,32 @@
       border-radius: var(--panel-radius);
       box-shadow: var(--panel-shadow);
       border: 1px solid var(--border);
-      margin-bottom: 20px;
+      margin-bottom: 8px;
     }
     
     .panel-body {
-      padding: 16px 20px;
+      padding: 10px 14px;
     }
     
-    /* Quartiles Display */
+    /* Quartiles Display - Compact */
     .quartiles-container {
       display: flex;
       justify-content: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin: 0 0 20px 0;
+      flex-wrap: nowrap;
+      gap: 8px;
+      margin: 0 0 10px 0;
     }
     
     .quartile-box {
       background-color: var(--surface-2);
       color: var(--text-primary);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
+      border-radius: 6px;
+      padding: 6px 8px;
       text-align: center;
-      flex: 0 1 auto;
-      min-width: 90px;
+      flex: 1 1 auto;
+      min-width: 70px;
+      max-width: 110px;
       cursor: pointer;
       transition: all 0.3s ease;
     }
@@ -91,43 +92,43 @@
     }
     
     .quartile-box div:first-child {
-      font-size: 0.85em;
+      font-size: 0.75em;
       color: var(--text-secondary);
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
     
     .quartile-value {
       font-weight: 700;
-      font-size: 1.3em;
+      font-size: 1.1em;
       color: var(--accent-1);
     }
     
-    /* Distribution Controls */
+    /* Distribution Controls - Compact */
     .distribution-controls {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      margin: 0 0 20px 0;
+      gap: 8px;
+      margin: 0 0 10px 0;
       flex-wrap: wrap;
     }
     
     .distribution-controls label {
       margin: 0;
-      font-size: 0.9em;
+      font-size: 0.8em;
       color: var(--text-secondary);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
     
     .distribution-controls select {
-      padding: 8px 14px;
+      padding: 5px 10px;
       background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 5px;
       color: var(--text-primary);
-      font-size: 0.9em;
+      font-size: 0.8em;
       cursor: pointer;
       transition: border-color 0.3s ease;
     }
@@ -139,18 +140,18 @@
     }
     
     .distribution-controls button {
-      padding: 8px 16px;
+      padding: 5px 12px;
       background: linear-gradient(145deg, #4a5568, #2d3748);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 5px;
       color: var(--text-primary);
-      font-size: 0.9em;
+      font-size: 0.8em;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     
     .distribution-controls button:hover {
@@ -163,40 +164,40 @@
       border-color: var(--accent-2);
     }
     
-    /* Chart Container */
+    /* Chart Container - Compact */
     #chart-container {
-      height: 420px;
+      height: 320px;
       width: 100%;
       margin: 0 auto;
     }
     
-    /* Slider Controls */
+    /* Slider Controls - Compact */
     .slider-section {
-      margin: 20px 0;
+      margin: 10px 0 8px 0;
     }
     
     .slider-section label {
       color: var(--text-secondary);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       display: block;
       font-weight: 500;
-      font-size: 0.95em;
+      font-size: 0.85em;
     }
     
     #value-slider {
-      height: 10px;
-      margin: 12px 0;
+      height: 8px;
+      margin: 8px 0;
     }
     
     .current-value {
-      font-size: 1.3em;
+      font-size: 1.1em;
       text-align: center;
-      margin: 12px 0;
-      padding: 10px 14px;
+      margin: 8px 0;
+      padding: 6px 10px;
       background: var(--surface-2);
       border: 1px solid var(--border);
       color: var(--text-primary);
-      border-radius: 8px;
+      border-radius: 6px;
       transition: all 0.3s ease;
     }
     
@@ -205,23 +206,23 @@
       font-weight: 700;
     }
     
-    /* Info Note */
+    /* Info Note - Compact */
     .info-note {
-      font-size: 0.85em;
+      font-size: 0.75em;
       text-align: center;
-      margin: 12px auto;
-      padding: 8px 12px;
+      margin: 8px auto 0;
+      padding: 6px 10px;
       max-width: 700px;
       color: var(--text-secondary);
       background: rgba(255, 165, 120, 0.1);
       border-left: 3px solid var(--accent-1);
       border-radius: 4px;
-      line-height: 1.5;
+      line-height: 1.4;
     }
     
     .info-note i {
       color: var(--accent-1);
-      margin-right: 6px;
+      margin-right: 4px;
     }
     
     /* noUiSlider custom styling */
@@ -256,30 +257,30 @@
       display: none;
     }
     
-    /* Awaiting State */
+    /* Awaiting State - Compact */
     .awaiting-panel {
       text-align: center;
-      padding: 60px 20px;
+      padding: 40px 20px;
       color: var(--text-muted);
     }
     
     .awaiting-panel i {
-      font-size: 60px;
+      font-size: 48px;
       color: var(--accent-2);
-      margin-bottom: 20px;
+      margin-bottom: 14px;
       opacity: 0.6;
       animation: pulse 2s ease-in-out infinite;
     }
     
     .awaiting-panel h3 {
-      font-size: 1.4em;
+      font-size: 1.2em;
       font-weight: 600;
-      margin: 0 0 10px 0;
+      margin: 0 0 8px 0;
       color: var(--text-secondary);
     }
     
     .awaiting-panel p {
-      font-size: 1em;
+      font-size: 0.9em;
       margin: 0;
       color: var(--text-muted);
     }
@@ -726,24 +727,57 @@
         onMessageReceived
       );
       
-      // Simulate data for testing (remove in production)
+      // Request data from parent
+      setTimeout(() => {
+        sendMessageToParent({ status: 'ready', action: 'requestData' });
+      }, 500);
+      
+      // Fallback to sample data after 5 seconds if no real data arrives
       setTimeout(() => {
         if (originalData.length === 0) {
-          console.log('📊 No data received, using sample data');
-          const sampleData = Array.from({length: 100}, () => Math.random() * 100);
-          handleDataReceived({ values: sampleData, variableName: 'Sample Data' });
+          console.log('⚠️ No data received, loading sample data');
+          loadSampleData();
         }
-      }, 3000);
+      }, 5000);
     };
     
     function onMessageReceived(arg) {
       console.log('📨 Message received from parent:', arg.message);
       try {
-        const data = JSON.parse(arg.message);
-        handleDataReceived(data);
+        const message = JSON.parse(arg.message);
+        console.log('📩 Parsed message:', message);
+        
+        if (message.action === 'loadData' && message.data) {
+          handleDataReceived(message.data);
+        } else if (message.values || message.data) {
+          // Handle direct data format
+          handleDataReceived(message.values ? message : message.data);
+        } else {
+          handleDataReceived(message);
+        }
       } catch (e) {
         console.error('❌ Failed to parse message:', e);
       }
+    }
+    
+    function sendMessageToParent(message) {
+      if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+        try {
+          Office.context.ui.messageParent(JSON.stringify(message));
+          console.log('📤 Message sent to parent:', message);
+        } catch (e) {
+          console.error('❌ Failed to send message to parent:', e);
+        }
+      }
+    }
+    
+    function loadSampleData() {
+      console.log('📊 Loading sample data for demonstration');
+      const sampleData = Array.from({length: 100}, () => Math.random() * 100);
+      handleDataReceived({ 
+        values: sampleData, 
+        variableName: 'Sample Data (Demo)'
+      });
     }
   </script>
 </body>
