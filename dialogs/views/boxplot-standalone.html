@@ -88,59 +88,64 @@
 
     .stats-panel {
       flex-shrink: 0;
-      margin-bottom: 0;
+      margin-bottom: 2px;
       padding: 0 !important;
-      border: none !important;
     }
     
     .stats-panel .panel-heading {
-      padding: 1px 8px 0;
-      font-size: 0.65em;
+      padding: 3px 8px;
+      font-size: 0.75em;
       margin: 0;
-      line-height: 1;
-      border-bottom: none !important;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-      gap: 3px;
-      padding: 1px 8px 2px;
-      margin-top: 0;
-    }
-
-    .stat-box {
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 3px;
-      padding: 2px 5px;
+      line-height: 1.2;
       text-align: center;
-      line-height: 1.1;
+      border-bottom: 1px solid var(--border);
     }
 
-    .stat-box .label {
-      font-size: 0.6em;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      margin-bottom: 1px;
-      letter-spacing: 0.2px;
-      line-height: 1;
+    .stats-panel .responsive-panel-body {
+      padding: 3px 6px !important;
     }
 
-    .stat-box .value {
-      font-size: 0.8em;
+    .stats-panel table {
+      width: 100%;
+      text-align: center;
+      background: var(--surface-2);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 3px;
+      border-collapse: collapse;
+    }
+
+    .stats-panel table:last-child {
+      margin-bottom: 0;
+    }
+
+    .stats-panel th {
+      padding: 3px 6px;
       font-weight: 600;
+      font-size: 0.65em;
       color: var(--text-primary);
-      line-height: 1;
+      background: var(--surface-0);
+      border: none;
     }
 
-    .stat-box.highlight {
-      border-color: var(--accent-2);
-      background: rgba(120, 200, 255, 0.1);
+    .stats-panel th.highlight {
+      background: rgba(255, 165, 120, 0.3);
     }
 
-    .stat-box.highlight .label {
-      color: var(--accent-2);
+    .stats-panel td {
+      padding: 4px 6px;
+      font-size: 0.7em;
+      font-weight: 500;
+      color: var(--text-primary);
+      border: none;
+    }
+
+    .stats-panel td.highlight {
+      color: var(--accent-1);
+      font-size: 0.75em;
+      font-weight: 700;
+      background: rgba(255, 165, 120, 0.1);
     }
 
     /* Loading state */
@@ -180,22 +185,56 @@
   <div class="responsive-container">
     
     <!-- Loading State -->
-    <div class="responsive-panel" id="loading" style="display: none;">
-      <div class="awaiting-overlay">
-        <i class="fa-solid fa-chart-simple"></i>
-        <h3>Loading Box Plot Analysis</h3>
-        <p>Preparing your visualization...</p>
-      </div>
-    </div>
+    
 
     <!-- RESULTS CONTAINER -->
     <div class="results-container responsive-panel" id="results-container">
       <div class="responsive-panel-body">
         
-        <!-- Stats Summary - Ultra Compact -->
+        <!-- Stats Summary - Table Style -->
         <div class="stats-panel responsive-panel flex-shrink-0">
           <div class="panel-heading">SUMMARY STATISTICS</div>
-          <div class="stats-grid" id="statsGrid"></div>
+          <div class="responsive-panel-body">
+            <!-- First Table: Key Stats -->
+            <table>
+              <tr>
+                <th class="highlight">MIN</th>
+                <th class="highlight">Q1 (25%)</th>
+                <th class="highlight">MEDIAN (Q2)</th>
+                <th class="highlight">Q3 (75%)</th>
+                <th class="highlight">MAX</th>
+                <th>IQR</th>
+              </tr>
+              <tr>
+                <td class="highlight" id="stat-min">--</td>
+                <td class="highlight" id="stat-q1">--</td>
+                <td class="highlight" id="stat-median">--</td>
+                <td class="highlight" id="stat-q3">--</td>
+                <td class="highlight" id="stat-max">--</td>
+                <td id="stat-iqr">--</td>
+              </tr>
+            </table>
+            
+            <!-- Second Table: Additional Stats -->
+            <table>
+              <tr>
+                <th>COUNT</th>
+                <th>MEAN</th>
+                <th>STD DEV</th>
+                <th>OUTLIERS</th>
+                <th>VARIANCE</th>
+                <th>RANGE</th>
+              </tr>
+              <tr>
+                <td id="stat-count">--</td>
+                <td id="stat-mean">--</td>
+                <td id="stat-stddev">--</td>
+                <td id="stat-outliers">--</td>
+                <td id="stat-variance">--</td>
+                <td id="stat-range">--</td>
+              </tr>
+            </table>
+          </div>
         </div>
        
 
@@ -371,37 +410,30 @@
 
     // Display summary statistics
     function displaySummaryStats(boxData) {
-      const statsGrid = document.getElementById('statsGrid');
-      statsGrid.innerHTML = `
-        <div class="stat-box">
-          <div class="label">Min</div>
-          <div class="value">${boxData.min.toFixed(2)}</div>
-        </div>
-        <div class="stat-box highlight">
-          <div class="label">Q1 (25%)</div>
-          <div class="value">${boxData.q1.toFixed(2)}</div>
-        </div>
-        <div class="stat-box highlight">
-          <div class="label">Median (Q2)</div>
-          <div class="value">${boxData.median.toFixed(2)}</div>
-        </div>
-        <div class="stat-box highlight">
-          <div class="label">Q3 (75%)</div>
-          <div class="value">${boxData.q3.toFixed(2)}</div>
-        </div>
-        <div class="stat-box">
-          <div class="label">Max</div>
-          <div class="value">${boxData.max.toFixed(2)}</div>
-        </div>
-        <div class="stat-box">
-          <div class="label">IQR</div>
-          <div class="value">${boxData.iqr.toFixed(2)}</div>
-        </div>
-        <div class="stat-box ${boxData.outliers.length > 0 ? 'highlight' : ''}">
-          <div class="label">Outliers</div>
-          <div class="value">${boxData.outliers.length}</div>
-        </div>
-      `;
+      // Populate table cells
+      document.getElementById('stat-min').textContent = boxData.min != null ? boxData.min.toFixed(2) : '--';
+      document.getElementById('stat-q1').textContent = boxData.q1 != null ? boxData.q1.toFixed(2) : '--';
+      document.getElementById('stat-median').textContent = boxData.median != null ? boxData.median.toFixed(2) : '--';
+      document.getElementById('stat-q3').textContent = boxData.q3 != null ? boxData.q3.toFixed(2) : '--';
+      document.getElementById('stat-max').textContent = boxData.max != null ? boxData.max.toFixed(2) : '--';
+      document.getElementById('stat-iqr').textContent = boxData.iqr != null ? boxData.iqr.toFixed(2) : '--';
+      
+      document.getElementById('stat-count').textContent = boxData.data ? boxData.data.length : '--';
+      document.getElementById('stat-mean').textContent = boxData.data ? calculateMean(boxData.data).toFixed(2) : '--';
+      document.getElementById('stat-stddev').textContent = boxData.data ? calculateStdDev(boxData.data).toFixed(2) : '--';
+      document.getElementById('stat-outliers').textContent = boxData.outliers ? boxData.outliers.length : '0';
+      document.getElementById('stat-variance').textContent = boxData.data ? Math.pow(calculateStdDev(boxData.data), 2).toFixed(2) : '--';
+      document.getElementById('stat-range').textContent = (boxData.max != null && boxData.min != null) ? (boxData.max - boxData.min).toFixed(2) : '--';
+    }
+    
+    function calculateMean(data) {
+      return data.reduce((sum, val) => sum + val, 0) / data.length;
+    }
+    
+    function calculateStdDev(data) {
+      const mean = calculateMean(data);
+      const variance = data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / data.length;
+      return Math.sqrt(variance);
     }
 
     // Build stat label series
