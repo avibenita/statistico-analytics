@@ -2,11 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Box Plot Analysis - Statistico</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- Office.js -->
-  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <title>Box Plot Analysis</title>
   
   <!-- Font Awesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
@@ -14,15 +11,18 @@
   <!-- Highcharts -->
   <script src="https://code.highcharts.com/highcharts.js"></script>
   <script src="https://code.highcharts.com/highcharts-more.js"></script>
+  <script src="https://code.highcharts.com/modules/exporting.js"></script>
+  <script src="https://code.highcharts.com/modules/export-data.js"></script>
+  <script src="https://code.highcharts.com/modules/annotations.js"></script>
   
-  <!-- Shared Header -->
+  <!-- Shared Components -->
   <link rel="stylesheet" href="shared-header.css">
   <script src="shared-header.js"></script>
   
   <!-- Responsive Layout System -->
   <link rel="stylesheet" href="responsive-layout.css">
   <script src="responsive-layout.js"></script>
-  
+
   <style>
     :root {
       --surface-0: #0c1624;
@@ -34,137 +34,97 @@
       --text-primary: #ffffff;
       --text-secondary: rgba(255,255,255,0.8);
       --text-muted: rgba(255,255,255,0.6);
-      --panel-radius: 10px;
-      --panel-shadow: 0px 4px 20px rgba(0, 0, 0, 0.4);
     }
 
-    /* Custom styles for box plot (responsive-layout.css handles base layout) */
-    
+    body {
+      background-color: var(--surface-0);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+
+    /* Results Container */
     .results-container {
       display: none;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 12px;
     }
-
+    
     .results-container.show {
       display: flex !important;
-      flex-direction: column;
-      gap: 2px;
-    }
-    
-    .results-container .responsive-panel-body {
-      padding: 2px 6px !important;
-    }
-    
-    .stats-panel .responsive-panel-body {
-      padding: 0 6px 2px !important;
     }
 
-    .boxplot-panel {
+    /* Panel Styling */
+    .chart-panel {
+      background: var(--surface-1);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
       flex-shrink: 0;
-      padding: 0 !important;
-    }
-    
-    .boxplot-panel .panel-heading {
-      padding: 3px 8px;
-      font-size: 0.75em;
-      line-height: 1.2;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
     }
 
     .panel-heading {
       background: transparent;
       color: var(--accent-1);
       font-weight: 600;
-      padding: 3px 8px;
-      font-size: 0.75em;
-      letter-spacing: .2px;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
-      line-height: 1.2;
-    }
-
-    .chart-container {
-      padding: 8px;
-      height: 290px;
-    }
-
-    .stats-panel {
-      flex-shrink: 0;
-      margin-bottom: 2px;
-      padding: 0 !important;
-    }
-    
-    .stats-panel .panel-heading {
-      padding: 3px 8px;
-      font-size: 0.75em;
-      margin: 0;
-      line-height: 1.2;
-      text-align: center;
+      padding: 10px 16px;
+      font-size: 1.05rem;
+      letter-spacing: .3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       border-bottom: 1px solid var(--border);
     }
 
-    .stats-panel .responsive-panel-body {
-      padding: 0 6px 3px !important;
-    }
-
-    .stats-panel table {
-      width: 100%;
-      text-align: center;
+    .panel-body {
+      padding: 12px;
       background: var(--surface-2);
-      border-radius: 4px;
-      overflow: hidden;
+      border-radius: 6px;
       border: 1px solid var(--border);
-      margin-bottom: 3px;
-      border-collapse: collapse;
+      margin: 8px 12px 12px 12px;
     }
 
-    .stats-panel table:last-child {
-      margin-bottom: 0;
+    /* Chart Container */
+    .chart-container {
+      width: 100%;
+      height: 320px;
+      min-height: 280px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
     }
 
-    .stats-panel th {
-      padding: 3px 6px;
-      font-weight: 600;
-      font-size: 0.65em;
-      color: var(--text-primary);
-      background: var(--surface-0);
-      border: none;
-    }
-
-    .stats-panel th.highlight {
-      background: rgba(255, 165, 120, 0.3);
-    }
-
-    .stats-panel td {
-      padding: 4px 6px;
-      font-size: 0.7em;
-      font-weight: 500;
-      color: var(--text-primary);
-      border: none;
-    }
-
-    .stats-panel td.highlight {
-      color: var(--accent-1);
-      font-size: 0.75em;
-      font-weight: 700;
-      background: rgba(255, 165, 120, 0.1);
-    }
-
-    /* Loading state */
-    .loading {
+    /* Loading State */
+    .awaiting-overlay {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 60px 20px;
+      padding: 80px 20px;
       color: var(--text-secondary);
     }
 
-    .loading i {
-      font-size: 48px;
-      margin-bottom: 16px;
+    .awaiting-overlay i {
+      font-size: 64px;
+      margin-bottom: 24px;
       color: var(--accent-2);
       animation: pulse 2s ease-in-out infinite;
+    }
+
+    .awaiting-overlay h3 {
+      font-size: 1.5em;
+      margin: 0 0 12px 0;
+      color: var(--text-primary);
+    }
+
+    .awaiting-overlay p {
+      margin: 0;
+      font-size: 1em;
+      color: var(--text-muted);
     }
 
     @keyframes pulse {
@@ -172,10 +132,20 @@
       50% { opacity: 0.5; }
     }
 
-    /* Responsive */
-    @media (max-width: 900px) {
-      .results-container.show {
-        grid-template-columns: 1fr;
+    /* Responsive breakpoints */
+    @media (max-height: 800px) {
+      .chart-container {
+        height: 280px;
+      }
+    }
+
+    @media (max-height: 700px) {
+      .chart-container {
+        height: 250px;
+      }
+      .panel-heading {
+        padding: 8px 12px;
+        font-size: 0.95rem;
       }
     }
   </style>
@@ -186,99 +156,63 @@
   <!-- Responsive Container -->
   <div class="responsive-container">
     
-    <!-- Loading State -->
-    
-
-    <!-- RESULTS CONTAINER -->
-    <div class="results-container responsive-panel" id="results-container">
-      <div class="responsive-panel-body">
-        
-        <!-- Stats Summary - Table Style -->
-        <div class="stats-panel responsive-panel flex-shrink-0">
-          <div class="panel-heading">SUMMARY STATISTICS</div>
-          <div class="responsive-panel-body">
-            <!-- First Table: Key Stats -->
-            <table>
-              <tr>
-                <th class="highlight">MIN</th>
-                <th class="highlight">Q1 (25%)</th>
-                <th class="highlight">MEDIAN (Q2)</th>
-                <th class="highlight">Q3 (75%)</th>
-                <th class="highlight">MAX</th>
-                <th>IQR</th>
-              </tr>
-              <tr>
-                <td class="highlight" id="stat-min">--</td>
-                <td class="highlight" id="stat-q1">--</td>
-                <td class="highlight" id="stat-median">--</td>
-                <td class="highlight" id="stat-q3">--</td>
-                <td class="highlight" id="stat-max">--</td>
-                <td id="stat-iqr">--</td>
-              </tr>
-            </table>
-            
-            <!-- Second Table: Additional Stats -->
-            <table>
-              <tr>
-                <th>COUNT</th>
-                <th>MEAN</th>
-                <th>STD DEV</th>
-                <th>OUTLIERS</th>
-                <th>VARIANCE</th>
-                <th>RANGE</th>
-              </tr>
-              <tr>
-                <td id="stat-count">--</td>
-                <td id="stat-mean">--</td>
-                <td id="stat-stddev">--</td>
-                <td id="stat-outliers">--</td>
-                <td id="stat-variance">--</td>
-                <td id="stat-range">--</td>
-              </tr>
-            </table>
-          </div>
-        </div>
-       
-
-        <!-- Box Plot With Outliers -->
-        <div class="boxplot-panel responsive-panel flex-shrink-0">
-          <div class="panel-heading">WITH OUTLIERS</div>
-          <div class="chart-container" id="boxWithOutliers"></div>
-        </div>
-
-        <!-- Box Plot Without Outliers -->
-        <div class="boxplot-panel responsive-panel flex-shrink-0">
-          <div class="panel-heading">WITHOUT OUTLIERS + OUTLIER POINTS</div>
-          <div class="chart-container" id="boxWithoutOutliers"></div>
-        </div>
-        
+    <!-- Awaiting State -->
+    <div class="responsive-panel" id="awaitingPanel">
+      <div class="awaiting-overlay">
+        <i class="fa-solid fa-chart-simple"></i>
+        <h3>Box Plot Analysis</h3>
+        <p>Awaiting data from Excel...</p>
       </div>
+    </div>
+
+    <!-- Results Container -->
+    <div class="results-container" id="results-container">
+      
+      <!-- Box Plot With Outliers -->
+      <div class="chart-panel">
+        <div class="panel-heading">
+          Box Plot with Outliers
+          <span style="margin-left: auto;">
+            <i class="fas fa-expand" style="margin-left: 10px; cursor: pointer;" title="Expand"></i>
+          </span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-container" id="withOutliers"></div>
+        </div>
+      </div>
+
+      <!-- Box Plot Without Outliers -->
+      <div class="chart-panel">
+        <div class="panel-heading">
+          Box Plot Without Outliers
+          <span style="margin-left: auto;">
+            <i class="fas fa-expand" style="margin-left: 10px; cursor: pointer;" title="Expand"></i>
+          </span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-container" id="withoutOutliers"></div>
+        </div>
+      </div>
+      
     </div>
     
   </div>
 
   <script>
-    // Global variables
     let originalData = [];
     let currentVariableName = 'Variable';
     let currentSampleSize = 0;
 
-    // Office.js initialization
-    Office.initialize = function (reason) {
-      console.log('✅ Office.js initialized:', reason);
+    // Initialize Office.js
+    if (typeof Office !== 'undefined') {
+      Office.initialize = function() {
+        console.log('✅ Office.js initialized for box plot dialog');
+        Office.context.ui.addHandlerAsync(
+          Office.EventType.DialogMessageReceived,
+          onMessageReceived
+        );
+      };
       
-      // Listen for messages from parent
-      Office.context.ui.addHandlerAsync(
-        Office.EventType.DialogParentMessageReceived,
-        onMessageReceived
-      );
-      
-      // Send ready message to parent
-      setTimeout(() => {
-        sendMessageToParent({ status: 'ready' });
-      }, 500);
-      
-      // For testing, load sample data if no parent
       setTimeout(() => {
         const container = document.getElementById('results-container');
         if (!container.classList.contains('show')) {
@@ -309,16 +243,8 @@
       console.log('📨 Message received:', arg);
       const message = JSON.parse(arg.message);
       
-      if (message.action === 'loadData') {
+      if (message.type === 'data') {
         handleDataReceived(message.data);
-      }
-    }
-
-    // Send message to parent window
-    function sendMessageToParent(message) {
-      if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
-        Office.context.ui.messageParent(JSON.stringify(message));
-        console.log('📤 Sent message to parent:', message);
       }
     }
 
@@ -327,8 +253,8 @@
       try {
         console.log('📊 Data received:', data);
         
-        originalData = data.values || data.data || [];
-        currentVariableName = data.column || data.variableName || 'Variable';
+        originalData = data.values || data.trimmedValues || data.transformedValues || data.rawValues || [];
+        currentVariableName = data.variable || data.column || 'Variable';
         currentSampleSize = data.n || originalData.length;
         
         console.log('✅ Data loaded:', { length: originalData.length, variable: currentVariableName });
@@ -339,9 +265,8 @@
         // Calculate and display
         displayBoxPlot();
         
-        // Hide loading, show results
-        const loading = document.getElementById('loading');
-        if (loading) loading.style.display = 'none';
+        // Hide awaiting, show results
+        document.getElementById('awaitingPanel').style.display = 'none';
         document.getElementById('results-container').classList.add('show');
         
       } catch (error) {
@@ -370,271 +295,237 @@
     }
 
     // Calculate box plot statistics
-    function calculateBoxPlotData(sortedData) {
-      const n = sortedData.length;
-      const min = sortedData[0];
-      const max = sortedData[n - 1];
+    function calculateBoxPlot(data) {
+      const sorted = [...data].sort((a, b) => a - b);
+      const n = sorted.length;
       
-      const median = (sortedData[Math.floor((n - 1) / 2)] + sortedData[Math.ceil((n - 1) / 2)]) / 2;
-      const q1 = (sortedData[Math.floor((n - 1) / 4)] + sortedData[Math.ceil((n - 1) / 4)]) / 2;
-      const q3 = (sortedData[Math.floor((3 * (n - 1)) / 4)] + sortedData[Math.ceil((3 * (n - 1)) / 4)]) / 2;
-      
+      const q1 = sorted[Math.floor(n * 0.25)];
+      const median = sorted[Math.floor(n * 0.5)];
+      const q3 = sorted[Math.floor(n * 0.75)];
       const iqr = q3 - q1;
+      
       const lowerFence = q1 - 1.5 * iqr;
       const upperFence = q3 + 1.5 * iqr;
       
-      const outliers = sortedData.filter(v => v < lowerFence || v > upperFence);
+      const outliers = sorted.filter(v => v < lowerFence || v > upperFence);
+      const dataWithoutOutliers = sorted.filter(v => v >= lowerFence && v <= upperFence);
       
-      const adjustedLow = sortedData.find(v => v >= lowerFence) || min;
-      const adjustedHigh = [...sortedData].reverse().find(v => v <= upperFence) || max;
+      const min = dataWithoutOutliers[0];
+      const max = dataWithoutOutliers[dataWithoutOutliers.length - 1];
       
       return {
-        min, max, q1, median, q3, iqr,
-        lowerFence, upperFence,
+        min,
+        q1,
+        median,
+        q3,
+        max,
         outliers,
-        boxWithOutliers: [min, q1, median, q3, max],
-        boxWithoutOutliers: [adjustedLow, q1, median, q3, adjustedHigh]
+        dataWithoutOutliers,
+        iqr
       };
     }
 
     // Display box plot
     function displayBoxPlot() {
-      const sortedData = [...originalData].sort((a, b) => a - b);
-      const boxData = calculateBoxPlotData(sortedData);
-      
-      console.log('📈 Box plot data:', boxData);
-      
-      // Display summary statistics
-      displaySummaryStats(boxData);
+      const boxData = calculateBoxPlot(originalData);
+      console.log('📦 Box plot data:', boxData);
       
       // Create charts
-      createBoxPlotCharts(boxData);
+      createBoxPlotWithOutliers(boxData);
+      createBoxPlotWithoutOutliers(boxData);
     }
 
-    // Display summary statistics
-    function displaySummaryStats(boxData) {
-      // Populate table cells
-      document.getElementById('stat-min').textContent = boxData.min != null ? boxData.min.toFixed(2) : '--';
-      document.getElementById('stat-q1').textContent = boxData.q1 != null ? boxData.q1.toFixed(2) : '--';
-      document.getElementById('stat-median').textContent = boxData.median != null ? boxData.median.toFixed(2) : '--';
-      document.getElementById('stat-q3').textContent = boxData.q3 != null ? boxData.q3.toFixed(2) : '--';
-      document.getElementById('stat-max').textContent = boxData.max != null ? boxData.max.toFixed(2) : '--';
-      document.getElementById('stat-iqr').textContent = boxData.iqr != null ? boxData.iqr.toFixed(2) : '--';
+    // Create box plot with outliers
+    function createBoxPlotWithOutliers(boxData) {
+      const boxArray = [boxData.min, boxData.q1, boxData.median, boxData.q3, boxData.max];
       
-      document.getElementById('stat-count').textContent = boxData.data ? boxData.data.length : '--';
-      document.getElementById('stat-mean').textContent = boxData.data ? calculateMean(boxData.data).toFixed(2) : '--';
-      document.getElementById('stat-stddev').textContent = boxData.data ? calculateStdDev(boxData.data).toFixed(2) : '--';
-      document.getElementById('stat-outliers').textContent = boxData.outliers ? boxData.outliers.length : '0';
-      document.getElementById('stat-variance').textContent = boxData.data ? Math.pow(calculateStdDev(boxData.data), 2).toFixed(2) : '--';
-      document.getElementById('stat-range').textContent = (boxData.max != null && boxData.min != null) ? (boxData.max - boxData.min).toFixed(2) : '--';
-    }
-    
-    function calculateMean(data) {
-      return data.reduce((sum, val) => sum + val, 0) / data.length;
-    }
-    
-    function calculateStdDev(data) {
-      const mean = calculateMean(data);
-      const variance = data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / data.length;
-      return Math.sqrt(variance);
-    }
-
-    // Build stat label series
-    function buildStatLabelSeries(boxArray, labelColor) {
-      const labels = [
-        { key: 'Min', y: boxArray[0], dx: 10 },
-        { key: 'Q1', y: boxArray[1], dx: 10 },
-        { key: 'Median', y: boxArray[2], dx: -10, align: 'right' },
-        { key: 'Q3', y: boxArray[3], dx: 10 },
-        { key: 'Max', y: boxArray[4], dx: 10 }
-      ];
-      
-      return labels.map(l => ({
-        x: 0,
-        y: l.y,
-        dataLabels: {
-          enabled: true,
-          formatter() { 
-            return this.y != null ? `${l.key}: ${this.y.toFixed(1)}` : `${l.key}: --`;
-          },
-          style: { color: labelColor, fontSize: '10px', fontWeight: 600 },
-          align: l.align || 'left',
-          verticalAlign: 'middle',
-          x: l.dx,
-          y: 0,
-          padding: 2,
-          backgroundColor: 'rgba(0,0,0,0.6)',
-          borderRadius: 3
-        }
-      }));
-    }
-
-    // Create box plot charts
-    function createBoxPlotCharts(boxData) {
-      const labelColor = '#ffa578';
-      const textColor = '#ffffff';
-      const gridColor = 'rgba(255,255,255,0.1)';
-      
-      const statLabelsWithOutliers = buildStatLabelSeries(boxData.boxWithOutliers, labelColor);
-      const statLabelsWithoutOutliers = buildStatLabelSeries(boxData.boxWithoutOutliers, labelColor);
-      
-      const commonOptions = {
-        chart: {
+      Highcharts.chart('withOutliers', {
+        chart: { 
           type: 'boxplot',
-          inverted: true,
-          backgroundColor: 'transparent',
-          height: 220,
-          marginTop: 25,
-          marginBottom: 35,
-          marginLeft: 70,
-          marginRight: 20,
-          spacingTop: 5,
-          spacingBottom: 5
+          backgroundColor: 'transparent'
         },
-        title: {
-          text: null
-        },
+        title: { text: '' },
+        legend: { enabled: false },
+        credits: { enabled: false },
         xAxis: {
           categories: [currentVariableName],
-          labels: { style: { color: textColor, fontSize: '11px' } },
-          gridLineColor: gridColor
+          title: { text: null },
+          labels: { style: { color: '#ffffff', fontSize: '14px' } },
+          gridLineColor: 'rgba(255, 255, 255, 0.1)'
         },
         yAxis: {
-          labels: { style: { color: textColor, fontSize: '10px' } },
-          gridLineColor: gridColor,
-          title: {
-            text: 'Value',
-            style: { color: textColor, fontSize: '11px' }
-          }
-        },
-        legend: { enabled: false },
-        tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.9)',
-          style: { color: '#ffffff', fontSize: '11px' },
-          borderColor: '#2d3748'
+          title: { text: 'Values', style: { color: '#ffffff' } },
+          labels: { style: { color: '#ffffff' } },
+          gridLineColor: 'rgba(255, 255, 255, 0.1)'
         },
         plotOptions: {
           boxplot: {
-            dataLabels: { enabled: false },
-            fillColor: 'rgba(255, 255, 255, 0.1)',
+            fillColor: 'rgba(255, 165, 120, 0.3)',
             lineWidth: 2,
-            medianColor: '#ffa578',
+            medianColor: 'rgb(255, 165, 120)',
             medianWidth: 3,
-            stemColor: '#78c8ff',
-            stemWidth: 1,
-            whiskerColor: '#78c8ff',
-            whiskerLength: '50%',
+            stemColor: 'rgb(255, 165, 120)',
+            stemDashStyle: 'solid',
+            stemWidth: 2,
+            whiskerColor: 'rgb(255, 165, 120)',
+            whiskerLength: '20%',
             whiskerWidth: 2
           }
         },
-        credits: { enabled: false }
-      };
-      
-      // Chart 1: With Outliers
-      Highcharts.chart('boxWithOutliers', {
-        ...commonOptions,
-        tooltip: {
-          ...commonOptions.tooltip,
-          formatter: function() {
-            const point = this.point;
-            if (!point) return '';
-            return `<b>${currentVariableName}</b><br/>` +
-                   `Min: ${point.low != null ? point.low.toFixed(2) : '--'}<br/>` +
-                   `Q1: ${point.q1 != null ? point.q1.toFixed(2) : '--'}<br/>` +
-                   `Median: ${point.median != null ? point.median.toFixed(2) : '--'}<br/>` +
-                   `Q3: ${point.q3 != null ? point.q3.toFixed(2) : '--'}<br/>` +
-                   `Max: ${point.high != null ? point.high.toFixed(2) : '--'}`;
-          }
-        },
-        series: [
-          {
-            name: 'Box Plot',
-            data: [boxData.boxWithOutliers],
-            color: '#e94560'
-          },
-          {
-            name: 'Stats',
-            type: 'scatter',
-            data: statLabelsWithOutliers,
-            marker: { enabled: false },
-            enableMouseTracking: false,
-            tooltip: { enabled: false }
-          }
-        ]
-      });
-      
-      // Chart 2: Without Outliers + Outlier Points
-      const outlierPoints = boxData.outliers.map(val => ({
-        x: 0,
-        y: val,
-        marker: {
-          fillColor: '#ff6b6b',
-          lineColor: '#ff3838',
-          lineWidth: 2,
-          radius: 4
-        }
-      }));
-      
-      Highcharts.chart('boxWithoutOutliers', {
-        ...commonOptions,
-        legend: {
-          enabled: boxData.outliers.length > 0,
-          align: 'right',
-          verticalAlign: 'top',
-          layout: 'vertical',
-          x: -10,
-          y: 10,
-          itemStyle: { color: textColor, fontSize: '10px' }
-        },
-        tooltip: {
-          ...commonOptions.tooltip,
-          formatter: function() {
-            if (this.series.name === 'Outliers') {
-              return `<b>Outlier</b><br/>Value: ${this.y != null ? this.y.toFixed(2) : '--'}`;
+        series: [{
+          name: currentVariableName,
+          data: [[boxArray[0], boxArray[1], boxArray[2], boxArray[3], boxArray[4]]],
+          tooltip: {
+            headerFormat: '<em>{point.key}</em><br/>',
+            pointFormatter: function() {
+              return `
+                <b>Maximum:</b> ${this.high != null ? this.high.toFixed(2) : '--'}<br/>
+                <b>Q3 (75%):</b> ${this.q3 != null ? this.q3.toFixed(2) : '--'}<br/>
+                <b>Median:</b> ${this.median != null ? this.median.toFixed(2) : '--'}<br/>
+                <b>Q1 (25%):</b> ${this.q1 != null ? this.q1.toFixed(2) : '--'}<br/>
+                <b>Minimum:</b> ${this.low != null ? this.low.toFixed(2) : '--'}
+              `;
             }
-            const point = this.point;
-            if (!point) return '';
-            return `<b>${currentVariableName}</b><br/>` +
-                   `Adjusted Low: ${point.low != null ? point.low.toFixed(2) : '--'}<br/>` +
-                   `Q1: ${point.q1 != null ? point.q1.toFixed(2) : '--'}<br/>` +
-                   `Median: ${point.median != null ? point.median.toFixed(2) : '--'}<br/>` +
-                   `Q3: ${point.q3 != null ? point.q3.toFixed(2) : '--'}<br/>` +
-                   `Adjusted High: ${point.high != null ? point.high.toFixed(2) : '--'}`;
+          }
+        }, {
+          name: 'Outliers',
+          type: 'scatter',
+          data: boxData.outliers.map(v => [0, v]),
+          marker: {
+            fillColor: 'rgb(120, 200, 255)',
+            lineWidth: 1,
+            lineColor: 'rgb(120, 200, 255)',
+            radius: 4
+          },
+          tooltip: {
+            pointFormatter: function() {
+              return `<b>Outlier:</b> ${this.y != null ? this.y.toFixed(2) : '--'}`;
+            }
+          }
+        }, {
+          name: 'Stat Labels',
+          type: 'scatter',
+          data: [
+            { x: 0, y: boxArray[0], name: `Min: ${boxArray[0].toFixed(1)}` },
+            { x: 0, y: boxArray[1], name: `Q1: ${boxArray[1].toFixed(1)}` },
+            { x: 0, y: boxArray[2], name: `Median: ${boxArray[2].toFixed(1)}` },
+            { x: 0, y: boxArray[3], name: `Q3: ${boxArray[3].toFixed(1)}` },
+            { x: 0, y: boxArray[4], name: `Max: ${boxArray[4].toFixed(1)}` }
+          ],
+          marker: { enabled: false },
+          enableMouseTracking: false,
+          dataLabels: {
+            enabled: true,
+            formatter: function() { return this.point.name; },
+            style: { color: 'rgb(255, 165, 120)', fontSize: '11px', textOutline: 'none' }
+          }
+        }]
+      });
+    }
+
+    // Create box plot without outliers
+    function createBoxPlotWithoutOutliers(boxData) {
+      const dataNoOutliers = boxData.dataWithoutOutliers;
+      const minNoOut = dataNoOutliers[0];
+      const maxNoOut = dataNoOutliers[dataNoOutliers.length - 1];
+      const boxArray = [minNoOut, boxData.q1, boxData.median, boxData.q3, maxNoOut];
+      
+      Highcharts.chart('withoutOutliers', {
+        chart: { 
+          type: 'boxplot',
+          backgroundColor: 'transparent'
+        },
+        title: { text: '' },
+        legend: { enabled: false },
+        credits: { enabled: false },
+        xAxis: {
+          categories: [currentVariableName],
+          title: { text: null },
+          labels: { style: { color: '#ffffff', fontSize: '14px' } },
+          gridLineColor: 'rgba(255, 255, 255, 0.1)'
+        },
+        yAxis: {
+          title: { text: 'Values', style: { color: '#ffffff' } },
+          labels: { style: { color: '#ffffff' } },
+          gridLineColor: 'rgba(255, 255, 255, 0.1)'
+        },
+        plotOptions: {
+          boxplot: {
+            fillColor: 'rgba(120, 200, 255, 0.3)',
+            lineWidth: 2,
+            medianColor: 'rgb(120, 200, 255)',
+            medianWidth: 3,
+            stemColor: 'rgb(120, 200, 255)',
+            stemDashStyle: 'solid',
+            stemWidth: 2,
+            whiskerColor: 'rgb(120, 200, 255)',
+            whiskerLength: '20%',
+            whiskerWidth: 2
           }
         },
-        series: [
-          {
-            name: 'Box Plot',
-            data: [boxData.boxWithoutOutliers],
-            color: '#4ea5d9'
-          },
-          {
-            name: 'Stats',
-            type: 'scatter',
-            data: statLabelsWithoutOutliers,
-            marker: { enabled: false },
-            enableMouseTracking: false,
-            tooltip: { enabled: false },
-            showInLegend: false
-          },
-          {
-            name: `Outliers (${boxData.outliers.length})`,
-            type: 'scatter',
-            data: outlierPoints,
-            color: '#ff6b6b'
+        series: [{
+          name: currentVariableName,
+          data: [[boxArray[0], boxArray[1], boxArray[2], boxArray[3], boxArray[4]]],
+          tooltip: {
+            headerFormat: '<em>{point.key}</em><br/>',
+            pointFormatter: function() {
+              return `
+                <b>Maximum:</b> ${this.high != null ? this.high.toFixed(2) : '--'}<br/>
+                <b>Q3 (75%):</b> ${this.q3 != null ? this.q3.toFixed(2) : '--'}<br/>
+                <b>Median:</b> ${this.median != null ? this.median.toFixed(2) : '--'}<br/>
+                <b>Q1 (25%):</b> ${this.q1 != null ? this.q1.toFixed(2) : '--'}<br/>
+                <b>Minimum:</b> ${this.low != null ? this.low.toFixed(2) : '--'}
+              `;
+            }
           }
-        ]
+        }, {
+          name: 'Outlier Points',
+          type: 'scatter',
+          data: boxData.outliers.map(v => [0, v]),
+          marker: {
+            symbol: 'diamond',
+            fillColor: 'rgba(255, 100, 100, 0.6)',
+            lineWidth: 1,
+            lineColor: 'rgb(255, 100, 100)',
+            radius: 5
+          },
+          tooltip: {
+            pointFormatter: function() {
+              return `<b>Outlier Point:</b> ${this.y != null ? this.y.toFixed(2) : '--'}`;
+            }
+          }
+        }, {
+          name: 'Stat Labels',
+          type: 'scatter',
+          data: [
+            { x: 0, y: boxArray[0], name: `Min: ${boxArray[0].toFixed(1)}` },
+            { x: 0, y: boxArray[1], name: `Q1: ${boxArray[1].toFixed(1)}` },
+            { x: 0, y: boxArray[2], name: `Median: ${boxArray[2].toFixed(1)}` },
+            { x: 0, y: boxArray[3], name: `Q3: ${boxArray[3].toFixed(1)}` },
+            { x: 0, y: boxArray[4], name: `Max: ${boxArray[4].toFixed(1)}` }
+          ],
+          marker: { enabled: false },
+          enableMouseTracking: false,
+          dataLabels: {
+            enabled: true,
+            formatter: function() { return this.point.name; },
+            style: { color: 'rgb(120, 200, 255)', fontSize: '11px', textOutline: 'none' }
+          }
+        }]
       });
-      
-      console.log('✅ Box plots created');
     }
 
-    // Close view
-    function closeView() {
-      sendMessageToParent({ action: 'close' });
+    // Auto-test on load (browser only)
+    if (typeof Office === 'undefined') {
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          if (!document.querySelector('#withOutliers .highcharts-container')) {
+            console.log('🔄 No charts detected, running auto-test...');
+            loadSampleData();
+          }
+        }, 1000);
+      });
     }
-
-    console.log('✅ Box Plot view script loaded');
   </script>
 </body>
 </html>
