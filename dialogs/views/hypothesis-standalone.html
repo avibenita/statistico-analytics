@@ -1802,16 +1802,6 @@
       // Set results to awaiting state
       setAwaitingState();
     };
-        if (currentParameter === 'median' || currentParameter === 'percentile') {
-          document.querySelector('input[name="parameter"][value="mean"]').checked = true;
-          selectParameter('mean');
-          return; // selectParameter will call setAwaitingState
-        }
-      }
-      
-      updatePopSizeState();
-      setAwaitingState();
-    };
 
     // Parameter selection
     window.selectParameter = function(param) {
