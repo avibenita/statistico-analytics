@@ -415,36 +415,63 @@
       
       try {
         let values;
+        let variableName = null;
         
         // Extract values from different possible formats
         if (Array.isArray(data)) {
           values = data;
         } else if (data.values) {
-          values = data.values;
+          // Check if values is an array or needs to be extracted
+          if (Array.isArray(data.values)) {
+            values = data.values;
+          } else if (data.values.values) {
+            values = data.values.values;
+          }
+          
+          // Extract variable name
+          variableName = data.column || data.variableName || data.variable || data.colName;
         } else if (data.trimmedValues) {
           values = data.trimmedValues;
+          variableName = data.column || data.variableName;
         } else if (data.transformedValues) {
           values = data.transformedValues;
+          variableName = data.column || data.variableName;
         } else if (data.rawValues) {
           values = data.rawValues;
+          variableName = data.column || data.variableName;
         } else {
-          console.error('❌ Invalid data format');
+          console.error('❌ Invalid data format:', data);
           return;
         }
         
-        // Filter out non-numeric values
-        values = values.filter(v => typeof v === 'number' && !isNaN(v));
+        if (!Array.isArray(values)) {
+          console.error('❌ Values is not an array:', values);
+          return;
+        }
+        
+        console.log(`📋 Raw values count: ${values.length}`);
+        
+        // Convert to numbers and filter out non-numeric values
+        values = values.map(v => {
+          if (typeof v === 'number') return v;
+          if (typeof v === 'string') {
+            const num = parseFloat(v);
+            return isNaN(num) ? null : num;
+          }
+          return null;
+        }).filter(v => v !== null && !isNaN(v));
         
         if (values.length === 0) {
-          console.error('❌ No valid numeric values');
+          console.error('❌ No valid numeric values after filtering');
           return;
         }
         
         console.log(`✅ Processing ${values.length} values`);
         
         // Update header if variable name provided
-        if (data.variableName && headerInitialized) {
-          StatisticoHeader.updateVariable(data.variableName, values.length);
+        if (variableName && headerInitialized) {
+          console.log(`📝 Updating header with: ${variableName}, n=${values.length}`);
+          StatisticoHeader.updateVariable(variableName, values.length);
         }
         
         // Process and visualize
@@ -453,6 +480,7 @@
         
       } catch (error) {
         console.error('❌ Error processing data:', error);
+        console.error('Error details:', error.stack);
       }
     }
     
@@ -742,21 +770,29 @@
     };
     
     function onMessageReceived(arg) {
-      console.log('📨 Message received from parent:', arg.message);
+      console.log('📨 Message received from parent (raw):', arg.message);
       try {
         const message = JSON.parse(arg.message);
         console.log('📩 Parsed message:', message);
+        console.log('📩 Message type:', typeof message);
+        console.log('📩 Message keys:', Object.keys(message));
         
         if (message.action === 'loadData' && message.data) {
+          console.log('📊 Route 1: loadData action with data property');
           handleDataReceived(message.data);
-        } else if (message.values || message.data) {
-          // Handle direct data format
-          handleDataReceived(message.values ? message : message.data);
+        } else if (message.values) {
+          console.log('📊 Route 2: Direct values property');
+          handleDataReceived(message);
+        } else if (message.data) {
+          console.log('📊 Route 3: data property without action');
+          handleDataReceived(message.data);
         } else {
+          console.log('📊 Route 4: Direct message');
           handleDataReceived(message);
         }
       } catch (e) {
         console.error('❌ Failed to parse message:', e);
+        console.error('Raw message:', arg.message);
       }
     }
     
