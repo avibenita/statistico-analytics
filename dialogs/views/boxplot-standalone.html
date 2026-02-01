@@ -47,19 +47,29 @@
     .results-container.show {
       display: flex !important;
       flex-direction: column;
-      gap: 5px;
+      gap: 3px;
+    }
+    
+    .results-container .responsive-panel-body {
+      padding: 3px 8px !important;
     }
 
     .boxplot-panel {
       flex-shrink: 0;
+      padding: 0 !important;
+    }
+    
+    .boxplot-panel .panel-heading {
+      padding: 2px 8px;
+      font-size: 0.7em;
     }
 
     .panel-heading {
       background: transparent;
       color: var(--accent-1);
       font-weight: 600;
-      padding: 5px 10px;
-      font-size: 0.9em;
+      padding: 3px 8px;
+      font-size: 0.75em;
       letter-spacing: .3px;
       text-align: center;
       border-bottom: 1px solid var(--border);
@@ -67,39 +77,45 @@
 
     .chart-container {
       padding: 8px;
-      height: 220px;
+      height: 260px;
     }
 
     .stats-panel {
       flex-shrink: 0;
       margin-bottom: 0;
+      padding: 0 !important;
+    }
+    
+    .stats-panel .panel-heading {
+      padding: 2px 8px;
+      font-size: 0.7em;
     }
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 6px;
-      margin-top: 5px;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 4px;
+      padding: 4px 8px 6px;
     }
 
     .stat-box {
       background: rgba(0, 0, 0, 0.3);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 5px;
-      padding: 5px 8px;
+      border-radius: 4px;
+      padding: 3px 6px;
       text-align: center;
     }
 
     .stat-box .label {
-      font-size: 0.7em;
+      font-size: 0.65em;
       color: var(--text-muted);
       text-transform: uppercase;
-      margin-bottom: 2px;
-      letter-spacing: 0.5px;
+      margin-bottom: 1px;
+      letter-spacing: 0.3px;
     }
 
     .stat-box .value {
-      font-size: 0.95em;
+      font-size: 0.85em;
       font-weight: 600;
       color: var(--text-primary);
     }
@@ -162,21 +178,21 @@
     <div class="results-container responsive-panel" id="results-container">
       <div class="responsive-panel-body">
         
-        <!-- Stats Summary -->
-        <div class="stats-panel responsive-panel flex-shrink-0 mb-sm">
-          <div class="panel-heading">Summary Statistics</div>
+        <!-- Stats Summary - Ultra Compact -->
+        <div class="stats-panel responsive-panel flex-shrink-0">
+          <div class="panel-heading">SUMMARY STATISTICS</div>
           <div class="stats-grid" id="statsGrid"></div>
         </div>
 
         <!-- Box Plot With Outliers -->
-        <div class="boxplot-panel responsive-panel flex-shrink-0 mb-sm">
-          <div class="panel-heading">With Outliers</div>
+        <div class="boxplot-panel responsive-panel flex-shrink-0">
+          <div class="panel-heading">WITH OUTLIERS</div>
           <div class="chart-container" id="boxWithOutliers"></div>
         </div>
 
         <!-- Box Plot Without Outliers -->
         <div class="boxplot-panel responsive-panel flex-shrink-0">
-          <div class="panel-heading">Without Outliers + Outlier Points</div>
+          <div class="panel-heading">WITHOUT OUTLIERS + OUTLIER POINTS</div>
           <div class="chart-container" id="boxWithoutOutliers"></div>
         </div>
         
