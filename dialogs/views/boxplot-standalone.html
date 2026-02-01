@@ -47,11 +47,11 @@
     .results-container.show {
       display: flex !important;
       flex-direction: column;
-      gap: 3px;
+      gap: 2px;
     }
     
     .results-container .responsive-panel-body {
-      padding: 3px 8px !important;
+      padding: 2px 6px !important;
     }
 
     .boxplot-panel {
@@ -60,64 +60,72 @@
     }
     
     .boxplot-panel .panel-heading {
-      padding: 2px 8px;
-      font-size: 0.7em;
+      padding: 1px 8px;
+      font-size: 0.65em;
+      line-height: 1.2;
     }
 
     .panel-heading {
       background: transparent;
       color: var(--accent-1);
       font-weight: 600;
-      padding: 3px 8px;
-      font-size: 0.75em;
-      letter-spacing: .3px;
+      padding: 1px 8px;
+      font-size: 0.65em;
+      letter-spacing: .2px;
       text-align: center;
       border-bottom: 1px solid var(--border);
+      line-height: 1.2;
     }
 
     .chart-container {
       padding: 8px;
-      height: 260px;
+      height: 280px;
     }
 
     .stats-panel {
       flex-shrink: 0;
       margin-bottom: 0;
       padding: 0 !important;
+      border: none !important;
     }
     
     .stats-panel .panel-heading {
-      padding: 2px 8px;
-      font-size: 0.7em;
+      padding: 2px 8px 1px;
+      font-size: 0.65em;
+      margin: 0;
+      line-height: 1;
     }
 
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-      gap: 4px;
-      padding: 4px 8px 6px;
+      gap: 3px;
+      padding: 2px 8px 3px;
     }
 
     .stat-box {
       background: rgba(0, 0, 0, 0.3);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 4px;
-      padding: 3px 6px;
+      border-radius: 3px;
+      padding: 2px 5px;
       text-align: center;
+      line-height: 1.1;
     }
 
     .stat-box .label {
-      font-size: 0.65em;
+      font-size: 0.6em;
       color: var(--text-muted);
       text-transform: uppercase;
       margin-bottom: 1px;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.2px;
+      line-height: 1;
     }
 
     .stat-box .value {
-      font-size: 0.85em;
+      font-size: 0.8em;
       font-weight: 600;
       color: var(--text-primary);
+      line-height: 1;
     }
 
     .stat-box.highlight {
