@@ -45,12 +45,27 @@
       overflow: hidden;
     }
 
+    /* Override responsive layout padding */
+    .responsive-container {
+      padding: 4px 8px !important;
+      gap: 4px;
+    }
+
+    .responsive-panel {
+      padding: 0 !important;
+      margin-bottom: 0 !important;
+    }
+
+    .responsive-panel-body {
+      padding: 0 !important;
+    }
+
     /* Results Container */
     .results-container {
       display: none;
       flex-direction: column;
-      gap: 6px;
-      padding: 6px 10px;
+      gap: 4px;
+      padding: 0;
     }
     
     .results-container.show {
@@ -65,7 +80,8 @@
       box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.4);
       overflow: hidden;
       flex-shrink: 0;
-      padding: 0;
+      padding: 0 !important;
+      margin: 0;
     }
 
     /* Chart Container - Direct in Panel */
@@ -82,8 +98,12 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 80px 20px;
+      padding: 60px 20px;
       color: var(--text-secondary);
+    }
+
+    #awaitingPanel {
+      margin: 0 !important;
     }
 
     .awaiting-overlay i {
@@ -309,15 +329,19 @@
           inverted: true,
           backgroundColor: 'transparent',
           height: 240,
-          marginTop: 30,
-          marginBottom: 40,
-          marginLeft: 70,
-          marginRight: 15
+          marginTop: 25,
+          marginBottom: 35,
+          marginLeft: 65,
+          marginRight: 10,
+          spacingTop: 0,
+          spacingBottom: 0,
+          spacingLeft: 0,
+          spacingRight: 0
         },
         title: { 
           text: 'Box Plot with Outliers',
-          style: { color: 'rgb(255,165,120)', fontSize: '15px', fontWeight: '600' },
-          margin: 12
+          style: { color: 'rgb(255,165,120)', fontSize: '14px', fontWeight: '600' },
+          margin: 8
         },
         legend: { enabled: false },
         credits: { enabled: false },
@@ -416,15 +440,19 @@
           inverted: true,
           backgroundColor: 'transparent',
           height: 240,
-          marginTop: 30,
-          marginBottom: 40,
-          marginLeft: 70,
-          marginRight: 15
+          marginTop: 25,
+          marginBottom: 35,
+          marginLeft: 65,
+          marginRight: 10,
+          spacingTop: 0,
+          spacingBottom: 0,
+          spacingLeft: 0,
+          spacingRight: 0
         },
         title: { 
           text: 'Box Plot Without Outliers + Outlier Points',
-          style: { color: 'rgb(255,165,120)', fontSize: '15px', fontWeight: '600' },
-          margin: 12
+          style: { color: 'rgb(255,165,120)', fontSize: '14px', fontWeight: '600' },
+          margin: 8
         },
         legend: { enabled: false },
         credits: { enabled: false },
