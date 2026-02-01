@@ -40,13 +40,17 @@
       margin: 0;
       padding: 0;
       color: var(--text-primary);
-      overflow-x: hidden;
+      overflow: hidden;
+      height: 100vh;
     }
     
     .container {
-      padding: 8px 16px;
-      max-width: 1200px;
+      padding: 6px 14px;
+      max-width: 1860px;
       margin: 0 auto;
+      height: calc(100vh - 52px);
+      display: flex;
+      flex-direction: column;
     }
     
     .panel {
@@ -54,20 +58,29 @@
       border-radius: var(--panel-radius);
       box-shadow: var(--panel-shadow);
       border: 1px solid var(--border);
-      margin-bottom: 8px;
+      margin-bottom: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
     
     .panel-body {
-      padding: 10px 14px;
+      padding: 8px 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
     
-    /* Quartiles Display - Compact */
+    /* Quartiles Display - 1920x1080 Optimized */
     .quartiles-container {
       display: flex;
       justify-content: center;
       flex-wrap: nowrap;
-      gap: 8px;
-      margin: 0 0 10px 0;
+      gap: 10px;
+      margin: 0 0 8px 0;
+      flex-shrink: 0;
     }
     
     .quartile-box {
@@ -75,11 +88,11 @@
       color: var(--text-primary);
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 6px 8px;
+      padding: 8px 12px;
       text-align: center;
       flex: 1 1 auto;
-      min-width: 70px;
-      max-width: 110px;
+      min-width: 80px;
+      max-width: 140px;
       cursor: pointer;
       transition: all 0.3s ease;
     }
@@ -92,43 +105,44 @@
     }
     
     .quartile-box div:first-child {
-      font-size: 0.75em;
+      font-size: 0.8em;
       color: var(--text-secondary);
-      margin-bottom: 2px;
+      margin-bottom: 3px;
     }
     
     .quartile-value {
       font-weight: 700;
-      font-size: 1.1em;
+      font-size: 1.2em;
       color: var(--accent-1);
     }
     
-    /* Distribution Controls - Compact */
+    /* Distribution Controls - 1920x1080 Optimized */
     .distribution-controls {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      margin: 0 0 10px 0;
-      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 8px 0;
+      flex-wrap: nowrap;
+      flex-shrink: 0;
     }
     
     .distribution-controls label {
       margin: 0;
-      font-size: 0.8em;
+      font-size: 0.85em;
       color: var(--text-secondary);
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
     }
     
     .distribution-controls select {
-      padding: 5px 10px;
+      padding: 6px 12px;
       background: var(--surface-2);
       border: 1px solid var(--border);
       border-radius: 5px;
       color: var(--text-primary);
-      font-size: 0.8em;
+      font-size: 0.85em;
       cursor: pointer;
       transition: border-color 0.3s ease;
     }
@@ -140,12 +154,12 @@
     }
     
     .distribution-controls button {
-      padding: 5px 12px;
+      padding: 6px 14px;
       background: linear-gradient(145deg, #4a5568, #2d3748);
       border: 1px solid var(--border);
       border-radius: 5px;
       color: var(--text-primary);
-      font-size: 0.8em;
+      font-size: 0.85em;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
@@ -164,21 +178,23 @@
       border-color: var(--accent-2);
     }
     
-    /* Chart Container - Compact */
+    /* Chart Container - 1920x1080 Optimized */
     #chart-container {
-      height: 320px;
+      flex: 1;
       width: 100%;
-      margin: 0 auto;
+      min-height: 400px;
+      max-height: calc(100vh - 400px);
     }
     
-    /* Slider Controls - Compact */
+    /* Slider Controls - 1920x1080 Optimized */
     .slider-section {
-      margin: 10px 0 8px 0;
+      margin: 8px 0 6px 0;
+      flex-shrink: 0;
     }
     
     .slider-section label {
       color: var(--text-secondary);
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       display: block;
       font-weight: 500;
       font-size: 0.85em;
@@ -186,19 +202,20 @@
     
     #value-slider {
       height: 8px;
-      margin: 8px 0;
+      margin: 6px 0;
     }
     
     .current-value {
       font-size: 1.1em;
       text-align: center;
-      margin: 8px 0;
+      margin: 6px 0;
       padding: 6px 10px;
       background: var(--surface-2);
       border: 1px solid var(--border);
       color: var(--text-primary);
       border-radius: 6px;
       transition: all 0.3s ease;
+      flex-shrink: 0;
     }
     
     .current-value span {
@@ -206,18 +223,19 @@
       font-weight: 700;
     }
     
-    /* Info Note - Compact */
+    /* Info Note - 1920x1080 Optimized */
     .info-note {
       font-size: 0.75em;
       text-align: center;
-      margin: 8px auto 0;
-      padding: 6px 10px;
-      max-width: 700px;
+      margin: 6px auto 0;
+      padding: 5px 10px;
+      max-width: 800px;
       color: var(--text-secondary);
       background: rgba(255, 165, 120, 0.1);
       border-left: 3px solid var(--accent-1);
       border-radius: 4px;
       line-height: 1.4;
+      flex-shrink: 0;
     }
     
     .info-note i {
@@ -257,30 +275,35 @@
       display: none;
     }
     
-    /* Awaiting State - Compact */
+    /* Awaiting State - 1920x1080 Optimized */
     .awaiting-panel {
       text-align: center;
-      padding: 40px 20px;
+      padding: 60px 20px;
       color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
     }
     
     .awaiting-panel i {
-      font-size: 48px;
+      font-size: 64px;
       color: var(--accent-2);
-      margin-bottom: 14px;
+      margin-bottom: 20px;
       opacity: 0.6;
       animation: pulse 2s ease-in-out infinite;
     }
     
     .awaiting-panel h3 {
-      font-size: 1.2em;
+      font-size: 1.4em;
       font-weight: 600;
-      margin: 0 0 8px 0;
+      margin: 0 0 10px 0;
       color: var(--text-secondary);
     }
     
     .awaiting-panel p {
-      font-size: 0.9em;
+      font-size: 1em;
       margin: 0;
       color: var(--text-muted);
     }
@@ -296,16 +319,17 @@
   
   <div class="container">
     <!-- Awaiting Data Panel -->
-    <div id="awaiting-panel" class="panel awaiting-panel">
-      <i class="fas fa-chart-area"></i>
-      <h3>Waiting for Data</h3>
-      <p>Select a column from Excel to visualize its cumulative distribution</p>
+    <div id="awaiting-panel" class="panel">
+      <div class="awaiting-panel">
+        <i class="fas fa-chart-area"></i>
+        <h3>Waiting for Data</h3>
+        <p>Select a column from Excel to visualize its cumulative distribution</p>
+      </div>
     </div>
     
     <!-- Main Content (hidden until data arrives) -->
-    <div id="main-content" style="display: none;">
-      <div class="panel">
-        <div class="panel-body">
+    <div id="main-content" class="panel" style="display: none;">
+      <div class="panel-body">
           <!-- Quartiles Display -->
           <div class="quartiles-container">
             <div class="quartile-box" onclick="jumpToPercentile(25)">
@@ -362,12 +386,11 @@
             F(x) = <span id="probability">--</span> at x = <span id="x-value">--</span>
           </div>
           
-          <!-- Info Note -->
-          <div class="info-note">
-            <i class="fas fa-info-circle"></i>
-            <strong>Note:</strong> Percentile cards use linear interpolation. 
-            Cursor position uses CDF curve interpolation. Small differences are normal and reflect different statistical methods.
-          </div>
+        <!-- Info Note -->
+        <div class="info-note">
+          <i class="fas fa-info-circle"></i>
+          <strong>Note:</strong> Percentile cards use linear interpolation. 
+          Cursor position uses CDF curve interpolation. Small differences are normal and reflect different statistical methods.
         </div>
       </div>
     </div>
