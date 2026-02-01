@@ -298,18 +298,29 @@
       const outliers = sorted.filter(v => v < lowerFence || v > upperFence);
       const dataWithoutOutliers = sorted.filter(v => v >= lowerFence && v <= upperFence);
       
-      const min = dataWithoutOutliers[0];
-      const max = dataWithoutOutliers[dataWithoutOutliers.length - 1];
+      // For "with outliers" chart: use ABSOLUTE min/max from ALL data
+      const absoluteMin = sorted[0];
+      const absoluteMax = sorted[n - 1];
+      
+      // For "without outliers" chart: use min/max within IQR fences
+      const minWithoutOutliers = dataWithoutOutliers[0];
+      const maxWithoutOutliers = dataWithoutOutliers[dataWithoutOutliers.length - 1];
       
       return {
-        min,
+        // For chart WITH outliers (all data)
+        absoluteMin,
+        absoluteMax,
+        // For chart WITHOUT outliers (filtered)
+        minWithoutOutliers,
+        maxWithoutOutliers,
+        // Common values
         q1,
         median,
         q3,
-        max,
         outliers,
         dataWithoutOutliers,
-        iqr
+        iqr,
+        allData: sorted
       };
     }
 
@@ -325,7 +336,8 @@
 
     // Create box plot with outliers
     function createBoxPlotWithOutliers(boxData) {
-      const boxArray = [boxData.min, boxData.q1, boxData.median, boxData.q3, boxData.max];
+      // Use ABSOLUTE min/max from ALL data (n=369)
+      const boxArray = [boxData.absoluteMin, boxData.q1, boxData.median, boxData.q3, boxData.absoluteMax];
       
       Highcharts.chart('withOutliers', {
         chart: { 
@@ -390,23 +402,9 @@
                 <b>Q3 (75%):</b> ${this.q3 != null ? this.q3.toFixed(2) : '--'}<br/>
                 <b>Median:</b> ${this.median != null ? this.median.toFixed(2) : '--'}<br/>
                 <b>Q1 (25%):</b> ${this.q1 != null ? this.q1.toFixed(2) : '--'}<br/>
-                <b>Minimum:</b> ${this.low != null ? this.low.toFixed(2) : '--'}
+                <b>Minimum:</b> ${this.low != null ? this.low.toFixed(2) : '--'}<br/>
+                <b>n = ${boxData.allData.length}</b>
               `;
-            }
-          }
-        }, {
-          name: 'Outliers',
-          type: 'scatter',
-          data: boxData.outliers.map(v => [0, v]),
-          marker: {
-            fillColor: 'rgb(120, 200, 255)',
-            lineWidth: 1,
-            lineColor: 'rgb(120, 200, 255)',
-            radius: 4
-          },
-          tooltip: {
-            pointFormatter: function() {
-              return `<b>Outlier:</b> ${this.y != null ? this.y.toFixed(2) : '--'}`;
             }
           }
         }, {
@@ -432,10 +430,8 @@
 
     // Create box plot without outliers
     function createBoxPlotWithoutOutliers(boxData) {
-      const dataNoOutliers = boxData.dataWithoutOutliers;
-      const minNoOut = dataNoOutliers[0];
-      const maxNoOut = dataNoOutliers[dataNoOutliers.length - 1];
-      const boxArray = [minNoOut, boxData.q1, boxData.median, boxData.q3, maxNoOut];
+      // Use min/max WITHOUT outliers (filtered by IQR fences)
+      const boxArray = [boxData.minWithoutOutliers, boxData.q1, boxData.median, boxData.q3, boxData.maxWithoutOutliers];
       
       Highcharts.chart('withoutOutliers', {
         chart: { 
@@ -496,11 +492,12 @@
             headerFormat: '<em>{point.key}</em><br/>',
             pointFormatter: function() {
               return `
-                <b>Maximum:</b> ${this.high != null ? this.high.toFixed(2) : '--'}<br/>
+                <b>Maximum (no outliers):</b> ${this.high != null ? this.high.toFixed(2) : '--'}<br/>
                 <b>Q3 (75%):</b> ${this.q3 != null ? this.q3.toFixed(2) : '--'}<br/>
                 <b>Median:</b> ${this.median != null ? this.median.toFixed(2) : '--'}<br/>
                 <b>Q1 (25%):</b> ${this.q1 != null ? this.q1.toFixed(2) : '--'}<br/>
-                <b>Minimum:</b> ${this.low != null ? this.low.toFixed(2) : '--'}
+                <b>Minimum (no outliers):</b> ${this.low != null ? this.low.toFixed(2) : '--'}<br/>
+                <b>n = ${boxData.dataWithoutOutliers.length}</b> (outliers excluded)
               `;
             }
           }
