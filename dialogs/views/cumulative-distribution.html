@@ -558,6 +558,9 @@
     }
     
     function initializeChart() {
+      const minVal = sortedData[0];
+      const medianVal = calculatePercentile(sortedData, 50);
+      
       chart = Highcharts.chart('chart-container', {
         chart: {
           type: 'line',
@@ -569,7 +572,22 @@
         xAxis: {
           title: { text: 'Value', style: { color: '#ffffff' } },
           labels: { style: { color: '#ffffff' } },
-          gridLineColor: '#2d3748'
+          gridLineColor: '#2d3748',
+          plotBands: [{
+            id: 'shaded-area',
+            from: minVal,
+            to: medianVal,
+            color: 'rgba(255,165,120,0.15)',
+            zIndex: 0
+          }],
+          plotLines: [{
+            id: 'current-value-line',
+            value: medianVal,
+            color: 'rgba(255,165,120,0.8)',
+            width: 2,
+            dashStyle: 'Dash',
+            zIndex: 5
+          }]
         },
         yAxis: {
           title: { text: 'Cumulative Probability', style: { color: '#ffffff' } },
@@ -648,8 +666,47 @@
         }
       }
       
+      // Update text display
       document.getElementById('x-value').textContent = xValue.toFixed(currentDecimals);
       document.getElementById('probability').textContent = (probability * 100).toFixed(2) + '%';
+      
+      // Update shaded area in chart
+      if (chart && chart.xAxis && chart.xAxis[0]) {
+        const minVal = sortedData[0];
+        
+        // Remove existing plot band and line
+        chart.xAxis[0].removePlotBand('shaded-area');
+        chart.xAxis[0].removePlotLine('current-value-line');
+        
+        // Add new plot band (shaded area to the left)
+        chart.xAxis[0].addPlotBand({
+          id: 'shaded-area',
+          from: minVal,
+          to: xValue,
+          color: 'rgba(255,165,120,0.2)',
+          zIndex: 0
+        });
+        
+        // Add vertical line at current position
+        chart.xAxis[0].addPlotLine({
+          id: 'current-value-line',
+          value: xValue,
+          color: 'rgba(255,165,120,0.9)',
+          width: 2,
+          dashStyle: 'Dash',
+          zIndex: 5,
+          label: {
+            text: `${(probability * 100).toFixed(1)}%`,
+            align: 'right',
+            style: {
+              color: 'rgb(255,165,120)',
+              fontWeight: 'bold',
+              fontSize: '11px'
+            },
+            y: -5
+          }
+        });
+      }
     }
     
     function jumpToPercentile(percentile) {
