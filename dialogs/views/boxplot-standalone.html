@@ -87,8 +87,9 @@
     /* Chart Container - Direct in Panel */
     .chart-container {
       width: 100%;
-      height: 240px;
-      min-height: 200px;
+      height: 180px;
+      min-height: 160px;
+      max-height: 180px;
       background: transparent;
     }
 
@@ -133,19 +134,19 @@
     /* Responsive breakpoints */
     @media (max-height: 800px) {
       .chart-container {
-        height: 220px;
+        height: 170px;
       }
     }
 
     @media (max-height: 700px) {
       .chart-container {
-        height: 200px;
+        height: 160px;
       }
     }
 
     @media (max-height: 600px) {
       .chart-container {
-        height: 180px;
+        height: 150px;
       }
     }
   </style>
@@ -328,10 +329,10 @@
           type: 'boxplot',
           inverted: true,
           backgroundColor: 'transparent',
-          height: 240,
-          marginTop: 25,
-          marginBottom: 35,
-          marginLeft: 65,
+          height: 180,
+          marginTop: 20,
+          marginBottom: 30,
+          marginLeft: 60,
           marginRight: 10,
           spacingTop: 0,
           spacingBottom: 0,
@@ -340,8 +341,8 @@
         },
         title: { 
           text: 'Box Plot with Outliers',
-          style: { color: 'rgb(255,165,120)', fontSize: '14px', fontWeight: '600' },
-          margin: 8
+          style: { color: 'rgb(255,165,120)', fontSize: '13px', fontWeight: '600' },
+          margin: 6
         },
         legend: { enabled: false },
         credits: { enabled: false },
@@ -439,10 +440,10 @@
           type: 'boxplot',
           inverted: true,
           backgroundColor: 'transparent',
-          height: 240,
-          marginTop: 25,
-          marginBottom: 35,
-          marginLeft: 65,
+          height: 180,
+          marginTop: 20,
+          marginBottom: 30,
+          marginLeft: 60,
           marginRight: 10,
           spacingTop: 0,
           spacingBottom: 0,
@@ -451,8 +452,8 @@
         },
         title: { 
           text: 'Box Plot Without Outliers + Outlier Points',
-          style: { color: 'rgb(255,165,120)', fontSize: '14px', fontWeight: '600' },
-          margin: 8
+          style: { color: 'rgb(255,165,120)', fontSize: '13px', fontWeight: '600' },
+          margin: 6
         },
         legend: { enabled: false },
         credits: { enabled: false },
