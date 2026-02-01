@@ -338,7 +338,8 @@
         displayBoxPlot();
         
         // Hide loading, show results
-        document.getElementById('loading').style.display = 'none';
+        const loading = document.getElementById('loading');
+        if (loading) loading.style.display = 'none';
         document.getElementById('results-container').classList.add('show');
         
       } catch (error) {
