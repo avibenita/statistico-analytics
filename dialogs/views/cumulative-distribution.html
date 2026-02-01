@@ -45,8 +45,8 @@
     }
     
     .container {
-      padding: 6px 14px;
-      max-width: 1860px;
+      padding: 4px 12px;
+      max-width: 1870px;
       margin: 0 auto;
       height: calc(100vh - 52px);
       display: flex;
@@ -66,20 +66,20 @@
     }
     
     .panel-body {
-      padding: 8px 12px;
+      padding: 5px 10px;
       flex: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
     
-    /* Quartiles Display - 1920x1080 Optimized */
+    /* Quartiles Display - Ultra Compact */
     .quartiles-container {
       display: flex;
       justify-content: center;
       flex-wrap: nowrap;
-      gap: 10px;
-      margin: 0 0 8px 0;
+      gap: 8px;
+      margin: 0 0 5px 0;
       flex-shrink: 0;
     }
     
@@ -87,12 +87,12 @@
       background-color: var(--surface-2);
       color: var(--text-primary);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 12px;
+      border-radius: 5px;
+      padding: 5px 8px;
       text-align: center;
       flex: 1 1 auto;
-      min-width: 80px;
-      max-width: 140px;
+      min-width: 75px;
+      max-width: 130px;
       cursor: pointer;
       transition: all 0.3s ease;
     }
@@ -105,44 +105,44 @@
     }
     
     .quartile-box div:first-child {
-      font-size: 0.8em;
+      font-size: 0.7em;
       color: var(--text-secondary);
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
     
     .quartile-value {
       font-weight: 700;
-      font-size: 1.2em;
+      font-size: 1em;
       color: var(--accent-1);
     }
     
-    /* Distribution Controls - 1920x1080 Optimized */
+    /* Distribution Controls - Ultra Compact */
     .distribution-controls {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      margin: 0 0 8px 0;
+      gap: 8px;
+      margin: 0 0 5px 0;
       flex-wrap: nowrap;
       flex-shrink: 0;
     }
     
     .distribution-controls label {
       margin: 0;
-      font-size: 0.85em;
+      font-size: 0.75em;
       color: var(--text-secondary);
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
     }
     
     .distribution-controls select {
-      padding: 6px 12px;
+      padding: 4px 10px;
       background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: 5px;
+      border-radius: 4px;
       color: var(--text-primary);
-      font-size: 0.85em;
+      font-size: 0.75em;
       cursor: pointer;
       transition: border-color 0.3s ease;
     }
@@ -154,18 +154,18 @@
     }
     
     .distribution-controls button {
-      padding: 6px 14px;
+      padding: 4px 10px;
       background: linear-gradient(145deg, #4a5568, #2d3748);
       border: 1px solid var(--border);
-      border-radius: 5px;
+      border-radius: 4px;
       color: var(--text-primary);
-      font-size: 0.85em;
+      font-size: 0.75em;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
     }
     
     .distribution-controls button:hover {
@@ -178,42 +178,42 @@
       border-color: var(--accent-2);
     }
     
-    /* Chart Container - 1920x1080 Optimized */
+    /* Chart Container - Ultra Compact */
     #chart-container {
       flex: 1;
       width: 100%;
-      min-height: 400px;
-      max-height: calc(100vh - 400px);
+      min-height: 350px;
+      max-height: calc(100vh - 320px);
     }
     
-    /* Slider Controls - 1920x1080 Optimized */
+    /* Slider Controls - Ultra Compact */
     .slider-section {
-      margin: 8px 0 6px 0;
+      margin: 4px 0 3px 0;
       flex-shrink: 0;
     }
     
     .slider-section label {
       color: var(--text-secondary);
-      margin-bottom: 5px;
+      margin-bottom: 3px;
       display: block;
       font-weight: 500;
-      font-size: 0.85em;
+      font-size: 0.75em;
     }
     
     #value-slider {
-      height: 8px;
-      margin: 6px 0;
+      height: 6px;
+      margin: 4px 0;
     }
     
     .current-value {
-      font-size: 1.1em;
+      font-size: 1em;
       text-align: center;
-      margin: 6px 0;
-      padding: 6px 10px;
+      margin: 4px 0;
+      padding: 4px 8px;
       background: var(--surface-2);
       border: 1px solid var(--border);
       color: var(--text-primary);
-      border-radius: 6px;
+      border-radius: 5px;
       transition: all 0.3s ease;
       flex-shrink: 0;
     }
@@ -223,24 +223,25 @@
       font-weight: 700;
     }
     
-    /* Info Note - 1920x1080 Optimized */
+    /* Info Note - Ultra Compact */
     .info-note {
-      font-size: 0.75em;
+      font-size: 0.7em;
       text-align: center;
-      margin: 6px auto 0;
-      padding: 5px 10px;
-      max-width: 800px;
+      margin: 4px auto 0;
+      padding: 4px 8px;
+      max-width: 900px;
       color: var(--text-secondary);
       background: rgba(255, 165, 120, 0.1);
-      border-left: 3px solid var(--accent-1);
-      border-radius: 4px;
-      line-height: 1.4;
+      border-left: 2px solid var(--accent-1);
+      border-radius: 3px;
+      line-height: 1.3;
       flex-shrink: 0;
     }
     
     .info-note i {
       color: var(--accent-1);
-      margin-right: 4px;
+      margin-right: 3px;
+      font-size: 0.9em;
     }
     
     /* noUiSlider custom styling */
@@ -259,10 +260,10 @@
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
       cursor: pointer;
       border: 1px solid rgba(255, 165, 120, 0.6);
-      width: 18px !important;
-      height: 18px !important;
-      top: -5px !important;
-      right: -9px !important;
+      width: 16px !important;
+      height: 16px !important;
+      top: -4px !important;
+      right: -8px !important;
     }
     
     .noUi-handle:hover {
