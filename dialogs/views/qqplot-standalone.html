@@ -705,7 +705,7 @@
       if (qqppChart) qqppChart.destroy();
       if (detrendedChart) detrendedChart.destroy();
       
-      // Create main chart
+      // Create main chart (EXACT same config as detrended chart for consistency)
       qqppChart = Highcharts.chart('qqplot-chart', {
         chart: {
           backgroundColor: 'transparent',
@@ -728,29 +728,31 @@
           style: { color: '#fff' }
         },
         plotOptions: {
-          scatter: { marker: { radius: 3 } },
-          line: { marker: { enabled: false }, lineWidth: 2 }
+          scatter: { marker: { radius: 3 } }
         },
         credits: { enabled: false },
         series: [
           {
-            name: 'Data Points',
             type: 'scatter',
             data: plotData,
-            color: '#4a90e2',
-            showInLegend: false
+            color: '#4a90e2'
           },
           {
-            name: 'Reference Line',
             type: 'line',
             data: referenceLine,
             color: '#e74c3c',
             dashStyle: 'Dash',
-            enableMouseTracking: false,
-            showInLegend: false
+            enableMouseTracking: false
           }
         ]
       });
+      
+      // Force reflow of main chart after creation
+      setTimeout(() => {
+        if (qqppChart) {
+          qqppChart.reflow();
+        }
+      }, 100);
       
       // Create detrended chart
       detrendedChart = Highcharts.chart('detrended-chart', {
@@ -797,6 +799,13 @@
           color: '#9b59b6'
         }]
       });
+      
+      // Force reflow of detrended chart after creation
+      setTimeout(() => {
+        if (detrendedChart) {
+          detrendedChart.reflow();
+        }
+      }, 100);
     }
   </script>
 </body>
