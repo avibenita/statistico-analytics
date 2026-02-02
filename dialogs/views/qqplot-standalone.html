@@ -11,6 +11,10 @@
   <link rel="stylesheet" href="./shared-header.css">
   <script src="./shared-header.js"></script>
   
+  <!-- Responsive Layout System -->
+  <link rel="stylesheet" href="./responsive-layout.css">
+  <script src="./responsive-layout.js"></script>
+  
   <style>
     :root {
       --surface-0: #0c1624;
@@ -34,26 +38,17 @@
       background-color: var(--surface-0);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: var(--text-primary);
-      overflow-x: hidden;
+      overflow: hidden; /* Responsive layout handles overflow */
     }
 
-    .results-container {
-      padding: 12px;
-      max-width: 100%;
-    }
-
-    /* Controls Panel */
-    .controls-panel {
-      background: var(--surface-1);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 16px;
-      margin-bottom: 12px;
+    /* Override responsive panel body for controls */
+    .controls-panel .responsive-panel-body {
       display: flex;
       gap: 20px;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
+      padding: 8px 12px !important; /* Compact controls */
     }
 
     .plot-type-group {
@@ -132,34 +127,45 @@
     .charts-grid {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: var(--spacing-sm);
+      flex: 1;
+      overflow: hidden;
     }
 
-    /* Chart Panel */
+    /* Chart Panel - work with responsive layout */
     .chart-panel {
-      background: var(--surface-1);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0; /* Allow flex shrinking */
     }
 
-    .panel-header {
-      margin-bottom: 10px;
+    .chart-panel .responsive-panel-heading {
+      background: linear-gradient(135deg, rgba(255, 165, 120, 0.1), rgba(120, 200, 255, 0.1));
+      padding: 6px 12px !important;
+      border-bottom: 1px solid var(--border);
     }
 
-    .panel-header h3 {
+    .chart-panel .responsive-panel-heading h3 {
       color: var(--accent-1);
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
+      margin: 0;
     }
 
-    .chart-container {
-      min-height: 300px;
-      max-height: 350px;
+    .chart-panel .responsive-panel-body {
+      flex: 1;
+      padding: 4px !important;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .chart-panel .responsive-chart-container {
+      flex: 1;
+      min-height: 200px; /* Minimum chart height */
       background: rgba(255, 255, 255, 0.02);
       border-radius: 6px;
-      padding: 8px;
     }
 
     /* Compact mode */
@@ -174,55 +180,61 @@
 <body>
   <statistico-header view-name="QQ/PP Plot Analysis" module-name="Univariate Analysis"></statistico-header>
   
-  <div class="results-container" id="results-container">
+  <div class="responsive-container" id="results-container">
     <!-- Controls Panel -->
-    <div class="controls-panel">
-      <div class="plot-type-group">
-        <label class="radio-option active" id="radioQQ">
-          <input type="radio" name="plotType" value="qq" checked onchange="switchPlotType('qq')">
-          <span class="radio-label">
-            <strong>QQ Plot</strong>
-            <small>Quantile-Quantile</small>
-          </span>
-        </label>
+    <div class="responsive-panel controls-panel">
+      <div class="responsive-panel-body">
+        <div class="plot-type-group">
+          <label class="radio-option active" id="radioQQ">
+            <input type="radio" name="plotType" value="qq" checked onchange="switchPlotType('qq')">
+            <span class="radio-label">
+              <strong>QQ Plot</strong>
+              <small>Quantile-Quantile</small>
+            </span>
+          </label>
+          
+          <label class="radio-option" id="radioPP">
+            <input type="radio" name="plotType" value="pp" onchange="switchPlotType('pp')">
+            <span class="radio-label">
+              <strong>PP Plot</strong>
+              <small>Probability-Probability</small>
+            </span>
+          </label>
+        </div>
         
-        <label class="radio-option" id="radioPP">
-          <input type="radio" name="plotType" value="pp" onchange="switchPlotType('pp')">
-          <span class="radio-label">
-            <strong>PP Plot</strong>
-            <small>Probability-Probability</small>
-          </span>
-        </label>
-      </div>
-      
-      <div>
-        <label for="distributionSelect" style="color: var(--text-muted); font-size: 12px; margin-right: 8px;">Distribution:</label>
-        <select id="distributionSelect" class="distribution-select" onchange="switchDistribution()">
-          <option value="normal" selected>Normal</option>
-          <option value="exponential">Exponential</option>
-          <option value="uniform">Uniform</option>
-          <option value="lognormal">Log-Normal</option>
-          <option value="gamma">Gamma</option>
-        </select>
+        <div>
+          <label for="distributionSelect" style="color: var(--text-muted); font-size: 12px; margin-right: 8px;">Distribution:</label>
+          <select id="distributionSelect" class="distribution-select" onchange="switchDistribution()">
+            <option value="normal" selected>Normal</option>
+            <option value="exponential">Exponential</option>
+            <option value="uniform">Uniform</option>
+            <option value="lognormal">Log-Normal</option>
+            <option value="gamma">Gamma</option>
+          </select>
+        </div>
       </div>
     </div>
 
     <!-- Charts (will be stacked vertically) -->
     <div class="charts-grid">
       <!-- Main Chart Panel -->
-      <div class="chart-panel" id="mainChartPanel">
-        <div class="panel-header">
+      <div class="responsive-panel chart-panel" id="mainChartPanel">
+        <div class="responsive-panel-heading panel-header">
           <h3 id="chartTitle">QQ Plot - Normal Distribution</h3>
         </div>
-        <div id="qqplot-chart" class="chart-container"></div>
+        <div class="responsive-panel-body">
+          <div id="qqplot-chart" class="responsive-chart-container chart-container"></div>
+        </div>
       </div>
       
       <!-- Detrended Chart Panel -->
-      <div class="chart-panel" id="detrendedChartPanel">
-        <div class="panel-header">
+      <div class="responsive-panel chart-panel" id="detrendedChartPanel">
+        <div class="responsive-panel-heading panel-header">
           <h3>Detrended Plot</h3>
         </div>
-        <div id="detrended-chart" class="chart-container"></div>
+        <div class="responsive-panel-body">
+          <div id="detrended-chart" class="responsive-chart-container chart-container"></div>
+        </div>
       </div>
     </div>
   </div>
