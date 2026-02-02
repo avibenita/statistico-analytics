@@ -98,10 +98,11 @@ const ResponsiveLayout = {
       usedHeight += panel.offsetHeight || 50; // Estimate if not rendered
     });
     
-    // Account for gaps and padding (estimate)
+    // Account for gaps and padding (with generous buffer)
     const gaps = (panels.length - 1) * 8; // var(--spacing-sm) = 8px
     const containerPadding = 16; // Top and bottom padding
-    usedHeight += gaps + containerPadding;
+    const safetyBuffer = 20; // Extra buffer for borders, margins, rounding errors
+    usedHeight += gaps + containerPadding + safetyBuffer;
     
     // Calculate available height for chart panels
     const chartAreaHeight = availableHeight - usedHeight;
@@ -166,19 +167,25 @@ const ResponsiveLayout = {
   finalCheck() {
     const bodyHeight = document.body.scrollHeight;
     const viewportHeight = window.innerHeight;
+    const overflow = bodyHeight - viewportHeight;
+    const tolerance = 10; // Allow 10px tolerance before adjusting
     
-    if (bodyHeight > viewportHeight && this.config.adjustmentAttempts < this.config.maxAdjustmentAttempts) {
+    if (overflow > tolerance && this.config.adjustmentAttempts < this.config.maxAdjustmentAttempts) {
       this.config.adjustmentAttempts++;
-      console.warn(`⚠️ Content overflow detected (attempt ${this.config.adjustmentAttempts}): ${bodyHeight}px > ${viewportHeight}px`);
+      console.warn(`⚠️ Content overflow detected (attempt ${this.config.adjustmentAttempts}): ${bodyHeight}px > ${viewportHeight}px (${overflow}px over)`);
       this.adjustForOverflow();
       
       // Check again after adjustment (but not infinitely)
       setTimeout(() => this.finalCheck(), 200);
-    } else if (this.config.adjustmentAttempts >= this.config.maxAdjustmentAttempts) {
-      console.warn('🛑 Max adjustment attempts reached, forcing fit...');
+    } else if (overflow > tolerance && this.config.adjustmentAttempts >= this.config.maxAdjustmentAttempts) {
+      console.warn(`🛑 Max adjustment attempts reached, forcing fit... (${overflow}px overflow)`);
       this.forceFit();
     } else {
-      console.log('✅ Layout fits perfectly - no scrolling');
+      if (overflow > 0 && overflow <= tolerance) {
+        console.log(`✅ Layout fits within tolerance: ${overflow}px overflow (< ${tolerance}px) - acceptable`);
+      } else {
+        console.log('✅ Layout fits perfectly - no scrolling');
+      }
     }
   },
   
@@ -218,33 +225,46 @@ const ResponsiveLayout = {
     const vh = window.innerHeight;
     const availableHeight = vh - this.config.headerHeight;
     
-    // Ultra-compact spacing
+    // Moderately compact spacing (not ultra-compact to preserve visibility)
     const style = document.createElement('style');
+    style.id = 'force-fit-styles';
     style.textContent = `
       .responsive-container {
         height: ${availableHeight}px !important;
         max-height: ${availableHeight}px !important;
         overflow: hidden !important;
-        padding: 2px 6px !important;
+        padding: 3px 8px !important;
       }
       .responsive-panel {
-        margin-bottom: 2px !important;
+        margin-bottom: 3px !important;
       }
       .responsive-panel-heading {
-        padding: 2px 6px !important;
-        font-size: 11px !important;
+        padding: 4px 8px !important;
+        font-size: 12px !important;
+        flex: 0 0 auto !important;
+        min-height: 0 !important;
+        height: auto !important;
       }
       .responsive-panel-heading h3 {
-        font-size: 11px !important;
+        font-size: 12px !important;
         margin: 0 !important;
+        line-height: 1.2 !important;
       }
       .responsive-panel-body {
-        padding: 2px !important;
+        padding: 3px !important;
       }
       .chart-panel {
+        flex: 1 1 auto !important;
         min-height: ${this.config.minChartHeight}px !important;
+        display: flex !important;
+        flex-direction: column !important;
       }
     `;
+    
+    // Remove old force-fit styles if they exist
+    const oldStyle = document.getElementById('force-fit-styles');
+    if (oldStyle) oldStyle.remove();
+    
     document.head.appendChild(style);
     
     // Force recalculate
