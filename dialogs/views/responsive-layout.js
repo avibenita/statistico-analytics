@@ -29,6 +29,7 @@ const ResponsiveLayout = {
     
     // Calculate and apply optimal layout
     this.calculateOptimalLayout();
+    this.reflowCharts();
     
     // Setup resize handler
     this.setupResizeHandler();
@@ -129,7 +130,8 @@ const ResponsiveLayout = {
         const panelHeader = panel.querySelector('.responsive-panel-heading');
         const headerHeight = panelHeader ? panelHeader.offsetHeight : 30;
         
-        const chartHeight = heightPerChart - headerHeight - 16; // 16px for padding
+        const rawChartHeight = heightPerChart - headerHeight - 16; // 16px for padding
+        const chartHeight = Math.max(rawChartHeight, 120); // Ensure minimum visibility
         chartContainer.style.height = `${chartHeight}px`;
         chartContainer.style.maxHeight = `${chartHeight}px`;
         
@@ -143,6 +145,9 @@ const ResponsiveLayout = {
     otherPanels.forEach(panel => {
       panel.style.flex = '0 0 auto';
     });
+
+    // Reflow charts after sizing
+    this.reflowCharts();
   },
   
   /**
@@ -157,6 +162,7 @@ const ResponsiveLayout = {
         this.config.adjustmentAttempts = 0; // Reset counter
         this.forceViewportConstraints();
         this.calculateOptimalLayout();
+        this.reflowCharts();
       }, 250);
     });
   },
@@ -214,6 +220,7 @@ const ResponsiveLayout = {
     
     // Recalculate layout with new spacing
     this.calculateOptimalLayout();
+    this.reflowCharts();
   },
   
   /**
@@ -269,6 +276,28 @@ const ResponsiveLayout = {
     
     // Force recalculate
     this.calculateOptimalLayout();
+    this.reflowCharts();
+  },
+  
+  /**
+   * Reflow charts after layout changes
+   */
+  reflowCharts() {
+    // Highcharts
+    if (window.Highcharts && Array.isArray(window.Highcharts.charts)) {
+      window.Highcharts.charts.forEach(chart => {
+        if (chart && typeof chart.reflow === 'function') {
+          chart.reflow();
+        }
+      });
+    }
+    
+    // Plotly
+    if (window.Plotly && typeof window.Plotly.Plots?.resize === 'function') {
+      document.querySelectorAll('.js-plotly-plot').forEach(plot => {
+        window.Plotly.Plots.resize(plot);
+      });
+    }
   },
   
   /**
