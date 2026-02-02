@@ -1,7 +1,7 @@
 /**
- * Responsive Layout Manager for Statistico Views
- * Ensures views fit perfectly without scrolling
- * Provides utilities for dynamic layout adjustments
+ * Responsive Layout Manager for Statistico Views (ROBUST VERSION)
+ * Ensures views fit perfectly without scrolling on any screen
+ * Handles stacked charts, multiple panels, and dynamic content
  * 
  * Usage: Include after responsive-layout.css
  * <script src="./responsive-layout.js"></script>
@@ -10,11 +10,11 @@
 const ResponsiveLayout = {
   // Configuration
   config: {
-    headerHeight: 52,
-    minChartHeight: 280,
-    targetViewportHeight: 1080,
-    targetViewportWidth: 1920,
-    debugMode: false
+    headerHeight: 52, // statistico-header height
+    minChartHeight: 180,
+    debugMode: false,
+    adjustmentAttempts: 0,
+    maxAdjustmentAttempts: 3 // Prevent infinite loops
   },
   
   /**
@@ -22,72 +22,126 @@ const ResponsiveLayout = {
    * Call this on page load or after DOM ready
    */
   init() {
-    console.log('🎨 ResponsiveLayout: Initializing...');
+    console.log('🎨 ResponsiveLayout: Initializing ROBUST mode...');
     
-    // Apply responsive classes
-    this.applyResponsiveClasses();
+    // Force proper viewport constraints immediately
+    this.forceViewportConstraints();
     
-    // Setup viewport monitoring
-    this.setupViewportMonitoring();
+    // Calculate and apply optimal layout
+    this.calculateOptimalLayout();
     
     // Setup resize handler
     this.setupResizeHandler();
     
-    // Initial layout calculation
-    this.calculateOptimalLayout();
+    // Monitor and adjust if needed (with loop prevention)
+    setTimeout(() => this.finalCheck(), 500);
     
     console.log('✅ ResponsiveLayout: Initialized');
   },
   
   /**
-   * Apply responsive classes to common elements
+   * Force viewport constraints to prevent overflow
    */
-  applyResponsiveClasses() {
-    // Find container and apply class
-    const container = document.querySelector('.container, [class*="container"]');
-    if (container && !container.classList.contains('responsive-container')) {
-      container.classList.add('responsive-container');
-    }
+  forceViewportConstraints() {
+    // Prevent body overflow
+    document.body.style.overflow = 'hidden';
+    document.body.style.height = '100vh';
+    document.body.style.maxHeight = '100vh';
+    document.documentElement.style.overflow = 'hidden';
     
-    // Find panels and apply classes
-    const panels = document.querySelectorAll('.panel, [class*="panel"]');
-    panels.forEach(panel => {
-      if (!panel.classList.contains('responsive-panel')) {
-        panel.classList.add('responsive-panel');
-      }
-    });
+    // Get actual viewport height
+    const vh = window.innerHeight;
+    const availableHeight = vh - this.config.headerHeight;
     
-    if (this.config.debugMode) {
-      console.log('📦 Applied responsive classes to', panels.length, 'panels');
+    // Set CSS variables for use throughout the app
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+    document.documentElement.style.setProperty('--available-height', `${availableHeight}px`);
+    document.documentElement.style.setProperty('--header-height', `${this.config.headerHeight}px`);
+    
+    console.log(`📐 Viewport: ${window.innerWidth}x${vh}px, Available: ${availableHeight}px`);
+    
+    // Force container to fit
+    const container = document.querySelector('.responsive-container');
+    if (container) {
+      container.style.height = `${availableHeight}px`;
+      container.style.maxHeight = `${availableHeight}px`;
+      container.style.overflow = 'hidden';
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
     }
   },
   
   /**
-   * Setup viewport size monitoring
+   * Calculate optimal layout based on viewport and content
    */
-  setupViewportMonitoring() {
-    const viewport = {
-      width: window.innerWidth,
-      height: window.innerHeight
-    };
+  calculateOptimalLayout() {
+    const vh = window.innerHeight;
+    const availableHeight = vh - this.config.headerHeight;
     
-    // Log viewport info
-    console.log(`📐 Viewport: ${viewport.width}x${viewport.height}`);
+    const container = document.querySelector('.responsive-container');
+    if (!container) return;
     
-    // Check if scrolling might occur
-    const bodyHeight = document.body.scrollHeight;
-    const hasScroll = bodyHeight > viewport.height;
+    // Find all panels
+    const panels = container.querySelectorAll('.responsive-panel');
     
-    if (hasScroll) {
-      console.warn(`⚠️ Content overflow detected: ${bodyHeight}px > ${viewport.height}px`);
-      this.adjustForOverflow();
-    } else {
-      console.log('✅ No scrolling detected - layout fits perfectly');
-    }
+    // Count chart panels vs other panels
+    const chartPanels = Array.from(panels).filter(panel => 
+      panel.classList.contains('chart-panel') || 
+      panel.querySelector('.chart-container, .responsive-chart-container')
+    );
     
-    // Store in data attribute for CSS access
-    document.documentElement.style.setProperty('--viewport-height', `${viewport.height}px`);
-    document.documentElement.style.setProperty('--viewport-width', `${viewport.width}px`);
+    const otherPanels = Array.from(panels).filter(panel => !chartPanels.includes(panel));
+    
+    // Calculate space used by non-chart panels
+    let usedHeight = 0;
+    otherPanels.forEach(panel => {
+      usedHeight += panel.offsetHeight || 50; // Estimate if not rendered
+    });
+    
+    // Account for gaps and padding (estimate)
+    const gaps = (panels.length - 1) * 8; // var(--spacing-sm) = 8px
+    const containerPadding = 16; // Top and bottom padding
+    usedHeight += gaps + containerPadding;
+    
+    // Calculate available height for chart panels
+    const chartAreaHeight = availableHeight - usedHeight;
+    const heightPerChart = Math.max(
+      Math.floor(chartAreaHeight / chartPanels.length),
+      this.config.minChartHeight
+    );
+    
+    console.log(`📊 Charts: ${chartPanels.length}, Height per chart: ${heightPerChart}px`);
+    
+    // Apply heights to chart panels
+    chartPanels.forEach(panel => {
+      panel.style.flex = '1';
+      panel.style.minHeight = `${this.config.minChartHeight}px`;
+      panel.style.maxHeight = `${heightPerChart}px`;
+      panel.style.display = 'flex';
+      panel.style.flexDirection = 'column';
+      panel.style.overflow = 'hidden';
+      
+      // Find chart container within panel
+      const chartContainer = panel.querySelector('.chart-container, .responsive-chart-container, [id*="chart"]');
+      if (chartContainer) {
+        const panelBody = panel.querySelector('.responsive-panel-body');
+        const panelHeader = panel.querySelector('.responsive-panel-heading');
+        const headerHeight = panelHeader ? panelHeader.offsetHeight : 30;
+        
+        const chartHeight = heightPerChart - headerHeight - 16; // 16px for padding
+        chartContainer.style.height = `${chartHeight}px`;
+        chartContainer.style.maxHeight = `${chartHeight}px`;
+        
+        if (this.config.debugMode) {
+          console.log(`  📈 Chart container height: ${chartHeight}px`);
+        }
+      }
+    });
+    
+    // Make non-chart panels compact
+    otherPanels.forEach(panel => {
+      panel.style.flex = '0 0 auto';
+    });
   },
   
   /**
@@ -99,49 +153,33 @@ const ResponsiveLayout = {
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
+        this.config.adjustmentAttempts = 0; // Reset counter
+        this.forceViewportConstraints();
         this.calculateOptimalLayout();
-        this.setupViewportMonitoring();
       }, 250);
     });
   },
   
   /**
-   * Calculate optimal layout based on viewport
+   * Final check after initial load (with loop prevention)
    */
-  calculateOptimalLayout() {
+  finalCheck() {
+    const bodyHeight = document.body.scrollHeight;
     const viewportHeight = window.innerHeight;
-    const viewportWidth = window.innerWidth;
     
-    // Calculate available space for content
-    const availableHeight = viewportHeight - this.config.headerHeight;
-    
-    // Find chart containers and set optimal height
-    const chartContainers = document.querySelectorAll(
-      '#chart-container, .chart-container, .responsive-chart-container, [class*="chart"]'
-    );
-    
-    chartContainers.forEach(container => {
-      // Calculate space taken by siblings
-      const parent = container.parentElement;
-      if (!parent) return;
+    if (bodyHeight > viewportHeight && this.config.adjustmentAttempts < this.config.maxAdjustmentAttempts) {
+      this.config.adjustmentAttempts++;
+      console.warn(`⚠️ Content overflow detected (attempt ${this.config.adjustmentAttempts}): ${bodyHeight}px > ${viewportHeight}px`);
+      this.adjustForOverflow();
       
-      const siblings = Array.from(parent.children).filter(child => child !== container);
-      const siblingsHeight = siblings.reduce((total, sibling) => {
-        return total + sibling.offsetHeight;
-      }, 0);
-      
-      // Set optimal height
-      const optimalHeight = Math.max(
-        availableHeight - siblingsHeight - 20, // 20px buffer
-        this.config.minChartHeight
-      );
-      
-      container.style.height = `${optimalHeight}px`;
-      
-      if (this.config.debugMode) {
-        console.log(`📊 Chart height set to: ${optimalHeight}px`);
-      }
-    });
+      // Check again after adjustment (but not infinitely)
+      setTimeout(() => this.finalCheck(), 200);
+    } else if (this.config.adjustmentAttempts >= this.config.maxAdjustmentAttempts) {
+      console.warn('🛑 Max adjustment attempts reached, forcing fit...');
+      this.forceFit();
+    } else {
+      console.log('✅ Layout fits perfectly - no scrolling');
+    }
   },
   
   /**
@@ -150,41 +188,67 @@ const ResponsiveLayout = {
   adjustForOverflow() {
     console.log('🔧 Adjusting layout to prevent overflow...');
     
-    // Reduce padding and margins progressively
-    const adjustments = [
-      { selector: '.responsive-container', property: 'padding', value: '2px 8px' },
-      { selector: '.responsive-panel-body', property: 'padding', value: '3px 8px' },
-      { selector: '.compact-card', property: 'padding', value: '3px 6px' },
-      { selector: '.compact-info-box', property: 'padding', value: '3px 6px' }
+    // Progressive spacing reduction
+    const reductions = [
+      { selector: '.responsive-container', property: 'padding', value: '4px 8px' },
+      { selector: '.responsive-panel', property: 'margin-bottom', value: '4px' },
+      { selector: '.responsive-panel-body', property: 'padding', value: '4px 8px' },
+      { selector: '.responsive-panel-heading', property: 'padding', value: '4px 8px' },
+      { selector: '.responsive-panel-heading h3', property: 'font-size', value: '12px' },
+      { selector: '.responsive-panel-heading h3', property: 'margin', value: '0' },
     ];
     
-    adjustments.forEach(adj => {
-      const elements = document.querySelectorAll(adj.selector);
+    reductions.forEach(reduction => {
+      const elements = document.querySelectorAll(reduction.selector);
       elements.forEach(el => {
-        el.style[adj.property] = adj.value;
+        el.style[reduction.property] = reduction.value;
       });
     });
     
-    // Recalculate after adjustments
-    setTimeout(() => {
-      this.setupViewportMonitoring();
-    }, 100);
+    // Recalculate layout with new spacing
+    this.calculateOptimalLayout();
   },
   
   /**
-   * Force layout to fit viewport (emergency measure)
+   * Force fit as last resort (emergency measure)
    */
-  forceLayoutFit() {
-    console.log('🚨 Forcing layout to fit viewport...');
+  forceFit() {
+    console.log('🚨 FORCE FIT: Applying emergency layout constraints...');
     
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
+    const vh = window.innerHeight;
+    const availableHeight = vh - this.config.headerHeight;
     
-    const container = document.querySelector('.responsive-container');
-    if (container) {
-      container.style.maxHeight = `calc(100vh - ${this.config.headerHeight}px)`;
-      container.style.overflow = 'hidden';
-    }
+    // Ultra-compact spacing
+    const style = document.createElement('style');
+    style.textContent = `
+      .responsive-container {
+        height: ${availableHeight}px !important;
+        max-height: ${availableHeight}px !important;
+        overflow: hidden !important;
+        padding: 2px 6px !important;
+      }
+      .responsive-panel {
+        margin-bottom: 2px !important;
+      }
+      .responsive-panel-heading {
+        padding: 2px 6px !important;
+        font-size: 11px !important;
+      }
+      .responsive-panel-heading h3 {
+        font-size: 11px !important;
+        margin: 0 !important;
+      }
+      .responsive-panel-body {
+        padding: 2px !important;
+      }
+      .chart-panel {
+        min-height: ${this.config.minChartHeight}px !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Force recalculate
+    this.calculateOptimalLayout();
   },
   
   /**
@@ -226,59 +290,7 @@ const ResponsiveLayout = {
   enableDebug() {
     this.config.debugMode = true;
     console.log('🐛 Debug mode enabled');
-    
-    // Add visual indicators
-    document.body.style.outline = '2px solid rgba(255,0,0,0.3)';
-    
-    // Log metrics every second
-    setInterval(() => {
-      const metrics = this.getMetrics();
-      if (metrics.hasVerticalScroll || metrics.hasHorizontalScroll) {
-        console.warn('⚠️ Scrolling detected!', metrics);
-      }
-    }, 1000);
-  },
-  
-  /**
-   * Utility: Wait for element to be ready
-   */
-  waitForElement(selector, timeout = 5000) {
-    return new Promise((resolve, reject) => {
-      const startTime = Date.now();
-      
-      const checkElement = () => {
-        const element = document.querySelector(selector);
-        
-        if (element) {
-          resolve(element);
-        } else if (Date.now() - startTime > timeout) {
-          reject(new Error(`Element ${selector} not found after ${timeout}ms`));
-        } else {
-          requestAnimationFrame(checkElement);
-        }
-      };
-      
-      checkElement();
-    });
-  },
-  
-  /**
-   * Utility: Apply compact spacing to element
-   */
-  makeCompact(element) {
-    if (typeof element === 'string') {
-      element = document.querySelector(element);
-    }
-    
-    if (!element) return;
-    
-    element.style.margin = '2px';
-    element.style.padding = '4px';
-    
-    // Make children compact too
-    Array.from(element.children).forEach(child => {
-      child.style.margin = '2px';
-    });
+    this.logMetrics();
   }
 };
 
@@ -288,6 +300,7 @@ if (document.readyState === 'loading') {
     ResponsiveLayout.init();
   });
 } else {
+  // DOM already loaded
   ResponsiveLayout.init();
 }
 

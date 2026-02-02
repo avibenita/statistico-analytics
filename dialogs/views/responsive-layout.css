@@ -51,7 +51,8 @@
 
 html {
   height: 100%;
-  overflow: hidden;
+  max-height: 100vh;
+  overflow: hidden !important;
 }
 
 body {
@@ -59,41 +60,61 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text-primary);
   height: 100vh;
-  overflow: hidden;
+  max-height: 100vh;
+  overflow: hidden !important;
   margin: 0;
   padding: 0;
 }
 
-/* Main Container - Full Viewport */
+/* Main Container - Full Viewport with strict constraints */
 .responsive-container {
   padding: var(--container-padding-vertical) var(--container-padding-horizontal);
   max-width: 1870px;
   margin: 0 auto;
   height: calc(100vh - var(--header-height));
+  max-height: calc(100vh - var(--header-height));
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden !important;
 }
 
-/* Panel System */
+/* Panel System - with strict height constraints */
 .responsive-panel {
   background-color: var(--surface-1);
   border-radius: var(--panel-radius);
   box-shadow: var(--panel-shadow);
   border: 1px solid var(--border);
-  margin-bottom: 0;
-  flex: 1;
+  margin-bottom: var(--spacing-sm);
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0; /* Critical for flexbox shrinking */
+}
+
+.responsive-panel:last-child {
+  margin-bottom: 0;
+}
+
+.responsive-panel-heading {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto; /* Don't grow or shrink */
+}
+
+.responsive-panel-heading h3 {
+  margin: 0;
+  font-size: var(--font-md);
+  font-weight: 600;
 }
 
 .responsive-panel-body {
   padding: var(--panel-padding);
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0; /* Critical for flexbox shrinking */
 }
 
 /* Flex Layout Utilities */
@@ -234,13 +255,20 @@ body {
   font-size: 0.9em;
 }
 
-/* Chart/Content Area - Auto-sized */
+/* Chart/Content Area - Dynamically sized by JS, but with fallback */
 .responsive-chart-container {
-  flex: 1;
+  flex: 1 1 auto;
   width: 100%;
-  min-height: 350px;
-  max-height: calc(100vh - 320px);
+  min-height: 180px; /* Minimum for readability */
+  max-height: 100%; /* Fill available space */
   position: relative;
+  overflow: hidden; /* Prevent chart overflow */
+}
+
+/* For Highcharts/Plotly containers */
+.responsive-chart-container > div {
+  height: 100% !important;
+  width: 100% !important;
 }
 
 /* Awaiting State */
@@ -281,18 +309,32 @@ body {
   50% { opacity: 0.8; transform: scale(1.05); }
 }
 
-/* Responsive Breakpoints */
+/* Responsive Breakpoints - More aggressive spacing reduction */
 @media (max-height: 800px) {
-  .responsive-chart-container {
-    min-height: 280px;
-    max-height: calc(100vh - 280px);
+  :root {
+    --container-padding-vertical: 2px;
+    --panel-padding: 3px 8px;
+    --spacing-sm: 3px;
+  }
+  
+  .responsive-panel-heading {
+    padding: 3px 8px !important;
+  }
+  
+  .responsive-panel-heading h3 {
+    font-size: 12px !important;
   }
 }
 
-@media (max-height: 900px) {
+@media (max-height: 700px) {
+  :root {
+    --container-padding-vertical: 2px;
+    --panel-padding: 2px 6px;
+    --spacing-sm: 2px;
+  }
+  
   .responsive-chart-container {
-    min-height: 300px;
-    max-height: calc(100vh - 300px);
+    min-height: 150px; /* Even more compact */
   }
 }
 
