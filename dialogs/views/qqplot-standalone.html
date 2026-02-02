@@ -272,10 +272,10 @@
         onMessageReceived
       );
       
-      // Request data from parent
+      // Send ready signal to parent (taskpane will respond with data)
       setTimeout(() => {
-        sendMessageToParent({ action: 'requestData', view: 'qqplot' });
-        console.log('📤 Requesting data from parent');
+        sendMessageToParent({ status: 'ready', view: 'qqplot' });
+        console.log('📤 Sending ready signal to parent');
       }, 500);
       
       // Try to load data from various sources (wait longer for parent response)
@@ -351,18 +351,26 @@
     function onMessageReceived(arg) {
       try {
         const message = JSON.parse(arg.message);
-        console.log('📩 Message received:', message);
+        console.log('📩 Message received from parent:', message);
         
-        // Handle different message formats
-        if (message.type === 'data' || message.action === 'sendData') {
+        // Handle data from taskpane (action: 'loadData')
+        if (message.action === 'loadData' && message.data) {
+          console.log('✅ Received data from taskpane:', message.data);
+          handleDataReceived(message.data);
+        } 
+        // Legacy: handle other formats
+        else if (message.type === 'data' || message.action === 'sendData') {
           const dataToHandle = message.data || message;
-          console.log('📊 Handling data:', dataToHandle);
+          console.log('📊 Handling data (legacy format):', dataToHandle);
           handleDataReceived(dataToHandle);
-        } else if (message.action === 'switchView') {
+        } 
+        // Navigation request
+        else if (message.action === 'switchView') {
           console.log('🔄 Switch view request:', message.view);
-        } else {
-          // Try treating the entire message as data
-          console.log('🔄 Treating message as data');
+        } 
+        // Fallback: treat entire message as data
+        else {
+          console.log('🔄 Unknown format, treating as data');
           handleDataReceived(message);
         }
       } catch (e) {
