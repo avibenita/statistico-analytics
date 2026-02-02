@@ -277,32 +277,30 @@
         sendMessageToParent({ status: 'ready' });
       }, 500);
       
-      // Check localStorage for data first (from parent window)
-      const checkStoredData = () => {
-        const storedData = localStorage.getItem('univariateResults');
-        if (storedData && !dataReady) {
-          try {
-            const parsedData = JSON.parse(storedData);
-            console.log('📦 Found stored data in localStorage');
-            handleDataReceived(parsedData);
-            return true;
-          } catch (e) {
-            console.error('❌ Error parsing stored data:', e);
-          }
+      // Try to load data from various sources
+      setTimeout(() => {
+        if (dataReady) {
+          console.log('✅ Data already loaded');
+          return;
         }
-        return false;
-      };
-      
-      // Try stored data immediately
-      if (!checkStoredData()) {
-        // For testing, load sample data if no data received after 5 seconds
-        setTimeout(() => {
-          if (!dataReady && !checkStoredData()) {
-            console.log('⏰ No data received from parent or localStorage, loading sample data...');
-            loadSampleData();
+        
+        // Try localStorage first
+        try {
+          const storedData = localStorage.getItem('univariateResults');
+          if (storedData) {
+            const parsedData = JSON.parse(storedData);
+            console.log('📦 Loading data from localStorage');
+            handleDataReceived(parsedData);
+            return;
           }
-        }, 5000);
-      }
+        } catch (e) {
+          console.error('❌ Error loading from localStorage:', e);
+        }
+        
+        // Fallback to sample data
+        console.log('⏰ No data received, loading sample data...');
+        loadSampleData();
+      }, 2000);
     };
 
     // Fallback: If Office.js doesn't load (browser testing), load sample data
