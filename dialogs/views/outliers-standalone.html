@@ -1060,8 +1060,16 @@
         // Extract variable name from multiple possible fields
         varName = data.variable || data.variableName || data.column || 'Variable';
         columnName = varName.replace(/[^A-Za-z]/g, '') || 'A';
-        dataReady = true;
+        
         console.log('✅ Data processed:', originalData.length, 'values from', rawData.length, 'raw values');
+        
+        // If no valid data, don't mark as ready (will load sample data)
+        if (originalData.length === 0) {
+          console.warn('⚠️ No valid data found, will load sample data');
+          return;
+        }
+        
+        dataReady = true;
         
         const updateHeader = () => {
           if (typeof StatisticoHeader !== 'undefined') {
