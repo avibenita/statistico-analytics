@@ -480,10 +480,11 @@
       );
       
       setTimeout(() => {
-        sendMessageToParent({ status: 'ready' });
+        sendMessageToParent({ status: 'ready', view: 'kernel' });
+        console.log('📤 Sending ready signal to parent');
       }, 500);
       
-      // Try to load data from various sources
+      // Try to load data from various sources (wait longer for parent response)
       setTimeout(() => {
         if (dataReady) {
           console.log('✅ Data already loaded');
@@ -497,16 +498,16 @@
             const parsedData = JSON.parse(storedData);
             console.log('📦 Loading data from localStorage');
             handleDataReceived(parsedData);
-            return;
+            if (dataReady) return;
           }
         } catch (e) {
           console.error('❌ Error loading from localStorage:', e);
         }
         
         // Fallback to sample data
-        console.log('⏰ No data received, loading sample data...');
+        console.log('⏰ No real data received after 3s, loading sample data...');
         loadSampleData();
-      }, 2000);
+      }, 3000);
     };
 
     // DOM loaded
@@ -550,10 +551,27 @@
     function onMessageReceived(arg) {
       try {
         const message = JSON.parse(arg.message);
-        console.log('📩 Message received:', message);
+        console.log('📩 Message received from parent:', message);
         
-        if (message.action === 'sendData' && message.data) {
+        // Handle data from taskpane (action: 'loadData')
+        if (message.action === 'loadData' && message.data) {
+          console.log('✅ Received data from taskpane:', message.data);
           handleDataReceived(message.data);
+        } 
+        // Legacy: handle other formats
+        else if (message.type === 'data' || message.action === 'sendData') {
+          const dataToHandle = message.data || message;
+          console.log('📊 Handling data (legacy format):', dataToHandle);
+          handleDataReceived(dataToHandle);
+        } 
+        // Navigation request
+        else if (message.action === 'switchView') {
+          console.log('🔄 Switch view request:', message.view);
+        } 
+        // Fallback: treat entire message as data
+        else {
+          console.log('🔄 Unknown format, treating as data');
+          handleDataReceived(message);
         }
       } catch (e) {
         console.error('❌ Error handling message:', e);
