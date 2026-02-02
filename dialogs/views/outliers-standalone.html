@@ -911,12 +911,32 @@
         sendMessageToParent({ status: 'ready' });
       }, 500);
       
-      setTimeout(() => {
-        if (!dataReady) {
-          console.log('⏰ No data received, loading sample data...');
-          loadSampleData();
+      // Check localStorage for data first (from parent window)
+      const checkStoredData = () => {
+        const storedData = localStorage.getItem('univariateResults');
+        if (storedData && !dataReady) {
+          try {
+            const parsedData = JSON.parse(storedData);
+            console.log('📦 Found stored data in localStorage');
+            handleDataReceived(parsedData);
+            return true;
+          } catch (e) {
+            console.error('❌ Error parsing stored data:', e);
+          }
         }
-      }, 2000);
+        return false;
+      };
+      
+      // Try stored data immediately
+      if (!checkStoredData()) {
+        // For testing, load sample data if no data received after 5 seconds
+        setTimeout(() => {
+          if (!dataReady && !checkStoredData()) {
+            console.log('⏰ No data received from parent or localStorage, loading sample data...');
+            loadSampleData();
+          }
+        }, 5000);
+      }
     };
 
     // DOM loaded
