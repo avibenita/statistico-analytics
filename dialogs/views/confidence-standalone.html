@@ -874,6 +874,14 @@
         
         dataReady = true;
         
+        // Store data in localStorage for view navigation
+        try {
+          localStorage.setItem('univariateResults', JSON.stringify(data));
+          console.log('💾 Saved data to localStorage for navigation');
+        } catch (e) {
+          console.warn('⚠️ Could not save to localStorage:', e);
+        }
+        
         document.getElementById('stat-n').textContent = originalData.length;
         
         const updateHeader = () => {
