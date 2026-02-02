@@ -106,6 +106,9 @@ body {
   margin: 0;
   font-size: var(--font-md);
   font-weight: 600;
+  height: auto !important; /* Never constrain h3 height */
+  max-height: none !important;
+  min-height: 0 !important;
 }
 
 .responsive-panel-body {
