@@ -156,41 +156,47 @@ const StatisticoHeader = {
    */
   navigateTo(filename) {
     console.log('🔄 Navigating to:', filename);
-    console.log('typeof Office:', typeof Office);
     
-    // Check if Office is available
-    if (typeof Office !== 'undefined') {
-      console.log('Office.context:', Office.context);
-      console.log('Office.context.ui:', Office.context && Office.context.ui);
-    }
-    
-    // If in Office context, we need to pass data and open new dialog
-    if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
-      // Store current data for the new view
-      const currentData = localStorage.getItem('univariateResults');
-      if (currentData) {
-        // Keep the data in localStorage
-        console.log('✅ Data preserved for new view');
-      }
+    try {
+      // Check if Office is available
+      const isOfficeAvailable = typeof Office !== 'undefined' && 
+                                Office.context && 
+                                Office.context.ui;
       
-      // Close current dialog and let parent open the new one
-      const message = {
-        action: 'switchView',
-        view: filename
-      };
+      console.log('Office available:', isOfficeAvailable);
       
-      console.log('📤 Sending message to parent:', message);
-      
-      try {
+      if (isOfficeAvailable) {
+        // Office context - send message to parent
+        const currentData = localStorage.getItem('univariateResults');
+        if (currentData) {
+          console.log('✅ Data preserved for new view');
+        }
+        
+        const message = {
+          action: 'switchView',
+          view: filename
+        };
+        
+        console.log('📤 Sending message to parent:', message);
         Office.context.ui.messageParent(JSON.stringify(message));
         console.log('✅ Message sent successfully');
-      } catch (error) {
-        console.error('❌ Error sending message:', error);
+      } else {
+        // Browser mode - direct navigation
+        console.log('⚠️ Browser mode - navigating directly');
+        const newUrl = filename.startsWith('http') ? filename : `./${filename}`;
+        console.log('Navigating to:', newUrl);
+        window.location.href = newUrl;
       }
-    } else {
-      // Browser mode - simple navigation
-      console.log('⚠️ Not in Office context, using browser navigation');
-      window.location.href = filename;
+    } catch (error) {
+      console.error('❌ Navigation error:', error);
+      // Fallback to direct navigation
+      try {
+        const newUrl = filename.startsWith('http') ? filename : `./${filename}`;
+        window.location.href = newUrl;
+      } catch (fallbackError) {
+        console.error('❌ Fallback navigation failed:', fallbackError);
+        alert(`Navigation failed. Please manually navigate to: ${filename}`);
+      }
     }
   }
 };
