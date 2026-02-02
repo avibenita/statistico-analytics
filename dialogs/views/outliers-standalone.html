@@ -1016,10 +1016,24 @@
           return;
         }
         
-        originalData = data.values || data.data || [];
-        varName = data.variableName || data.column || 'Variable';
+        // Robust data extraction - handle various formats
+        let rawData = data.values || data.trimmedValues || data.transformedValues || data.rawValues || data.data || [];
+        
+        // Handle nested values (e.g., data.values.values)
+        if (rawData.values && Array.isArray(rawData.values)) {
+          rawData = rawData.values;
+        }
+        
+        // Convert to numbers and filter out invalid values
+        originalData = rawData
+          .map(v => typeof v === 'string' ? parseFloat(v) : v)
+          .filter(v => !isNaN(v) && v != null);
+        
+        // Extract variable name from multiple possible fields
+        varName = data.variable || data.variableName || data.column || 'Variable';
         columnName = varName.replace(/[^A-Za-z]/g, '') || 'A';
         dataReady = true;
+        console.log('✅ Data processed:', originalData.length, 'values from', rawData.length, 'raw values');
         
         const updateHeader = () => {
           if (typeof StatisticoHeader !== 'undefined') {
