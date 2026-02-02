@@ -132,17 +132,19 @@
     .charts-grid {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-sm);
-      flex: 1;
+      gap: 4px; /* Fixed gap instead of var */
+      flex: 1 1 auto;
       overflow: hidden;
+      min-height: 0;
     }
 
     /* Chart Panel - work with responsive layout */
     .chart-panel {
-      flex: 1;
+      flex: 1 1 auto;
       display: flex;
       flex-direction: column;
-      min-height: 0; /* Allow flex shrinking */
+      min-height: 150px; /* Ensure minimum visibility */
+      overflow: hidden;
     }
 
     .chart-panel .responsive-panel-heading {
@@ -171,17 +173,46 @@
     }
 
     .chart-panel .responsive-chart-container {
-      flex: 1;
-      min-height: 200px; /* Minimum chart height */
+      flex: 1 1 auto;
+      min-height: 150px !important; /* Ensure always visible */
+      max-height: 100%;
       background: rgba(255, 255, 255, 0.02);
       border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    /* Ensure Highcharts fills container properly */
+    .chart-panel .responsive-chart-container > div,
+    .chart-panel .responsive-chart-container .highcharts-container {
+      height: 100% !important;
+      width: 100% !important;
     }
 
+    /* Ensure both charts are always visible */
+    #mainChartPanel,
+    #detrendedChartPanel {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      flex: 1 1 auto !important;
+      min-height: 150px !important;
+    }
+    
+    #qqplot-chart,
+    #detrended-chart {
+      display: block !important;
+      visibility: visible !important;
+      min-height: 150px !important;
+    }
+    
     /* Compact mode */
     @media (max-height: 800px) {
-      .chart-container {
-        min-height: 250px;
-        max-height: 300px;
+      .chart-panel {
+        min-height: 140px !important;
+      }
+      .responsive-chart-container {
+        min-height: 120px !important;
       }
     }
   </style>
