@@ -41,7 +41,11 @@
       overflow: hidden; /* Responsive layout handles overflow */
     }
 
-    /* Override responsive panel body for controls */
+    /* Override responsive panel for controls */
+    .controls-panel {
+      flex: 0 0 auto !important; /* Don't grow - fixed height */
+    }
+    
     .controls-panel .responsive-panel-body {
       display: flex;
       gap: 20px;
@@ -49,6 +53,7 @@
       justify-content: space-between;
       flex-wrap: wrap;
       padding: 8px 12px !important; /* Compact controls */
+      flex: 0 0 auto !important; /* Don't grow */
     }
 
     .plot-type-group {
@@ -144,6 +149,9 @@
       background: linear-gradient(135deg, rgba(255, 165, 120, 0.1), rgba(120, 200, 255, 0.1));
       padding: 6px 12px !important;
       border-bottom: 1px solid var(--border);
+      flex: 0 0 auto !important; /* CRITICAL: Prevent header from growing */
+      min-height: 0;
+      height: auto;
     }
 
     .chart-panel .responsive-panel-heading h3 {
@@ -151,6 +159,7 @@
       font-size: 13px;
       font-weight: 600;
       margin: 0;
+      line-height: 1.3;
     }
 
     .chart-panel .responsive-panel-body {
