@@ -157,8 +157,12 @@ const StatisticoHeader = {
   navigateTo(filename) {
     console.log('🔄 Navigating to:', filename);
     console.log('typeof Office:', typeof Office);
-    console.log('Office.context:', Office.context);
-    console.log('Office.context.ui:', Office.context && Office.context.ui);
+    
+    // Check if Office is available
+    if (typeof Office !== 'undefined') {
+      console.log('Office.context:', Office.context);
+      console.log('Office.context.ui:', Office.context && Office.context.ui);
+    }
     
     // If in Office context, we need to pass data and open new dialog
     if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
