@@ -319,16 +319,28 @@
       };
       initHeader();
       
-      // Check if libraries are loaded
+      // Check if libraries are loaded (with timeout)
+      let attempts = 0;
+      const maxAttempts = 50; // 5 seconds max wait
+      
       const checkAndInit = () => {
+        attempts++;
+        
         if (checkLibraries()) {
-          // Check if Office.js is available
+          // Libraries loaded - check if Office.js is available
           if (typeof Office === 'undefined') {
             console.log('⚠️ Office.js not available - loading sample data immediately');
-            loadSampleData();
+            setTimeout(() => {
+              if (!dataReady) loadSampleData();
+            }, 500);
           }
-        } else {
+        } else if (attempts < maxAttempts) {
+          // Keep trying
           setTimeout(checkAndInit, 100);
+        } else {
+          // Timeout - load sample data anyway
+          console.warn('⚠️ Libraries failed to load after 5s, loading sample data anyway');
+          loadSampleData();
         }
       };
       setTimeout(checkAndInit, 100);

@@ -768,7 +768,12 @@
       
       // Only load sample data if Office.js is not available
       if (typeof Office === 'undefined') {
-        setTimeout(loadSampleData, 500);
+        setTimeout(() => {
+          if (!dataReady) {
+            console.log('⚠️ Office.js not available - loading sample data');
+            loadSampleData();
+          }
+        }, 500);
       }
     });
 
