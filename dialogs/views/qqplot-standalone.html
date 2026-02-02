@@ -722,10 +722,7 @@
           labels: { style: { color: '#fff', fontSize: '10px' } },
           gridLineColor: '#2d3748'
         },
-        legend: {
-          enabled: true,
-          itemStyle: { color: '#fff', fontSize: '11px' }
-        },
+        legend: { enabled: false },
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           style: { color: '#fff' }
@@ -740,7 +737,8 @@
             name: 'Data Points',
             type: 'scatter',
             data: plotData,
-            color: '#4a90e2'
+            color: '#4a90e2',
+            showInLegend: false
           },
           {
             name: 'Reference Line',
@@ -748,7 +746,8 @@
             data: referenceLine,
             color: '#e74c3c',
             dashStyle: 'Dash',
-            enableMouseTracking: false
+            enableMouseTracking: false,
+            showInLegend: false
           }
         ]
       });
