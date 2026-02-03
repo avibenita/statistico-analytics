@@ -36,7 +36,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   background: var(--surface-1);
   border-bottom: 1px solid var(--border);
   display: flex;
@@ -151,10 +151,12 @@
   transform: translateX(-50%);
   background: var(--text-primary);
   color: var(--surface-0);
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
-  font-size: 11px;
-  white-space: nowrap;
+  font-size: 10px;
+  white-space: normal;
+  max-width: 200px;
+  text-align: center;
   z-index: 1000;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
