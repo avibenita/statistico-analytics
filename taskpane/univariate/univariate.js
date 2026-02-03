@@ -344,6 +344,9 @@ function updateStats() {
 function updateSummary() {
     if (currentData.length === 0) return;
     
+    const summaryElement = document.getElementById('summaryContent');
+    if (!summaryElement) return; // Element doesn't exist, skip update
+    
     const sorted = [...currentData].sort((a, b) => a - b);
     const n = sorted.length;
     const sum = sorted.reduce((a, b) => a + b, 0);
@@ -360,7 +363,7 @@ function updateSummary() {
         </div>
     `;
     
-    document.getElementById('summaryContent').innerHTML = summaryHTML;
+    summaryElement.innerHTML = summaryHTML;
 }
 
 /**
