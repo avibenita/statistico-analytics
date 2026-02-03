@@ -159,9 +159,17 @@ function onVariableChange() {
     // Reset trim and transform
     resetTrim();
     currentTransform = 'none';
-    document.querySelector('input[value="none"]').checked = true;
-    document.querySelectorAll('.radgrid .opt').forEach(o => o.classList.remove('selected'));
-    document.querySelector('input[value="none"]').closest('.opt').classList.add('selected');
+    
+    // Safely reset transform selection
+    const noneInput = document.querySelector('input[value="none"]');
+    if (noneInput) {
+        noneInput.checked = true;
+        const parentOpt = noneInput.closest('.opt');
+        if (parentOpt) {
+            document.querySelectorAll('.radgrid .opt').forEach(o => o.classList.remove('selected'));
+            parentOpt.classList.add('selected');
+        }
+    }
     
     // Update stats
     updateStats();
