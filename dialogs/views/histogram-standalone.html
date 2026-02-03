@@ -539,9 +539,10 @@
         currentData = [...originalData];
         console.log('✅ Data arrays set, length:', originalData.length);
         
-        // Update stats
-        populateStatistics(data.descriptive);
-        console.log('✅ Statistics populated');
+        // Always recalculate stats from actual data to ensure they're numeric
+        const calculatedStats = calculateDescriptiveStats(originalData);
+        populateStatistics(calculatedStats);
+        console.log('✅ Statistics populated from actual data');
         
         // Update variable name
         const varName = data.column || data.variableName || 'Variable';
