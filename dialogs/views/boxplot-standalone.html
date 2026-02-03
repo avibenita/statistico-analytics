@@ -218,11 +218,15 @@
               try {
                 const parsedData = JSON.parse(storedResults);
                 console.log('✅ Found data in localStorage');
+                console.log('📊 BOX PLOT - Column from localStorage:', parsedData.column);
+                console.log('📊 BOX PLOT - Data length:', parsedData.values?.length || parsedData.rawData?.length);
                 handleDataReceived(parsedData);
                 return;
               } catch (e) {
                 console.error('❌ Error parsing localStorage data:', e);
               }
+            } else {
+              console.log('⚠️ No localStorage data found');
             }
           }
         }, 1000);
