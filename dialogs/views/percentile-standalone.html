@@ -14,7 +14,7 @@
       --surface-0: #0c1624;
       --surface-1: #1a1f2e;
       --surface-2: #242938;
-      --border: #2d3748;
+      --border: #4a5568; /* More visible border color */
       --accent-1: rgb(255,165,120);
       --accent-2: rgb(120,200,255);
       --text-primary: #ffffff;
@@ -53,7 +53,8 @@
     .panel {
       background: var(--surface-1);
       border-radius: 10px;
-      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.4);
+      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      border: 1.5px solid var(--border);
       overflow: hidden;
     }
 
