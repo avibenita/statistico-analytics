@@ -733,12 +733,16 @@
         xAxis: {
           title: { text: `Theoretical ${plotTypeLabel === 'QQ' ? 'Quantiles' : 'Probabilities'}`, style: { color: '#fff', fontSize: '11px' } },
           labels: { style: { color: '#fff', fontSize: '10px' } },
-          gridLineColor: '#2d3748'
+          gridLineColor: '#2d3748',
+          min: currentPlotType === 'pp' ? 0 : undefined,
+          max: currentPlotType === 'pp' ? 1 : undefined
         },
         yAxis: {
           title: { text: `Sample ${plotTypeLabel === 'QQ' ? 'Quantiles' : 'Probabilities'}`, style: { color: '#fff', fontSize: '11px' } },
           labels: { style: { color: '#fff', fontSize: '10px' } },
-          gridLineColor: '#2d3748'
+          gridLineColor: '#2d3748',
+          min: currentPlotType === 'pp' ? 0 : undefined,
+          max: currentPlotType === 'pp' ? 1 : undefined
         },
         legend: { enabled: false },
         tooltip: {
@@ -785,7 +789,9 @@
         xAxis: {
           title: { text: `Theoretical ${plotTypeLabel === 'QQ' ? 'Quantiles' : 'Probabilities'}`, style: { color: '#fff', fontSize: '11px' } },
           labels: { style: { color: '#fff', fontSize: '10px' } },
-          gridLineColor: '#2d3748'
+          gridLineColor: '#2d3748',
+          min: currentPlotType === 'pp' ? 0 : undefined,
+          max: currentPlotType === 'pp' ? 1 : undefined
         },
         yAxis: {
           title: { text: 'Residuals', style: { color: '#fff', fontSize: '11px' } },
