@@ -618,6 +618,7 @@ function openNewView(dialogUrl, results) {
                                 console.log('🔴 Closing dialog (handler 2)');
                                 resultsDialog.close();
                                 resultsDialog = null;
+                    unlockTaskpaneUI();
                             }
                             setTimeout(() => {
                                 const newDialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/${message.view}`;
@@ -627,6 +628,7 @@ function openNewView(dialogUrl, results) {
                         } else if (message.action === 'close' || message.action === 'closeDialog') {
                             resultsDialog.close();
                             resultsDialog = null;
+                    unlockTaskpaneUI();
                         }
                     } catch (e) {
                         console.error('Error handling dialog message:', e);
@@ -636,10 +638,72 @@ function openNewView(dialogUrl, results) {
                 resultsDialog.addEventHandler(Office.EventType.DialogEventReceived, (arg) => {
                     console.log('Dialog event:', arg.error);
                     resultsDialog = null;
+                    unlockTaskpaneUI();
                 });
             }
         }
     );
+}
+
+/**
+ * Lock taskpane UI when dialog is open
+ */
+function lockTaskpaneUI() {
+    // Disable all input controls
+    const inputs = document.querySelectorAll('input, select, button');
+    inputs.forEach(el => {
+        el.disabled = true;
+        el.dataset.wasDisabled = el.disabled;
+    });
+    
+    // Show notice
+    let notice = document.getElementById('dialog-open-notice');
+    if (!notice) {
+        notice = document.createElement('div');
+        notice.id = 'dialog-open-notice';
+        notice.style.cssText = `
+            background: linear-gradient(135deg, rgba(255, 165, 120, 0.15), rgba(255, 165, 120, 0.25));
+            border: 2px solid var(--accent-1);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-primary);
+            box-shadow: 0 4px 12px rgba(255, 165, 120, 0.3);
+            animation: slideDown 0.3s ease;
+        `;
+        notice.innerHTML = `
+            <i class="fa-solid fa-lock" style="color: var(--accent-1); margin-right: 8px;"></i>
+            <strong>Analysis in Progress</strong><br>
+            <span style="font-size: 11px; opacity: 0.9;">Close the analysis window to modify settings</span>
+        `;
+        
+        const container = document.querySelector('.univariate-container');
+        if (container) {
+            container.insertBefore(notice, container.firstChild);
+        }
+    }
+    notice.style.display = 'block';
+    console.log('🔒 Taskpane UI locked');
+}
+
+/**
+ * Unlock taskpane UI when dialog closes
+ */
+function unlockTaskpaneUI() {
+    // Re-enable all controls
+    const inputs = document.querySelectorAll('input, select, button');
+    inputs.forEach(el => {
+        el.disabled = false;
+    });
+    
+    // Hide notice
+    const notice = document.getElementById('dialog-open-notice');
+    if (notice) {
+        notice.style.display = 'none';
+    }
+    console.log('🔓 Taskpane UI unlocked');
 }
 
 function openResultsDialog(results) {
@@ -651,6 +715,9 @@ function openResultsDialog(results) {
     console.log('🧹 Cleared localStorage before storing new results');
     console.log('📊 Storing results for column:', results.column, 'n:', results.n);
     localStorage.setItem('univariateResults', JSON.stringify(results));
+    
+    // Lock taskpane UI
+    lockTaskpaneUI();
     
     // Use standalone histogram instead of full results dialog
     const dialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/histogram-standalone.html`;
@@ -710,6 +777,7 @@ function openResultsDialog(results) {
                                 console.log('🔴 Closing current dialog...');
                                 resultsDialog.close();
                                 resultsDialog = null;
+                    unlockTaskpaneUI();
                                 console.log('✅ Dialog closed');
                             }
                             
@@ -724,6 +792,7 @@ function openResultsDialog(results) {
                             console.log('📤 Close dialog message received');
                             resultsDialog.close();
                             resultsDialog = null;
+                    unlockTaskpaneUI();
                         }
                     } catch (e) {
                         console.error('Error handling dialog message:', e);
@@ -734,6 +803,7 @@ function openResultsDialog(results) {
                 resultsDialog.addEventHandler(Office.EventType.DialogEventReceived, (arg) => {
                     console.log('Dialog event:', arg.error);
                     resultsDialog = null;
+                    unlockTaskpaneUI();
                 });
             }
         }
