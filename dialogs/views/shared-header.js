@@ -44,7 +44,8 @@ const StatisticoHeader = {
       'cdf': 'Cumulative Distribution',
       'confidence': 'Confidence Intervals',
       'hypothesis': 'Hypothesis Testing',
-      'outliers': 'Outliers Detection'
+      'outliers': 'Outliers Detection',
+      'percentile': 'Percentile Calculator'
     };
     
     const headerHTML = `
@@ -100,6 +101,7 @@ const StatisticoHeader = {
       { id: 'qqplot', icon: 'fa-chart-scatter', label: 'QQ/PP Plot', file: 'qqplot-standalone.html' },
       { id: 'kernel', icon: 'fa-wave-square', label: 'Kernel Density', file: 'kernel-standalone.html' },
       { id: 'cdf', icon: 'fa-chart-area', label: 'Cumulative Distribution', file: 'cumulative-distribution.html' },
+      { id: 'percentile', icon: 'fa-percent', label: 'Percentile Calculator', file: 'percentile-standalone.html' },
       { id: 'outliers', icon: 'fa-exclamation-triangle', label: 'Outliers Detection', file: 'outliers-standalone.html' },
       { id: 'confidence', icon: 'fa-chart-line', label: 'Confidence Intervals', file: 'confidence-standalone.html' },
       { id: 'normality', icon: 'fa-vial', label: 'Normality Tests', file: 'normality-standalone.html' },
