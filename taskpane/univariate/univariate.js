@@ -469,20 +469,21 @@ function calculateStatistics(data, address, transform) {
         transform: transform,
         trim: { min: trimMin, max: trimMax },
         n: n,
-        rawData: data, // Include raw data for histogram
+        values: data, // Include processed data for all views
+        rawData: data, // Keep for backward compatibility
         descriptive: {
-            mean: mean.toFixed(4),
-            median: median.toFixed(4),
-            stdDev: stdDev.toFixed(4),
-            variance: variance.toFixed(4),
-            min: min.toFixed(4),
-            max: max.toFixed(4),
-            range: (max - min).toFixed(4),
-            q1: q1.toFixed(4),
-            q3: q3.toFixed(4),
-            iqr: (q3 - q1).toFixed(4),
-            skewness: skewness.toFixed(4),
-            kurtosis: kurtosis.toFixed(4)
+            mean: mean,
+            median: median,
+            stdDev: stdDev,
+            variance: variance,
+            min: min,
+            max: max,
+            range: (max - min),
+            q1: q1,
+            q3: q3,
+            iqr: (q3 - q1),
+            skewness: skewness,
+            kurtosis: kurtosis
         }
     };
 }
