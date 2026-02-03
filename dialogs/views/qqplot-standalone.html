@@ -253,6 +253,7 @@
             <option value="uniform">Uniform</option>
             <option value="lognormal">Log-Normal</option>
             <option value="gamma">Gamma</option>
+            <option value="weibull">Weibull</option>
           </select>
         </div>
       </div>
@@ -627,6 +628,13 @@
               const scale = (std * std) / mean;
               theoreticalValue = jStat.gamma.inv(p, shape, scale);
               break;
+            case 'weibull':
+              // Weibull parameters using method of moments approximation
+              const cvWeibull = std / mean;
+              const kWeibull = Math.pow(cvWeibull, -1.086); // Shape parameter approximation
+              const lambdaWeibull = mean / jStat.gammafn(1 + 1 / kWeibull); // Scale parameter
+              theoreticalValue = jStat.weibull.inv(p, lambdaWeibull, kWeibull);
+              break;
             default:
               theoreticalValue = jStat.normal.inv(p, mean, std);
           }
@@ -657,6 +665,13 @@
               const shape2 = (mean * mean) / (std * std);
               const scale2 = (std * std) / mean;
               theoreticalValue = sortedData[i] > 0 ? jStat.gamma.cdf(sortedData[i], shape2, scale2) : 0;
+              break;
+            case 'weibull':
+              // Weibull parameters using method of moments approximation
+              const cvWeibull2 = std / mean;
+              const kWeibull2 = Math.pow(cvWeibull2, -1.086); // Shape parameter approximation
+              const lambdaWeibull2 = mean / jStat.gammafn(1 + 1 / kWeibull2); // Scale parameter
+              theoreticalValue = sortedData[i] > 0 ? jStat.weibull.cdf(sortedData[i], lambdaWeibull2, kWeibull2) : 0;
               break;
             default:
               theoreticalValue = jStat.normal.cdf(sortedData[i], mean, std);
