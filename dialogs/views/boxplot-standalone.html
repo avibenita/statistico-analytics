@@ -249,9 +249,26 @@
       StatisticoHeader.init('boxplot', 'Variable', 0);
       console.log('✅ Shared header initialized');
       
+      // Check localStorage FIRST before loading sample data
       setTimeout(() => {
         if (typeof Office === 'undefined' || !Office.context) {
-          console.log('⚠️ Office.js not available - loading sample data for browser testing');
+          console.log('⚠️ Office.js not available in this context');
+          
+          // Try localStorage first
+          const storedResults = localStorage.getItem('univariateResults');
+          if (storedResults) {
+            try {
+              const parsedData = JSON.parse(storedResults);
+              console.log('✅ Loading from localStorage:', parsedData.column);
+              handleDataReceived(parsedData);
+              return;
+            } catch (e) {
+              console.error('❌ Error parsing localStorage:', e);
+            }
+          }
+          
+          // Only load sample data if no localStorage found
+          console.log('⚠️ No localStorage - loading sample data for browser testing');
           loadSampleData();
         }
       }, 100);
