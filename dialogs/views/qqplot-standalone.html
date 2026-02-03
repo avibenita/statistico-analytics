@@ -743,7 +743,10 @@
         legend: { enabled: false },
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          style: { color: '#fff' }
+          style: { color: '#fff' },
+          formatter: function() {
+            return '<b>Series 1</b><br/>x: ' + this.x.toFixed(3) + '<br/>y: ' + this.y.toFixed(3);
+          }
         },
         plotOptions: {
           scatter: { marker: { radius: 3 } }
@@ -805,7 +808,10 @@
         legend: { enabled: false },
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          style: { color: '#fff' }
+          style: { color: '#fff' },
+          formatter: function() {
+            return '<b>Series 1</b><br/>x: ' + this.x.toFixed(3) + '<br/>y: ' + this.y.toFixed(3);
+          }
         },
         plotOptions: {
           scatter: { marker: { radius: 3 } }
