@@ -129,6 +129,10 @@ function onVariableChange() {
     
     currentColumn = colIndex;
     
+    // Clear old localStorage data when changing columns
+    localStorage.removeItem('univariateResults');
+    console.log('🗑️ Cleared old localStorage data for new column selection');
+    
     // Extract column data (skip header row)
     const columnValues = rawData.slice(1).map(row => row[colIndex]);
     
