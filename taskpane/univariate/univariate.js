@@ -117,10 +117,12 @@ function populateVariableDropdown(data) {
 function onVariableChange() {
     const dropdown = document.getElementById('ddlVariable');
     const colIndex = parseInt(dropdown.value);
+    const runButton = document.getElementById('runButton');
     
     if (isNaN(colIndex) || !rawData) {
         currentColumn = null;
         currentData = [];
+        if (runButton) runButton.disabled = true;
         updateStats();
         return;
     }
@@ -137,8 +139,12 @@ function onVariableChange() {
     
     if (currentData.length === 0) {
         showStatus('error', 'No valid numeric data in selected column');
+        if (runButton) runButton.disabled = true;
         return;
     }
+    
+    // Enable Run button
+    if (runButton) runButton.disabled = false;
     
     // Enable tabs
     const trimTab = document.getElementById('tab-trim');
@@ -156,6 +162,14 @@ function onVariableChange() {
     // Update stats
     updateStats();
     updateSummary();
+    
+    // Scroll to show Summary section
+    setTimeout(() => {
+        const summarySection = document.getElementById('panel-summary');
+        if (summarySection) {
+            summarySection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }, 100);
 }
 
 /**
