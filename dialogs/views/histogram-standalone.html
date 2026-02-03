@@ -25,7 +25,7 @@
       --surface-0: #0c1624;
       --surface-1: #1a1f2e;
       --surface-2: #242938;
-      --border: #4a5568; /* More visible border color */
+      --border: #6b7280; /* Much brighter border - easily visible */
       --accent-1: rgb(255,165,120);
       --accent-2: rgb(120,200,255);
       --text-primary: #ffffff;
@@ -80,8 +80,8 @@
     .panel {
       background-color: var(--surface-1);
       border-radius: var(--panel-radius);
-      box-shadow: var(--panel-shadow), 0 0 0 1px rgba(255, 255, 255, 0.05);
-      border: 1.5px solid var(--border);
+      box-shadow: var(--panel-shadow), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+      border: 2px solid var(--border);
       margin-bottom: 10px;
     }
 
