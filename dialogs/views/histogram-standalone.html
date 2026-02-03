@@ -550,9 +550,14 @@
         document.getElementById('histogram-title').textContent = `${varName} - Interactive Histogram`;
         console.log('✅ Titles updated');
         
-        // Update shared header
-        StatisticoHeader.updateVariable(varName, originalData.length);
-        console.log('✅ Header updated');
+        // Check if data was modified (trimmed or transformed)
+        const isTrimmed = data.trim && (data.trim.min > 0 || data.trim.max < 100);
+        const isTransformed = data.transform && data.transform !== 'none';
+        const displayN = (isTrimmed || isTransformed) ? originalData.length + '*' : originalData.length;
+        
+        // Update shared header with modified n indicator
+        StatisticoHeader.updateVariable(varName, displayN);
+        console.log('✅ Header updated with n:', displayN);
         
         // Initialize range
         originalMin = Math.min(...originalData);

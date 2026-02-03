@@ -528,11 +528,16 @@
           console.warn('⚠️ Could not save to localStorage:', e);
         }
         
+        // Check if data was modified (trimmed or transformed)
+        const isTrimmed = data.trim && (data.trim.min > 0 || data.trim.max < 100);
+        const isTransformed = data.transform && data.transform !== 'none';
+        const displayN = (isTrimmed || isTransformed) ? originalData.length + '*' : originalData.length;
+        
         // Update header when available
         const updateHeader = () => {
           if (typeof StatisticoHeader !== 'undefined' && StatisticoHeader.updateVariable) {
-            StatisticoHeader.updateVariable(varName, originalData.length);
-            console.log('✅ Header updated');
+            StatisticoHeader.updateVariable(varName, displayN);
+            console.log('✅ Header updated with n:', displayN);
           } else {
             setTimeout(updateHeader, 100);
           }
