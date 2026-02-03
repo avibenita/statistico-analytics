@@ -76,8 +76,7 @@ const StatisticoHeader = {
             <i class="fa-solid fa-rotate-right"></i>
           </button>
           <button class="dropdown-btn" onclick="StatisticoHeader.toggleDropdown()">
-            <i class="fa-solid fa-chart-simple"></i>
-            <span>Views</span>
+            <span>Advanced Analysis Options</span>
             <i class="fa-solid fa-chevron-down"></i>
           </button>
           <div class="dropdown-content" id="dropdownMenu">
@@ -96,25 +95,30 @@ const StatisticoHeader = {
    */
   renderDropdownItems() {
     const views = [
-      { id: 'histogram', icon: 'fa-chart-column', label: 'Histogram & Stats', file: 'histogram-standalone.html' },
-      { id: 'boxplot', icon: 'fa-box', label: 'Box Plot', file: 'boxplot-standalone.html' },
-      { id: 'qqplot', icon: 'fa-chart-scatter', label: 'QQ/PP Plot', file: 'qqplot-standalone.html' },
-      { id: 'kernel', icon: 'fa-wave-square', label: 'Kernel Density', file: 'kernel-standalone.html' },
-      { id: 'cdf', icon: 'fa-chart-area', label: 'Cumulative Distribution', file: 'cumulative-distribution.html' },
-      { id: 'percentile', icon: 'fa-percent', label: 'Percentile Calculator', file: 'percentile-standalone.html' },
-      { id: 'outliers', icon: 'fa-exclamation-triangle', label: 'Outliers Detection', file: 'outliers-standalone.html' },
-      { id: 'confidence', icon: 'fa-chart-line', label: 'Confidence Intervals', file: 'confidence-standalone.html' },
-      { id: 'normality', icon: 'fa-vial', label: 'Normality Tests', file: 'normality-standalone.html' },
-      { id: 'hypothesis', icon: 'fa-flask', label: 'Hypothesis Testing', file: 'hypothesis-standalone.html' }
+      { id: 'histogram', label: 'Interactive Histogram', file: 'histogram-standalone.html' },
+      { id: 'boxplot', label: 'Box Plot Analysis', file: 'boxplot-standalone.html' },
+      { id: 'cdf', label: 'Cumulative Distribution', file: 'cumulative-distribution.html' },
+      { id: 'percentile', label: 'Percentiles', file: 'percentile-standalone.html' },
+      { id: 'outliers', label: 'Outliers Detection', file: 'outliers-standalone.html' },
+      { id: 'separator', label: '---', file: null }, // Separator
+      { id: 'normality', label: 'Tests of Normality', file: 'normality-standalone.html' },
+      { id: 'qqplot', label: 'PP-QQ Plots', file: 'qqplot-standalone.html' },
+      { id: 'hypothesis', label: 'Hypothesis Testing', file: 'hypothesis-standalone.html' },
+      { id: 'confidence', label: 'Confidence Intervals', file: 'confidence-standalone.html' },
+      { id: 'kernel', label: 'Kernel Density', file: 'kernel-standalone.html' }
     ];
     
-    return views.map(view => `
-      <div class="analysis-option ${view.id === this.currentView ? 'active' : ''}" 
-           onclick="StatisticoHeader.navigateTo('${view.file}')">
-        <i class="fa-solid ${view.icon}"></i>
-        ${view.label}
-      </div>
-    `).join('');
+    return views.map(view => {
+      if (view.id === 'separator') {
+        return '<div class="analysis-separator"></div>';
+      }
+      return `
+        <div class="analysis-option ${view.id === this.currentView ? 'active' : ''}" 
+             onclick="StatisticoHeader.navigateTo('${view.file}')">
+          ${view.label}
+        </div>
+      `;
+    }).join('');
   },
   
   /**
