@@ -203,6 +203,12 @@ function onTrimChange() {
     trimMin = parseInt(document.getElementById('slMin').value);
     trimMax = parseInt(document.getElementById('slMax').value);
     
+    // Update slider gradients (inverse colors - orange = kept data)
+    const slMin = document.getElementById('slMin');
+    const slMax = document.getElementById('slMax');
+    slMin.style.setProperty('--trim-left-percent', trimMin + '%');
+    slMax.style.setProperty('--trim-right-percent', trimMax + '%');
+    
     if (currentData.length === 0) return;
     
     const sorted = [...currentData].sort((a, b) => a - b);
@@ -221,8 +227,15 @@ function onTrimChange() {
 function resetTrim() {
     trimMin = 0;
     trimMax = 100;
-    document.getElementById('slMin').value = 0;
-    document.getElementById('slMax').value = 100;
+    const slMin = document.getElementById('slMin');
+    const slMax = document.getElementById('slMax');
+    slMin.value = 0;
+    slMax.value = 100;
+    
+    // Reset gradients
+    slMin.style.setProperty('--trim-left-percent', '0%');
+    slMax.style.setProperty('--trim-right-percent', '100%');
+    
     document.getElementById('lblMin').textContent = '—';
     document.getElementById('lblMax').textContent = '—';
     updateStats();

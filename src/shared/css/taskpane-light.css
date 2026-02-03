@@ -307,6 +307,59 @@ input[type="range"] {
   padding: 0;
   height: 6px;
   accent-color: var(--accent-1);
+  -webkit-appearance: none;
+  background: transparent;
+}
+
+/* Slider track */
+input[type="range"]::-webkit-slider-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+}
+
+/* Slider thumb */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  cursor: pointer;
+  margin-top: -6px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  cursor: pointer;
+  border: none;
+}
+
+/* Left Trim - Gray left (trimmed), Orange right (kept) */
+#slMin {
+  background: linear-gradient(to right, 
+    var(--border) 0%, 
+    var(--border) var(--trim-left-percent, 0%), 
+    var(--accent-1) var(--trim-left-percent, 0%), 
+    var(--accent-1) 100%);
+}
+
+/* Right Trim - Orange left (kept), Gray right (trimmed) */
+#slMax {
+  background: linear-gradient(to right, 
+    var(--accent-1) 0%, 
+    var(--accent-1) var(--trim-right-percent, 100%), 
+    var(--border) var(--trim-right-percent, 100%), 
+    var(--border) 100%);
 }
 
 /* Clean Checkbox */
