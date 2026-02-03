@@ -72,9 +72,6 @@ const StatisticoHeader = {
         
         <!-- Right: Dropdown Menu -->
         <div class="header-right">
-          <button class="refresh-btn" onclick="StatisticoHeader.refreshView()" title="Refresh View (Ctrl+R)">
-            <i class="fa-solid fa-rotate-right"></i>
-          </button>
           <button class="dropdown-btn" onclick="StatisticoHeader.toggleDropdown()">
             <span>Advanced Analysis Options</span>
             <i class="fa-solid fa-chevron-down"></i>
