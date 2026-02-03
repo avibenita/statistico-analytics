@@ -28,7 +28,48 @@ const StatisticoHeader = {
     this.variableName = variableName;
     this.sampleSize = sampleSize;
     document.getElementById('headerVariableName').textContent = variableName;
-    document.getElementById('headerSampleSize').textContent = `(n=${sampleSize})`;
+    
+    // Check if sampleSize contains asterisk (indicating trimmed/transformed data)
+    const sampleSizeStr = String(sampleSize);
+    const hasAsterisk = sampleSizeStr.includes('*');
+    
+    if (hasAsterisk) {
+      // Use innerHTML with superscript for asterisk
+      const numericPart = sampleSizeStr.replace('*', '');
+      document.getElementById('headerSampleSize').innerHTML = `(n=${numericPart}<sup>*</sup>)`;
+      
+      // Show notice
+      this.showModificationNotice();
+    } else {
+      document.getElementById('headerSampleSize').textContent = `(n=${sampleSize})`;
+      
+      // Hide notice
+      this.hideModificationNotice();
+    }
+  },
+  
+  showModificationNotice() {
+    let notice = document.getElementById('header-modification-notice');
+    if (!notice) {
+      // Create notice element if it doesn't exist
+      notice = document.createElement('div');
+      notice.id = 'header-modification-notice';
+      notice.style.cssText = 'font-size: 10px; color: #94a3b8; text-align: center; padding: 4px 8px; background: rgba(148, 163, 184, 0.08); border-bottom: 1px solid rgba(255, 165, 120, 0.3);';
+      notice.textContent = '* Data has been trimmed or transformed';
+      
+      const header = document.querySelector('.statistico-header');
+      if (header && header.parentNode) {
+        header.parentNode.insertBefore(notice, header.nextSibling);
+      }
+    }
+    notice.style.display = 'block';
+  },
+  
+  hideModificationNotice() {
+    const notice = document.getElementById('header-modification-notice');
+    if (notice) {
+      notice.style.display = 'none';
+    }
   },
   
   /**
