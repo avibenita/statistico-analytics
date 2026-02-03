@@ -380,6 +380,9 @@ async function runAnalysis() {
     runButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Running...</span>';
     
     try {
+        console.log('🎯 Running analysis for column:', currentColumn, 'with', currentData.length, 'values');
+        console.log('📊 First few values:', currentData.slice(0, 5));
+        
         // Apply trim by value range (keeping original order)
         let processedData = currentData;
         if (trimMin > 0 || trimMax < 100) {
@@ -397,6 +400,7 @@ async function runAnalysis() {
         
         // Calculate statistics
         const results = calculateStatistics(processedData, address, currentTransform);
+        console.log('📈 Results calculated for:', results.column);
         
         // Open results in Office Dialog
         openResultsDialog(results);
@@ -465,6 +469,8 @@ function calculateStatistics(data, address, transform) {
     // Get column name from dropdown
     const dropdown = document.getElementById('ddlVariable');
     const columnName = dropdown.options[dropdown.selectedIndex]?.text || 'Variable';
+    
+    console.log('📋 calculateStatistics - Column name:', columnName, 'Index:', dropdown.selectedIndex);
     
     return {
         dataSource: address,
@@ -628,6 +634,11 @@ function openNewView(dialogUrl, results) {
 function openResultsDialog(results) {
     // Store results globally and in localStorage
     currentResults = results;
+    
+    // Clear old localStorage first, then set new
+    localStorage.removeItem('univariateResults');
+    console.log('🧹 Cleared localStorage before storing new results');
+    console.log('📊 Storing results for column:', results.column, 'n:', results.n);
     localStorage.setItem('univariateResults', JSON.stringify(results));
     
     // Use standalone histogram instead of full results dialog
