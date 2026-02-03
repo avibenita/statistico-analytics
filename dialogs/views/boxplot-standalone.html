@@ -202,15 +202,39 @@
           Office.EventType.DialogMessageReceived,
           onMessageReceived
         );
+        
+        // Send ready status
+        setTimeout(() => {
+          sendMessageToParent({ status: 'ready' });
+        }, 500);
+        
+        // Check localStorage for data
+        setTimeout(() => {
+          const container = document.getElementById('results-container');
+          if (!container.classList.contains('show')) {
+            console.log('📦 Checking localStorage for univariateResults...');
+            const storedResults = localStorage.getItem('univariateResults');
+            if (storedResults) {
+              try {
+                const parsedData = JSON.parse(storedResults);
+                console.log('✅ Found data in localStorage');
+                handleDataReceived(parsedData);
+                return;
+              } catch (e) {
+                console.error('❌ Error parsing localStorage data:', e);
+              }
+            }
+          }
+        }, 1000);
       };
       
       setTimeout(() => {
         const container = document.getElementById('results-container');
         if (!container.classList.contains('show')) {
-          console.log('⏰ No data received from parent, loading sample data...');
+          console.log('⏰ No data received from parent or localStorage, loading sample data...');
           loadSampleData();
         }
-      }, 2000);
+      }, 5000);
     };
     
     // Fallback for browser testing
@@ -229,13 +253,28 @@
       }, 100);
     });
 
+    // Send message to parent
+    function sendMessageToParent(message) {
+      if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+        Office.context.ui.messageParent(JSON.stringify(message));
+        console.log('📤 Sent message to parent:', message);
+      }
+    }
+
     // Handle messages from parent window
     function onMessageReceived(arg) {
-      console.log('📨 Message received:', arg);
-      const message = JSON.parse(arg.message);
-      
-      if (message.type === 'data') {
-        handleDataReceived(message.data);
+      try {
+        console.log('📨 Message received:', arg);
+        const message = JSON.parse(arg.message);
+        
+        // Handle both old format (type: 'data') and new format (action: 'loadData')
+        if (message.type === 'data') {
+          handleDataReceived(message.data);
+        } else if (message.action === 'loadData') {
+          handleDataReceived(message.data);
+        }
+      } catch (e) {
+        console.error('❌ Error handling message:', e);
       }
     }
 
@@ -244,8 +283,19 @@
       try {
         console.log('📊 Data received:', data);
         
+        // Save to localStorage for view switching
+        try {
+          localStorage.setItem('univariateResults', JSON.stringify(data));
+          console.log('✅ Saved data to localStorage');
+        } catch (e) {
+          console.error('❌ Error saving to localStorage:', e);
+        }
+        
         originalData = data.values || data.trimmedValues || data.transformedValues || data.rawValues || [];
-        currentVariableName = data.variable || data.column || 'Variable';
+        
+        // Extract variable name with priority to column field
+        currentVariableName = data.column || data.variable || data.variableName || 'Variable';
+        console.log('✅ Variable name set to:', currentVariableName);
         
         // Use actual data length, not the original n
         const actualN = originalData.length;
