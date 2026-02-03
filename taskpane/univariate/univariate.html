@@ -61,9 +61,31 @@
                 <div class="tab-content">
                     <!-- Summary -->
                     <div id="panel-summary" class="active">
-                        <div id="summaryContent" class="hint">
-                            <i class="fa-solid fa-info-circle"></i><br>
-                            Select a data range and column
+                        <div class="stats-mini">
+                            <div class="stat-box">
+                                <div class="stat-label">n</div>
+                                <div class="stat-value" id="stat-n">—</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Mean</div>
+                                <div class="stat-value" id="stat-mean">—</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Median</div>
+                                <div class="stat-value" id="stat-median">—</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">SD</div>
+                                <div class="stat-value" id="stat-std">—</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Min</div>
+                                <div class="stat-value" id="stat-min">—</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Max</div>
+                                <div class="stat-value" id="stat-max">—</div>
+                            </div>
                         </div>
                     </div>
 
@@ -120,42 +142,6 @@
                                 <input type="radio" name="transform" value="minmax" />
                                 <span>Min-Max</span>
                             </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stats -->
-            <div class="section">
-                <div class="section-header">
-                    <i class="fa-solid fa-calculator"></i>
-                    <span class="section-title">Quick Stats</span>
-                </div>
-                <div class="section-body">
-                    <div class="stats-mini">
-                        <div class="stat-box">
-                            <div class="stat-label">n</div>
-                            <div class="stat-value" id="stat-n">—</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Mean</div>
-                            <div class="stat-value" id="stat-mean">—</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Median</div>
-                            <div class="stat-value" id="stat-median">—</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">SD</div>
-                            <div class="stat-value" id="stat-std">—</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Min</div>
-                            <div class="stat-value" id="stat-min">—</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Max</div>
-                            <div class="stat-value" id="stat-max">—</div>
                         </div>
                     </div>
                 </div>
