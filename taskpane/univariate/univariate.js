@@ -197,6 +197,28 @@ function switchTab(tabName) {
 }
 
 /**
+ * Update stats footer notice
+ */
+function updateStatsFooter(isTrimmed, isTransformed) {
+    const footer = document.getElementById('stats-footer');
+    if (!footer) return;
+    
+    if (!isTrimmed && !isTransformed) {
+        footer.style.display = 'none';
+        return;
+    }
+    
+    let message = '* ';
+    const modifications = [];
+    if (isTrimmed) modifications.push('trimmed');
+    if (isTransformed) modifications.push('transformed');
+    message += 'Data has been ' + modifications.join(' and ');
+    
+    footer.textContent = message;
+    footer.style.display = 'block';
+}
+
+/**
  * Handle trim slider changes
  */
 function onTrimChange() {
@@ -260,6 +282,7 @@ function updateStats() {
         document.getElementById('stat-std').textContent = '—';
         document.getElementById('stat-min').textContent = '—';
         document.getElementById('stat-max').textContent = '—';
+        updateStatsFooter(false, false);
         return;
     }
     
@@ -267,9 +290,18 @@ function updateStats() {
     const sorted = [...currentData].sort((a, b) => a - b);
     const minIdx = Math.floor((sorted.length - 1) * trimMin / 100);
     const maxIdx = Math.floor((sorted.length - 1) * trimMax / 100);
-    const trimmedData = sorted.slice(minIdx, maxIdx + 1);
+    let trimmedData = sorted.slice(minIdx, maxIdx + 1);
     
-    // Calculate stats (without transform for display)
+    // Track if modifications are applied
+    const isTrimmed = (trimMin > 0 || trimMax < 100);
+    const isTransformed = (currentTransform !== 'none');
+    
+    // Apply transform to the data
+    if (isTransformed) {
+        trimmedData = applyTransform(trimmedData, currentTransform);
+    }
+    
+    // Calculate stats (WITH transform applied)
     const n = trimmedData.length;
     const sum = trimmedData.reduce((a, b) => a + b, 0);
     const mean = sum / n;
@@ -281,13 +313,17 @@ function updateStats() {
     const min = Math.min(...trimmedData);
     const max = Math.max(...trimmedData);
     
-    // Update display
-    document.getElementById('stat-n').textContent = n;
+    // Update display with asterisk if modified
+    const nDisplay = isTrimmed || isTransformed ? n + '*' : n;
+    document.getElementById('stat-n').innerHTML = nDisplay;
     document.getElementById('stat-mean').textContent = mean.toFixed(2);
     document.getElementById('stat-median').textContent = median.toFixed(2);
     document.getElementById('stat-std').textContent = stdDev.toFixed(2);
     document.getElementById('stat-min').textContent = min.toFixed(2);
     document.getElementById('stat-max').textContent = max.toFixed(2);
+    
+    // Update footer notice
+    updateStatsFooter(isTrimmed, isTransformed);
 }
 
 /**
