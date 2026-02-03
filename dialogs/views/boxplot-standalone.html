@@ -182,6 +182,9 @@
         <div class="chart-container" id="withoutOutliers"></div>
       </div>
       
+      <!-- Footer Notice -->
+      <div id="boxplot-footer" style="display: none; font-size: 11px; color: #7f8c8d; text-align: center; padding: 6px 0; opacity: 0.9;"></div>
+      
     </div>
     
   </div>
@@ -243,12 +246,37 @@
         
         originalData = data.values || data.trimmedValues || data.transformedValues || data.rawValues || [];
         currentVariableName = data.variable || data.column || 'Variable';
-        currentSampleSize = data.n || originalData.length;
         
-        console.log('✅ Data loaded:', { length: originalData.length, variable: currentVariableName });
+        // Use actual data length, not the original n
+        const actualN = originalData.length;
         
-        // Update shared header
-        StatisticoHeader.updateVariable(currentVariableName, currentSampleSize);
+        // Check if data was modified (trimmed or transformed)
+        const isTrimmed = data.trim && (data.trim.min > 0 || data.trim.max < 100);
+        const isTransformed = data.transform && data.transform !== 'none';
+        const isModified = isTrimmed || isTransformed;
+        
+        // Set display n with asterisk if modified
+        currentSampleSize = actualN;
+        const displayN = isModified ? actualN + '*' : actualN;
+        
+        console.log('✅ Data loaded:', { length: actualN, variable: currentVariableName, modified: isModified });
+        
+        // Update shared header with display n
+        StatisticoHeader.updateVariable(currentVariableName, displayN);
+        
+        // Update footer notice
+        const footer = document.getElementById('boxplot-footer');
+        if (isModified) {
+          let message = '* ';
+          const modifications = [];
+          if (isTrimmed) modifications.push('trimmed');
+          if (isTransformed) modifications.push('transformed');
+          message += 'Data has been ' + modifications.join(' and ');
+          footer.textContent = message;
+          footer.style.display = 'block';
+        } else {
+          footer.style.display = 'none';
+        }
         
         // Calculate and display
         displayBoxPlot();
