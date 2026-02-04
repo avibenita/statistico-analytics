@@ -105,7 +105,7 @@ async function loadFromNamedRange() {
       document.getElementById('namedRangeDropdown').style.display = 'none';
       
       // Show range display
-      showRangeDisplay('XLs Address', range.address, true);
+      showRangeDisplay('Xls Address', range.address, true);
       
       // Process data
       processRangeData(range.values, range.address);
@@ -129,7 +129,7 @@ async function autoDetectRange() {
       expandedRange.load(['address', 'values', 'rowCount', 'columnCount']);
       await context.sync();
       
-      showRangeDisplay('XLs Address', expandedRange.address, false);
+      showRangeDisplay('Xls Address', expandedRange.address, false);
       processRangeData(expandedRange.values, expandedRange.address);
     });
   } catch (error) {
@@ -149,7 +149,7 @@ async function useSelection() {
       range.load(['address', 'values', 'rowCount', 'columnCount']);
       await context.sync();
       
-      showRangeDisplay('Selected Range', range.address, false);
+      showRangeDisplay('Xls Address', range.address, false);
       processRangeData(range.values, range.address);
     });
   } catch (error) {
