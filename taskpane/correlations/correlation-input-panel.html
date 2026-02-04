@@ -31,13 +31,28 @@
     gap: 8px;
   }
   
+  /* Top Scroll Bar */
+  .top-scroll-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 20px;
+    border: 1px solid #d1d5db;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    background: #f9fafb;
+  }
+  
+  .top-scroll-content {
+    height: 1px;
+  }
+  
   /* Column Table */
   .column-table-container {
     max-height: 400px;
     overflow-x: auto;
     overflow-y: auto;
     border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border-radius: 0 0 6px 6px;
     background: white;
   }
   
@@ -286,8 +301,13 @@
   </div>
   
   <div class="column-preview-section">
+    <!-- Top Scroll Bar -->
+    <div class="top-scroll-container" id="topScroll">
+      <div class="top-scroll-content" id="topScrollContent"></div>
+    </div>
+    
     <!-- Column Table -->
-    <div class="column-table-container">
+    <div class="column-table-container" id="tableContainer">
       <table class="column-table">
         <thead>
           <tr>

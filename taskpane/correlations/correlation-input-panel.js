@@ -152,6 +152,9 @@ function displayColumnTable() {
   });
   
   updateSummaryStats();
+  
+  // Setup scroll sync after table is rendered
+  setTimeout(setupScrollSync, 100);
 }
 
 /**
@@ -341,6 +344,33 @@ function showError(message) {
   console.error(message);
   // TODO: Implement proper error display
   alert(message);
+}
+
+/**
+ * Setup scroll synchronization between top and bottom scrollbars
+ */
+function setupScrollSync() {
+  const topScroll = document.getElementById('topScroll');
+  const tableContainer = document.getElementById('tableContainer');
+  const topScrollContent = document.getElementById('topScrollContent');
+  const table = document.querySelector('.column-table');
+  
+  if (!topScroll || !tableContainer || !topScrollContent || !table) {
+    return;
+  }
+  
+  // Set the width of the top scroll content to match the table width
+  topScrollContent.style.width = table.scrollWidth + 'px';
+  
+  // Sync top scroll to table scroll
+  topScroll.addEventListener('scroll', function() {
+    tableContainer.scrollLeft = topScroll.scrollLeft;
+  });
+  
+  // Sync table scroll to top scroll
+  tableContainer.addEventListener('scroll', function() {
+    topScroll.scrollLeft = tableContainer.scrollLeft;
+  });
 }
 
 // Initialize when Office is ready
