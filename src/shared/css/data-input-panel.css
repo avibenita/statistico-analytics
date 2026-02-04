@@ -27,7 +27,7 @@
   background: var(--surface-0);
   border: 1.5px solid var(--border);
   border-radius: 8px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .section-title {
@@ -225,6 +225,7 @@
   display: flex;
   gap: 8px;
   position: relative;
+  overflow: visible;
 }
 
 /* ===== RESPONSIVE DESIGN FOR DATA INPUT PANEL ===== */
