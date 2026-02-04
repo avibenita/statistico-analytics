@@ -15,7 +15,7 @@
   /* Column Preview Section */
   .column-preview-section {
     margin-top: 20px;
-    padding: 14px;
+    padding: 10px;
     background: #f8f9fa;
     border-radius: 8px;
     border: 1px solid #e5e7eb;
@@ -43,7 +43,7 @@
   .column-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 11px;
   }
   
   .column-table thead {
@@ -55,16 +55,16 @@
   }
   
   .column-table th {
-    padding: 10px 8px;
+    padding: 8px 6px;
     text-align: left;
     font-weight: 600;
     color: #374151;
     border-bottom: 2px solid #d1d5db;
-    font-size: 12px;
+    font-size: 11px;
   }
   
   .column-table th.col-checkbox {
-    width: 50px;
+    width: 40px;
     text-align: center;
   }
   
@@ -73,7 +73,7 @@
   }
   
   .column-table th.col-stat {
-    width: 80px;
+    width: 70px;
     text-align: center;
   }
   
@@ -92,7 +92,7 @@
   }
   
   .column-table td {
-    padding: 10px 8px;
+    padding: 8px 6px;
   }
   
   .column-table td.col-checkbox {
@@ -108,15 +108,15 @@
     text-align: center;
     color: #6b7280;
     font-family: 'Courier New', monospace;
-    font-size: 12px;
+    font-size: 10px;
   }
   
   /* Stat badges */
   .stat-badge {
     display: inline-block;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 11px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 10px;
     font-weight: 600;
   }
   
@@ -151,7 +151,7 @@
   .select-all-controls {
     display: flex;
     gap: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     justify-content: flex-end;
   }
   
@@ -280,24 +280,11 @@
   </div>
   
   <div class="column-preview-section">
-    <div class="preview-title">
-      <i class="fa-solid fa-list"></i>
-      <span>Detected Columns</span>
-    </div>
-    
-    <!-- Select All/None Controls -->
+    <!-- Select All Control -->
     <div class="select-all-controls">
       <button class="select-btn" onclick="selectAllColumns()">
         <i class="fa-solid fa-check-double"></i>
         Select All
-      </button>
-      <button class="select-btn" onclick="selectNoneColumns()">
-        <i class="fa-solid fa-xmark"></i>
-        Select None
-      </button>
-      <button class="select-btn" onclick="selectOnlyNumeric()">
-        <i class="fa-solid fa-hashtag"></i>
-        Numeric Only
       </button>
     </div>
     
