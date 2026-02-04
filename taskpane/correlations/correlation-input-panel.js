@@ -130,6 +130,12 @@ function displayColumnTable() {
     nameCell.textContent = col.name;
     row.appendChild(nameCell);
     
+    // Arrow cell
+    const arrowCell = document.createElement('td');
+    arrowCell.className = 'col-arrow';
+    arrowCell.textContent = '→';
+    row.appendChild(arrowCell);
+    
     // n Numeric cell
     const numericCell = document.createElement('td');
     numericCell.className = 'col-stat';
