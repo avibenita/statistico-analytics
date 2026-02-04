@@ -720,7 +720,7 @@ function openResultsDialog(results) {
     lockTaskpaneUI();
     
     // Use standalone histogram instead of full results dialog
-    const dialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/univariate/histogram-standalone.html`;
+    const dialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/histogram-standalone.html`;
     
     Office.context.ui.displayDialogAsync(
         dialogUrl,
@@ -862,7 +862,7 @@ function quickTestBoxPlot() {
     const results = calculateStatistics(sampleData, 'Test Data', 'none');
     currentResults = results;
     
-    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/univariate/boxplot-standalone.html';
+    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/boxplot-standalone.html';
     openNewView(dialogUrl, results);
     showStatus('success', 'Test box plot opened!');
 }
@@ -885,7 +885,7 @@ function quickTestQQPlot() {
     const results = calculateStatistics(sampleData, 'Test Data', 'none');
     currentResults = results;
     
-    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/univariate/qqplot-standalone.html';
+    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/qqplot-standalone.html';
     openNewView(dialogUrl, results);
     showStatus('success', 'Test QQ/PP plot opened!');
 }
@@ -908,7 +908,7 @@ function quickTestKernel() {
     const results = calculateStatistics(sampleData, 'Test Data', 'none');
     currentResults = results;
     
-    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/univariate/kernel-standalone.html';
+    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/kernel-standalone.html';
     openNewView(dialogUrl, results);
     showStatus('success', 'Test Kernel Density opened!');
 }
@@ -933,7 +933,7 @@ function quickTestOutliers() {
     const results = calculateStatistics(sampleData, 'Test Data', 'none');
     currentResults = results;
     
-    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/univariate/outliers-standalone.html';
+    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/outliers-standalone.html';
     openNewView(dialogUrl, results);
     showStatus('success', 'Test Outliers Detection opened!');
 }
@@ -956,7 +956,7 @@ function quickTestConfidence() {
     const results = calculateStatistics(sampleData, 'Test Data', 'none');
     currentResults = results;
     
-    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/univariate/confidence-standalone.html';
+    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/confidence-standalone.html';
     openNewView(dialogUrl, results);
     showStatus('success', 'Test Confidence Intervals opened!');
 }
@@ -979,7 +979,7 @@ function quickTestNormality() {
     const results = calculateStatistics(sampleData, 'Test Data', 'none');
     currentResults = results;
     
-    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/univariate/normality-standalone.html';
+    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/normality-standalone.html';
     openNewView(dialogUrl, results);
     showStatus('success', 'Test Normality Tests opened!');
 }
@@ -1002,7 +1002,7 @@ function quickTestHypothesis() {
     const results = calculateStatistics(sampleData, 'Test Data', 'none');
     currentResults = results;
     
-    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/univariate/hypothesis-standalone.html';
+    const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/hypothesis-standalone.html';
     openNewView(dialogUrl, results);
     showStatus('success', 'Test Hypothesis Testing opened!');
 }

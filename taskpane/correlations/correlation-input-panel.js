@@ -392,7 +392,7 @@ function openCorrelationResults(correlationData) {
   console.log('Data to send:', correlationData);
   
   // Dialog URL - will be opened in Office dialog
-  const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/correlations/correlation-standalone.html';
+  const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/correlation-standalone.html';
   
   Office.context.ui.displayDialogAsync(
     dialogUrl,
