@@ -105,7 +105,7 @@ async function loadFromNamedRange() {
       document.getElementById('namedRangeDropdown').style.display = 'none';
       
       // Show range display
-      showRangeDisplay('Named Range', range.address, true);
+      showRangeDisplay('XLs Address', range.address, true);
       
       // Process data
       processRangeData(range.values, range.address);
@@ -129,7 +129,7 @@ async function autoDetectRange() {
       expandedRange.load(['address', 'values', 'rowCount', 'columnCount']);
       await context.sync();
       
-      showRangeDisplay('XL address', expandedRange.address, false);
+      showRangeDisplay('XLs Address', expandedRange.address, false);
       processRangeData(expandedRange.values, expandedRange.address);
     });
   } catch (error) {
