@@ -251,20 +251,20 @@
     let currentType = 'Pearson';
 
     // Initialize Office.js
-    Office.initialize = function() {
-      console.log('Office initialized in correlation dialog');
+    Office.onReady(function(info) {
+      console.log('Office initialized in correlation dialog', info);
+      
+      // Listen for messages from parent
+      Office.context.ui.addHandlerAsync(
+        Office.EventType.DialogParentMessageReceived,
+        onMessageFromParent
+      );
       
       // Notify parent that dialog is ready
       Office.context.ui.messageParent(JSON.stringify({
         action: 'ready'
       }));
-    };
-
-    // Listen for messages from parent
-    Office.context.ui.addHandlerAsync(
-      Office.EventType.DialogParentMessageReceived,
-      onMessageFromParent
-    );
+    });
 
     function onMessageFromParent(arg) {
       try {
