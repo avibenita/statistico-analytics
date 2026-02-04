@@ -34,6 +34,7 @@
   /* Column Table */
   .column-table-container {
     max-height: 400px;
+    overflow-x: auto;
     overflow-y: auto;
     border: 1px solid #d1d5db;
     border-radius: 6px;
@@ -41,7 +42,8 @@
   }
   
   .column-table {
-    width: 100%;
+    width: max-content;
+    min-width: 100%;
     border-collapse: collapse;
     font-size: 11px;
   }
@@ -69,7 +71,8 @@
   }
   
   .column-table th.col-name {
-    min-width: 150px;
+    min-width: 200px;
+    max-width: 400px;
   }
   
   .column-table th.col-stat {
@@ -102,6 +105,9 @@
   .column-table td.col-name {
     font-weight: 500;
     color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
   .column-table td.col-stat {
@@ -280,14 +286,6 @@
   </div>
   
   <div class="column-preview-section">
-    <!-- Select All Control -->
-    <div class="select-all-controls">
-      <button class="select-btn" onclick="selectAllColumns()">
-        <i class="fa-solid fa-check-double"></i>
-        Select All
-      </button>
-    </div>
-    
     <!-- Column Table -->
     <div class="column-table-container">
       <table class="column-table">
