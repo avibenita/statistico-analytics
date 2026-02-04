@@ -273,6 +273,20 @@
     font-size: 16px;
   }
   
+  /* Hint Message */
+  .hint-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #1e40af;
+  }
+  
   /* Warning Messages */
   .warning-message {
     display: flex;
@@ -301,6 +315,11 @@
   </div>
   
   <div class="column-preview-section">
+    <!-- Hint Message -->
+    <div class="hint-message">
+      <span>👉 Drag this panel wider for best experience</span>
+    </div>
+    
     <!-- Top Scroll Bar -->
     <div class="top-scroll-container" id="topScroll">
       <div class="top-scroll-content" id="topScrollContent"></div>
