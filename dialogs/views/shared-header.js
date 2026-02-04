@@ -54,8 +54,19 @@ const StatisticoHeader = {
       // Create notice element if it doesn't exist
       notice = document.createElement('div');
       notice.id = 'header-modification-notice';
-      notice.style.cssText = 'font-size: 10px; color: #94a3b8; text-align: center; padding: 4px 8px; background: rgba(148, 163, 184, 0.08); border-bottom: 1px solid rgba(255, 165, 120, 0.3);';
-      notice.textContent = '* Data has been trimmed or transformed';
+      notice.style.cssText = `
+        font-size: 11px;
+        font-weight: 600;
+        color: #ffa578;
+        text-align: center;
+        padding: 8px 12px;
+        background: linear-gradient(135deg, rgba(255, 165, 120, 0.15), rgba(255, 165, 120, 0.25));
+        border-bottom: 2px solid rgba(255, 165, 120, 0.6);
+        border-top: 1px solid rgba(255, 165, 120, 0.3);
+        box-shadow: 0 2px 8px rgba(255, 165, 120, 0.2);
+        letter-spacing: 0.3px;
+      `;
+      notice.innerHTML = '<i class="fa-solid fa-exclamation-triangle" style="margin-right: 6px;"></i>* Data has been trimmed or transformed';
       
       const header = document.querySelector('.statistico-header');
       if (header && header.parentNode) {
