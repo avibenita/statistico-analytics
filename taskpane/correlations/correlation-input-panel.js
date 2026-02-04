@@ -324,6 +324,9 @@ function getSelectedColumnsData() {
   return columnData.filter(col => col.included);
 }
 
+// Store results dialog reference
+let resultsDialog = null;
+
 /**
  * Run correlation analysis
  * This function should be implemented by the main module
@@ -338,9 +341,111 @@ function runCorrelationAnalysis() {
   
   console.log('Running correlation analysis on columns:', selectedColumns);
   
-  // TODO: Implement actual correlation analysis
-  // This will call the main analysis function with the selected columns
-  alert(`Ready to analyze ${selectedColumns.length} columns:\n${selectedColumns.map(c => c.name).join(', ')}`);
+  // Get the current range data
+  const rangeData = getCurrentRangeData();
+  if (!rangeData || !rangeData.values || rangeData.values.length < 2) {
+    showError('No data available. Please select a range first.');
+    return;
+  }
+  
+  // Prepare data for correlation analysis
+  const data = prepareCorrelationData(rangeData.values, selectedColumns);
+  
+  // Open results dialog
+  openCorrelationResults(data);
+}
+
+/**
+ * Prepare data for correlation analysis
+ */
+function prepareCorrelationData(values, selectedColumns) {
+  // Extract headers (first row)
+  const allHeaders = values[0];
+  const dataRows = values.slice(1);
+  
+  // Filter to only selected columns
+  const selectedHeaders = selectedColumns.map(col => col.name);
+  
+  // Build data array with only selected columns
+  const correlationData = dataRows.map(row => {
+    const rowData = {};
+    selectedHeaders.forEach((header, idx) => {
+      const colIndex = allHeaders.indexOf(header);
+      if (colIndex !== -1) {
+        rowData[header] = row[colIndex];
+      }
+    });
+    return rowData;
+  });
+  
+  return {
+    data: correlationData,
+    headers: selectedHeaders
+  };
+}
+
+/**
+ * Open correlation results in Office Dialog
+ */
+function openCorrelationResults(correlationData) {
+  console.log('Opening correlation results dialog...');
+  console.log('Data to send:', correlationData);
+  
+  // Dialog URL - will be opened in Office dialog
+  const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/correlations/correlation-standalone.html';
+  
+  Office.context.ui.displayDialogAsync(
+    dialogUrl,
+    { height: 90, width: 90, displayInIframe: true },
+    (asyncResult) => {
+      if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+        console.error('Failed to open dialog:', asyncResult.error);
+        showError('Failed to open results dialog: ' + asyncResult.error.message);
+      } else {
+        resultsDialog = asyncResult.value;
+        console.log('✅ Dialog opened successfully');
+        
+        // Wait for dialog to be ready, then send data
+        setTimeout(() => {
+          if (resultsDialog) {
+            console.log('📤 Sending data to dialog...');
+            resultsDialog.messageChild(JSON.stringify({
+              type: 'CORRELATION_DATA',
+              payload: correlationData
+            }));
+          }
+        }, 1000);
+        
+        // Handle messages from dialog
+        resultsDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
+          try {
+            const message = JSON.parse(arg.message);
+            console.log('📩 Message from dialog:', message);
+            
+            if (message.action === 'ready') {
+              // Dialog is ready, send data again
+              console.log('Dialog ready, sending data...');
+              resultsDialog.messageChild(JSON.stringify({
+                type: 'CORRELATION_DATA',
+                payload: correlationData
+              }));
+            } else if (message.action === 'close') {
+              resultsDialog.close();
+              resultsDialog = null;
+            }
+          } catch (e) {
+            console.error('Error handling dialog message:', e);
+          }
+        });
+        
+        // Handle dialog close event
+        resultsDialog.addEventHandler(Office.EventType.DialogEventReceived, (arg) => {
+          console.log('Dialog event:', arg.error);
+          resultsDialog = null;
+        });
+      }
+    }
+  );
 }
 
 /**
@@ -348,8 +453,81 @@ function runCorrelationAnalysis() {
  */
 function showError(message) {
   console.error(message);
-  // TODO: Implement proper error display
-  alert(message);
+  
+  // Create or update error message element
+  let errorDiv = document.getElementById('correlation-error-message');
+  if (!errorDiv) {
+    errorDiv = document.createElement('div');
+    errorDiv.id = 'correlation-error-message';
+    errorDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      max-width: 400px;
+      padding: 16px 20px;
+      background: #fee2e2;
+      border: 2px solid #ef4444;
+      border-radius: 8px;
+      color: #991b1b;
+      font-weight: 600;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      animation: slideIn 0.3s ease;
+    `;
+    document.body.appendChild(errorDiv);
+  }
+  
+  errorDiv.innerHTML = `
+    <div style="display: flex; align-items: flex-start; gap: 12px;">
+      <i class="fa-solid fa-exclamation-triangle" style="color: #ef4444; font-size: 20px; margin-top: 2px;"></i>
+      <div style="flex: 1;">
+        <div style="font-weight: 700; margin-bottom: 4px;">Error</div>
+        <div style="font-weight: 400;">${message}</div>
+      </div>
+      <button onclick="document.getElementById('correlation-error-message').remove()" 
+              style="background: none; border: none; color: #991b1b; cursor: pointer; font-size: 20px; padding: 0; line-height: 1;">
+        ×
+      </button>
+    </div>
+  `;
+  
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    if (errorDiv && errorDiv.parentNode) {
+      errorDiv.style.animation = 'slideOut 0.3s ease';
+      setTimeout(() => errorDiv.remove(), 300);
+    }
+  }, 5000);
+}
+
+// Add CSS animation for error message
+if (!document.getElementById('correlation-error-styles')) {
+  const style = document.createElement('style');
+  style.id = 'correlation-error-styles';
+  style.textContent = `
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 /**
