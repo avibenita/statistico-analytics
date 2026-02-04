@@ -129,7 +129,7 @@ async function autoDetectRange() {
       expandedRange.load(['address', 'values', 'rowCount', 'columnCount']);
       await context.sync();
       
-      showRangeDisplay('Auto-detected', expandedRange.address, false);
+      showRangeDisplay('XL address', expandedRange.address, false);
       processRangeData(expandedRange.values, expandedRange.address);
     });
   } catch (error) {
