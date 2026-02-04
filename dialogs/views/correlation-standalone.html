@@ -30,40 +30,149 @@
     body{background:var(--surface-0);color:var(--text-primary);font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
 
     .container{
-      padding:20px;
-      max-width:1400px;
-      margin:0 auto;
+      padding:0;
+      max-width:100%;
+      margin:0;
+      height:100vh;
+      display:flex;
+      flex-direction:column;
     }
 
-    .header{
+    /* Statistico Header */
+    .statistico-header{
+      background:linear-gradient(135deg, #1a1f2e 0%, #0c1624 100%);
+      padding:16px 24px;
       display:flex;
       justify-content:space-between;
       align-items:center;
-      margin-bottom:20px;
-      padding-bottom:15px;
-      border-bottom:2px solid var(--border);
+      border-bottom:3px solid var(--accent-1);
+      box-shadow:0 4px 12px rgba(0,0,0,0.3);
     }
 
-    .header h1{
-      margin:0;
-      font-size:28px;
+    .header-left{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .logo-container{
+      width:48px;
+      height:48px;
+      background:linear-gradient(145deg, rgba(255,165,120,0.2), rgba(255,165,120,0.1));
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:2px solid var(--accent-1);
+    }
+
+    .header-info{
+      display:flex;
+      flex-direction:column;
+    }
+
+    .app-name{
+      font-size:18px;
+      font-weight:700;
       color:var(--accent-1);
+      letter-spacing:0.5px;
     }
 
-    .close-btn{
-      padding:8px 16px;
-      background:rgba(231,76,60,0.2);
-      border:1px solid rgba(231,76,60,0.4);
-      color:#e74c3c;
-      border-radius:6px;
-      cursor:pointer;
+    .module-name{
+      font-size:11px;
       font-weight:600;
-      transition:all .2s;
+      color:var(--text-secondary);
+      letter-spacing:1.5px;
+      margin-top:-2px;
     }
 
-    .close-btn:hover{
-      background:#e74c3c;
-      color:#fff;
+    .header-center{
+      flex:1;
+      text-align:center;
+      padding:0 20px;
+    }
+
+    .dialog-title{
+      margin:0;
+      font-size:24px;
+      font-weight:600;
+      color:var(--text-primary);
+      letter-spacing:0.3px;
+    }
+
+    .dialog-subtitle{
+      margin:4px 0 0 0;
+      font-size:14px;
+      color:var(--text-secondary);
+      font-weight:400;
+    }
+
+    .header-right{
+      display:flex;
+      align-items:center;
+    }
+
+    .dropdown-container{
+      position:relative;
+    }
+
+    .advanced-options-btn{
+      padding:10px 18px;
+      background:linear-gradient(145deg, #4a5568, #2d3748);
+      border:1px solid #4a5568;
+      border-radius:8px;
+      color:#e2e8f0;
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all .3s;
+      box-shadow:0 4px 8px rgba(0,0,0,.3);
+      white-space:nowrap;
+    }
+
+    .advanced-options-btn:hover{
+      transform:translateY(-1px);
+      background:linear-gradient(145deg, #5a6578, #3d4758);
+      box-shadow:0 6px 12px rgba(0,0,0,.4);
+    }
+
+    .advanced-options-dropdown{
+      position:absolute;
+      top:calc(100% + 8px);
+      right:0;
+      min-width:280px;
+      background:var(--surface-1);
+      border:1px solid var(--border);
+      border-radius:8px;
+      box-shadow:0 8px 24px rgba(0,0,0,0.4);
+      padding:8px 0;
+      z-index:1000;
+    }
+
+    .advanced-options-dropdown a{
+      display:block;
+      padding:12px 20px;
+      color:var(--text-secondary);
+      text-decoration:none;
+      transition:all .2s;
+      font-size:14px;
+      border-bottom:1px solid rgba(255,255,255,0.05);
+    }
+
+    .advanced-options-dropdown a:hover{
+      background:var(--accent-1);
+      color:var(--surface-0);
+      transform:translateX(4px);
+    }
+
+    .advanced-options-dropdown a:last-child{
+      border-bottom:none;
+    }
+
+    .content-wrapper{
+      flex:1;
+      overflow:auto;
+      padding:20px;
     }
 
     .controls{
@@ -201,16 +310,39 @@
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>
-        <i class="fa-solid fa-link"></i>
-        Correlation Analysis
-      </h1>
-      <button class="close-btn" onclick="closeDialog()">
-        <i class="fa-solid fa-times"></i> Close
-      </button>
+    <!-- Statistico Header -->
+    <div class="statistico-header">
+      <div class="header-left">
+        <div class="logo-container">
+          <i class="fa-solid fa-chart-line" style="font-size: 24px; color: var(--accent-1);"></i>
+        </div>
+        <div class="header-info">
+          <div class="app-name">Statistico</div>
+          <div class="module-name">CORRELATIONS</div>
+        </div>
+      </div>
+      <div class="header-center">
+        <h1 class="dialog-title">Correlation Matrix</h1>
+        <p class="dialog-subtitle" id="variableInfo">Analyzing selected variables</p>
+      </div>
+      <div class="header-right">
+        <div class="dropdown-container">
+          <button class="advanced-options-btn" onclick="toggleAdvancedOptions()">
+            Advanced Analysis Options ▼
+          </button>
+          <div class="advanced-options-dropdown" id="advancedOptionsDropdown" style="display: none;">
+            <a href="#" onclick="navigateTo('correlations')">Correlation Matrix</a>
+            <a href="#" onclick="navigateTo('partial-correlations')">Partial Correlations</a>
+            <a href="#" onclick="navigateTo('correlation-network')">Correlation Network</a>
+            <a href="#" onclick="navigateTo('reliability')">Reliability Coefficients</a>
+            <a href="#" style="opacity: 0.3; pointer-events: none;">─────────────────</a>
+            <a href="#" onclick="closeDialog()">✕ Close Dialog</a>
+          </div>
+        </div>
+      </div>
     </div>
 
+    <div class="content-wrapper">
     <div class="controls">
       <div class="control-group">
         <label>Correlation Type:</label>
@@ -243,6 +375,7 @@
           <tbody id="tableBody"></tbody>
         </table>
       </div>
+    </div>
     </div>
   </div>
 
@@ -420,11 +553,32 @@
       renderCorrelations();
     }
 
+    function toggleAdvancedOptions() {
+      const dropdown = document.getElementById('advancedOptionsDropdown');
+      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function navigateTo(view) {
+      console.log('Navigate to:', view);
+      // TODO: Implement navigation to other views
+      // For now, just close the dropdown
+      toggleAdvancedOptions();
+    }
+
     function closeDialog() {
       Office.context.ui.messageParent(JSON.stringify({
         action: 'close'
       }));
     }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      const dropdown = document.getElementById('advancedOptionsDropdown');
+      const btn = document.querySelector('.advanced-options-btn');
+      if (dropdown && btn && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>
