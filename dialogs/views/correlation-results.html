@@ -490,6 +490,89 @@
     .network-corr-label.dimmed{
       opacity: 0.2;
     }
+
+    /* Coming Soon Sections */
+    .coming-soon-container{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    /* Enhanced Responsive Design */
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .filter-controls-frame {
+        flex-direction: column;
+        margin-left: 0;
+      }
+
+      .radio-bar {
+        flex-wrap: wrap;
+      }
+
+      .coming-soon-container {
+        padding: 30px 15px;
+        min-height: 300px;
+      }
+
+      .coming-soon-container h2 {
+        font-size: 1.5em;
+      }
+
+      .network-container {
+        min-height: 400px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .results-container {
+        padding: 10px;
+      }
+
+      .controls {
+        padding: 10px;
+      }
+
+      .control-group {
+        width: 100%;
+      }
+
+      input[type="range"] {
+        width: 100%;
+      }
+
+      .coming-soon-container {
+        padding: 20px 10px;
+      }
+
+      .network-container {
+        min-height: 300px;
+      }
+    }
+
+    /* Landscape mobile optimization */
+    @media (max-height: 600px) and (orientation: landscape) {
+      .table-container {
+        max-height: 50vh;
+      }
+
+      .network-container {
+        min-height: 350px;
+      }
+
+      .coming-soon-container {
+        min-height: 250px;
+        padding: 20px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -594,6 +677,62 @@
     </div>
   </div>
 
+  <!-- Partial Correlations View -->
+  <div id="partialView" class="view-section">
+    <div class="results-container">
+      <div class="coming-soon-container">
+        <i class="fas fa-flask fa-3x" style="color: var(--accent-2); margin-bottom: 20px;"></i>
+        <h2 style="color: var(--accent-1); margin-bottom: 10px;">Partial Correlations</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">Control for confounding variables to reveal true relationships</p>
+        <div style="background: var(--surface-2); padding: 20px; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+          <p style="color: var(--text-muted); font-size: 14px;">Coming soon: Calculate partial and semi-partial correlations to understand the unique contribution of each variable while controlling for others.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reliability Coefficients View -->
+  <div id="reliabilityView" class="view-section">
+    <div class="results-container">
+      <div class="coming-soon-container">
+        <i class="fas fa-check-double fa-3x" style="color: var(--accent-2); margin-bottom: 20px;"></i>
+        <h2 style="color: var(--accent-1); margin-bottom: 10px;">Reliability Analysis</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">Assess internal consistency and reliability of your measures</p>
+        <div style="background: var(--surface-2); padding: 20px; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+          <p style="color: var(--text-muted); font-size: 14px;">Coming soon: Calculate Cronbach's α, McDonald's ω, split-half reliability, and item-total correlations for scale validation.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rolling Correlations View -->
+  <div id="rollingView" class="view-section">
+    <div class="results-container">
+      <div class="coming-soon-container">
+        <i class="fas fa-chart-line fa-3x" style="color: var(--accent-2); margin-bottom: 20px;"></i>
+        <h2 style="color: var(--accent-1); margin-bottom: 10px;">Rolling Correlations</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">Track how correlations change over time</p>
+        <div style="background: var(--surface-2); padding: 20px; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+          <p style="color: var(--text-muted); font-size: 14px;">Coming soon: Analyze time-varying correlations with customizable window sizes for time series data.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Correlation Tests View -->
+  <div id="testsView" class="view-section">
+    <div class="results-container">
+      <div class="coming-soon-container">
+        <i class="fas fa-vial fa-3x" style="color: var(--accent-2); margin-bottom: 20px;"></i>
+        <h2 style="color: var(--accent-1); margin-bottom: 10px;">Correlation Tests</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">Advanced hypothesis testing for correlations</p>
+        <div style="background: var(--surface-2); padding: 20px; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+          <p style="color: var(--text-muted); font-size: 14px;">Coming soon: Compare correlations between groups, test for significant differences, and perform Fisher's Z-transformation tests.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     let correlationData = null;
     let currentType = 'Pearson';
@@ -604,29 +743,47 @@
       console.log('🔄 Switching view to:', filename);
       
       if (filename === 'correlation-standalone.html' || filename.includes('matrix')) {
-        switchToMatrixView();
+        switchToView('matrixView');
       } else if (filename === 'correlation-network-standalone.html' || filename.includes('network')) {
-        switchToNetworkView();
+        switchToView('networkView');
+      } else if (filename.includes('partial')) {
+        switchToView('partialView');
+      } else if (filename.includes('reliability')) {
+        switchToView('reliabilityView');
+      } else if (filename.includes('rolling')) {
+        switchToView('rollingView');
+      } else if (filename.includes('tests')) {
+        switchToView('testsView');
       }
     };
 
+    function switchToView(viewId) {
+      // Hide all views
+      document.querySelectorAll('.view-section').forEach(section => {
+        section.classList.remove('active');
+      });
+
+      // Show selected view
+      const targetView = document.getElementById(viewId);
+      if (targetView) {
+        targetView.classList.add('active');
+        currentView = viewId;
+        console.log('✅ Switched to:', viewId);
+
+        // Special handling for network view
+        if (viewId === 'networkView' && !window.networkRendered && correlationData) {
+          renderNetwork();
+        }
+      }
+    }
+
+    // Legacy functions for backward compatibility
     function switchToMatrixView() {
-      document.getElementById('matrixView').classList.add('active');
-      document.getElementById('networkView').classList.remove('active');
-      currentView = 'matrix';
-      console.log('✅ Switched to Matrix view');
+      switchToView('matrixView');
     }
 
     function switchToNetworkView() {
-      document.getElementById('matrixView').classList.remove('active');
-      document.getElementById('networkView').classList.add('active');
-      currentView = 'network';
-      
-      // Render network if not already done
-      if (!window.networkRendered && correlationData) {
-        renderNetwork();
-      }
-      console.log('✅ Switched to Network view');
+      switchToView('networkView');
     }
 
     // Initialize Office.js

@@ -115,7 +115,9 @@ const StatisticoHeader = {
       'correlation-matrix': 'Correlation Matrix',
       'correlation-network': 'Correlation Network',
       'partial-correlations': 'Partial Correlations',
-      'reliability': 'Reliability Coefficients'
+      'reliability': 'Reliability Coefficients',
+      'rolling-correlations': 'Rolling Correlations',
+      'correlation-tests': 'Correlation Tests'
     };
 
     const moduleNames = {
@@ -184,8 +186,10 @@ const StatisticoHeader = {
       { id: 'correlation-matrix', label: 'Correlation Matrix', file: 'correlation-standalone.html' },
       { id: 'correlation-network', label: 'Correlation Network', file: 'correlation-network-standalone.html' },
       { id: 'separator', label: '---', file: null },
-      { id: 'partial-correlations', label: 'Partial Correlations', file: null },
-      { id: 'reliability', label: 'Reliability Coefficients', file: null }
+      { id: 'partial-correlations', label: 'Partial Correlations', file: 'partial-correlations.html' },
+      { id: 'reliability', label: 'Reliability Coefficients', file: 'reliability.html' },
+      { id: 'rolling-correlations', label: 'Rolling Correlations', file: 'rolling-correlations.html' },
+      { id: 'correlation-tests', label: 'Correlation Tests', file: 'correlation-tests.html' }
     ];
     
     const views = this.module === 'correlations' ? correlationViews : univariateViews;
