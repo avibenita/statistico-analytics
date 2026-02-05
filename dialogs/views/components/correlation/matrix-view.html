@@ -1,0 +1,358 @@
+<div class="controls">
+  <div class="control-group">
+    <label>Correlation Type:</label>
+    <div class="radio-bar">
+      <label>
+        <input type="radio" name="corrType" value="Pearson" checked onchange="recalculateMatrix()">
+        <span>Pearson</span>
+      </label>
+      <label>
+        <input type="radio" name="corrType" value="Spearman" onchange="recalculateMatrix()">
+        <span>Spearman</span>
+      </label>
+      <label>
+        <input type="radio" name="corrType" value="Kendall" onchange="recalculateMatrix()">
+        <span>Kendall</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Filter Controls Frame -->
+  <div class="filter-controls-frame">
+    <!-- Threshold Slider (Centered) -->
+    <div class="slider-center">
+      <div class="control-group slider-container">
+        <span class="slider-label">Highlight r ≥</span>
+        <input type="range" id="matrixThresholdSlider" min="0" max="1" step="0.05" value="0" oninput="updateMatrixThreshold(this.value)">
+        <span class="slider-value" id="matrixThresholdValue">0.00</span>
+      </div>
+    </div>
+
+    <!-- Display Options Checkboxes (Right Aligned) -->
+    <div class="checkbox-right">
+      <div class="control-group checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="showPValue" checked onchange="toggleMatrixDisplay()">
+          <span>Show p-value</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="showN" checked onchange="toggleMatrixDisplay()">
+          <span>Show n</span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="matrixLoadingMessage" class="loading">
+  <i class="fa-solid fa-spinner"></i>
+  <p>Loading correlation data...</p>
+</div>
+
+<div id="matrixResultsContainer" style="display:none;">
+  <div class="scroll-hint">
+    <i class="fa-solid fa-arrows-left-right"></i>
+    Scroll horizontally to view all variables • First column stays fixed
+  </div>
+  
+  <div class="table-container">
+    <table id="correlationTable">
+      <thead id="matrixTableHead"></thead>
+      <tbody id="matrixTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // Matrix View Logic
+  (function() {
+    let matrixCurrentType = 'Pearson';
+    let matrixThreshold = 0;
+
+    window.initializeMatrixView = function(data) {
+      console.log('🎨 Initializing Matrix View');
+      window.matrixData = data;
+      renderMatrixCorrelations();
+    };
+
+    window.recalculateMatrix = function() {
+      const selected = document.querySelector('input[name="corrType"]:checked');
+      matrixCurrentType = selected ? selected.value : 'Pearson';
+      console.log('🔄 Recalculating matrix with type:', matrixCurrentType);
+      renderMatrixCorrelations();
+    };
+
+    function renderMatrixCorrelations() {
+      if (!window.matrixData || !window.matrixData.headers || !window.matrixData.data) {
+        console.error('Invalid correlation data for matrix');
+        return;
+      }
+
+      const headers = window.matrixData.headers;
+      const data = window.matrixData.data;
+
+      // Update header with variable info
+      if (typeof StatisticoHeader !== 'undefined') {
+        const varCount = headers.length;
+        const varList = headers.slice(0, 3).join(', ') + (headers.length > 3 ? '...' : '');
+        StatisticoHeader.updateVariable(`${varCount} Variables: ${varList}`, data.length);
+      }
+
+      // Hide loading, show results
+      document.getElementById('matrixLoadingMessage').style.display = 'none';
+      document.getElementById('matrixResultsContainer').style.display = 'block';
+
+      // Calculate correlation matrix
+      const matrix = calculateMatrixCorrelationMatrix(data, headers);
+
+      // Render table
+      renderMatrixTable(headers, matrix);
+    }
+
+    function calculateMatrixCorrelationMatrix(data, headers) {
+      const n = headers.length;
+      const matrix = [];
+
+      for (let i = 0; i < n; i++) {
+        matrix[i] = [];
+        for (let j = 0; j < n; j++) {
+          if (i === j) {
+            matrix[i][j] = { r: 1.000, p: 0, n: data.length };
+          } else {
+            const result = calculateMatrixCorrelation(data, headers[i], headers[j]);
+            matrix[i][j] = result;
+          }
+        }
+      }
+
+      return matrix;
+    }
+
+    function calculateMatrixCorrelation(data, var1, var2) {
+      const pairs = [];
+      data.forEach(row => {
+        const x = row[var1];
+        const y = row[var2];
+        if (typeof x === 'number' && typeof y === 'number' && !isNaN(x) && !isNaN(y)) {
+          pairs.push([x, y]);
+        }
+      });
+
+      if (pairs.length < 2) {
+        return { r: null, p: null, n: 0 };
+      }
+
+      const xValues = pairs.map(p => p[0]);
+      const yValues = pairs.map(p => p[1]);
+      const n = pairs.length;
+
+      let r;
+      if (matrixCurrentType === 'Spearman') {
+        r = calculateSpearman(xValues, yValues);
+      } else if (matrixCurrentType === 'Kendall') {
+        r = calculateKendall(xValues, yValues);
+      } else {
+        r = calculatePearson(xValues, yValues);
+      }
+
+      if (r === null) {
+        return { r: null, p: null, n: n };
+      }
+      
+      const t = r * Math.sqrt((n - 2) / (1 - r * r));
+      const p = 2 * (1 - tDistribution(Math.abs(t), n - 2));
+
+      return { r: r, p: p, n: n };
+    }
+
+    function calculatePearson(xValues, yValues) {
+      const n = xValues.length;
+      const sumX = xValues.reduce((a, b) => a + b, 0);
+      const sumY = yValues.reduce((a, b) => a + b, 0);
+      const sumXY = xValues.reduce((sum, x, i) => sum + x * yValues[i], 0);
+      const sumX2 = xValues.reduce((sum, x) => sum + x * x, 0);
+      const sumY2 = yValues.reduce((sum, y) => sum + y * y, 0);
+
+      const numerator = n * sumXY - sumX * sumY;
+      const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+      if (denominator === 0) return null;
+      return numerator / denominator;
+    }
+
+    function calculateSpearman(xValues, yValues) {
+      const xRanks = getRanks(xValues);
+      const yRanks = getRanks(yValues);
+      return calculatePearson(xRanks, yRanks);
+    }
+
+    function calculateKendall(xValues, yValues) {
+      const n = xValues.length;
+      let concordant = 0;
+      let discordant = 0;
+
+      for (let i = 0; i < n - 1; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const xDiff = xValues[i] - xValues[j];
+          const yDiff = yValues[i] - yValues[j];
+          
+          if ((xDiff > 0 && yDiff > 0) || (xDiff < 0 && yDiff < 0)) {
+            concordant++;
+          } else if ((xDiff > 0 && yDiff < 0) || (xDiff < 0 && yDiff > 0)) {
+            discordant++;
+          }
+        }
+      }
+
+      return (concordant - discordant) / (n * (n - 1) / 2);
+    }
+
+    function getRanks(values) {
+      const indexed = values.map((val, idx) => ({ val, idx }));
+      indexed.sort((a, b) => a.val - b.val);
+      
+      const ranks = new Array(values.length);
+      let i = 0;
+      while (i < indexed.length) {
+        let j = i;
+        while (j < indexed.length && indexed[j].val === indexed[i].val) {
+          j++;
+        }
+        const avgRank = (i + j - 1) / 2 + 1;
+        for (let k = i; k < j; k++) {
+          ranks[indexed[k].idx] = avgRank;
+        }
+        i = j;
+      }
+      
+      return ranks;
+    }
+
+    function tDistribution(t, df) {
+      if (df > 30) return normalCDF(t);
+      return 0.5;
+    }
+
+    function normalCDF(z) {
+      const t = 1 / (1 + 0.2316419 * Math.abs(z));
+      const d = 0.3989423 * Math.exp(-z * z / 2);
+      const prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+      return z > 0 ? 1 - prob : prob;
+    }
+
+    function renderMatrixTable(headers, matrix) {
+      const thead = document.getElementById('matrixTableHead');
+      const tbody = document.getElementById('matrixTableBody');
+      
+      if (!thead || !tbody) return;
+
+      let headerHTML = '<tr><th>Variable</th>';
+      headers.forEach(h => {
+        headerHTML += `<th>${escapeHTML(h)}</th>`;
+      });
+      headerHTML += '</tr>';
+      thead.innerHTML = headerHTML;
+
+      let bodyHTML = '';
+      headers.forEach((rowHeader, i) => {
+        bodyHTML += `<tr><td>${escapeHTML(rowHeader)}</td>`;
+        headers.forEach((colHeader, j) => {
+          const cell = matrix[i][j];
+          if (i === j) {
+            bodyHTML += '<td class="diagonal-cell"><div class="corr-value">1.000</div><div class="corr-details">—</div></td>';
+          } else if (cell.r !== null) {
+            const rDisplay = cell.r.toFixed(3);
+            const pDisplay = cell.p < 0.0001 ? 'p < 0.0001' : `p = ${cell.p.toFixed(4)}`;
+            bodyHTML += `<td>
+              <div class="corr-value">${rDisplay}</div>
+              <div class="corr-details">
+                <span class="p-value">${pDisplay}</span>
+                <span class="n-value">N = ${cell.n}</span>
+              </div>
+            </td>`;
+          } else {
+            bodyHTML += '<td><div class="corr-value">—</div><div class="corr-details">N/A</div></td>';
+          }
+        });
+        bodyHTML += '</tr>';
+      });
+      tbody.innerHTML = bodyHTML;
+      
+      applyMatrixThresholdHighlight(matrixThreshold);
+      toggleMatrixDisplay();
+    }
+
+    function escapeHTML(str) {
+      return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    window.updateMatrixThreshold = function(value) {
+      matrixThreshold = parseFloat(value);
+      document.getElementById('matrixThresholdValue').textContent = value;
+      applyMatrixThresholdHighlight(matrixThreshold);
+      updateMatrixSliderBackground(matrixThreshold);
+    };
+
+    function applyMatrixThresholdHighlight(threshold) {
+      clearMatrixThresholdHighlight();
+      if (threshold === 0) return;
+
+      const table = document.getElementById('correlationTable');
+      const cells = table.querySelectorAll('td');
+      
+      cells.forEach(cell => {
+        if (cell.cellIndex === 0) return;
+        
+        const corrSpan = cell.querySelector('.corr-value');
+        if (corrSpan) {
+          const corrText = corrSpan.textContent.trim();
+          if (corrText !== '1.000' && corrText !== '—' && corrText !== 'N/A') {
+            const corrValue = parseFloat(corrText);
+            if (!isNaN(corrValue) && Math.abs(corrValue) >= threshold && Math.abs(corrValue) < 0.999) {
+              cell.classList.add('threshold-highlight');
+            }
+          }
+        }
+      });
+    }
+
+    function clearMatrixThresholdHighlight() {
+      const highlightedCells = document.querySelectorAll('.threshold-highlight');
+      highlightedCells.forEach(cell => {
+        cell.classList.remove('threshold-highlight');
+      });
+    }
+
+    function updateMatrixSliderBackground(value) {
+      const slider = document.getElementById('matrixThresholdSlider');
+      if (slider) {
+        const percentage = (value / slider.max) * 100;
+        slider.style.background = `linear-gradient(to right, var(--accent-1) ${percentage}%, var(--surface-0) ${percentage}%)`;
+      }
+    }
+
+    window.toggleMatrixDisplay = function() {
+      const showPValue = document.getElementById('showPValue').checked;
+      const showN = document.getElementById('showN').checked;
+      
+      const table = document.getElementById('correlationTable');
+      const tbody = table.querySelector('tbody');
+      if (!tbody) return;
+
+      const cells = tbody.querySelectorAll('td');
+      cells.forEach(cell => {
+        const pSpan = cell.querySelector('.p-value');
+        const nSpan = cell.querySelector('.n-value');
+        
+        if (pSpan) {
+          pSpan.style.display = showPValue ? 'block' : 'none';
+        }
+        if (nSpan) {
+          nSpan.style.display = showN ? 'block' : 'none';
+        }
+      });
+    };
+
+    console.log('✅ Matrix view component loaded');
+  })();
+</script>
