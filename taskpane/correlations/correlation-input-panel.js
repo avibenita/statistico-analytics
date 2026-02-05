@@ -472,7 +472,7 @@ function openDialogWithData(dialogUrl, correlationData) {
  * Open correlation results in Office Dialog
  */
 function openCorrelationResults(correlationData) {
-  const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/correlation-results.html';
+  const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/correlations/correlation-results.html';
   openDialogWithData(dialogUrl, correlationData);
 }
 

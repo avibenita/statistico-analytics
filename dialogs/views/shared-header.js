@@ -169,27 +169,27 @@ const StatisticoHeader = {
    */
   renderDropdownItems() {
     const univariateViews = [
-      { id: 'histogram', label: 'Interactive Histogram', file: 'histogram-standalone.html' },
-      { id: 'boxplot', label: 'Box Plot Analysis', file: 'boxplot-standalone.html' },
-      { id: 'cdf', label: 'Cumulative Distribution', file: 'cumulative-distribution.html' },
-      { id: 'percentile', label: 'Percentiles', file: 'percentile-standalone.html' },
-      { id: 'outliers', label: 'Outliers Detection', file: 'outliers-standalone.html' },
+      { id: 'histogram', label: 'Interactive Histogram', file: 'univariate/histogram-standalone.html' },
+      { id: 'boxplot', label: 'Box Plot Analysis', file: 'univariate/boxplot-standalone.html' },
+      { id: 'cdf', label: 'Cumulative Distribution', file: 'univariate/cumulative-distribution.html' },
+      { id: 'percentile', label: 'Percentiles', file: 'univariate/percentile-standalone.html' },
+      { id: 'outliers', label: 'Outliers Detection', file: 'univariate/outliers-standalone.html' },
       { id: 'separator', label: '---', file: null },
-      { id: 'normality', label: 'Tests of Normality', file: 'normality-standalone.html' },
-      { id: 'qqplot', label: 'PP-QQ Plots', file: 'qqplot-standalone.html' },
-      { id: 'hypothesis', label: 'Hypothesis Testing', file: 'hypothesis-standalone.html' },
-      { id: 'confidence', label: 'Confidence Intervals', file: 'confidence-standalone.html' },
-      { id: 'kernel', label: 'Kernel Density', file: 'kernel-standalone.html' }
+      { id: 'normality', label: 'Tests of Normality', file: 'univariate/normality-standalone.html' },
+      { id: 'qqplot', label: 'PP-QQ Plots', file: 'univariate/qqplot-standalone.html' },
+      { id: 'hypothesis', label: 'Hypothesis Testing', file: 'univariate/hypothesis-standalone.html' },
+      { id: 'confidence', label: 'Confidence Intervals', file: 'univariate/confidence-standalone.html' },
+      { id: 'kernel', label: 'Kernel Density', file: 'univariate/kernel-standalone.html' }
     ];
 
     const correlationViews = [
-      { id: 'correlation-matrix', label: 'Correlation Matrix', file: 'correlation-standalone.html' },
-      { id: 'correlation-network', label: 'Correlation Network', file: 'correlation-network-standalone.html' },
+      { id: 'correlation-matrix', label: 'Correlation Matrix', file: 'correlations/correlation-standalone.html' },
+      { id: 'correlation-network', label: 'Correlation Network', file: 'correlations/correlation-network-standalone.html' },
       { id: 'separator', label: '---', file: null },
-      { id: 'partial-correlations', label: 'Partial Correlations', file: 'partial-correlations.html' },
-      { id: 'reliability', label: 'Reliability Coefficients', file: 'reliability.html' },
-      { id: 'rolling-correlations', label: 'Rolling Correlations', file: 'rolling-correlations.html' },
-      { id: 'correlation-tests', label: 'Correlation Tests', file: 'correlation-tests.html' }
+      { id: 'partial-correlations', label: 'Partial Correlations', file: 'correlations/partial-correlations.html' },
+      { id: 'reliability', label: 'Reliability Coefficients', file: 'correlations/reliability.html' },
+      { id: 'rolling-correlations', label: 'Rolling Correlations', file: 'correlations/rolling-correlations.html' },
+      { id: 'correlation-tests', label: 'Correlation Tests', file: 'correlations/correlation-tests.html' }
     ];
     
     const views = this.module === 'correlations' ? correlationViews : univariateViews;
