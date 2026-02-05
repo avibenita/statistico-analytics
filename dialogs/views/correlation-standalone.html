@@ -687,6 +687,7 @@
         return;
       }
 
+      console.log(`🎚️ Applying threshold filter: ${currentThreshold}`);
       const rows = tbody.querySelectorAll('tr');
       let hiddenCount = 0;
       
@@ -695,12 +696,15 @@
         const varName = cells[0] ? cells[0].textContent.trim() : '';
         let maxCorr = 0;
         let hasValidCorr = false;
+        let correlations = [];
         
         // Check all correlation values in the row (skip first cell which is the variable name)
         for (let i = 1; i < cells.length; i++) {
           const corrSpan = cells[i].querySelector('.corr-value');
           if (corrSpan) {
             const corrText = corrSpan.textContent.trim();
+            correlations.push(corrText);
+            
             // Skip diagonal (1.000) and missing values (—)
             if (corrText !== '1.000' && corrText !== '—' && corrText !== 'N/A') {
               const corrValue = Math.abs(parseFloat(corrText));
@@ -714,21 +718,23 @@
           }
         }
         
+        console.log(`📊 "${varName}": correlations = [${correlations.slice(0, 5).join(', ')}...], max = ${maxCorr.toFixed(3)}`);
+        
         // Hide row if max correlation is below threshold (but only if row has valid correlations)
         const shouldHide = hasValidCorr && maxCorr < currentThreshold;
         if (shouldHide) {
           row.style.display = 'none';
           hiddenCount++;
-          console.log(`🙈 Hiding "${varName}": max |r| = ${maxCorr.toFixed(3)} < ${currentThreshold}`);
+          console.log(`   ❌ HIDING: ${maxCorr.toFixed(3)} < ${currentThreshold}`);
         } else {
           row.style.display = '';
           if (hasValidCorr) {
-            console.log(`👁️ Showing "${varName}": max |r| = ${maxCorr.toFixed(3)} >= ${currentThreshold}`);
+            console.log(`   ✅ SHOWING: ${maxCorr.toFixed(3)} >= ${currentThreshold}`);
           }
         }
       });
       
-      console.log(`✅ Filter applied: ${hiddenCount} rows hidden, ${rows.length - hiddenCount} visible`);
+      console.log(`\n📈 Filter complete: ${hiddenCount} hidden, ${rows.length - hiddenCount} visible\n`);
     }
 
     // Toggle display of p-values and n
