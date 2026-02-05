@@ -429,12 +429,20 @@ function openDialogWithData(dialogUrl, correlationData) {
             } else if (message.action === 'switchView') {
               // Close current dialog and open new view
               console.log('🔄 Switching to view:', message.view);
-              resultsDialog.close();
-              resultsDialog = null;
               
-              // Open new dialog with same data
+              // Store the new URL before closing
               const newDialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/${message.view}`;
-              openDialogWithData(newDialogUrl, correlationData);
+              
+              // Close current dialog
+              if (resultsDialog) {
+                resultsDialog.close();
+                resultsDialog = null;
+              }
+              
+              // Wait for dialog to close before opening new one (Office limitation: one dialog at a time)
+              setTimeout(() => {
+                openDialogWithData(newDialogUrl, correlationData);
+              }, 500);
             }
           } catch (e) {
             console.error('Error handling dialog message:', e);
