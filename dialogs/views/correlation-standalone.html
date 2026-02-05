@@ -102,6 +102,99 @@
       display:none;
     }
 
+    /* Threshold Slider */
+    .slider-container{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .slider-label{
+      font-size:12px;
+      font-weight:600;
+      color:var(--text-secondary);
+      min-width:100px;
+    }
+
+    .slider-value{
+      font-size:14px;
+      font-weight:700;
+      color:var(--accent-1);
+      min-width:45px;
+      text-align:center;
+    }
+
+    input[type="range"]{
+      width:180px;
+      height:6px;
+      border-radius:3px;
+      background:linear-gradient(90deg, var(--surface-0) 0%, var(--accent-1) 100%);
+      outline:none;
+      -webkit-appearance:none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      background:linear-gradient(135deg, var(--accent-1), var(--accent-2));
+      cursor:pointer;
+      border:2px solid var(--surface-0);
+      box-shadow:0 2px 6px rgba(0,0,0,0.3);
+      transition:transform .2s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover{
+      transform:scale(1.15);
+      box-shadow:0 3px 8px rgba(0,0,0,0.4);
+    }
+
+    input[type="range"]::-moz-range-thumb{
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      background:linear-gradient(135deg, var(--accent-1), var(--accent-2));
+      cursor:pointer;
+      border:2px solid var(--surface-0);
+      box-shadow:0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    /* Checkboxes */
+    .checkbox-group{
+      display:flex;
+      gap:15px;
+    }
+
+    .checkbox-label{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+      font-size:13px;
+      font-weight:500;
+      color:var(--text-secondary);
+      padding:6px 12px;
+      border-radius:6px;
+      transition:all .2s;
+    }
+
+    .checkbox-label:hover{
+      background:rgba(255,165,120,0.1);
+    }
+
+    .checkbox-label input[type="checkbox"]{
+      width:18px;
+      height:18px;
+      cursor:pointer;
+      accent-color:var(--accent-1);
+    }
+
+    .checkbox-label:has(input:checked){
+      color:var(--accent-1);
+      font-weight:600;
+    }
+
     .table-container{
       width:100%;
       border:2px solid var(--border);
@@ -201,6 +294,17 @@
       font-weight:600;
     }
 
+    .corr-details{
+      font-size:11px;
+      color:var(--text-secondary);
+      margin-top:4px;
+    }
+
+    .corr-details .p-value,
+    .corr-details .n-value{
+      display:block;
+    }
+
     /* Scroll hint */
     .scroll-hint{
       display:flex;
@@ -293,6 +397,25 @@
             <span>Kendall</span>
           </label>
         </div>
+      </div>
+
+      <!-- Threshold Slider -->
+      <div class="control-group slider-container">
+        <span class="slider-label">Hide |r| &lt;</span>
+        <input type="range" id="thresholdSlider" min="0" max="1" step="0.01" value="0" oninput="updateThreshold(this.value)">
+        <span class="slider-value" id="thresholdValue">0.00</span>
+      </div>
+
+      <!-- Display Options Checkboxes -->
+      <div class="control-group checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="showPValue" checked onchange="toggleDisplay()">
+          <span>Show p-value</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="showN" checked onchange="toggleDisplay()">
+          <span>Show n</span>
+        </label>
       </div>
     </div>
 
@@ -460,6 +583,8 @@
     function renderTable(headers, matrix) {
       const thead = document.getElementById('tableHead');
       const tbody = document.getElementById('tableBody');
+      
+      if (!thead || !tbody) return;
 
       // Build header
       let headerHTML = '<tr><th>Variable</th>';
@@ -480,7 +605,13 @@
           } else if (cell.r !== null) {
             const rDisplay = cell.r.toFixed(3);
             const pDisplay = cell.p < 0.0001 ? 'p < 0.0001' : `p = ${cell.p.toFixed(4)}`;
-            bodyHTML += `<td><div class="corr-value">${rDisplay}</div><div class="corr-details">${pDisplay}<br>N = ${cell.n}</div></td>`;
+            bodyHTML += `<td>
+              <div class="corr-value">${rDisplay}</div>
+              <div class="corr-details">
+                <span class="p-value">${pDisplay}</span>
+                <span class="n-value">N = ${cell.n}</span>
+              </div>
+            </td>`;
           } else {
             bodyHTML += '<td><div class="corr-value">—</div><div class="corr-details">N/A</div></td>';
           }
@@ -488,6 +619,10 @@
         bodyHTML += '</tr>';
       });
       tbody.innerHTML = bodyHTML;
+      
+      // Apply filters after rendering
+      applyThresholdFilter();
+      toggleDisplay();
     }
 
     function escapeHTML(str) {
@@ -500,6 +635,67 @@
       console.log('Recalculating with type:', currentType);
       // TODO: Implement Spearman and Kendall
       renderCorrelations();
+    }
+
+    // Threshold slider
+    let currentThreshold = 0;
+    function updateThreshold(value) {
+      currentThreshold = parseFloat(value);
+      document.getElementById('thresholdValue').textContent = value;
+      applyThresholdFilter();
+    }
+
+    function applyThresholdFilter() {
+      const table = document.getElementById('correlationTable');
+      const tbody = table.querySelector('tbody');
+      if (!tbody) return;
+
+      const rows = tbody.querySelectorAll('tr');
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        let maxCorr = 0;
+        
+        // Check all correlation values in the row (skip first cell which is the variable name)
+        for (let i = 1; i < cells.length; i++) {
+          const corrSpan = cells[i].querySelector('.corr-value');
+          if (corrSpan) {
+            const corrValue = Math.abs(parseFloat(corrSpan.textContent));
+            if (!isNaN(corrValue) && corrValue > maxCorr) {
+              maxCorr = corrValue;
+            }
+          }
+        }
+        
+        // Hide row if max correlation is below threshold
+        if (maxCorr < currentThreshold && maxCorr > 0) {
+          row.style.display = 'none';
+        } else {
+          row.style.display = '';
+        }
+      });
+    }
+
+    // Toggle display of p-values and n
+    function toggleDisplay() {
+      const showPValue = document.getElementById('showPValue').checked;
+      const showN = document.getElementById('showN').checked;
+      
+      const table = document.getElementById('correlationTable');
+      const tbody = table.querySelector('tbody');
+      if (!tbody) return;
+
+      const cells = tbody.querySelectorAll('td');
+      cells.forEach(cell => {
+        const pSpan = cell.querySelector('.p-value');
+        const nSpan = cell.querySelector('.n-value');
+        
+        if (pSpan) {
+          pSpan.style.display = showPValue ? 'block' : 'none';
+        }
+        if (nSpan) {
+          nSpan.style.display = showN ? 'block' : 'none';
+        }
+      });
     }
 
     function closeDialog() {
