@@ -7,17 +7,29 @@ const StatisticoHeader = {
   currentView: 'histogram',
   variableName: 'Variable',
   sampleSize: 0,
+  module: 'univariate', // 'univariate' or 'correlations'
   
   /**
    * Initialize the header
-   * @param {string} viewName - Current view name (histogram, boxplot, etc.)
+   * @param {string} viewName - Current view name (histogram, boxplot, correlation-matrix, etc.)
    * @param {string} variableName - Variable name to display
    * @param {number} sampleSize - Sample size
+   * @param {string} module - Module name ('univariate' or 'correlations')
    */
-  init(viewName, variableName = 'Variable', sampleSize = 0) {
+  init(viewName, variableName = 'Variable', sampleSize = 0, module = null) {
     this.currentView = viewName;
     this.variableName = variableName;
     this.sampleSize = sampleSize;
+    
+    // Auto-detect module from view name if not specified
+    if (module) {
+      this.module = module;
+    } else if (viewName.includes('correlation') || viewName.includes('network')) {
+      this.module = 'correlations';
+    } else {
+      this.module = 'univariate';
+    }
+    
     this.render();
   },
   
@@ -88,6 +100,7 @@ const StatisticoHeader = {
    */
   render() {
     const viewTitles = {
+      // Univariate views
       'histogram': 'Interactive Histogram',
       'boxplot': 'Box Plot Analysis',
       'qqplot': 'QQ/PP Plot Analysis',
@@ -97,7 +110,17 @@ const StatisticoHeader = {
       'confidence': 'Confidence Intervals',
       'hypothesis': 'Hypothesis Testing',
       'outliers': 'Outliers Detection',
-      'percentile': 'Percentile Calculator'
+      'percentile': 'Percentile Calculator',
+      // Correlation views
+      'correlation-matrix': 'Correlation Matrix',
+      'correlation-network': 'Correlation Network',
+      'partial-correlations': 'Partial Correlations',
+      'reliability': 'Reliability Coefficients'
+    };
+
+    const moduleNames = {
+      'univariate': 'Univariate',
+      'correlations': 'Correlations'
     };
     
     const headerHTML = `
@@ -109,7 +132,7 @@ const StatisticoHeader = {
           </div>
           <div class="header-module">
             <div class="header-brand">Statistico</div>
-            <div class="header-module-name">Univariate</div>
+            <div class="header-module-name">${moduleNames[this.module] || 'Analysis'}</div>
           </div>
         </div>
         
@@ -143,28 +166,43 @@ const StatisticoHeader = {
    * Render dropdown menu items
    */
   renderDropdownItems() {
-    const views = [
+    const univariateViews = [
       { id: 'histogram', label: 'Interactive Histogram', file: 'histogram-standalone.html' },
       { id: 'boxplot', label: 'Box Plot Analysis', file: 'boxplot-standalone.html' },
       { id: 'cdf', label: 'Cumulative Distribution', file: 'cumulative-distribution.html' },
       { id: 'percentile', label: 'Percentiles', file: 'percentile-standalone.html' },
       { id: 'outliers', label: 'Outliers Detection', file: 'outliers-standalone.html' },
-      { id: 'separator', label: '---', file: null }, // Separator
+      { id: 'separator', label: '---', file: null },
       { id: 'normality', label: 'Tests of Normality', file: 'normality-standalone.html' },
       { id: 'qqplot', label: 'PP-QQ Plots', file: 'qqplot-standalone.html' },
       { id: 'hypothesis', label: 'Hypothesis Testing', file: 'hypothesis-standalone.html' },
       { id: 'confidence', label: 'Confidence Intervals', file: 'confidence-standalone.html' },
       { id: 'kernel', label: 'Kernel Density', file: 'kernel-standalone.html' }
     ];
+
+    const correlationViews = [
+      { id: 'correlation-matrix', label: 'Correlation Matrix', file: 'correlation-standalone.html' },
+      { id: 'correlation-network', label: 'Correlation Network', file: 'correlation-network-standalone.html' },
+      { id: 'separator', label: '---', file: null },
+      { id: 'partial-correlations', label: 'Partial Correlations', file: null },
+      { id: 'reliability', label: 'Reliability Coefficients', file: null }
+    ];
+    
+    const views = this.module === 'correlations' ? correlationViews : univariateViews;
     
     return views.map(view => {
       if (view.id === 'separator') {
         return '<div class="analysis-separator"></div>';
       }
+      
+      const isDisabled = !view.file;
+      const isActive = view.id === this.currentView;
+      
       return `
-        <div class="analysis-option ${view.id === this.currentView ? 'active' : ''}" 
-             onclick="StatisticoHeader.navigateTo('${view.file}')">
+        <div class="analysis-option ${isActive ? 'active' : ''} ${isDisabled ? 'disabled' : ''}" 
+             ${!isDisabled ? `onclick="StatisticoHeader.navigateTo('${view.file}')"` : ''}>
           ${view.label}
+          ${isDisabled ? ' <span style="opacity:0.5">(Coming Soon)</span>' : ''}
         </div>
       `;
     }).join('');
