@@ -446,11 +446,17 @@
       border-radius: 8px;
       border: 2px solid var(--border);
       position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     #networkSVG{
       width: 100%;
       height: 100%;
+      min-height: 500px;
+      touch-action: none; /* Better touch handling for zoom/pan */
     }
 
     .network-link{
@@ -529,6 +535,20 @@
 
       .network-container {
         min-height: 400px;
+        margin: 0 -10px; /* Extend to edges on mobile */
+        border-radius: 0;
+      }
+
+      #networkSVG {
+        min-height: 400px;
+      }
+
+      .network-label {
+        font-size: 11px;
+      }
+
+      .network-node {
+        r: 18; /* Slightly smaller nodes on mobile */
       }
     }
 
@@ -539,14 +559,22 @@
 
       .controls {
         padding: 10px;
+        gap: 10px;
       }
 
       .control-group {
         width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
       }
 
       input[type="range"] {
         width: 100%;
+      }
+
+      .slider-label {
+        min-width: auto;
+        font-size: 11px;
       }
 
       .coming-soon-container {
@@ -555,6 +583,23 @@
 
       .network-container {
         min-height: 300px;
+        margin: 0 -5px;
+      }
+
+      #networkSVG {
+        min-height: 300px;
+      }
+
+      .network-label {
+        font-size: 10px;
+      }
+
+      .network-corr-label {
+        font-size: 9px;
+      }
+
+      .network-node {
+        r: 15; /* Even smaller nodes on very small screens */
       }
     }
 
@@ -566,11 +611,40 @@
 
       .network-container {
         min-height: 350px;
+        max-height: calc(100vh - 180px); /* Ensure it fits in viewport */
+      }
+
+      #networkSVG {
+        min-height: 350px;
+      }
+
+      .controls {
+        padding: 8px;
+        gap: 10px;
       }
 
       .coming-soon-container {
         min-height: 250px;
         padding: 20px;
+      }
+
+      .network-label {
+        font-size: 10px;
+      }
+    }
+
+    /* Tablet specific optimizations */
+    @media (min-width: 768px) and (max-width: 1024px) {
+      .network-container {
+        min-height: 450px;
+      }
+
+      .network-node {
+        r: 18;
+      }
+
+      .network-label {
+        font-size: 11px;
       }
     }
   </style>
