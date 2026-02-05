@@ -57,6 +57,7 @@
       padding:15px;
       background:var(--surface-2);
       border-radius:8px;
+      align-items:center;
     }
 
     .control-group{
@@ -68,6 +69,31 @@
     .control-group label{
       font-weight:600;
       color:var(--text-secondary);
+    }
+
+    /* Filter Controls Frame */
+    .filter-controls-frame{
+      display:flex;
+      gap:25px;
+      padding:12px 20px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(255,165,120,0.2);
+      border-radius:8px;
+      align-items:center;
+      flex:1;
+      margin-left:auto;
+    }
+
+    .slider-center{
+      display:flex;
+      justify-content:center;
+      flex:1;
+    }
+
+    .checkbox-right{
+      display:flex;
+      justify-content:flex-end;
+      margin-left:auto;
     }
 
     .radio-bar{
@@ -399,23 +425,30 @@
         </div>
       </div>
 
-      <!-- Threshold Slider -->
-      <div class="control-group slider-container">
-        <span class="slider-label">Hide |r| &lt;</span>
-        <input type="range" id="thresholdSlider" min="0" max="1" step="0.01" value="0" oninput="updateThreshold(this.value)">
-        <span class="slider-value" id="thresholdValue">0.00</span>
-      </div>
+      <!-- Filter Controls Frame -->
+      <div class="filter-controls-frame">
+        <!-- Threshold Slider (Centered) -->
+        <div class="slider-center">
+          <div class="control-group slider-container">
+            <span class="slider-label">Hide |r| &lt;</span>
+            <input type="range" id="thresholdSlider" min="0" max="1" step="0.01" value="0" oninput="updateThreshold(this.value)">
+            <span class="slider-value" id="thresholdValue">0.00</span>
+          </div>
+        </div>
 
-      <!-- Display Options Checkboxes -->
-      <div class="control-group checkbox-group">
-        <label class="checkbox-label">
-          <input type="checkbox" id="showPValue" checked onchange="toggleDisplay()">
-          <span>Show p-value</span>
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" id="showN" checked onchange="toggleDisplay()">
-          <span>Show n</span>
-        </label>
+        <!-- Display Options Checkboxes (Right Aligned) -->
+        <div class="checkbox-right">
+          <div class="control-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="showPValue" checked onchange="toggleDisplay()">
+              <span>Show p-value</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="showN" checked onchange="toggleDisplay()">
+              <span>Show n</span>
+            </label>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -654,20 +687,28 @@
       rows.forEach(row => {
         const cells = row.querySelectorAll('td');
         let maxCorr = 0;
+        let hasValidCorr = false;
         
         // Check all correlation values in the row (skip first cell which is the variable name)
         for (let i = 1; i < cells.length; i++) {
           const corrSpan = cells[i].querySelector('.corr-value');
           if (corrSpan) {
-            const corrValue = Math.abs(parseFloat(corrSpan.textContent));
-            if (!isNaN(corrValue) && corrValue > maxCorr) {
-              maxCorr = corrValue;
+            const corrText = corrSpan.textContent.trim();
+            // Skip diagonal (1.000) and missing values (—)
+            if (corrText !== '1.000' && corrText !== '—' && corrText !== 'N/A') {
+              const corrValue = Math.abs(parseFloat(corrText));
+              if (!isNaN(corrValue)) {
+                hasValidCorr = true;
+                if (corrValue > maxCorr) {
+                  maxCorr = corrValue;
+                }
+              }
             }
           }
         }
         
-        // Hide row if max correlation is below threshold
-        if (maxCorr < currentThreshold && maxCorr > 0) {
+        // Hide row if max correlation is below threshold (but only if row has valid correlations)
+        if (hasValidCorr && maxCorr < currentThreshold) {
           row.style.display = 'none';
         } else {
           row.style.display = '';
