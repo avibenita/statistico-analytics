@@ -205,8 +205,9 @@ const StatisticoHeader = {
       return `
         <div class="analysis-option ${isActive ? 'active' : ''} ${isDisabled ? 'disabled' : ''}" 
              ${!isDisabled ? `onclick="StatisticoHeader.navigateTo('${view.file}')"` : ''}>
+          ${isActive ? '<i class="fa-solid fa-check" style="margin-right: 8px; color: var(--accent-1);"></i>' : ''}
           ${view.label}
-          ${isDisabled ? ' <span style="opacity:0.5">(Coming Soon)</span>' : ''}
+          ${isDisabled ? ' <span style="opacity:0.5; margin-left: 8px;">(Coming Soon)</span>' : ''}
         </div>
       `;
     }).join('');
@@ -253,6 +254,9 @@ const StatisticoHeader = {
    */
   navigateTo(filename) {
     console.log('🔄 Navigating to:', filename);
+    
+    // Close dropdown after selection
+    this.toggleDropdown();
     
     try {
       // Check if there's a global view switcher (for single-dialog multi-view approach)

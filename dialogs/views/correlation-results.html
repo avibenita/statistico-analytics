@@ -770,6 +770,25 @@
         currentView = viewId;
         console.log('✅ Switched to:', viewId);
 
+        // Update header to reflect current view
+        if (typeof StatisticoHeader !== 'undefined') {
+          const viewNames = {
+            'matrixView': 'correlation-matrix',
+            'networkView': 'correlation-network',
+            'partialView': 'partial-correlations',
+            'reliabilityView': 'reliability',
+            'rollingView': 'rolling-correlations',
+            'testsView': 'correlation-tests'
+          };
+          StatisticoHeader.currentView = viewNames[viewId] || 'correlation-matrix';
+          
+          // Re-render dropdown to update active state
+          const dropdownContent = document.getElementById('dropdownMenu');
+          if (dropdownContent) {
+            dropdownContent.innerHTML = StatisticoHeader.getDropdownViews();
+          }
+        }
+
         // Special handling for network view
         if (viewId === 'networkView' && !window.networkRendered && correlationData) {
           renderNetwork();
