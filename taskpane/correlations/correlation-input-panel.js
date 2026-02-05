@@ -326,6 +326,7 @@ function getSelectedColumnsData() {
 
 // Store results dialog reference
 let resultsDialog = null;
+let isSwitchingDialog = false;
 
 /**
  * Run correlation analysis
@@ -427,7 +428,13 @@ function openDialogWithData(dialogUrl, correlationData) {
               resultsDialog.close();
               resultsDialog = null;
             } else if (message.action === 'switchView') {
-              // Close current dialog and open new view
+              // Prevent multiple simultaneous switches
+              if (isSwitchingDialog) {
+                console.log('⚠️ Already switching dialogs, ignoring request');
+                return;
+              }
+              
+              isSwitchingDialog = true;
               console.log('🔄 Switching to view:', message.view);
               
               // Store the new URL before closing
@@ -439,10 +446,11 @@ function openDialogWithData(dialogUrl, correlationData) {
                 resultsDialog = null;
               }
               
-              // Wait for dialog to close before opening new one (Office limitation: one dialog at a time)
+              // Wait longer for dialog to close before opening new one (Office limitation: one dialog at a time)
               setTimeout(() => {
                 openDialogWithData(newDialogUrl, correlationData);
-              }, 500);
+                isSwitchingDialog = false;
+              }, 1000);
             }
           } catch (e) {
             console.error('Error handling dialog message:', e);
@@ -453,6 +461,7 @@ function openDialogWithData(dialogUrl, correlationData) {
         resultsDialog.addEventHandler(Office.EventType.DialogEventReceived, (arg) => {
           console.log('Dialog event:', arg.error);
           resultsDialog = null;
+          isSwitchingDialog = false; // Reset flag when dialog closes
         });
       }
     }
