@@ -142,6 +142,14 @@
       min-width:100px;
     }
 
+    /* Threshold highlighting */
+    .threshold-highlight{
+      background-color:rgba(255,165,120,0.15) !important;
+      border:4px solid rgba(255,165,120,0.3) !important;
+      box-shadow:inset 0 0 8px rgba(255,165,120,0.2) !important;
+      transition:all 0.3s ease !important;
+    }
+
     .slider-value{
       font-size:14px;
       font-weight:700;
@@ -430,8 +438,8 @@
         <!-- Threshold Slider (Centered) -->
         <div class="slider-center">
           <div class="control-group slider-container">
-            <span class="slider-label">Hide |r| &lt;</span>
-            <input type="range" id="thresholdSlider" min="0" max="1" step="0.01" value="0" oninput="updateThreshold(this.value)">
+            <span class="slider-label">Highlight r ≥</span>
+            <input type="range" id="thresholdSlider" min="0" max="1" step="0.05" value="0" oninput="updateThreshold(this.value)">
             <span class="slider-value" id="thresholdValue">0.00</span>
           </div>
         </div>
@@ -653,8 +661,8 @@
       });
       tbody.innerHTML = bodyHTML;
       
-      // Apply filters after rendering
-      applyThresholdFilter();
+      // Apply highlighting and display toggles after rendering
+      applyThresholdHighlight(currentThreshold);
       toggleDisplay();
     }
 
@@ -670,71 +678,54 @@
       renderCorrelations();
     }
 
-    // Threshold slider
+    // Threshold slider - HIGHLIGHTING (not hiding)
     let currentThreshold = 0;
     function updateThreshold(value) {
       currentThreshold = parseFloat(value);
       document.getElementById('thresholdValue').textContent = value;
-      console.log('📊 Threshold updated to:', currentThreshold);
-      applyThresholdFilter();
+      applyThresholdHighlight(currentThreshold);
+      updateSliderBackground(currentThreshold);
     }
 
-    function applyThresholdFilter() {
-      const table = document.getElementById('correlationTable');
-      const tbody = table.querySelector('tbody');
-      if (!tbody) {
-        console.warn('⚠️ No tbody found for threshold filter');
-        return;
-      }
+    function applyThresholdHighlight(threshold) {
+      clearThresholdHighlight();
+      if (threshold === 0) return;
 
-      console.log(`🎚️ Applying threshold filter: ${currentThreshold}`);
-      const rows = tbody.querySelectorAll('tr');
-      let hiddenCount = 0;
+      const table = document.getElementById('correlationTable');
+      const cells = table.querySelectorAll('td');
       
-      rows.forEach((row, rowIndex) => {
-        const cells = row.querySelectorAll('td');
-        const varName = cells[0] ? cells[0].textContent.trim() : '';
-        let maxCorr = 0;
-        let hasValidCorr = false;
-        let correlations = [];
+      cells.forEach(cell => {
+        // Skip first column (variable names)
+        if (cell.cellIndex === 0) return;
         
-        // Check all correlation values in the row (skip first cell which is the variable name)
-        for (let i = 1; i < cells.length; i++) {
-          const corrSpan = cells[i].querySelector('.corr-value');
-          if (corrSpan) {
-            const corrText = corrSpan.textContent.trim();
-            correlations.push(corrText);
-            
-            // Skip diagonal (1.000) and missing values (—)
-            if (corrText !== '1.000' && corrText !== '—' && corrText !== 'N/A') {
-              const corrValue = Math.abs(parseFloat(corrText));
-              if (!isNaN(corrValue) && corrValue < 1.0) { // Exclude diagonal values that might be 1.000
-                hasValidCorr = true;
-                if (corrValue > maxCorr) {
-                  maxCorr = corrValue;
-                }
-              }
+        const corrSpan = cell.querySelector('.corr-value');
+        if (corrSpan) {
+          const corrText = corrSpan.textContent.trim();
+          // Skip diagonal and missing values
+          if (corrText !== '1.000' && corrText !== '—' && corrText !== 'N/A') {
+            const corrValue = parseFloat(corrText);
+            // Highlight if |r| >= threshold and < 0.999 (exclude near-perfect correlations from highlight for clarity)
+            if (!isNaN(corrValue) && Math.abs(corrValue) >= threshold && Math.abs(corrValue) < 0.999) {
+              cell.classList.add('threshold-highlight');
             }
           }
         }
-        
-        console.log(`📊 "${varName}": correlations = [${correlations.slice(0, 5).join(', ')}...], max = ${maxCorr.toFixed(3)}`);
-        
-        // Hide row if max correlation is below threshold (but only if row has valid correlations)
-        const shouldHide = hasValidCorr && maxCorr < currentThreshold;
-        if (shouldHide) {
-          row.style.display = 'none';
-          hiddenCount++;
-          console.log(`   ❌ HIDING: ${maxCorr.toFixed(3)} < ${currentThreshold}`);
-        } else {
-          row.style.display = '';
-          if (hasValidCorr) {
-            console.log(`   ✅ SHOWING: ${maxCorr.toFixed(3)} >= ${currentThreshold}`);
-          }
-        }
       });
-      
-      console.log(`\n📈 Filter complete: ${hiddenCount} hidden, ${rows.length - hiddenCount} visible\n`);
+    }
+
+    function clearThresholdHighlight() {
+      const highlightedCells = document.querySelectorAll('.threshold-highlight');
+      highlightedCells.forEach(cell => {
+        cell.classList.remove('threshold-highlight');
+      });
+    }
+
+    function updateSliderBackground(value) {
+      const slider = document.getElementById('thresholdSlider');
+      if (slider) {
+        const percentage = (value / slider.max) * 100;
+        slider.style.background = `linear-gradient(to right, var(--accent-1) ${percentage}%, var(--surface-0) ${percentage}%)`;
+      }
     }
 
     // Toggle display of p-values and n
