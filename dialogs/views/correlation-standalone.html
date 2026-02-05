@@ -150,6 +150,19 @@
       transition:all 0.3s ease !important;
     }
 
+    /* Diagonal cells - distinct style */
+    .diagonal-cell{
+      background:linear-gradient(135deg, rgba(120,200,255,0.15), rgba(120,200,255,0.05)) !important;
+      border:1px solid rgba(120,200,255,0.3) !important;
+      font-weight:700 !important;
+      color:var(--accent-2) !important;
+    }
+
+    .diagonal-cell .corr-value{
+      font-size:15px;
+      text-shadow:0 0 8px rgba(120,200,255,0.4);
+    }
+
     .slider-value{
       font-size:14px;
       font-weight:700;
@@ -583,9 +596,33 @@
 
       const xValues = pairs.map(p => p[0]);
       const yValues = pairs.map(p => p[1]);
-
-      // Calculate Pearson correlation
       const n = pairs.length;
+
+      let r, p;
+
+      // Calculate correlation based on type
+      if (currentType === 'Spearman') {
+        r = calculateSpearman(xValues, yValues);
+      } else if (currentType === 'Kendall') {
+        r = calculateKendall(xValues, yValues);
+      } else {
+        // Pearson (default)
+        r = calculatePearson(xValues, yValues);
+      }
+
+      if (r === null) {
+        return { r: null, p: null, n: n };
+      }
+      
+      // Calculate p-value (simplified - same for all types)
+      const t = r * Math.sqrt((n - 2) / (1 - r * r));
+      p = 2 * (1 - tDistribution(Math.abs(t), n - 2));
+
+      return { r: r, p: p, n: n };
+    }
+
+    function calculatePearson(xValues, yValues) {
+      const n = xValues.length;
       const sumX = xValues.reduce((a, b) => a + b, 0);
       const sumY = yValues.reduce((a, b) => a + b, 0);
       const sumXY = xValues.reduce((sum, x, i) => sum + x * yValues[i], 0);
@@ -595,17 +632,68 @@
       const numerator = n * sumXY - sumX * sumY;
       const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
 
-      if (denominator === 0) {
-        return { r: null, p: null, n: n };
+      if (denominator === 0) return null;
+      return numerator / denominator;
+    }
+
+    function calculateSpearman(xValues, yValues) {
+      // Convert to ranks
+      const xRanks = getRanks(xValues);
+      const yRanks = getRanks(yValues);
+      
+      // Calculate Pearson correlation on ranks
+      return calculatePearson(xRanks, yRanks);
+    }
+
+    function calculateKendall(xValues, yValues) {
+      const n = xValues.length;
+      let concordant = 0;
+      let discordant = 0;
+
+      // Count concordant and discordant pairs
+      for (let i = 0; i < n - 1; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const xDiff = xValues[i] - xValues[j];
+          const yDiff = yValues[i] - yValues[j];
+          
+          if ((xDiff > 0 && yDiff > 0) || (xDiff < 0 && yDiff < 0)) {
+            concordant++;
+          } else if ((xDiff > 0 && yDiff < 0) || (xDiff < 0 && yDiff > 0)) {
+            discordant++;
+          }
+          // Ties are ignored
+        }
       }
 
-      const r = numerator / denominator;
-      
-      // Calculate p-value (simplified)
-      const t = r * Math.sqrt((n - 2) / (1 - r * r));
-      const p = 2 * (1 - tDistribution(Math.abs(t), n - 2));
+      const tau = (concordant - discordant) / (n * (n - 1) / 2);
+      return tau;
+    }
 
-      return { r: r, p: p, n: n };
+    function getRanks(values) {
+      // Create array of [value, originalIndex]
+      const indexed = values.map((val, idx) => ({ val, idx }));
+      
+      // Sort by value
+      indexed.sort((a, b) => a.val - b.val);
+      
+      // Assign ranks (handle ties by averaging)
+      const ranks = new Array(values.length);
+      let i = 0;
+      while (i < indexed.length) {
+        let j = i;
+        // Find end of tied group
+        while (j < indexed.length && indexed[j].val === indexed[i].val) {
+          j++;
+        }
+        // Average rank for tied values
+        const avgRank = (i + j - 1) / 2 + 1; // ranks start at 1
+        for (let k = i; k < j; k++) {
+          ranks[indexed[k].idx] = avgRank;
+        }
+        i = j;
+      }
+      
+      return ranks;
     }
 
     function tDistribution(t, df) {
@@ -642,7 +730,7 @@
         headers.forEach((colHeader, j) => {
           const cell = matrix[i][j];
           if (i === j) {
-            bodyHTML += '<td><div class="corr-value">1.000</div><div class="corr-details">—</div></td>';
+            bodyHTML += '<td class="diagonal-cell"><div class="corr-value">1.000</div><div class="corr-details">—</div></td>';
           } else if (cell.r !== null) {
             const rDisplay = cell.r.toFixed(3);
             const pDisplay = cell.p < 0.0001 ? 'p < 0.0001' : `p = ${cell.p.toFixed(4)}`;
@@ -673,8 +761,7 @@
     function recalculate() {
       const selected = document.querySelector('input[name="corrType"]:checked');
       currentType = selected ? selected.value : 'Pearson';
-      console.log('Recalculating with type:', currentType);
-      // TODO: Implement Spearman and Kendall
+      console.log('🔄 Recalculating with type:', currentType);
       renderCorrelations();
     }
 
