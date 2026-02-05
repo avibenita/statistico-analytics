@@ -814,6 +814,7 @@
     
     // Global view switcher function (called by shared-header)
     window.switchDialogView = function(filename) {
+      console.log('✅ window.switchDialogView is defined and called with:', filename);
       console.log('🔄 Switching view to:', filename);
       
       // Map view names to view IDs
@@ -885,6 +886,7 @@
     // Initialize Office.js
     Office.onReady(function(info) {
       console.log('Office initialized in correlation dialog', info);
+      console.log('🎯 window.switchDialogView is defined:', typeof window.switchDialogView === 'function');
       
       // Initialize shared header
       if (typeof StatisticoHeader !== 'undefined') {
