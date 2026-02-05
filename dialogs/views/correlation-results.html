@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Correlation Analysis Results</title>
+  
+  <!-- Office.js -->
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
+  
+  <!-- D3.js for network visualization -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  
+  <!-- Shared Header -->
+  <link rel="stylesheet" href="shared-header.css">
+  <script src="shared-header.js"></script>
+
+  <style>
+    :root{
+      --surface-0:#0c1624;
+      --surface-1:#1a1f2e;
+      --surface-2:#242938;
+      --border:#2d3748;
+      --accent-1:rgb(255,165,120);
+      --accent-2:rgb(120,200,255);
+      --text-primary:#fff;
+      --text-secondary:rgba(255,255,255,0.8);
+      --text-muted:rgba(255,255,255,0.6);
+      --panel-radius:10px;
+      --panel-shadow:0 4px 20px rgba(0,0,0,.4);
+      --header-color:var(--accent-1);
+    }
+
+    html,body{height:100%;margin:0;}
+    body{background:var(--surface-0);color:var(--text-primary);font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+
+    .container{
+      padding:0;
+      max-width:100%;
+      margin:0;
+      height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* View sections */
+    .view-section {
+      display: none;
+      flex: 1;
+      overflow: auto;
+    }
+
+    .view-section.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Loading state */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-size: 1.2em;
+      color: var(--text-muted);
+    }
+
+    .loading i {
+      margin-right: 10px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading" id="loadingState">
+    <i class="fas fa-spinner"></i>
+    Loading correlation results...
+  </div>
+
+  <div class="container" id="mainContainer" style="display:none;">
+    <!-- Header will be injected by shared-header.js -->
+    <div id="header-container"></div>
+
+    <!-- Correlation Matrix View -->
+    <div id="matrixView" class="view-section active">
+      <!-- Matrix content will be loaded here -->
+    </div>
+
+    <!-- Correlation Network View -->
+    <div id="networkView" class="view-section">
+      <!-- Network content will be loaded here -->
+    </div>
+  </div>
+
+  <script>
+    let correlationData = null;
+    let currentView = 'matrix';
+
+    // Initialize Office
+    Office.onReady((info) => {
+      console.log('Office initialized in unified correlation dialog');
+
+      // Set up message handler
+      Office.context.ui.addHandlerAsync(
+        Office.EventType.DialogParentMessageReceived,
+        onParentMessage
+      );
+
+      // Tell parent we're ready
+      Office.context.ui.messageParent(JSON.stringify({ action: 'ready' }));
+    });
+
+    function onParentMessage(arg) {
+      try {
+        const message = JSON.parse(arg.message);
+        console.log('📩 Received message from parent:', message);
+
+        if (message.type === 'CORRELATION_DATA') {
+          correlationData = message.payload;
+          console.log('✅ Correlation data received:', correlationData);
+          initializeViews();
+        }
+      } catch (e) {
+        console.error('Error handling parent message:', e);
+      }
+    }
+
+    function initializeViews() {
+      if (!correlationData || !correlationData.data || !correlationData.headers) {
+        console.error('Invalid correlation data');
+        return;
+      }
+
+      // Hide loading, show container
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('mainContainer').style.display = 'flex';
+
+      // Load matrix view (default)
+      loadMatrixView();
+
+      // Override the navigation function to switch views internally
+      if (window.StatisticoHeader) {
+        const originalNavigate = window.StatisticoHeader.navigateTo;
+        window.StatisticoHeader.navigateTo = function(filename) {
+          console.log('🔄 Switching to view:', filename);
+          
+          // Switch views based on filename
+          if (filename === 'correlation-standalone.html') {
+            switchToView('matrix');
+          } else if (filename === 'correlation-network-standalone.html') {
+            switchToView('network');
+          }
+        };
+      }
+    }
+
+    function switchToView(viewName) {
+      console.log('Switching to:', viewName);
+      
+      // Hide all views
+      document.querySelectorAll('.view-section').forEach(section => {
+        section.classList.remove('active');
+      });
+
+      // Show selected view
+      if (viewName === 'matrix') {
+        document.getElementById('matrixView').classList.add('active');
+        if (currentView !== 'matrix') {
+          loadMatrixView();
+        }
+      } else if (viewName === 'network') {
+        document.getElementById('networkView').classList.add('active');
+        if (currentView !== 'network') {
+          loadNetworkView();
+        }
+      }
+
+      currentView = viewName;
+    }
+
+    function loadMatrixView() {
+      // Load the matrix view content from the standalone file
+      fetch('correlation-matrix-content.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('matrixView').innerHTML = html;
+          // Initialize matrix with data
+          if (typeof initializeMatrix === 'function') {
+            initializeMatrix(correlationData);
+          }
+        })
+        .catch(error => {
+          console.error('Error loading matrix view:', error);
+          // Fallback: load inline
+          loadMatrixViewInline();
+        });
+    }
+
+    function loadNetworkView() {
+      // Load the network view content from the standalone file
+      fetch('correlation-network-content.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('networkView').innerHTML = html;
+          // Initialize network with data
+          if (typeof initializeNetwork === 'function') {
+            initializeNetwork(correlationData);
+          }
+        })
+        .catch(error => {
+          console.error('Error loading network view:', error);
+          // Fallback: load inline
+          loadNetworkViewInline();
+        });
+    }
+
+    function loadMatrixViewInline() {
+      // Inline fallback - will be implemented
+      document.getElementById('matrixView').innerHTML = '<div style="padding:20px;">Matrix view loading...</div>';
+    }
+
+    function loadNetworkViewInline() {
+      // Inline fallback - will be implemented
+      document.getElementById('networkView').innerHTML = '<div style="padding:20px;">Network view loading...</div>';
+    }
+  </script>
+</body>
+</html>

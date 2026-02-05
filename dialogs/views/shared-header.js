@@ -251,6 +251,13 @@ const StatisticoHeader = {
     console.log('🔄 Navigating to:', filename);
     
     try {
+      // Check if there's a global view switcher (for single-dialog multi-view approach)
+      if (typeof window.switchDialogView === 'function') {
+        console.log('✅ Using in-dialog view switcher');
+        window.switchDialogView(filename);
+        return;
+      }
+      
       // Check if Office is available
       const isOfficeAvailable = typeof Office !== 'undefined' && 
                                 Office.context && 
