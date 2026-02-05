@@ -675,17 +675,24 @@
     function updateThreshold(value) {
       currentThreshold = parseFloat(value);
       document.getElementById('thresholdValue').textContent = value;
+      console.log('📊 Threshold updated to:', currentThreshold);
       applyThresholdFilter();
     }
 
     function applyThresholdFilter() {
       const table = document.getElementById('correlationTable');
       const tbody = table.querySelector('tbody');
-      if (!tbody) return;
+      if (!tbody) {
+        console.warn('⚠️ No tbody found for threshold filter');
+        return;
+      }
 
       const rows = tbody.querySelectorAll('tr');
-      rows.forEach(row => {
+      let hiddenCount = 0;
+      
+      rows.forEach((row, rowIndex) => {
         const cells = row.querySelectorAll('td');
+        const varName = cells[0] ? cells[0].textContent.trim() : '';
         let maxCorr = 0;
         let hasValidCorr = false;
         
@@ -697,7 +704,7 @@
             // Skip diagonal (1.000) and missing values (—)
             if (corrText !== '1.000' && corrText !== '—' && corrText !== 'N/A') {
               const corrValue = Math.abs(parseFloat(corrText));
-              if (!isNaN(corrValue)) {
+              if (!isNaN(corrValue) && corrValue < 1.0) { // Exclude diagonal values that might be 1.000
                 hasValidCorr = true;
                 if (corrValue > maxCorr) {
                   maxCorr = corrValue;
@@ -708,12 +715,20 @@
         }
         
         // Hide row if max correlation is below threshold (but only if row has valid correlations)
-        if (hasValidCorr && maxCorr < currentThreshold) {
+        const shouldHide = hasValidCorr && maxCorr < currentThreshold;
+        if (shouldHide) {
           row.style.display = 'none';
+          hiddenCount++;
+          console.log(`🙈 Hiding "${varName}": max |r| = ${maxCorr.toFixed(3)} < ${currentThreshold}`);
         } else {
           row.style.display = '';
+          if (hasValidCorr) {
+            console.log(`👁️ Showing "${varName}": max |r| = ${maxCorr.toFixed(3)} >= ${currentThreshold}`);
+          }
         }
       });
+      
+      console.log(`✅ Filter applied: ${hiddenCount} rows hidden, ${rows.length - hiddenCount} visible`);
     }
 
     // Toggle display of p-values and n
