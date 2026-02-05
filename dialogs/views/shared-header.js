@@ -183,13 +183,13 @@ const StatisticoHeader = {
     ];
 
     const correlationViews = [
-      { id: 'correlation-matrix', label: 'Correlation Matrix', file: 'correlations/correlation-standalone.html' },
-      { id: 'correlation-network', label: 'Correlation Network', file: 'correlations/correlation-network-standalone.html' },
+      { id: 'correlation-matrix', label: 'Correlation Matrix', file: 'matrix' },
+      { id: 'correlation-network', label: 'Correlation Network', file: 'network' },
       { id: 'separator', label: '---', file: null },
-      { id: 'partial-correlations', label: 'Partial Correlations', file: 'correlations/partial-correlations.html' },
-      { id: 'reliability', label: 'Reliability Coefficients', file: 'correlations/reliability.html' },
-      { id: 'rolling-correlations', label: 'Rolling Correlations', file: 'correlations/rolling-correlations.html' },
-      { id: 'correlation-tests', label: 'Correlation Tests', file: 'correlations/correlation-tests.html' }
+      { id: 'partial-correlations', label: 'Partial Correlations', file: 'partial' },
+      { id: 'reliability', label: 'Reliability Coefficients', file: 'reliability' },
+      { id: 'rolling-correlations', label: 'Rolling Correlations', file: 'rolling' },
+      { id: 'correlation-tests', label: 'Correlation Tests', file: 'tests' }
     ];
     
     const views = this.module === 'correlations' ? correlationViews : univariateViews;

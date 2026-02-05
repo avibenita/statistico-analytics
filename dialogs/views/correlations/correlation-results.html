@@ -816,18 +816,21 @@
     window.switchDialogView = function(filename) {
       console.log('🔄 Switching view to:', filename);
       
-      if (filename === 'correlation-standalone.html' || filename.includes('matrix')) {
-        switchToView('matrixView');
-      } else if (filename === 'correlation-network-standalone.html' || filename.includes('network')) {
-        switchToView('networkView');
-      } else if (filename.includes('partial')) {
-        switchToView('partialView');
-      } else if (filename.includes('reliability')) {
-        switchToView('reliabilityView');
-      } else if (filename.includes('rolling')) {
-        switchToView('rollingView');
-      } else if (filename.includes('tests')) {
-        switchToView('testsView');
+      // Map view names to view IDs
+      const viewMap = {
+        'matrix': 'matrixView',
+        'network': 'networkView',
+        'partial': 'partialView',
+        'reliability': 'reliabilityView',
+        'rolling': 'rollingView',
+        'tests': 'testsView'
+      };
+      
+      const viewId = viewMap[filename];
+      if (viewId) {
+        switchToView(viewId);
+      } else {
+        console.error('Unknown view:', filename);
       }
     };
 
