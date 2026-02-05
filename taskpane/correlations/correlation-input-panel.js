@@ -385,22 +385,16 @@ function prepareCorrelationData(values, selectedColumns) {
 }
 
 /**
- * Open correlation results in Office Dialog
+ * Helper function to open any correlation dialog with data
  */
-function openCorrelationResults(correlationData) {
-  console.log('Opening correlation results dialog...');
-  console.log('Data to send:', correlationData);
-  
-  // Dialog URL - will be opened in Office dialog
-  const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/correlation-standalone.html';
-  
+function openDialogWithData(dialogUrl, correlationData) {
   Office.context.ui.displayDialogAsync(
     dialogUrl,
     { height: 90, width: 90, displayInIframe: true },
     (asyncResult) => {
       if (asyncResult.status === Office.AsyncResultStatus.Failed) {
         console.error('Failed to open dialog:', asyncResult.error);
-        showError('Failed to open results dialog: ' + asyncResult.error.message);
+        showError('Failed to open dialog: ' + asyncResult.error.message);
       } else {
         resultsDialog = asyncResult.value;
         console.log('✅ Dialog opened successfully');
@@ -423,7 +417,7 @@ function openCorrelationResults(correlationData) {
             console.log('📩 Message from dialog:', message);
             
             if (message.action === 'ready') {
-              // Dialog is ready, send data again
+              // Dialog is ready, send data
               console.log('Dialog ready, sending data...');
               resultsDialog.messageChild(JSON.stringify({
                 type: 'CORRELATION_DATA',
@@ -432,6 +426,15 @@ function openCorrelationResults(correlationData) {
             } else if (message.action === 'close') {
               resultsDialog.close();
               resultsDialog = null;
+            } else if (message.action === 'switchView') {
+              // Close current dialog and open new view
+              console.log('🔄 Switching to view:', message.view);
+              resultsDialog.close();
+              resultsDialog = null;
+              
+              // Open new dialog with same data
+              const newDialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/${message.view}`;
+              openDialogWithData(newDialogUrl, correlationData);
             }
           } catch (e) {
             console.error('Error handling dialog message:', e);
@@ -446,6 +449,14 @@ function openCorrelationResults(correlationData) {
       }
     }
   );
+}
+
+/**
+ * Open correlation results in Office Dialog
+ */
+function openCorrelationResults(correlationData) {
+  const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/correlation-standalone.html';
+  openDialogWithData(dialogUrl, correlationData);
 }
 
 /**
