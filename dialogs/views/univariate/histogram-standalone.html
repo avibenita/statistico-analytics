@@ -145,8 +145,10 @@
       gap: 8px;
       margin-bottom: 6px;
       font-size: 12px;
-      flex-wrap: nowrap;      /* force same row */
+      flex-wrap: nowrap !important;      /* force same row */
       align-items: center;    /* vertically aligned */
+      overflow-x: auto;      /* Allow horizontal scroll if needed */
+      overflow-y: hidden;
     }
 
     /* Smaller / shorter boxes */
@@ -159,6 +161,8 @@
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 6px;
       min-height: 32px;       /* reduced from 42px */
+      flex-shrink: 0;        /* prevent shrinking */
+      white-space: nowrap;   /* prevent text wrapping */
     }
 
     /* Make labels less "tall" */
@@ -231,6 +235,8 @@
       min-height: 32px;       /* reduced from 42px */
       margin-top: 0;          /* remove the extra vertical spacing */
       max-width: none;        /* remove 650px restriction */
+      flex-shrink: 0;        /* prevent shrinking */
+      white-space: nowrap;   /* prevent text wrapping */
     }
 
     .range-sliders {
