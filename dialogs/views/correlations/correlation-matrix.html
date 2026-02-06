@@ -383,6 +383,9 @@
     .corr-value{
       font-weight:700;
       font-size:14px;
+      text-decoration:underline;
+      text-underline-offset:3px;
+      cursor:pointer;
     }
 
     .p-value{
@@ -397,8 +400,14 @@
     }
 
     .diagonal-cell{
-      background:linear-gradient(135deg, rgba(120,200,255,0.15), rgba(255,165,120,0.15))!important;
+      background:linear-gradient(135deg, rgba(120,200,255,0.25), rgba(255,165,120,0.25))!important;
       position:relative;
+    }
+
+    .diagonal-cell .corr-value{
+      color:var(--accent-2);
+      text-decoration:none;
+      cursor:default;
     }
 
     .diagonal-cell::after{
@@ -416,6 +425,62 @@
       background:linear-gradient(135deg, rgba(255,165,120,0.25), rgba(120,200,255,0.25))!important;
       box-shadow:inset 0 0 8px rgba(255,165,120,0.4);
       animation:pulse-highlight 2s ease-in-out infinite;
+    }
+    .scatter-modal{
+      display:none;
+      position:fixed;
+      z-index:9999;
+      top:0;
+      left:0;
+      right:0;
+      bottom:0;
+      background:rgba(0,0,0,0.65);
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .scatter-modal-content{
+      background:var(--surface-1);
+      border:2px solid var(--border);
+      border-radius:12px;
+      width:90%;
+      max-width:900px;
+      max-height:85vh;
+      overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,0.5);
+      display:flex;
+      flex-direction:column;
+    }
+
+    .scatter-modal-header{
+      padding:14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid var(--border);
+      color:var(--accent-1);
+      font-weight:600;
+    }
+
+    .scatter-modal-body{
+      padding:14px 18px 18px;
+      overflow:auto;
+    }
+
+    .scatter-close{
+      cursor:pointer;
+      font-size:20px;
+      color:var(--text-secondary);
+    }
+
+    .scatter-chart{
+      width:100%;
+      height:420px;
+      background:rgba(0,0,0,0.15);
+      border:1px solid var(--border);
+      border-radius:8px;
+      position:relative;
     }
 
     @keyframes pulse-highlight{
@@ -566,6 +631,19 @@
         <p>Loading correlation data...</p>
       </div>
 
+      <div id="scatterModal" class="scatter-modal" role="dialog" aria-hidden="true">
+        <div class="scatter-modal-content">
+          <div class="scatter-modal-header">
+            <span id="scatterTitle">Scatter Plot</span>
+            <span class="scatter-close" onclick="closeScatterModal()">&times;</span>
+          </div>
+          <div class="scatter-modal-body">
+            <div id="scatterChart" class="scatter-chart"></div>
+            <div id="scatterMeta" style="margin-top:10px;color:var(--text-secondary);font-size:12px;"></div>
+          </div>
+        </div>
+      </div>
+
       <div id="resultsContainer" style="display:none;">
         <div class="scroll-hint">
           <i class="fa-solid fa-arrows-left-right"></i>
@@ -585,6 +663,7 @@
   <script>
     let correlationData = null;
     let currentType = 'Pearson';
+    let scatterPointsCache = new Map();
 
     // Initialize Office.js
     Office.onReady(function(info) {
@@ -718,6 +797,13 @@
           corrValue.className = 'corr-value';
           corrValue.textContent = corrData.r.toFixed(3);
           corrValue.setAttribute('data-corr', corrData.r);
+          corrValue.setAttribute('data-row', rowCol);
+          corrValue.setAttribute('data-col', colCol);
+          if (!isDiagonal) {
+            corrValue.addEventListener('click', () => {
+              openScatterModal(rowCol, colCol, corrData.r);
+            });
+          }
           td.appendChild(corrValue);
 
           // P-value
@@ -743,6 +829,117 @@
       // Apply display settings
       toggleDisplay();
       applyThresholdFilter();
+    }
+
+    function openScatterModal(rowVar, colVar, rValue) {
+      if (!correlationData || !correlationData.data) {
+        return;
+      }
+
+      const modal = document.getElementById('scatterModal');
+      const titleEl = document.getElementById('scatterTitle');
+      const metaEl = document.getElementById('scatterMeta');
+      const chartEl = document.getElementById('scatterChart');
+
+      const cacheKey = `${rowVar}__${colVar}`;
+      let points = scatterPointsCache.get(cacheKey);
+      if (!points) {
+        points = correlationData.data
+          .map(row => [row[rowVar], row[colVar]])
+          .filter(([x, y]) => typeof x === 'number' && typeof y === 'number' && isFinite(x) && isFinite(y));
+        scatterPointsCache.set(cacheKey, points);
+      }
+
+      titleEl.textContent = `${rowVar} vs ${colVar}`;
+      metaEl.textContent = `r = ${rValue.toFixed(3)} • n = ${points.length}`;
+
+      renderScatter(chartEl, points, rowVar, colVar);
+
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeScatterModal() {
+      const modal = document.getElementById('scatterModal');
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function renderScatter(container, points, xLabel, yLabel) {
+      container.innerHTML = '';
+
+      if (!points.length) {
+        container.innerHTML = '<div style="padding:20px;color:var(--text-secondary);">No valid numeric pairs to plot.</div>';
+        return;
+      }
+
+      const width = container.clientWidth || 800;
+      const height = container.clientHeight || 420;
+      const padding = { top: 20, right: 20, bottom: 40, left: 50 };
+
+      const xs = points.map(p => p[0]);
+      const ys = points.map(p => p[1]);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+      const maxY = Math.max(...ys);
+
+      const scaleX = (x) => padding.left + (x - minX) / (maxX - minX || 1) * (width - padding.left - padding.right);
+      const scaleY = (y) => height - padding.bottom - (y - minY) / (maxY - minY || 1) * (height - padding.top - padding.bottom);
+
+      const svgNS = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('width', width);
+      svg.setAttribute('height', height);
+
+      const axisColor = 'rgba(255,255,255,0.4)';
+      const textColor = 'rgba(255,255,255,0.7)';
+
+      const xAxis = document.createElementNS(svgNS, 'line');
+      xAxis.setAttribute('x1', padding.left);
+      xAxis.setAttribute('y1', height - padding.bottom);
+      xAxis.setAttribute('x2', width - padding.right);
+      xAxis.setAttribute('y2', height - padding.bottom);
+      xAxis.setAttribute('stroke', axisColor);
+      svg.appendChild(xAxis);
+
+      const yAxis = document.createElementNS(svgNS, 'line');
+      yAxis.setAttribute('x1', padding.left);
+      yAxis.setAttribute('y1', padding.top);
+      yAxis.setAttribute('x2', padding.left);
+      yAxis.setAttribute('y2', height - padding.bottom);
+      yAxis.setAttribute('stroke', axisColor);
+      svg.appendChild(yAxis);
+
+      const xLabelEl = document.createElementNS(svgNS, 'text');
+      xLabelEl.setAttribute('x', width / 2);
+      xLabelEl.setAttribute('y', height - 10);
+      xLabelEl.setAttribute('text-anchor', 'middle');
+      xLabelEl.setAttribute('fill', textColor);
+      xLabelEl.textContent = xLabel;
+      svg.appendChild(xLabelEl);
+
+      const yLabelEl = document.createElementNS(svgNS, 'text');
+      yLabelEl.setAttribute('x', 12);
+      yLabelEl.setAttribute('y', height / 2);
+      yLabelEl.setAttribute('text-anchor', 'middle');
+      yLabelEl.setAttribute('fill', textColor);
+      yLabelEl.setAttribute('transform', `rotate(-90 12 ${height / 2})`);
+      yLabelEl.textContent = yLabel;
+      svg.appendChild(yLabelEl);
+
+      points.forEach(([x, y]) => {
+        const cx = scaleX(x);
+        const cy = scaleY(y);
+        const circle = document.createElementNS(svgNS, 'circle');
+        circle.setAttribute('cx', cx);
+        circle.setAttribute('cy', cy);
+        circle.setAttribute('r', 3);
+        circle.setAttribute('fill', 'rgba(255,165,120,0.75)');
+        svg.appendChild(circle);
+      });
+
+      container.appendChild(svg);
     }
 
     /**
@@ -977,9 +1174,7 @@
         const corrValueEl = cell.querySelector('.corr-value');
         if (corrValueEl) {
           const corrValue = parseFloat(corrValueEl.getAttribute('data-corr'));
-          
-          // Highlight if abs(r) >= threshold, but exclude diagonal and perfect correlations
-          const isDiagonal = cell.parentElement.rowIndex === Array.from(cell.parentElement.parentElement.children).indexOf(cell.parentElement);
+          const isDiagonal = cell.classList.contains('diagonal-cell');
           const isPerfect = Math.abs(Math.abs(corrValue) - 1.0) < 0.001;
           
           if (Math.abs(corrValue) >= threshold && !isDiagonal && !isPerfect && threshold > 0) {
