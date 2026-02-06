@@ -678,6 +678,22 @@
       gap:6px;
     }
 
+    .fit-equation{
+      margin-top:8px;
+      padding:6px 8px;
+      border-radius:6px;
+      background:rgba(255,255,255,0.06);
+      border:1px solid var(--border);
+      color:var(--text-secondary);
+      font-size:12px;
+      text-align:center;
+      min-height:28px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      word-break:break-word;
+    }
+
     .scatter-btn{
       background:rgba(255,255,255,0.08);
       border:1px solid var(--border);
@@ -947,6 +963,7 @@
                   <button class="scatter-btn" id="fit-logarithmic" onclick="applyFit('logarithmic')">Logarithmic</button>
                   <button class="scatter-btn" id="fit-power" onclick="applyFit('power')">Power</button>
                 </div>
+                <div class="fit-equation" id="fitEquation">Equation: —</div>
               </div>
               <div class="scatter-panel">
                 <div class="scatter-panel-title"><i class="fas fa-exchange-alt"></i>Axis Transformations</div>
@@ -1474,15 +1491,16 @@
 
       if (!scatterState.chart) return;
       const points = pointsOverride || getVisiblePoints();
-      const fitSeries = buildFitSeries(points, type);
+      const fitResult = buildFitSeries(points, type);
 
       const existing = scatterState.chart.series.find(s => s.name === 'Fit');
       if (existing) {
         existing.remove(false);
       }
-      if (fitSeries) {
-        scatterState.chart.addSeries(fitSeries, false);
+      if (fitResult && fitResult.series) {
+        scatterState.chart.addSeries(fitResult.series, false);
       }
+      updateFitEquation(type, fitResult ? fitResult.equation : null);
       scatterState.chart.redraw();
     }
 
@@ -1510,13 +1528,26 @@
       }
 
       return {
-        name: 'Fit',
-        type: 'line',
-        data: line,
-        color: 'rgba(120,200,255,0.9)',
-        marker: { enabled: false },
-        lineWidth: 2
+        series: {
+          name: 'Fit',
+          type: 'line',
+          data: line,
+          color: 'rgba(120,200,255,0.9)',
+          marker: { enabled: false },
+          lineWidth: 2
+        },
+        equation: model.string || null
       };
+    }
+
+    function updateFitEquation(type, equation) {
+      const el = document.getElementById('fitEquation');
+      if (!el) return;
+      if (type === 'none' || !equation) {
+        el.textContent = 'Equation: —';
+      } else {
+        el.textContent = `Equation: ${equation}`;
+      }
     }
 
     function setTransformAxis(axis) {
