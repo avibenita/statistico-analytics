@@ -1,10 +1,10 @@
 /**
  * Shared Header Component for Statistico Standalone Views
  * Provides navigation dropdown to other analysis views
- * VERSION: 2026-02-06-reliability
+ * VERSION: 2026-02-06-taylor
  */
 
-console.log('📦 Loading shared-header.js VERSION 2026-02-06-reliability');
+console.log('📦 Loading shared-header.js VERSION 2026-02-06-taylor');
 
 const StatisticoHeader = {
   currentView: 'histogram',
@@ -198,6 +198,7 @@ const StatisticoHeader = {
     const correlationViews = [
       { id: 'correlation-matrix', label: 'Correlation Matrix', file: 'correlations/correlation-matrix.html' },
       { id: 'correlation-network', label: 'Correlation Network', file: 'correlations/correlation-network.html' },
+      { id: 'taylor-diagram', label: 'Taylor Diagram', file: 'correlations/correlation-taylor.html' },
       { id: 'partial-correlations', label: 'Partial Correlations', file: 'correlations/correlation-partial.html' },
       { id: 'reliability', label: 'Reliability Coefficients', file: 'correlations/correlation-reliability.html' },
       { id: 'separator', label: '---', file: null },
