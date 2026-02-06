@@ -473,7 +473,6 @@
 
     .threshold-highlight{
       background:linear-gradient(135deg, rgba(255,165,120,0.25), rgba(120,200,255,0.25))!important;
-      box-shadow:inset 0 0 8px rgba(255,165,120,0.4);
       animation:pulse-highlight 2s ease-in-out infinite;
     }
 
@@ -1181,19 +1180,7 @@
           }
           td.appendChild(corrValue);
 
-          // P-value
-          if (corrData.p !== null) {
-            const pValue = document.createElement('div');
-            pValue.className = 'p-value';
-            pValue.textContent = `p = ${corrData.p.toFixed(4)}`;
-            td.appendChild(pValue);
-          }
-
-          // N value
-          const nValue = document.createElement('div');
-          nValue.className = 'n-value';
-          nValue.textContent = `N = ${corrData.n}`;
-          td.appendChild(nValue);
+          // P-value and N value removed per UI request (show r only)
 
           row.appendChild(td);
         });
