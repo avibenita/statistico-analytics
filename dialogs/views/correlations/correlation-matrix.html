@@ -76,14 +76,20 @@
       margin-bottom:25px;
       border:2px solid var(--border);
       box-shadow:0 4px 20px rgba(0,0,0,0.3);
+      display:flex;
+      align-items:center;
+      gap:16px;
+      flex-wrap:nowrap;
+      overflow-x:auto;
     }
 
     .control-group{
-      margin-bottom:15px;
+      margin-bottom:0;
+      flex:0 0 auto;
     }
 
-    .control-group:last-child{
-      margin-bottom:0;
+    .type-group{
+      min-width:320px;
     }
 
     .control-group label{
@@ -97,24 +103,26 @@
     /* Radio Bar */
     .radio-bar{
       display:flex;
-      gap:10px;
+      gap:8px;
       flex-wrap:nowrap;
+      align-items:center;
     }
 
     .radio-bar label{
-      flex:1;
-      min-width:100px;
+      flex:0 0 auto;
+      min-width:90px;
       background:var(--surface-2);
       border:2px solid var(--border);
       border-radius:8px;
-      padding:10px 15px;
+      padding:8px 12px;
       cursor:pointer;
       transition:all 0.3s ease;
       display:flex;
       align-items:center;
       justify-content:center;
       white-space:nowrap;
-      flex-shrink:1;
+      flex-shrink:0;
+      font-size:13px;
     }
 
     .radio-bar label:hover{
@@ -164,6 +172,8 @@
       align-items:center;
       gap:12px;
       margin-bottom:0;
+      flex:1;
+      min-width:260px;
     }
 
     .slider-label{
@@ -230,6 +240,8 @@
       gap:15px;
       flex-wrap:nowrap;
       margin-bottom:0;
+      align-items:center;
+      white-space:nowrap;
     }
 
     .checkbox-label{
@@ -503,10 +515,6 @@
       .controls{
         padding:12px;
       }
-      .checkbox-group{
-        flex-direction:column;
-        gap:8px;
-      }
       input[type="range"]{
         min-width:100px;
       }
@@ -519,7 +527,7 @@
 
     <div class="results-container">
       <div class="controls">
-        <div class="control-group">
+        <div class="control-group type-group">
           <label>Correlation Type:</label>
           <div class="radio-bar">
             <label>
@@ -536,28 +544,20 @@
             </label>
           </div>
         </div>
-
-        <div class="filter-controls-frame">
-          <div class="slider-center">
-            <div class="control-group slider-container">
-              <span class="slider-label">Highlight r ≥</span>
-              <input type="range" id="thresholdSlider" min="0" max="1" step="0.05" value="0" oninput="updateThreshold(this.value)">
-              <span class="slider-value" id="thresholdValue">0.00</span>
-            </div>
-          </div>
-
-          <div class="checkbox-right">
-            <div class="control-group checkbox-group">
-              <label class="checkbox-label">
-                <input type="checkbox" id="showPValue" checked onchange="toggleDisplay()">
-                <span>Show p-value</span>
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" id="showN" checked onchange="toggleDisplay()">
-                <span>Show n</span>
-              </label>
-            </div>
-          </div>
+        <div class="control-group slider-container">
+          <span class="slider-label">Highlight r ≥</span>
+          <input type="range" id="thresholdSlider" min="0" max="1" step="0.05" value="0" oninput="updateThreshold(this.value)">
+          <span class="slider-value" id="thresholdValue">0.00</span>
+        </div>
+        <div class="control-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="showPValue" checked onchange="toggleDisplay()">
+            <span>Show p-value</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="showN" checked onchange="toggleDisplay()">
+            <span>Show n</span>
+          </label>
         </div>
       </div>
 
