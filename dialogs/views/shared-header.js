@@ -186,13 +186,13 @@ const StatisticoHeader = {
     ];
 
     const correlationViews = [
-      { id: 'correlation-matrix', label: 'Correlation Matrix', file: 'matrix' },
-      { id: 'correlation-network', label: 'Correlation Network', file: 'network' },
+      { id: 'correlation-matrix', label: 'Correlation Matrix', file: 'correlations/correlation-matrix.html' },
+      { id: 'correlation-network', label: 'Correlation Network', file: 'correlations/correlation-network.html' },
       { id: 'separator', label: '---', file: null },
-      { id: 'partial-correlations', label: 'Partial Correlations', file: 'partial' },
-      { id: 'reliability', label: 'Reliability Coefficients', file: 'reliability' },
-      { id: 'rolling-correlations', label: 'Rolling Correlations', file: 'rolling' },
-      { id: 'correlation-tests', label: 'Correlation Tests', file: 'tests' }
+      { id: 'partial-correlations', label: 'Partial Correlations', file: null, isDisabled: true },
+      { id: 'reliability', label: 'Reliability Coefficients', file: null, isDisabled: true },
+      { id: 'rolling-correlations', label: 'Rolling Correlations', file: null, isDisabled: true },
+      { id: 'correlation-tests', label: 'Correlation Tests', file: null, isDisabled: true }
     ];
     
     const views = this.module === 'correlations' ? correlationViews : univariateViews;
@@ -256,23 +256,12 @@ const StatisticoHeader = {
    * Navigate to another view
    */
   navigateTo(filename) {
-    console.log('🔄 [v2026-02-05-002] Navigating to:', filename);
-    console.log('🔍 Checking for window.switchDialogView...');
-    console.log('   Type:', typeof window.switchDialogView);
-    console.log('   Exists:', typeof window.switchDialogView === 'function');
+    console.log('🔄 [v2026-02-05-003] Navigating to:', filename);
     
     // Close dropdown after selection
     this.toggleDropdown();
     
     try {
-      // Check if there's a global view switcher (for single-dialog multi-view approach)
-      if (typeof window.switchDialogView === 'function') {
-        console.log('✅ Using in-dialog view switcher');
-        window.switchDialogView(filename);
-        return;
-      } else {
-        console.warn('⚠️ window.switchDialogView NOT FOUND, falling back to old navigation');
-      }
       
       // Check if Office is available
       const isOfficeAvailable = typeof Office !== 'undefined' && 
