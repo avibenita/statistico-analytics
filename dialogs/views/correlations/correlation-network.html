@@ -405,14 +405,20 @@
       const loading = document.getElementById('networkLoadingMessage');
       const networkContainer = document.getElementById('networkContainer');
 
+      console.log('🔍 Validating correlation data...');
+      console.log('  correlationData exists:', !!correlationData);
+      console.log('  correlationData.columns exists:', !!correlationData?.columns);
+      console.log('  columns length:', correlationData?.columns?.length);
+      console.log('  Full data structure:', correlationData);
+
       if (!correlationData || !correlationData.columns || correlationData.columns.length === 0) {
-        console.error('Invalid correlation data');
+        console.error('❌ Invalid correlation data - requirements not met');
         loading.innerHTML = '<i class="fa-solid fa-exclamation-triangle"></i><p>No correlation data available</p>';
         container.style.display = 'flex';
         return;
       }
 
-      console.log('Rendering network with data:', correlationData);
+      console.log('✅ Rendering network with data:', correlationData);
       
       const { columns, data } = correlationData;
 
