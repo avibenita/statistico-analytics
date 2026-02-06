@@ -847,6 +847,10 @@
               <input type="radio" name="corrType" value="Kendall" onchange="recalculate()">
               <span>Kendall</span>
             </label>
+            <label>
+              <input type="radio" name="corrType" value="Biweight" onchange="recalculate()">
+              <span>Biweight</span>
+            </label>
           </div>
         </div>
         <div class="control-group">
@@ -1575,6 +1579,8 @@
             ({ r, p, n: validN } = calculateSpearmanCorrelation(col1Data, col2Data));
           } else if (type === 'Kendall') {
             ({ r, p, n: validN } = calculateKendallCorrelation(col1Data, col2Data));
+          } else if (type === 'Biweight') {
+            ({ r, p, n: validN } = calculateBiweightMidcorrelation(col1Data, col2Data));
           }
 
           matrix[i][j] = { r, p, n: validN };
@@ -1670,6 +1676,43 @@
     }
 
     /**
+     * Calculate Biweight Midcorrelation (robust, downweights outliers)
+     */
+    function calculateBiweightMidcorrelation(x, y) {
+      const pairs = x.map((xi, i) => [xi, y[i]]).filter(([xi, yi]) =>
+        typeof xi === 'number' && typeof yi === 'number' && isFinite(xi) && isFinite(yi)
+      );
+      const n = pairs.length;
+      if (n < 2) return { r: 0, p: null, n: 0 };
+
+      const xs = pairs.map(p => p[0]);
+      const ys = pairs.map(p => p[1]);
+      const medX = median(xs);
+      const medY = median(ys);
+      const madX = mad(xs, medX);
+      const madY = mad(ys, medY);
+      if (madX === 0 || madY === 0) return { r: 0, p: null, n };
+
+      const tunedX = xs.map(v => (v - medX) / (9 * madX));
+      const tunedY = ys.map(v => (v - medY) / (9 * madY));
+      const wX = tunedX.map(u => Math.abs(u) < 1 ? Math.pow(1 - u * u, 2) : 0);
+      const wY = tunedY.map(u => Math.abs(u) < 1 ? Math.pow(1 - u * u, 2) : 0);
+
+      const xPrime = xs.map((v, i) => (v - medX) * wX[i]);
+      const yPrime = ys.map((v, i) => (v - medY) * wY[i]);
+
+      const num = xPrime.reduce((sum, v, i) => sum + v * yPrime[i], 0);
+      const denX = Math.sqrt(xPrime.reduce((sum, v) => sum + v * v, 0));
+      const denY = Math.sqrt(yPrime.reduce((sum, v) => sum + v * v, 0));
+      const r = denX === 0 || denY === 0 ? 0 : num / (denX * denY);
+
+      const t = r * Math.sqrt(n - 2) / Math.sqrt(1 - r * r);
+      const p = 2 * (1 - tDistCDF(Math.abs(t), n - 2));
+
+      return { r, p, n };
+    }
+
+    /**
      * Get ranks for Spearman
      */
     function getRanks(arr) {
@@ -1691,6 +1734,20 @@
       }
 
       return ranks;
+    }
+
+    function median(arr) {
+      const sorted = arr.slice().sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      if (sorted.length % 2 === 0) {
+        return (sorted[mid - 1] + sorted[mid]) / 2;
+      }
+      return sorted[mid];
+    }
+
+    function mad(arr, med) {
+      const deviations = arr.map(v => Math.abs(v - med));
+      return median(deviations) || 0;
     }
 
     /**
