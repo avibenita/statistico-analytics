@@ -641,6 +641,7 @@
       border:1px solid var(--border);
       border-radius:10px;
       padding:8px;
+      overflow:hidden;
     }
 
     .scatter-panel-title{
@@ -655,6 +656,8 @@
 
     .scatter-slider{
       margin-bottom:8px;
+      width:100%;
+      min-width:0;
     }
 
     .scatter-slider-header{
@@ -706,7 +709,7 @@
 
     .axis-row{
       display:grid;
-      grid-template-columns:1fr 1fr;
+      grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);
       gap:10px;
     }
 
