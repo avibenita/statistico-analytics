@@ -443,6 +443,14 @@
       currentVarNames = headers;
       currentMatrix = matrix;
 
+      // Update header with correct sample size
+      const sampleSize = data ? data.length : 0;
+      if (typeof StatisticoHeader !== 'undefined') {
+        StatisticoHeader.sampleSize = sampleSize;
+        StatisticoHeader.variableName = `${headers.length} Variables`;
+        StatisticoHeader.render();
+      }
+
       // Hide loading, show network
       loading.style.display = 'none';
       networkContainer.style.display = 'flex';

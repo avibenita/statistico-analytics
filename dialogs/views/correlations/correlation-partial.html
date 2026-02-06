@@ -585,6 +585,14 @@
           precomputedCorrelationMatrix = correlationMatrix;
           precomputedNMatrix = nMatrix;
           
+          // Update header with correct sample size
+          const sampleSize = data ? data.length : 0;
+          if (typeof StatisticoHeader !== 'undefined') {
+            StatisticoHeader.sampleSize = sampleSize;
+            StatisticoHeader.variableName = `${headers.length} Variables`;
+            StatisticoHeader.render();
+          }
+          
           // Initialize interface
           initializeInterface();
           

@@ -639,6 +639,16 @@
 
       console.log('Rendering matrix with data:', correlationData);
       
+      // Calculate sample size
+      const sampleSize = correlationData.data ? correlationData.data.length : 0;
+      
+      // Update header with correct sample size
+      if (typeof StatisticoHeader !== 'undefined') {
+        StatisticoHeader.sampleSize = sampleSize;
+        StatisticoHeader.variableName = `${correlationData.headers.length} Variables`;
+        StatisticoHeader.render();
+      }
+      
       // Hide loading, show results
       loading.style.display = 'none';
       results.style.display = 'block';
