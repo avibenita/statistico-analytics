@@ -357,6 +357,20 @@
     let networkSimulation = null;
     let networkThreshold = 0;
     let showCorr = true;
+    let currentMatrix = null;
+    let currentVarNames = null;
+
+    // Handle window resize for responsiveness
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (currentVarNames && currentMatrix) {
+          console.log('🔄 Redrawing network due to resize');
+          drawNetwork(currentVarNames, currentMatrix);
+        }
+      }, 250);
+    });
 
     // Initialize Office.js
     Office.onReady(function(info) {
@@ -425,6 +439,10 @@
       // Calculate correlation matrix
       const matrix = calculateCorrelationMatrix(data, headers, 'Pearson');
 
+      // Store for resize handling
+      currentVarNames = headers;
+      currentMatrix = matrix;
+
       // Hide loading, show network
       loading.style.display = 'none';
       networkContainer.style.display = 'flex';
@@ -439,8 +457,16 @@
      */
     function drawNetwork(varNames, matrix) {
       const container = document.getElementById('networkContainer');
-      const width = container.clientWidth;
-      const height = Math.max(container.clientHeight, 600);
+      const width = container.clientWidth || window.innerWidth - 40;
+      const height = Math.max(container.clientHeight || 600, 600);
+
+      console.log('📐 Network dimensions:', { width, height, containerWidth: container.clientWidth, containerHeight: container.clientHeight });
+
+      if (width === 0 || height === 0) {
+        console.error('❌ Invalid container dimensions, retrying in 100ms...');
+        setTimeout(() => drawNetwork(varNames, matrix), 100);
+        return;
+      }
 
       // Clear existing
       d3.select("#networkSVG").selectAll("*").remove();
