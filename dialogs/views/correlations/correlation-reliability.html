@@ -540,11 +540,18 @@
     function runReliabilityAnalysis(data, varnames) {
       console.log('🔄 Running reliability analysis...');
       console.log(`📊 Data: ${data.length} rows × ${varnames.length} columns`);
+      const isFiniteNumber = (value) => typeof value === 'number' && isFinite(value);
       
-      lastData = data;
+      // Remove rows with non-finite values (NaN/Infinity)
+      const cleanedData = data.filter(row => row.every(isFiniteNumber));
+      if (cleanedData.length !== data.length) {
+        console.warn(`⚠️ Removed ${data.length - cleanedData.length} rows with non-finite values`);
+      }
+
+      lastData = cleanedData;
       lastVarNames = varnames;
 
-      if (!Array.isArray(data) || data.length === 0 || !Array.isArray(data[0])) {
+      if (!Array.isArray(cleanedData) || cleanedData.length === 0 || !Array.isArray(cleanedData[0])) {
         console.error('❌ Invalid data structure');
         return;
       }
@@ -563,10 +570,10 @@
       };
 
       const numItems = varnames.length;
-      const numSubjects = data.length;
+      const numSubjects = cleanedData.length;
       
       // Identify zero-variance items
-      const allItems = transpose(data);
+      const allItems = transpose(cleanedData);
       const zeroVarianceIndices = [];
       allItems.forEach((item, idx) => {
         const itemSD = sd(item);
@@ -578,22 +585,26 @@
       
       // Filter out zero-variance items
       const validIndices = allItems.map((_, idx) => idx).filter(idx => !zeroVarianceIndices.includes(idx));
-      const filteredData = data.map(row => validIndices.map(idx => row[idx]));
+      const filteredData = cleanedData.map(row => validIndices.map(idx => row[idx]));
       
       const alphaMode = document.getElementById("alpha-mode")?.value || "raw";
       const isStandardized = alphaMode === "standardized";
       
-      const items = transpose(data);
+      const items = transpose(cleanedData);
       const itemMeans = [], itemSDs = [], itemTotalCorrs = [], alphaIfDeleted = [], nIfDeleted = [];
       
       if (isStandardized) {
         const standardizedItems = items.map(item => {
           const itemMean = mean(item);
           const itemSD = sd(item);
+          if (!itemSD || !isFinite(itemSD)) {
+            console.warn('⚠️ Standardization skipped due to zero variance');
+            return item.map(() => 0);
+          }
           return item.map(val => (val - itemMean) / itemSD);
         });
         
-        const standardizedData = data.map((_, rowIdx) => 
+        const standardizedData = cleanedData.map((_, rowIdx) => 
           standardizedItems.map(item => item[rowIdx])
         );
         
@@ -613,7 +624,7 @@
           nIfDeleted.push(reducedMatrix.length);
         }
       } else {
-        const totalScores = data.map(row => row.reduce((a, b) => a + b, 0));
+        const totalScores = cleanedData.map(row => row.reduce((a, b) => a + b, 0));
         
         for (let i = 0; i < numItems; i++) {
           const item = items[i];
@@ -623,7 +634,7 @@
           itemTotalCorrs.push(pearson(item, totalWithoutItem));
           
           const reduced = items.slice(0, i).concat(items.slice(i + 1));
-          const reducedMatrix = data.map((_, j) => reduced.map(col => col[j]));
+          const reducedMatrix = cleanedData.map((_, j) => reduced.map(col => col[j]));
           if (reducedMatrix.length >= 2 && reducedMatrix[0].length >= 2) {
             alphaIfDeleted.push(cronbachAlpha(reducedMatrix));
             nIfDeleted.push(reducedMatrix.length);
@@ -641,7 +652,7 @@
             : cronbachAlpha(filteredData))
         : NaN;
 
-      const omega = calculateOmegaFromPCA(data);
+      const omega = calculateOmegaFromPCA(cleanedData);
       
       document.getElementById("alpha-value").textContent = validIndices.length > 1 ? alpha.toFixed(3) : "N/A";
       document.getElementById("omega-value").textContent = omega.toFixed(3);
@@ -666,7 +677,7 @@
         </tr>`;
       }
 
-      storePCAData(data);
+      storePCAData(cleanedData);
       renderGauge(alpha);
       
       // Hide loading, show results
@@ -715,6 +726,20 @@
       return (k * rBar) / (1 + (k - 1) * rBar);
     }
 
+    function getEigenvaluesFromCov(cov) {
+      try {
+        const eig = numeric.eig(cov);
+        return eig.lambda.x;
+      } catch (error) {
+        console.warn('⚠️ numeric.eig failed, falling back to SVD:', error);
+        const svd = numeric.svd(cov);
+        if (!svd || !svd.S) {
+          throw error;
+        }
+        return svd.S;
+      }
+    }
+
     function calculateOmegaFromPCA(data) {
       try {
         const X = numeric.clone(data);
@@ -725,8 +750,20 @@
         }
         const Xt = numeric.transpose(X);
         const cov = numeric.dot(Xt, X);
-        const eig = numeric.eig(cov);
-        const vec = eig.E.x.map(row => row[0]);
+        let vec = null;
+        try {
+          const eig = numeric.eig(cov);
+          vec = eig.E.x.map(row => row[0]);
+        } catch (error) {
+          console.warn('⚠️ numeric.eig failed for omega, falling back to SVD:', error);
+          const svd = numeric.svd(cov);
+          if (svd && svd.V) {
+            vec = svd.V.map(row => row[0]);
+          }
+        }
+        if (!vec) {
+          return NaN;
+        }
         const norm = Math.sqrt(vec.reduce((s, x) => s + x * x, 0));
         const loadings = vec.map(x => x / norm);
         const sumLoad = loadings.reduce((a, b) => a + b, 0);
@@ -791,10 +828,12 @@
         
         // Calculate eigenvalues
         console.log('Calculating eigenvalues...');
-        const eig = numeric.eig(cov);
-        let eigenvalues = eig.lambda.x;
+        let eigenvalues = getEigenvaluesFromCov(cov);
         
         eigenvalues = eigenvalues.map(val => Math.max(0, Math.abs(val)));
+        if (!eigenvalues.length || eigenvalues.some(val => !isFinite(val))) {
+          throw new Error('Invalid eigenvalues from PCA');
+        }
         eigenvalues.sort((a, b) => b - a);
         
         const totalVariance = eigenvalues.reduce((a, b) => a + b, 0);
@@ -822,15 +861,21 @@
         
       } catch (error) {
         console.error("❌ Error calculating PCA:", error);
-        
-        // Set a fallback message
-        const summaryElement = document.getElementById("pca-summary");
-        if (summaryElement) {
-          summaryElement.innerHTML = `<span style="color: #e74c3c;">⚠ PCA calculation failed: ${error.message}</span>`;
-        }
+        showPcaError(`⚠ PCA calculation failed: ${error.message}`);
         
         // Don't set pcaData if calculation failed
         pcaData = null;
+      }
+    }
+
+    function showPcaError(message) {
+      const summaryElement = document.getElementById("pca-summary");
+      if (summaryElement) {
+        summaryElement.innerHTML = `<span style="color: #e74c3c;">${message}</span>`;
+      }
+      const commentElement = document.getElementById("modal-uni-comment");
+      if (commentElement) {
+        commentElement.innerHTML = `<span style="color: #e74c3c;">${message}</span>`;
       }
     }
 
@@ -844,7 +889,7 @@
       
       if (!pcaData) {
         console.error('❌ No PCA data available');
-        alert("No data available for PCA analysis. Please ensure the analysis has been run.");
+        showPcaError("⚠ No PCA data available. Please run the analysis first.");
         return;
       }
 
@@ -853,7 +898,7 @@
       // Check if Highcharts is loaded
       if (typeof Highcharts === 'undefined') {
         console.error('❌ Highcharts not loaded!');
-        alert('Highcharts library not loaded. Please refresh the page.');
+        showPcaError('⚠ Highcharts library not loaded. Please refresh the page.');
         return;
       }
 
