@@ -1,7 +1,10 @@
 /**
  * Shared Header Component for Statistico Standalone Views
  * Provides navigation dropdown to other analysis views
+ * VERSION: 2026-02-05-002
  */
+
+console.log('📦 Loading shared-header.js VERSION 2026-02-05-002');
 
 const StatisticoHeader = {
   currentView: 'histogram',
@@ -253,7 +256,10 @@ const StatisticoHeader = {
    * Navigate to another view
    */
   navigateTo(filename) {
-    console.log('🔄 Navigating to:', filename);
+    console.log('🔄 [v2026-02-05-002] Navigating to:', filename);
+    console.log('🔍 Checking for window.switchDialogView...');
+    console.log('   Type:', typeof window.switchDialogView);
+    console.log('   Exists:', typeof window.switchDialogView === 'function');
     
     // Close dropdown after selection
     this.toggleDropdown();
@@ -264,6 +270,8 @@ const StatisticoHeader = {
         console.log('✅ Using in-dialog view switcher');
         window.switchDialogView(filename);
         return;
+      } else {
+        console.warn('⚠️ window.switchDialogView NOT FOUND, falling back to old navigation');
       }
       
       // Check if Office is available
