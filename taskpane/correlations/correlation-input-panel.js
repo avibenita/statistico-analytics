@@ -438,7 +438,7 @@ function openDialogWithData(dialogUrl, correlationData) {
               console.log('🔄 Switching to view:', message.view);
               
               // Store the new URL before closing
-              const newDialogUrl = `https://www.statistico.live/statistico-analytics/dialogs/views/${message.view}`;
+              const newDialogUrl = `${getDialogsBaseUrl()}${message.view}`;
               
               // Close current dialog
               if (resultsDialog) {
@@ -472,8 +472,16 @@ function openDialogWithData(dialogUrl, correlationData) {
  * Open correlation results in Office Dialog
  */
 function openCorrelationResults(correlationData) {
-  const dialogUrl = 'https://www.statistico.live/statistico-analytics/dialogs/views/correlations/correlation-matrix.html';
+  const dialogUrl = `${getDialogsBaseUrl()}correlations/correlation-matrix.html`;
   openDialogWithData(dialogUrl, correlationData);
+}
+
+function getDialogsBaseUrl() {
+  const href = window.location.href;
+  if (href.includes('/taskpane/')) {
+    return `${href.split('/taskpane/')[0]}/dialogs/views/`;
+  }
+  return `${window.location.origin}/statistico-analytics/dialogs/views/`;
 }
 
 /**

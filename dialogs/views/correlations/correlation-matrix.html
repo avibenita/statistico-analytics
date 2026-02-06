@@ -141,6 +141,35 @@
       display:none;
     }
 
+    .view-toggle{
+      display:flex;
+      gap:8px;
+      background:var(--surface-2);
+      border:2px solid var(--border);
+      border-radius:20px;
+      padding:4px;
+      flex:0 0 auto;
+    }
+
+    .view-toggle button{
+      border:none;
+      background:transparent;
+      color:var(--text-secondary);
+      font-size:13px;
+      font-weight:600;
+      padding:6px 12px;
+      border-radius:16px;
+      cursor:pointer;
+      transition:all 0.2s ease;
+      white-space:nowrap;
+    }
+
+    .view-toggle button.active{
+      background:var(--accent-1);
+      color:var(--surface-0);
+      box-shadow:0 0 10px rgba(255,165,120,0.3);
+    }
+
     .radio-bar input[type="radio"]:checked + span{
       color:var(--accent-1);
       font-weight:700;
@@ -433,6 +462,72 @@
       box-shadow:inset 0 0 8px rgba(255,165,120,0.4);
       animation:pulse-highlight 2s ease-in-out infinite;
     }
+
+    .heatmap-container{
+      width:100%;
+      border:2px solid var(--border);
+      border-radius:8px;
+      overflow:auto;
+      max-height:70vh;
+      background:var(--surface-1);
+    }
+
+    .heatmap-table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      background:var(--surface-1);
+    }
+
+    .heatmap-table thead th{
+      position:sticky;
+      top:0;
+      z-index:10;
+      background:linear-gradient(135deg, var(--surface-2), #2d3545);
+      padding:10px 8px;
+      text-align:center;
+      font-weight:700;
+      font-size:12px;
+      color:var(--accent-1);
+      border-bottom:2px solid var(--accent-1);
+      border-right:1px solid var(--border);
+      white-space:nowrap;
+    }
+
+    .heatmap-table thead th:first-child{
+      position:sticky;
+      left:0;
+      z-index:11;
+      text-align:left;
+      min-width:150px;
+    }
+
+    .heatmap-table tbody td{
+      padding:8px;
+      text-align:center;
+      font-size:12px;
+      border-right:1px solid var(--border);
+      border-bottom:1px solid var(--border);
+      color:#0c1624;
+      font-weight:700;
+    }
+
+    .heatmap-table tbody td:first-child{
+      position:sticky;
+      left:0;
+      background:var(--surface-1);
+      color:var(--accent-2);
+      font-weight:700;
+      text-align:left;
+      z-index:2;
+      min-width:150px;
+    }
+
+    .heatmap-cell.threshold-highlight{
+      outline:2px solid rgba(255,165,120,0.9);
+      outline-offset:-2px;
+      box-shadow:inset 0 0 10px rgba(255,165,120,0.6);
+    }
     .scatter-modal{
       display:none;
       position:fixed;
@@ -453,7 +548,7 @@
       border-radius:12px;
       width:90%;
       max-width:900px;
-      max-height:85vh;
+      max-height:90vh;
       overflow:hidden;
       box-shadow:0 20px 60px rgba(0,0,0,0.5);
       display:flex;
@@ -461,7 +556,7 @@
     }
 
     .scatter-modal-header{
-      padding:14px 18px;
+      padding:10px 14px;
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -471,7 +566,7 @@
     }
 
     .scatter-modal-body{
-      padding:14px 18px 18px;
+      padding:10px 14px 12px;
       overflow:auto;
     }
 
@@ -483,7 +578,7 @@
 
     .scatter-chart{
       width:100%;
-      height:420px;
+      height:320px;
       background:rgba(0,0,0,0.15);
       border:1px solid var(--border);
       border-radius:8px;
@@ -493,15 +588,15 @@
     .scatter-stats{
       display:grid;
       grid-template-columns:repeat(4, minmax(140px, 1fr));
-      gap:10px;
-      margin-bottom:12px;
+      gap:8px;
+      margin-bottom:8px;
     }
 
     .scatter-stat{
       background:rgba(255,255,255,0.06);
       border:1px solid var(--border);
       border-radius:8px;
-      padding:10px 12px;
+      padding:8px 10px;
       text-align:center;
     }
 
@@ -511,6 +606,13 @@
       color:var(--accent-1);
     }
 
+    .scatter-stat-value.adjusted::after{
+      content:"*";
+      margin-left:4px;
+      color:var(--accent-2);
+      font-weight:700;
+    }
+
     .scatter-stat-label{
       font-size:11px;
       color:var(--text-muted);
@@ -518,16 +620,16 @@
 
     .scatter-controls{
       display:grid;
-      grid-template-columns:repeat(3, minmax(220px, 1fr));
-      gap:12px;
-      margin-top:12px;
+      grid-template-columns:repeat(3, minmax(190px, 1fr));
+      gap:10px;
+      margin-top:10px;
     }
 
     .scatter-panel{
       background:rgba(255,255,255,0.04);
       border:1px solid var(--border);
       border-radius:10px;
-      padding:10px;
+      padding:8px;
     }
 
     .scatter-panel-title{
@@ -535,13 +637,13 @@
       align-items:center;
       gap:8px;
       font-weight:600;
-      margin-bottom:8px;
+      margin-bottom:6px;
       color:var(--accent-1);
       font-size:13px;
     }
 
     .scatter-slider{
-      margin-bottom:10px;
+      margin-bottom:8px;
     }
 
     .scatter-slider-header{
@@ -549,7 +651,7 @@
       justify-content:space-between;
       font-size:12px;
       color:var(--text-secondary);
-      margin-bottom:4px;
+      margin-bottom:3px;
     }
 
     .scatter-slider input[type="range"]{
@@ -566,7 +668,7 @@
       background:rgba(255,255,255,0.08);
       border:1px solid var(--border);
       color:var(--text-secondary);
-      padding:6px 10px;
+      padding:5px 8px;
       border-radius:6px;
       font-size:12px;
       cursor:pointer;
@@ -582,7 +684,19 @@
     .scatter-axis-toggle{
       display:flex;
       gap:6px;
-      margin-bottom:8px;
+      margin-bottom:6px;
+    }
+
+    .axis-grid{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .axis-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
     }
 
     .scatter-axis-toggle .scatter-btn{
@@ -715,6 +829,13 @@
             </label>
           </div>
         </div>
+        <div class="control-group">
+          <label>View:</label>
+          <div class="view-toggle" role="tablist" aria-label="Matrix view">
+            <button type="button" id="viewTableBtn" class="active" onclick="setMatrixView('table')">Table</button>
+            <button type="button" id="viewHeatmapBtn" onclick="setMatrixView('heatmap')">Heatmap</button>
+          </div>
+        </div>
         <div class="control-group slider-container">
           <span class="slider-label">Highlight r ≥</span>
           <input type="range" id="thresholdSlider" min="0" max="1" step="0.05" value="0" oninput="updateThreshold(this.value)">
@@ -766,21 +887,27 @@
             <div class="scatter-controls">
               <div class="scatter-panel">
                 <div class="scatter-panel-title"><i class="fas fa-sliders-h"></i>Axis Controls</div>
-                <div class="scatter-slider">
-                  <div class="scatter-slider-header"><span>X Min</span><span id="xMinVal">--</span></div>
-                  <input type="range" id="xMinRange" oninput="updateAxisRange('x','min', this.value)">
-                </div>
-                <div class="scatter-slider">
-                  <div class="scatter-slider-header"><span>X Max</span><span id="xMaxVal">--</span></div>
-                  <input type="range" id="xMaxRange" oninput="updateAxisRange('x','max', this.value)">
-                </div>
-                <div class="scatter-slider">
-                  <div class="scatter-slider-header"><span>Y Min</span><span id="yMinVal">--</span></div>
-                  <input type="range" id="yMinRange" oninput="updateAxisRange('y','min', this.value)">
-                </div>
-                <div class="scatter-slider">
-                  <div class="scatter-slider-header"><span>Y Max</span><span id="yMaxVal">--</span></div>
-                  <input type="range" id="yMaxRange" oninput="updateAxisRange('y','max', this.value)">
+                <div class="axis-grid">
+                  <div class="axis-row">
+                    <div class="scatter-slider">
+                      <div class="scatter-slider-header"><span>X Min</span><span id="xMinVal">--</span></div>
+                      <input type="range" id="xMinRange" oninput="updateAxisRange('x','min', this.value)">
+                    </div>
+                    <div class="scatter-slider">
+                      <div class="scatter-slider-header"><span>X Max</span><span id="xMaxVal">--</span></div>
+                      <input type="range" id="xMaxRange" oninput="updateAxisRange('x','max', this.value)">
+                    </div>
+                  </div>
+                  <div class="axis-row">
+                    <div class="scatter-slider">
+                      <div class="scatter-slider-header"><span>Y Min</span><span id="yMinVal">--</span></div>
+                      <input type="range" id="yMinRange" oninput="updateAxisRange('y','min', this.value)">
+                    </div>
+                    <div class="scatter-slider">
+                      <div class="scatter-slider-header"><span>Y Max</span><span id="yMaxVal">--</span></div>
+                      <input type="range" id="yMaxRange" oninput="updateAxisRange('y','max', this.value)">
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="scatter-panel">
@@ -826,6 +953,18 @@
           </table>
         </div>
       </div>
+      <div id="heatmapContainer" style="display:none;">
+        <div class="scroll-hint">
+          <i class="fa-solid fa-fire"></i>
+          Heatmap view • Colors show correlation strength (blue = negative, orange = positive)
+        </div>
+        <div class="heatmap-container">
+          <table id="heatmapTable" class="heatmap-table">
+            <thead id="heatmapHead"></thead>
+            <tbody id="heatmapBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -843,8 +982,13 @@
       activeTransformAxis: 'x',
       chart: null,
       xRange: null,
-      yRange: null
+      yRange: null,
+      xRangeFull: null,
+      yRangeFull: null
     };
+    let currentMatrix = null;
+    let currentHeaders = null;
+    let currentView = 'table';
 
     // Initialize Office.js
     Office.onReady(function(info) {
@@ -919,6 +1063,7 @@
 
       // Build correlation matrix
       buildCorrelationMatrix();
+      setMatrixView(currentView);
     }
 
     /**
@@ -930,6 +1075,8 @@
 
       // Calculate correlations
       const matrix = calculateCorrelationMatrix(data, headers, currentType);
+      currentMatrix = matrix;
+      currentHeaders = headers;
       
       // Build table
       const thead = document.getElementById('tableHead');
@@ -1007,6 +1154,9 @@
         tbody.appendChild(row);
       });
 
+      // Build heatmap
+      buildHeatmapMatrix(headers, matrix);
+
       // Apply display settings
       toggleDisplay();
       applyThresholdFilter();
@@ -1047,6 +1197,30 @@
 
       modal.style.display = 'flex';
       modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function setMatrixView(view) {
+      currentView = view;
+      const results = document.getElementById('resultsContainer');
+      const heatmap = document.getElementById('heatmapContainer');
+      const tableBtn = document.getElementById('viewTableBtn');
+      const heatmapBtn = document.getElementById('viewHeatmapBtn');
+
+      if (view === 'heatmap') {
+        results.style.display = 'none';
+        heatmap.style.display = 'block';
+      } else {
+        results.style.display = 'block';
+        heatmap.style.display = 'none';
+      }
+
+      tableBtn.classList.toggle('active', view === 'table');
+      heatmapBtn.classList.toggle('active', view === 'heatmap');
+
+      if (currentHeaders && currentMatrix && view === 'heatmap') {
+        buildHeatmapMatrix(currentHeaders, currentMatrix);
+        applyThresholdFilter();
+      }
     }
 
     function closeScatterModal() {
@@ -1108,10 +1282,35 @@
       const r2 = r * r;
       const p = calculatePValue(r, n);
 
-      document.getElementById('scatterN').textContent = n;
-      document.getElementById('scatterR').textContent = isFinite(r) ? r.toFixed(4) : '--';
-      document.getElementById('scatterP').textContent = isFinite(p) ? p.toExponential(2) : '--';
-      document.getElementById('scatterR2').textContent = isFinite(r2) ? r2.toFixed(4) : '--';
+      setScatterStatValue('scatterN', n);
+      setScatterStatValue('scatterR', isFinite(r) ? r.toFixed(4) : '--');
+      setScatterStatValue('scatterP', isFinite(p) ? p.toExponential(2) : '--');
+      setScatterStatValue('scatterR2', isFinite(r2) ? r2.toFixed(4) : '--');
+    }
+
+    function setScatterStatValue(id, value) {
+      const el = document.getElementById(id);
+      el.textContent = value;
+      el.classList.toggle('adjusted', isScatterAdjusted());
+    }
+
+    function isScatterAdjusted() {
+      const axisAdjusted = hasAxisOverrides();
+      const transformAdjusted = scatterState.xTransform !== 'none' || scatterState.yTransform !== 'none';
+      const fitAdjusted = scatterState.fitType !== 'none';
+      return axisAdjusted || transformAdjusted || fitAdjusted;
+    }
+
+    function hasAxisOverrides() {
+      if (!scatterState.xRange || !scatterState.yRange || !scatterState.xRangeFull || !scatterState.yRangeFull) {
+        return false;
+      }
+      const eps = 1e-9;
+      const xChanged = Math.abs(scatterState.xRange.min - scatterState.xRangeFull.min) > eps ||
+        Math.abs(scatterState.xRange.max - scatterState.xRangeFull.max) > eps;
+      const yChanged = Math.abs(scatterState.yRange.min - scatterState.yRangeFull.min) > eps ||
+        Math.abs(scatterState.yRange.max - scatterState.yRangeFull.max) > eps;
+      return xChanged || yChanged;
     }
 
     function calculatePearson(x, y) {
@@ -1180,6 +1379,8 @@
 
       scatterState.xRange = { min: minX, max: maxX };
       scatterState.yRange = { min: minY, max: maxY };
+      scatterState.xRangeFull = { min: minX, max: maxX };
+      scatterState.yRangeFull = { min: minY, max: maxY };
 
       setupAxisRange('xMinRange', 'xMinVal', minX, maxX, minX);
       setupAxisRange('xMaxRange', 'xMaxVal', minX, maxX, maxX);
@@ -1207,6 +1408,7 @@
         scatterState.yRange[which] = val;
         document.getElementById(which === 'min' ? 'yMinVal' : 'yMaxVal').textContent = val.toFixed(2);
       }
+      updateScatterAdjustmentIndicator();
       updateChartExtremes();
     }
 
@@ -1225,6 +1427,7 @@
         document.getElementById(id).classList.remove('active');
       });
       document.getElementById(`fit-${type}`).classList.add('active');
+      updateScatterAdjustmentIndicator();
 
       if (!scatterState.chart) return;
       const points = getTransformedPoints();
@@ -1288,7 +1491,17 @@
       }
 
       updateTransformButtons();
+      updateScatterAdjustmentIndicator();
       refreshScatter();
+    }
+
+    function updateScatterAdjustmentIndicator() {
+      ['scatterN','scatterR','scatterP','scatterR2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.toggle('adjusted', isScatterAdjusted());
+        }
+      });
     }
 
     function updateTransformButtons() {
@@ -1528,6 +1741,7 @@
     function applyThresholdFilter() {
       const threshold = parseFloat(document.getElementById('thresholdSlider').value);
       const allCells = document.querySelectorAll('tbody td');
+      const heatmapCells = document.querySelectorAll('.heatmap-cell');
 
       allCells.forEach(cell => {
         const corrValueEl = cell.querySelector('.corr-value');
@@ -1543,6 +1757,76 @@
           }
         }
       });
+
+      heatmapCells.forEach(cell => {
+        const corrValue = parseFloat(cell.getAttribute('data-corr'));
+        const isDiagonal = cell.classList.contains('diagonal-cell');
+        const isPerfect = Math.abs(Math.abs(corrValue) - 1.0) < 0.001;
+        if (Math.abs(corrValue) >= threshold && !isDiagonal && !isPerfect && threshold > 0) {
+          cell.classList.add('threshold-highlight');
+        } else {
+          cell.classList.remove('threshold-highlight');
+        }
+      });
+    }
+
+    function buildHeatmapMatrix(headers, matrix) {
+      const head = document.getElementById('heatmapHead');
+      const body = document.getElementById('heatmapBody');
+      if (!head || !body) return;
+
+      head.innerHTML = '';
+      body.innerHTML = '';
+
+      const headerRow = document.createElement('tr');
+      const cornerTh = document.createElement('th');
+      cornerTh.textContent = 'Variable';
+      headerRow.appendChild(cornerTh);
+
+      headers.forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col;
+        headerRow.appendChild(th);
+      });
+      head.appendChild(headerRow);
+
+      headers.forEach((rowCol, i) => {
+        const row = document.createElement('tr');
+        const rowTh = document.createElement('td');
+        rowTh.textContent = rowCol;
+        row.appendChild(rowTh);
+
+        headers.forEach((colCol, j) => {
+          const td = document.createElement('td');
+          const corrData = matrix[i][j];
+          const value = corrData.r;
+          td.classList.add('heatmap-cell');
+          if (i === j) {
+            td.classList.add('diagonal-cell');
+          }
+          td.setAttribute('data-corr', value);
+          td.textContent = value.toFixed(2);
+          td.style.background = getHeatmapColor(value);
+          td.style.color = getHeatmapTextColor(value);
+          row.appendChild(td);
+        });
+
+        body.appendChild(row);
+      });
+    }
+
+    function getHeatmapColor(value) {
+      const v = Math.max(-1, Math.min(1, value));
+      const intensity = Math.abs(v);
+      const lightness = 20 + (1 - intensity) * 55;
+      if (v >= 0) {
+        return `hsl(24, 85%, ${lightness}%)`;
+      }
+      return `hsl(200, 75%, ${lightness}%)`;
+    }
+
+    function getHeatmapTextColor(value) {
+      return Math.abs(value) > 0.45 ? '#0c1624' : '#e7edf8';
     }
   </script>
 </body>
