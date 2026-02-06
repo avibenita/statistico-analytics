@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Partial Correlations</title>
+  
+  <!-- Office.js -->
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
+  
+  <!-- Shared Header -->
+  <link rel="stylesheet" href="../shared-header.css">
+  <script src="../shared-header.js"></script>
+
+  <style>
+    :root{
+      --surface-0:#0c1624;
+      --surface-1:#1a1f2e;
+      --surface-2:#242938;
+      --border:#2d3748;
+      --accent-1:rgb(255,165,120);
+      --accent-2:rgb(120,200,255);
+      --text-primary:#fff;
+      --text-secondary:rgba(255,255,255,0.8);
+      --text-muted:rgba(255,255,255,0.5);
+    }
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
+      background:linear-gradient(135deg, var(--surface-0) 0%, #1a2332 100%);
+      color:var(--text-primary);
+      line-height:1.6;
+      padding:0;
+      margin:0;
+      min-height:100vh;
+      overflow:hidden;
+    }
+
+    .container{
+      max-width:100%;
+      margin:0;
+      padding:0;
+      display:flex;
+      flex-direction:column;
+      height:100vh;
+    }
+
+    .results-container{
+      flex:1;
+      padding:40px 20px;
+      overflow:auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .coming-soon-container{
+      max-width:800px;
+      width:100%;
+      text-align:center;
+      padding:40px;
+      background:var(--surface-1);
+      border-radius:16px;
+      border:2px solid var(--border);
+      box-shadow:0 8px 32px rgba(0,0,0,0.4);
+      animation:fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn{
+      from{
+        opacity:0;
+        transform:translateY(20px);
+      }
+      to{
+        opacity:1;
+        transform:translateY(0);
+      }
+    }
+
+    .icon-container{
+      margin-bottom:30px;
+      animation:float 3s ease-in-out infinite;
+    }
+
+    @keyframes float{
+      0%, 100%{
+        transform:translateY(0px);
+      }
+      50%{
+        transform:translateY(-10px);
+      }
+    }
+
+    .icon-container i{
+      font-size:80px;
+      background:linear-gradient(135deg, var(--accent-2), var(--accent-1));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+
+    h1{
+      font-size:36px;
+      color:var(--accent-1);
+      margin-bottom:15px;
+      font-weight:700;
+      background:linear-gradient(135deg, var(--accent-1), var(--accent-2));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+
+    .subtitle{
+      font-size:18px;
+      color:var(--text-secondary);
+      margin-bottom:30px;
+      font-weight:500;
+    }
+
+    .description-box{
+      background:var(--surface-2);
+      padding:30px;
+      border-radius:12px;
+      margin-bottom:30px;
+      border-left:4px solid var(--accent-1);
+      text-align:left;
+    }
+
+    .description-box h3{
+      color:var(--accent-2);
+      margin-bottom:15px;
+      font-size:20px;
+      font-weight:600;
+    }
+
+    .description-box p{
+      color:var(--text-muted);
+      font-size:15px;
+      line-height:1.8;
+      margin-bottom:15px;
+    }
+
+    .description-box ul{
+      list-style:none;
+      padding:0;
+      margin-top:20px;
+    }
+
+    .description-box li{
+      color:var(--text-secondary);
+      font-size:14px;
+      padding:10px 0;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .description-box li:last-child{
+      border-bottom:none;
+    }
+
+    .description-box li i{
+      color:var(--accent-1);
+      font-size:16px;
+      min-width:20px;
+    }
+
+    .feature-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
+      gap:20px;
+      margin-top:30px;
+    }
+
+    .feature-card{
+      background:var(--surface-2);
+      padding:25px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      transition:all 0.3s ease;
+    }
+
+    .feature-card:hover{
+      border-color:var(--accent-1);
+      transform:translateY(-5px);
+      box-shadow:0 8px 20px rgba(255,165,120,0.2);
+    }
+
+    .feature-card i{
+      font-size:32px;
+      color:var(--accent-2);
+      margin-bottom:15px;
+      display:block;
+    }
+
+    .feature-card h4{
+      color:var(--accent-1);
+      font-size:16px;
+      margin-bottom:10px;
+      font-weight:600;
+    }
+
+    .feature-card p{
+      color:var(--text-muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .badge{
+      display:inline-block;
+      background:linear-gradient(135deg, rgba(255,165,120,0.2), rgba(120,200,255,0.2));
+      color:var(--accent-1);
+      padding:8px 20px;
+      border-radius:20px;
+      font-size:14px;
+      font-weight:600;
+      border:1px solid rgba(255,165,120,0.3);
+      margin-top:20px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px){
+      .coming-soon-container{
+        max-width:700px;
+        padding:35px 30px;
+      }
+      h1{
+        font-size:32px;
+      }
+      .icon-container i{
+        font-size:70px;
+      }
+    }
+
+    @media (max-width: 768px){
+      .results-container{
+        padding:30px 15px;
+      }
+      .coming-soon-container{
+        padding:30px 25px;
+      }
+      h1{
+        font-size:28px;
+      }
+      .subtitle{
+        font-size:16px;
+      }
+      .icon-container i{
+        font-size:60px;
+      }
+      .description-box{
+        padding:25px 20px;
+      }
+      .feature-grid{
+        grid-template-columns:1fr;
+        gap:15px;
+      }
+    }
+
+    @media (max-width: 480px){
+      .results-container{
+        padding:20px 10px;
+      }
+      .coming-soon-container{
+        padding:25px 20px;
+        border-radius:12px;
+      }
+      h1{
+        font-size:24px;
+      }
+      .subtitle{
+        font-size:15px;
+      }
+      .icon-container i{
+        font-size:50px;
+      }
+      .description-box{
+        padding:20px 15px;
+      }
+      .description-box h3{
+        font-size:18px;
+      }
+      .description-box p{
+        font-size:14px;
+      }
+      .feature-card{
+        padding:20px;
+      }
+      .feature-card i{
+        font-size:28px;
+      }
+    }
+
+    @media (orientation: landscape) and (max-height: 600px){
+      .results-container{
+        padding:20px;
+      }
+      .coming-soon-container{
+        max-height:calc(100vh - 100px);
+        overflow-y:auto;
+      }
+      .icon-container i{
+        font-size:50px;
+      }
+      h1{
+        font-size:24px;
+        margin-bottom:10px;
+      }
+      .subtitle{
+        font-size:14px;
+        margin-bottom:20px;
+      }
+    }
+
+    /* Tablet specific */
+    @media (min-width: 768px) and (max-width: 1024px){
+      .feature-grid{
+        grid-template-columns:repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="mainContainer">
+    <div id="header-container"></div>
+
+    <div class="results-container">
+      <div class="coming-soon-container">
+        <div class="icon-container">
+          <i class="fas fa-flask"></i>
+        </div>
+
+        <h1>Partial Correlations</h1>
+        <p class="subtitle">Control for confounding variables to reveal true relationships</p>
+
+        <div class="description-box">
+          <h3>What are Partial Correlations?</h3>
+          <p>
+            Partial correlation measures the relationship between two variables while controlling for the effect of one or more additional variables. This helps isolate the unique relationship between variables by removing the influence of confounders.
+          </p>
+          <p>
+            For example, you might find a correlation between ice cream sales and drowning deaths. However, when you control for temperature (a confounding variable), that correlation disappears—revealing that temperature drives both independently.
+          </p>
+
+          <ul>
+            <li>
+              <i class="fas fa-check-circle"></i>
+              <span><strong>Control for confounders:</strong> Remove the influence of third variables</span>
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i>
+              <span><strong>Unique relationships:</strong> Discover direct associations between variables</span>
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i>
+              <span><strong>Multiple controls:</strong> Adjust for several variables simultaneously</span>
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i>
+              <span><strong>Semi-partial option:</strong> Control variables asymmetrically for advanced analysis</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <i class="fas fa-filter"></i>
+            <h4>Variable Selection</h4>
+            <p>Choose which variables to analyze and which to control for with an intuitive interface</p>
+          </div>
+
+          <div class="feature-card">
+            <i class="fas fa-table"></i>
+            <h4>Correlation Matrix</h4>
+            <p>View partial correlations in a clear, color-coded matrix with significance tests</p>
+          </div>
+
+          <div class="feature-card">
+            <i class="fas fa-chart-network"></i>
+            <h4>Network Visualization</h4>
+            <p>Explore controlled relationships in an interactive network graph</p>
+          </div>
+
+          <div class="feature-card">
+            <i class="fas fa-chart-line"></i>
+            <h4>Effect Comparison</h4>
+            <p>Compare zero-order, partial, and semi-partial correlations side-by-side</p>
+          </div>
+        </div>
+
+        <div class="badge">
+          <i class="fas fa-clock"></i> Coming Soon
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Office.js
+    Office.onReady(function(info) {
+      console.log('Office initialized in partial correlations dialog');
+      
+      // Initialize shared header
+      if (typeof StatisticoHeader !== 'undefined') {
+        StatisticoHeader.init('partial-correlations', 'Partial Correlations', 0, 'correlations');
+      }
+      
+      // Show main container
+      document.getElementById('mainContainer').style.display = 'flex';
+      
+      // Listen for messages from parent (future functionality)
+      Office.context.ui.addHandlerAsync(
+        Office.EventType.DialogParentMessageReceived,
+        onMessageFromParent
+      );
+      
+      // Notify parent that dialog is ready
+      Office.context.ui.messageParent(JSON.stringify({
+        action: 'ready'
+      }));
+    });
+
+    /**
+     * Handle messages from parent taskpane (for future implementation)
+     */
+    function onMessageFromParent(arg) {
+      try {
+        const message = JSON.parse(arg.message);
+        console.log('Received message from parent:', message);
+
+        if (message.type === 'CORRELATION_DATA' && message.payload) {
+          console.log('Correlation data received (placeholder for future implementation):', message.payload);
+          // Future: Implement partial correlation calculation and display
+        }
+      } catch (error) {
+        console.error('Error parsing message:', error);
+      }
+    }
+
+    console.log('✅ Partial Correlations Dialog loaded (Coming Soon)');
+  </script>
+</body>
+</html>

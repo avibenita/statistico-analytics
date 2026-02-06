@@ -188,8 +188,8 @@ const StatisticoHeader = {
     const correlationViews = [
       { id: 'correlation-matrix', label: 'Correlation Matrix', file: 'correlations/correlation-matrix.html' },
       { id: 'correlation-network', label: 'Correlation Network', file: 'correlations/correlation-network.html' },
+      { id: 'partial-correlations', label: 'Partial Correlations', file: 'correlations/correlation-partial.html' },
       { id: 'separator', label: '---', file: null },
-      { id: 'partial-correlations', label: 'Partial Correlations', file: null, isDisabled: true },
       { id: 'reliability', label: 'Reliability Coefficients', file: null, isDisabled: true },
       { id: 'rolling-correlations', label: 'Rolling Correlations', file: null, isDisabled: true },
       { id: 'correlation-tests', label: 'Correlation Tests', file: null, isDisabled: true }
