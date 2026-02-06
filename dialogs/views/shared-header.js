@@ -1,10 +1,10 @@
 /**
  * Shared Header Component for Statistico Standalone Views
  * Provides navigation dropdown to other analysis views
- * VERSION: 2026-02-05-002
+ * VERSION: 2026-02-06-reliability
  */
 
-console.log('📦 Loading shared-header.js VERSION 2026-02-05-002');
+console.log('📦 Loading shared-header.js VERSION 2026-02-06-reliability');
 
 const StatisticoHeader = {
   currentView: 'histogram',
@@ -199,8 +199,8 @@ const StatisticoHeader = {
       { id: 'correlation-matrix', label: 'Correlation Matrix', file: 'correlations/correlation-matrix.html' },
       { id: 'correlation-network', label: 'Correlation Network', file: 'correlations/correlation-network.html' },
       { id: 'partial-correlations', label: 'Partial Correlations', file: 'correlations/correlation-partial.html' },
+      { id: 'reliability', label: 'Reliability Coefficients', file: 'correlations/correlation-reliability.html' },
       { id: 'separator', label: '---', file: null },
-      { id: 'reliability', label: 'Reliability Coefficients', file: null, isDisabled: true },
       { id: 'rolling-correlations', label: 'Rolling Correlations', file: null, isDisabled: true },
       { id: 'correlation-tests', label: 'Correlation Tests', file: null, isDisabled: true }
     ];
