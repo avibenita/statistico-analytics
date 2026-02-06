@@ -759,7 +759,12 @@
 
           let r, p, validN;
 
-          if (type === 'Pearson') {
+          // Force diagonal to 1.000 for all correlation types
+          if (i === j) {
+            validN = col1Data.filter(v => typeof v === 'number' && !isNaN(v)).length;
+            r = 1;
+            p = 0;
+          } else if (type === 'Pearson') {
             ({ r, p, n: validN } = calculatePearsonCorrelation(col1Data, col2Data));
           } else if (type === 'Spearman') {
             ({ r, p, n: validN } = calculateSpearmanCorrelation(col1Data, col2Data));
