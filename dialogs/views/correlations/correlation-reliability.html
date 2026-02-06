@@ -303,7 +303,10 @@
 
     .modal-chart-container {
       height: 300px;
+      min-height: 300px;
       margin-bottom: 15px;
+      width: 100%;
+      position: relative;
     }
 
     .loading {
@@ -736,13 +739,25 @@
     }
 
     function storePCAData(data) {
+      console.log('🔬 Calculating PCA...');
+      
       try {
+        // Check if numeric.js is loaded
+        if (typeof numeric === 'undefined') {
+          console.error('❌ numeric.js not loaded!');
+          throw new Error('numeric.js library not available');
+        }
+
         const alphaMode = document.getElementById("alpha-mode")?.value || "raw";
+        console.log('Mode:', alphaMode);
+        
         let X = numeric.clone(data);
         const n = X.length, k = X[0].length;
+        console.log(`Data: ${n} rows × ${k} columns`);
 
         if (alphaMode === "standardized") {
           // Standardize
+          console.log('Standardizing data...');
           for (let j = 0; j < k; j++) {
             const col = X.map(row => row[j]);
             const mean = col.reduce((a, b) => a + b, 0) / n;
@@ -755,6 +770,7 @@
           }
         } else {
           // Center
+          console.log('Centering data...');
           for (let j = 0; j < k; j++) {
             const mean = X.reduce((a, row) => a + row[j], 0) / n;
             for (let i = 0; i < n; i++) X[i][j] -= mean;
@@ -762,6 +778,7 @@
         }
 
         // Calculate covariance matrix
+        console.log('Calculating covariance matrix...');
         const Xt = numeric.transpose(X);
         const cov = numeric.dot(Xt, X);
         
@@ -773,6 +790,7 @@
         }
         
         // Calculate eigenvalues
+        console.log('Calculating eigenvalues...');
         const eig = numeric.eig(cov);
         let eigenvalues = eig.lambda.x;
         
@@ -788,7 +806,10 @@
           firstComponentVariance: explained[0] || 0
         };
 
-        console.log("PCA Data calculated:", pcaData);
+        console.log("✅ PCA Data calculated successfully:");
+        console.log("  Eigenvalues:", eigenvalues);
+        console.log("  Variance explained:", explained);
+        console.log("  First component:", explained[0].toFixed(1) + "%");
 
         const summaryElement = document.getElementById("pca-summary");
         if (summaryElement) {
@@ -800,39 +821,78 @@
         }
         
       } catch (error) {
-        console.error("Error calculating PCA:", error);
+        console.error("❌ Error calculating PCA:", error);
+        
+        // Set a fallback message
+        const summaryElement = document.getElementById("pca-summary");
+        if (summaryElement) {
+          summaryElement.innerHTML = `<span style="color: #e74c3c;">⚠ PCA calculation failed: ${error.message}</span>`;
+        }
+        
+        // Don't set pcaData if calculation failed
+        pcaData = null;
       }
     }
 
     function showPCAModal() {
+      console.log('🔍 Opening PCA modal...');
+      
       if (!pcaData && lastData.length > 0) {
-        console.log("PCA data not found, recalculating...");
+        console.log("📊 PCA data not found, recalculating...");
         storePCAData(lastData);
       }
       
       if (!pcaData) {
-        alert("No data available for PCA analysis.");
+        console.error('❌ No PCA data available');
+        alert("No data available for PCA analysis. Please ensure the analysis has been run.");
+        return;
+      }
+
+      console.log('✅ PCA data found:', pcaData);
+
+      // Check if Highcharts is loaded
+      if (typeof Highcharts === 'undefined') {
+        console.error('❌ Highcharts not loaded!');
+        alert('Highcharts library not loaded. Please refresh the page.');
         return;
       }
 
       const modal = document.getElementById("pca-modal");
+      if (!modal) {
+        console.error('❌ Modal element not found!');
+        return;
+      }
+      
       modal.style.display = "block";
+      console.log('✅ Modal displayed');
 
+      // Longer timeout to ensure modal is fully rendered
       setTimeout(() => {
         try {
+          const chartContainer = document.getElementById('modal-scree-chart');
+          if (!chartContainer) {
+            console.error('❌ Chart container not found!');
+            return;
+          }
+
+          console.log('📊 Rendering Highcharts scree plot...');
+          console.log('Eigenvalues:', pcaData.eigenvalues);
+          
           Highcharts.chart('modal-scree-chart', {
             chart: { 
               type: 'line',
-              backgroundColor: 'transparent'
+              backgroundColor: 'transparent',
+              height: 300
             },
             title: { 
               text: 'Scree Plot',
-              style: { color: '#fff' }
+              style: { color: '#fff', fontSize: '18px' }
             },
             xAxis: { 
               categories: pcaData.eigenvalues.map((_, i) => 'PC ' + (i + 1)),
               labels: { style: { color: '#fff' } },
-              gridLineColor: 'rgba(255, 255, 255, 0.1)'
+              gridLineColor: 'rgba(255, 255, 255, 0.1)',
+              lineColor: 'rgba(255, 255, 255, 0.2)'
             },
             yAxis: { 
               title: { 
@@ -840,22 +900,46 @@
                 style: { color: '#fff' }
               },
               labels: { style: { color: '#fff' } },
-              gridLineColor: 'rgba(255, 255, 255, 0.1)'
+              gridLineColor: 'rgba(255, 255, 255, 0.1)',
+              lineColor: 'rgba(255, 255, 255, 0.2)',
+              min: 0
             },
             legend: {
               itemStyle: { color: '#fff' }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              style: { color: '#fff' },
+              formatter: function() {
+                const pcIndex = this.point.index;
+                const variance = pcaData.explained[pcIndex];
+                return `<b>${this.x}</b><br/>Eigenvalue: ${this.y.toFixed(3)}<br/>Variance: ${variance.toFixed(1)}%`;
+              }
+            },
+            plotOptions: {
+              line: {
+                marker: {
+                  enabled: true
+                }
+              }
             },
             series: [{
               name: 'Eigenvalue', 
               data: pcaData.eigenvalues,
               color: 'rgb(255,165,120)',
+              lineWidth: 3,
               marker: {
                 enabled: true,
-                radius: 5
+                radius: 6,
+                fillColor: 'rgb(255,165,120)',
+                lineColor: '#fff',
+                lineWidth: 2
               }
             }],
             credits: { enabled: false }
           });
+
+          console.log('✅ Highcharts scree plot rendered');
 
           const commentElement = document.getElementById("modal-uni-comment");
           if (commentElement) {
@@ -866,9 +950,13 @@
             commentElement.innerHTML = `${varianceText} ${interpretation}`;
           }
         } catch (error) {
-          console.error("Error rendering PCA modal:", error);
+          console.error("❌ Error rendering PCA chart:", error);
+          const commentElement = document.getElementById("modal-uni-comment");
+          if (commentElement) {
+            commentElement.innerHTML = `<span style='color: #e74c3c;'>Error rendering chart: ${error.message}<br/>First component: ${pcaData.firstComponentVariance.toFixed(1)}% variance</span>`;
+          }
         }
-      }, 100);
+      }, 300);
     }
 
     function renderGauge(value) {
