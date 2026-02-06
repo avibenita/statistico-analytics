@@ -407,11 +407,11 @@
 
       console.log('🔍 Validating correlation data...');
       console.log('  correlationData exists:', !!correlationData);
-      console.log('  correlationData.columns exists:', !!correlationData?.columns);
-      console.log('  columns length:', correlationData?.columns?.length);
+      console.log('  correlationData.headers exists:', !!correlationData?.headers);
+      console.log('  headers length:', correlationData?.headers?.length);
       console.log('  Full data structure:', correlationData);
 
-      if (!correlationData || !correlationData.columns || correlationData.columns.length === 0) {
+      if (!correlationData || !correlationData.headers || correlationData.headers.length === 0) {
         console.error('❌ Invalid correlation data - requirements not met');
         loading.innerHTML = '<i class="fa-solid fa-exclamation-triangle"></i><p>No correlation data available</p>';
         container.style.display = 'flex';
@@ -420,10 +420,10 @@
 
       console.log('✅ Rendering network with data:', correlationData);
       
-      const { columns, data } = correlationData;
+      const { headers, data } = correlationData;
 
       // Calculate correlation matrix
-      const matrix = calculateCorrelationMatrix(data, columns, 'Pearson');
+      const matrix = calculateCorrelationMatrix(data, headers, 'Pearson');
 
       // Hide loading, show network
       loading.style.display = 'none';
@@ -431,7 +431,7 @@
       container.style.display = 'flex';
 
       // Draw network
-      drawNetwork(columns, matrix);
+      drawNetwork(headers, matrix);
     }
 
     /**
@@ -593,14 +593,14 @@
     /**
      * Calculate correlation matrix (Pearson only for network)
      */
-    function calculateCorrelationMatrix(data, columns, type) {
-      const n = columns.length;
+    function calculateCorrelationMatrix(data, headers, type) {
+      const n = headers.length;
       const matrix = Array(n).fill(null).map(() => Array(n));
 
       for (let i = 0; i < n; i++) {
         for (let j = 0; j < n; j++) {
-          const col1Data = data.map(row => row[columns[i]]);
-          const col2Data = data.map(row => row[columns[j]]);
+          const col1Data = data.map(row => row[headers[i]]);
+          const col2Data = data.map(row => row[headers[j]]);
 
           const { r, p, n: validN } = calculatePearsonCorrelation(col1Data, col2Data);
           matrix[i][j] = { r, p, n: validN };

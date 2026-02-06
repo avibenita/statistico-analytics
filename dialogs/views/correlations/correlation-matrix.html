@@ -630,7 +630,7 @@
       const loading = document.getElementById('loadingMessage');
       const results = document.getElementById('resultsContainer');
 
-      if (!correlationData || !correlationData.columns || correlationData.columns.length === 0) {
+      if (!correlationData || !correlationData.headers || correlationData.headers.length === 0) {
         console.error('Invalid correlation data');
         loading.innerHTML = '<i class="fa-solid fa-exclamation-triangle"></i><p>No correlation data available</p>';
         container.style.display = 'flex';
@@ -652,11 +652,11 @@
      * Build correlation table
      */
     function buildCorrelationMatrix() {
-      const { columns, data, types } = correlationData;
-      console.log('Building matrix for columns:', columns);
+      const { headers, data, types } = correlationData;
+      console.log('Building matrix for headers:', headers);
 
       // Calculate correlations
-      const matrix = calculateCorrelationMatrix(data, columns, currentType);
+      const matrix = calculateCorrelationMatrix(data, headers, currentType);
       
       // Build table
       const thead = document.getElementById('tableHead');
@@ -672,7 +672,7 @@
       cornerTh.textContent = 'Variable';
       headerRow.appendChild(cornerTh);
 
-      columns.forEach(col => {
+      headers.forEach(col => {
         const th = document.createElement('th');
         th.textContent = col;
         headerRow.appendChild(th);
@@ -681,7 +681,7 @@
       thead.appendChild(headerRow);
 
       // Create data rows
-      columns.forEach((rowCol, i) => {
+      headers.forEach((rowCol, i) => {
         const row = document.createElement('tr');
         
         // Row header
@@ -690,7 +690,7 @@
         row.appendChild(rowTh);
 
         // Correlation cells
-        columns.forEach((colCol, j) => {
+        headers.forEach((colCol, j) => {
           const td = document.createElement('td');
           const corrData = matrix[i][j];
 
@@ -735,14 +735,14 @@
     /**
      * Calculate correlation matrix
      */
-    function calculateCorrelationMatrix(data, columns, type) {
-      const n = columns.length;
+    function calculateCorrelationMatrix(data, headers, type) {
+      const n = headers.length;
       const matrix = Array(n).fill(null).map(() => Array(n));
 
       for (let i = 0; i < n; i++) {
         for (let j = 0; j < n; j++) {
-          const col1Data = data.map(row => row[columns[i]]);
-          const col2Data = data.map(row => row[columns[j]]);
+          const col1Data = data.map(row => row[headers[i]]);
+          const col2Data = data.map(row => row[headers[j]]);
 
           let r, p, validN;
 
