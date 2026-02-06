@@ -923,6 +923,11 @@
           console.log('📊 Rendering Highcharts scree plot...');
           console.log('Eigenvalues:', pcaData.eigenvalues);
           
+          const screeSeriesData = pcaData.eigenvalues.map((val, i) => ({
+            y: val,
+            variance: pcaData.explained[i] || 0
+          }));
+
           Highcharts.chart('modal-scree-chart', {
             chart: { 
               type: 'line',
@@ -958,19 +963,31 @@
               formatter: function() {
                 const pcIndex = this.point.index;
                 const variance = pcaData.explained[pcIndex];
-                return `<b>${this.x}</b><br/>Eigenvalue: ${this.y.toFixed(3)}<br/>Variance: ${variance.toFixed(1)}%`;
+                return `<b>${this.x}</b><br/>Eigenvalue: ${this.y.toFixed(2)}<br/>Variance: ${variance.toFixed(1)}%`;
               }
             },
             plotOptions: {
               line: {
                 marker: {
                   enabled: true
+                },
+                dataLabels: {
+                  enabled: true,
+                  formatter: function() {
+                    return `${this.point.variance.toFixed(1)}%`;
+                  },
+                  style: {
+                    color: '#fff',
+                    fontSize: '11px',
+                    textOutline: 'none'
+                  },
+                  y: -10
                 }
               }
             },
             series: [{
               name: 'Eigenvalue', 
-              data: pcaData.eigenvalues,
+              data: screeSeriesData,
               color: 'rgb(255,165,120)',
               lineWidth: 3,
               marker: {
