@@ -1266,12 +1266,25 @@
         .filter(([x, y]) => x !== null && y !== null && isFinite(x) && isFinite(y));
     }
 
+    function getVisiblePoints() {
+      const points = getTransformedPoints();
+      if (!scatterState.xRange || !scatterState.yRange) {
+        return points;
+      }
+      const xMin = Math.min(scatterState.xRange.min, scatterState.xRange.max);
+      const xMax = Math.max(scatterState.xRange.min, scatterState.xRange.max);
+      const yMin = Math.min(scatterState.yRange.min, scatterState.yRange.max);
+      const yMax = Math.max(scatterState.yRange.min, scatterState.yRange.max);
+      return points.filter(([x, y]) => x >= xMin && x <= xMax && y >= yMin && y <= yMax);
+    }
+
     function refreshScatter() {
       const points = getTransformedPoints();
-      updateScatterStats(points);
       renderScatterChart(points);
       initAxisControls(points);
-      applyFit(scatterState.fitType);
+      const visiblePoints = getVisiblePoints();
+      updateScatterStats(visiblePoints);
+      applyFit(scatterState.fitType, visiblePoints);
     }
 
     function updateScatterStats(points) {
@@ -1408,6 +1421,9 @@
         scatterState.yRange[which] = val;
         document.getElementById(which === 'min' ? 'yMinVal' : 'yMaxVal').textContent = val.toFixed(2);
       }
+      const visiblePoints = getVisiblePoints();
+      updateScatterStats(visiblePoints);
+      applyFit(scatterState.fitType, visiblePoints);
       updateScatterAdjustmentIndicator();
       updateChartExtremes();
     }
@@ -1421,7 +1437,7 @@
       scatterState.chart.redraw();
     }
 
-    function applyFit(type) {
+    function applyFit(type, pointsOverride = null) {
       scatterState.fitType = type;
       ['fit-none','fit-linear','fit-polynomial','fit-exponential','fit-logarithmic','fit-power'].forEach(id => {
         document.getElementById(id).classList.remove('active');
@@ -1430,7 +1446,7 @@
       updateScatterAdjustmentIndicator();
 
       if (!scatterState.chart) return;
-      const points = getTransformedPoints();
+      const points = pointsOverride || getVisiblePoints();
       const fitSeries = buildFitSeries(points, type);
 
       const existing = scatterState.chart.series.find(s => s.name === 'Fit');
