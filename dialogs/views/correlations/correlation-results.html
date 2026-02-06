@@ -14,6 +14,27 @@
   <!-- D3.js for network visualization -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   
+  <!-- Define view switcher BEFORE shared-header loads -->
+  <script>
+    console.log('🎯 Defining window.switchDialogView early...');
+    window.switchDialogView = function(viewName) {
+      console.log('✅ window.switchDialogView called with:', viewName);
+      // This will be overridden by the full implementation later
+      // but ensures the function exists when shared-header.js checks for it
+      if (window.actualSwitchDialogView) {
+        window.actualSwitchDialogView(viewName);
+      } else {
+        console.log('⏳ Waiting for full implementation to load...');
+        setTimeout(() => {
+          if (window.actualSwitchDialogView) {
+            window.actualSwitchDialogView(viewName);
+          }
+        }, 100);
+      }
+    };
+    console.log('✅ window.switchDialogView pre-defined, type:', typeof window.switchDialogView);
+  </script>
+  
   <!-- Shared Header -->
   <link rel="stylesheet" href="../shared-header.css?v=20260205-002">
   <script src="../shared-header.js?v=20260205-002"></script>
@@ -812,9 +833,9 @@
     let currentType = 'Pearson';
     let currentView = 'matrix';
     
-    // Global view switcher function (called by shared-header)
-    window.switchDialogView = function(filename) {
-      console.log('✅ window.switchDialogView is defined and called with:', filename);
+    // Full implementation of view switcher (overwrites the placeholder in head)
+    window.actualSwitchDialogView = function(filename) {
+      console.log('✅ actualSwitchDialogView called with:', filename);
       console.log('🔄 Switching view to:', filename);
       
       // Map view names to view IDs
