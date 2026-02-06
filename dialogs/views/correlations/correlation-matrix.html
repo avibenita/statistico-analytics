@@ -92,7 +92,7 @@
 
     .control-group{
       margin-bottom:0;
-      flex:1 1 auto;
+      flex:1 1 220px;
       min-width:220px;
     }
 
@@ -149,7 +149,8 @@
       border:2px solid var(--border);
       border-radius:20px;
       padding:4px;
-      flex:0 0 auto;
+      flex:1 1 240px;
+      max-width:none;
     }
 
     .view-toggle button{
@@ -209,8 +210,8 @@
       align-items:center;
       gap:12px;
       margin-bottom:0;
-      flex:1;
-      min-width:260px;
+      flex:1 1 260px;
+      min-width:220px;
     }
 
     .slider-label{
@@ -222,7 +223,7 @@
 
     input[type="range"]{
       flex:1;
-      min-width:200px;
+      min-width:140px;
       height:8px;
       border-radius:5px;
       background:linear-gradient(90deg, var(--surface-2) 0%, var(--accent-1) 100%);
@@ -275,19 +276,18 @@
     .checkbox-group{
       display:flex;
       gap:15px;
-      flex-wrap:nowrap;
+      flex-wrap:wrap;
       margin-bottom:0;
       align-items:center;
-      white-space:nowrap;
+      white-space:normal;
     }
 
     @media (max-width: 900px){
       .control-group{
         min-width:200px;
       }
-      .checkbox-group{
-        flex-wrap:wrap;
-        white-space:normal;
+      .slider-container{
+        min-width:200px;
       }
     }
 
