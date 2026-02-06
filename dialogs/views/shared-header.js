@@ -163,8 +163,18 @@ const StatisticoHeader = {
       </div>
     `;
     
-    // Insert at beginning of body
-    document.body.insertAdjacentHTML('afterbegin', headerHTML);
+    // Insert into header-container if it exists, otherwise at beginning of body
+    const headerContainer = document.getElementById('header-container');
+    if (headerContainer) {
+      headerContainer.innerHTML = headerHTML;
+    } else {
+      // Remove any existing header first
+      const existingHeader = document.querySelector('.statistico-header');
+      if (existingHeader) {
+        existingHeader.remove();
+      }
+      document.body.insertAdjacentHTML('afterbegin', headerHTML);
+    }
   },
   
   /**
