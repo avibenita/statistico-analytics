@@ -9,8 +9,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.3.3/highcharts-more.js"></script>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.3.3/modules/solid-gauge.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.4/jstat.min.js"></script>
   <link rel="stylesheet" href="../shared-header.css">
   <script src="../shared-header.js"></script>
+  <script src="../shared/views/normality-view.js"></script>
   <style>
     :root{--surface-0:#0c1624;--surface-1:#1a1f2e;--surface-2:#242938;--border:#2d3748;--accent-1:rgb(255,165,120);--text-primary:#fff;--text-secondary:rgba(255,255,255,0.85);}
     html,body{height:100%;margin:0;padding:0;}
@@ -23,7 +25,7 @@
     .control-group {display: flex;align-items: center;gap: 10px;}
     .decimal-control {display: flex;align-items: center;gap: 5px;}
     .decimal-control label {font-size: 14px;color: var(--text-secondary);font-weight: 500;}
-    .table-wrap{max-height:calc(7 * 40px + 45px);overflow:auto;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);flex-shrink:0;}
+    .table-wrap{max-height:calc(5 * 40px + 45px);overflow:auto;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);flex-shrink:0;}
     #stats-table{width:100%;border-collapse:collapse;table-layout:fixed;}
     #stats-table th,#stats-table td{padding:8px 10px;border:1px solid rgba(255,255,255,.18);box-sizing:border-box;text-align:right;font-size:11px;}
     #stats-table th:first-child,#stats-table td:first-child{text-align:left}
@@ -460,6 +462,19 @@
       }
     }
 
+    function loadFromLocalStorage() {
+      try {
+        const stored = localStorage.getItem('univariateResults');
+        if (!stored) return false;
+        const parsed = JSON.parse(stored);
+        handleOfficeData(parsed);
+        return true;
+      } catch (e) {
+        console.warn('Unable to load from localStorage:', e);
+        return false;
+      }
+    }
+
     // Helper: Convert column number to Excel letter (1=A, 2=B, 27=AA, etc.)
     function columnNumberToLetter(colNum) {
       let result = '';
@@ -773,26 +788,33 @@
         initializeGaugeChart();
       }, 100);
       
-      console.log('📤 Requesting normality test for variable:', VarNameSelected);
-      
-      // Get named range from sessionStorage (Input Panel stores it there)
-      const namedRange = sessionStorage.getItem('currentNamedRange') || '';
-      console.log('📗 Named range from sessionStorage:', namedRange || '(empty)');
-      
-      // Send to VB6: variableName|namedRange
-      const messageData = VarNameSelected + '|' + namedRange;
-      
-      if (typeof sendMessageToVB6 === 'function') {
-        sendMessageToVB6('Case400', messageData);
-        console.log('📤 Sent to VB6:', messageData);
-        console.log('   Variable:', VarNameSelected);
-        console.log('   Named Range:', namedRange || '(none - VB6 will determine)');
+      if (selectedRow && Array.isArray(selectedRow.vector) && typeof shapiroWilkTest === 'function') {
+        const rawData = selectedRow.vector.filter(v => typeof v === 'number' && isFinite(v));
+        const tests = buildNormalityResults(rawData);
+        updateNormalityTestCards(tests, 0.05);
+        calculateNormalityScore(tests);
       } else {
-        console.warn('⚠️ sendMessageToVB6 not available - loading sample data');
+        console.warn('⚠️ Normality engine not available - loading sample data');
         setTimeout(() => {
           loadSampleNormalityData();
         }, 100);
       }
+    }
+
+    function buildNormalityResults(rawData) {
+      const sw = shapiroWilkTest(rawData);
+      const jb = jarqueBeraTest(rawData);
+      const ks = kolmogorovSmirnovTest(rawData);
+      const ad = andersonDarlingTest(rawData);
+
+      return [
+        { name: 'Shapiro-Wilk', stat: sw.statistic, pval: sw.pValue, crit: null },
+        { name: 'Anderson-Darling', stat: ad.statistic, pval: ad.pValue, crit: null },
+        { name: 'Kolmogorov-Smirnov', stat: ks.statistic, pval: ks.pValue, crit: null },
+        { name: 'Jarque-Bera', stat: jb.statistic, pval: jb.pValue, crit: null },
+        { name: "D'Agostino-Pearson", stat: null, pval: null, crit: null },
+        { name: 'Cramer-von Mises', stat: null, pval: null, crit: null }
+      ];
     }
 
     function closeNormalityModal() {
@@ -1232,13 +1254,14 @@
       }
     });
 
-    // Auto-load data from sessionStorage on page load
+    // Auto-load data from localStorage on page load
     window.addEventListener('DOMContentLoaded', function() {
       if (typeof StatisticoHeader !== 'undefined') {
         StatisticoHeader.init('descriptive-stats', 'Descriptive Statistics', 0, 'univariate');
       }
 
       console.log('🔄 Descriptive Statistics page loaded');
+      loadFromLocalStorage();
       
       // Check if we're in regression context (variables from regression model)
       const regressionVariables = sessionStorage.getItem('regressionModelVariables');
