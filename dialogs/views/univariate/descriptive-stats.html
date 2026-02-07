@@ -177,7 +177,7 @@
   <div class="modal-overlay" id="normality-modal">
     <div class="modal-content">
       <div class="modal-header">
-        <div class="modal-title">Normality Tests - <span id="modal-variable-name">Variable</span></div>
+      <div class="modal-title">Normality Tests - <span id="modal-variable-name">Variable</span> <span id="modal-sample-size">(n=—)</span></div>
         <button class="close-btn" onclick="closeNormalityModal()">&times;</button>
       </div>
       <div class="modal-body">
@@ -437,6 +437,27 @@
     }
 
     function handleOfficeData(viewData) {
+      if (Array.isArray(viewData.descriptiveTable) && viewData.descriptiveTable.length > 0) {
+        data = viewData.descriptiveTable.map(row => ({
+          Variable: row.Variable || row.name || 'Variable',
+          N: row.N,
+          Mean: row.Mean,
+          Median: row.Median,
+          StdDev: row.StdDev,
+          Min: row.Min,
+          Max: row.Max,
+          Skew: row.Skew,
+          Kurt: row.Kurt,
+          vector: Array.isArray(row.vector) ? row.vector : []
+        }));
+        selectedRow = null;
+        renderTable();
+        if (data[0]) {
+          handleRowClick(data[0]);
+        }
+        return;
+      }
+
       const descriptive = viewData.descriptive || {};
       const values = Array.isArray(viewData.values) ? viewData.values : (Array.isArray(viewData.rawData) ? viewData.rawData : []);
       const row = {
@@ -780,6 +801,10 @@
       
       // Show modal first
       document.getElementById('modal-variable-name').textContent = VarNameSelected;
+      const modalSample = document.getElementById('modal-sample-size');
+      if (modalSample) {
+        modalSample.textContent = `(n=${selectedRow.N || selectedRow.vector?.length || 0})`;
+      }
       document.getElementById('normality-modal').style.display = 'block';
       document.body.style.overflow = 'hidden';
       
