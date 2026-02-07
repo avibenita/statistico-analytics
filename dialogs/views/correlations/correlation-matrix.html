@@ -85,7 +85,7 @@
       box-shadow:0 4px 20px rgba(0,0,0,0.3);
       display:grid;
       grid-template-columns:repeat(4, minmax(0, 1fr));
-      align-items:center;
+      align-items:stretch;
       gap:16px;
       overflow-x:hidden;
     }
@@ -93,6 +93,7 @@
     .control-group{
       margin-bottom:0;
       min-width:0;
+      width:100%;
     }
 
     .type-group{
@@ -1180,7 +1181,19 @@
           }
           td.appendChild(corrValue);
 
-          // P-value and N value removed per UI request (show r only)
+          // P-value
+          if (corrData.p !== null) {
+            const pValue = document.createElement('div');
+            pValue.className = 'p-value';
+            pValue.textContent = `p = ${corrData.p.toFixed(4)}`;
+            td.appendChild(pValue);
+          }
+
+          // N value
+          const nValue = document.createElement('div');
+          nValue.className = 'n-value';
+          nValue.textContent = `N = ${corrData.n}`;
+          td.appendChild(nValue);
 
           row.appendChild(td);
         });
