@@ -84,7 +84,7 @@
       border:2px solid var(--border);
       box-shadow:0 4px 20px rgba(0,0,0,0.3);
       display:grid;
-      grid-template-columns:repeat(4, minmax(0, 1fr));
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
       align-items:stretch;
       gap:16px;
       overflow-x:hidden;
@@ -343,6 +343,17 @@
     .table-container::-webkit-scrollbar{
       height:12px;
       width:12px;
+    }
+
+    #tableContainerTop{
+      overflow-x:auto;
+      overflow-y:hidden;
+      height:14px;
+      margin-bottom:8px;
+    }
+
+    #tableContainerTop::-webkit-scrollbar{
+      height:12px;
     }
 
     .table-container::-webkit-scrollbar-track{
@@ -1225,6 +1236,9 @@
         });
         topContainer.addEventListener('scroll', () => {
           tableContainer.scrollLeft = topContainer.scrollLeft;
+        });
+        window.addEventListener('resize', () => {
+          topScroll.style.width = `${tableContainer.scrollWidth}px`;
         });
         tableContainer._syncAttached = true;
       }
