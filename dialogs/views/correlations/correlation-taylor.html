@@ -117,9 +117,44 @@
       border-radius: var(--panel-radius);
       border: 1px solid var(--border);
       box-shadow: var(--panel-shadow);
-      overflow: hidden;
+      overflow: visible;
       height: auto;
+      min-height: 560px;
+      position: relative;
+    }
+
+    .chart-row {
+      display: flex;
+      gap: 12px;
+      height: 100%;
       min-height: 520px;
+    }
+
+    .example-note {
+      width: 240px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(255, 165, 120, 0.12);
+      border: 1px solid rgba(255, 165, 120, 0.45);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      line-height: 1.4;
+      display: none;
+    }
+
+    .example-note.active {
+      display: block;
+    }
+
+    .example-badge {
+      margin-left: 8px;
+      font-size: 0.75rem;
+      color: var(--accent-1);
+      background: rgba(255, 165, 120, 0.15);
+      border: 1px solid rgba(255, 165, 120, 0.5);
+      border-radius: 999px;
+      padding: 2px 8px;
+      display: none;
     }
     
     .panel-header {
@@ -129,6 +164,9 @@
       font-weight: 600;
       color: var(--accent-2);
       font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     
     .panel-content {
@@ -171,6 +209,12 @@
       }
       .chart-container {
         min-height: 420px;
+      }
+      .chart-row {
+        flex-direction: column;
+      }
+      .example-note {
+        width: 100%;
       }
     }
     
@@ -1023,6 +1067,7 @@
     <div class="left-panel">
       <div class="panel-header">
         <i class="fas fa-layer-group"></i> Dataset Configuration
+        <span id="examplePanelBadge" class="example-badge">Example</span>
       </div>
       <div class="panel-content">
         
@@ -1119,7 +1164,13 @@
           <div style="font-size:0.9rem;opacity:0.7;">Load data and add variables to display chart</div>
         </div>
       </div>
-      <div id="chart" style="width: 100%; height: 80%; display:none;"></div>
+      <div class="chart-row">
+        <div id="chart" style="width: 100%; height: 100%; display:none;"></div>
+        <div id="exampleNote" class="example-note">
+          <strong>Example dataset only.</strong> These variables are demo BP measurements
+          to illustrate how the Taylor diagram works. Click “Return to real data” to switch back.
+        </div>
+      </div>
 
 </div>
 
@@ -1830,7 +1881,7 @@
       setTimeout(() => {
         const refSelect = document.getElementById('reference-variable-select');
         if (refSelect) {
-          refSelect.value = 'Reference';
+          refSelect.value = 'BP-Reference';
           setReferenceVariable();
         }
         if (typeof addAllVariablesAsModels === 'function') {
@@ -1851,19 +1902,27 @@
       if (badge) {
         badge.style.display = window.__EXAMPLE_MODE__ ? 'inline' : 'none';
       }
+      const panelBadge = document.getElementById('examplePanelBadge');
+      if (panelBadge) {
+        panelBadge.style.display = window.__EXAMPLE_MODE__ ? 'inline' : 'none';
+      }
+      const note = document.getElementById('exampleNote');
+      if (note) {
+        note.classList.toggle('active', !!window.__EXAMPLE_MODE__);
+      }
     }
 
     function getExampleData() {
       return {
-        'Device A': [5.3, 4.9, 5.6, 5.0, 5.2, 5.4, 4.8, 5.5, 5.1, 5.3,
+        'BP-Device A': [5.3, 4.9, 5.6, 5.0, 5.2, 5.4, 4.8, 5.5, 5.1, 5.3,
                  5.0, 5.2, 5.4, 5.1, 4.9, 5.3, 5.2, 5.0, 5.4, 5.1],
-        'Device B': [5.1, 4.7, 5.4, 4.8, 5.0, 5.2, 4.6, 5.3, 4.9, 5.1,
+        'BP-Device B': [5.1, 4.7, 5.4, 4.8, 5.0, 5.2, 4.6, 5.3, 4.9, 5.1,
                  4.8, 5.0, 5.2, 4.9, 4.7, 5.1, 5.0, 4.8, 5.2, 4.9],
-        'Wearable': [5.4, 4.6, 5.7, 5.1, 5.3, 5.5, 4.5, 5.6, 5.2, 5.4,
+        'BP-Wearable': [5.4, 4.6, 5.7, 5.1, 5.3, 5.5, 4.5, 5.6, 5.2, 5.4,
                  5.1, 5.3, 5.5, 5.2, 5.0, 5.4, 5.3, 5.1, 5.5, 5.2],
-        'Lab Method': [5.0, 5.2, 5.3, 4.7, 4.9, 5.1, 5.0, 5.2, 4.8, 5.0,
+        'BP-Lab Method': [5.0, 5.2, 5.3, 4.7, 4.9, 5.1, 5.0, 5.2, 4.8, 5.0,
                  5.1, 4.9, 5.2, 4.8, 5.0, 5.1, 4.9, 5.1, 5.0, 4.9],
-        'Reference': [5.2, 4.8, 5.5, 4.9, 5.1, 5.3, 4.7, 5.4, 5.0, 5.2,
+        'BP-Reference': [5.2, 4.8, 5.5, 4.9, 5.1, 5.3, 4.7, 5.4, 5.0, 5.2,
                       4.9, 5.1, 5.3, 5.0, 4.8, 5.2, 5.1, 4.9, 5.3, 5.0]
       };
     }
@@ -2321,7 +2380,7 @@
           height: '100%',
           width: null,
           spacingTop: 20,
-          spacingBottom: 60,
+          spacingBottom: 40,
           spacingLeft: 20,
           spacingRight: 20
         },
@@ -2346,7 +2405,7 @@
         pane: {
           startAngle: 0,
           endAngle: 90,
-          size: '85%'
+          size: '90%'
         },
         
         xAxis: {
@@ -2674,7 +2733,7 @@
           height: '100%',
           width: null,
           spacingTop: 20,
-          spacingBottom: 60,
+          spacingBottom: 40,
           spacingLeft: 20,
           spacingRight: 20
   },
