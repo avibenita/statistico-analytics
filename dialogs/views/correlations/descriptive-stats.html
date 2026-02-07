@@ -25,9 +25,9 @@
     .control-group {display: flex;align-items: center;gap: 10px;}
     .decimal-control {display: flex;align-items: center;gap: 5px;}
     .decimal-control label {font-size: 14px;color: var(--text-secondary);font-weight: 500;}
-    .table-wrap{max-height:calc(5 * 40px + 45px);overflow:auto;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);flex-shrink:0;}
+    .table-wrap{max-height:260px;overflow-y:auto;overflow-x:hidden;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);flex-shrink:0;}
     #stats-table{width:100%;border-collapse:collapse;table-layout:fixed;}
-    #stats-table th,#stats-table td{padding:8px 10px;border:1px solid rgba(255,255,255,.18);box-sizing:border-box;text-align:right;font-size:11px;}
+    #stats-table th,#stats-table td{padding:8px 10px;border:1px solid rgba(255,255,255,.18);box-sizing:border-box;text-align:right;font-size:11px;line-height:18px;height:36px;}
     #stats-table th:first-child,#stats-table td:first-child{text-align:left}
     #stats-table thead th{position:sticky;top:0;background:#003366cc;color:#fff;z-index:2;cursor:pointer;}
     #stats-table tbody tr:nth-child(even) td{background:rgba(255,255,255,.05)}
@@ -614,6 +614,9 @@
           panel.classList.add('active');
           renderHistogram();
           updateSummaryTable();
+          if (document.getElementById('normality-modal').style.display === 'block') {
+            refreshNormalityFromSelection();
+          }
         });
         tbody.appendChild(tr);
       });
@@ -634,6 +637,9 @@
       
       renderHistogram();
       updateSummaryTable();
+      if (document.getElementById('normality-modal').style.display === 'block') {
+        refreshNormalityFromSelection();
+      }
     }
 
     // Update summary table with selected row data
@@ -832,8 +838,27 @@
         initializeGaugeChart();
       }, 100);
       
+      refreshNormalityFromSelection();
+    }
+
+    function refreshNormalityFromSelection() {
+      if (!selectedRow) return;
+
+      const modalSample = document.getElementById('modal-sample-size');
+      if (modalSample) {
+        modalSample.textContent = `(n=${selectedRow.N || selectedRow.vector?.length || 0})`;
+      }
+      document.getElementById('modal-variable-name').textContent = VarNameSelected || (selectedRow.Variable || selectedRow.name || '');
+
       if (selectedRow && Array.isArray(selectedRow.vector) && typeof shapiroWilkTest === 'function') {
-        const rawData = selectedRow.vector.filter(v => typeof v === 'number' && isFinite(v));
+        const rawData = selectedRow.vector
+          .map(v => typeof v === 'number' ? v : parseFloat(v))
+          .filter(v => isFinite(v));
+        if (rawData.length < 3 || rawData.every(v => v === rawData[0])) {
+          resetNormalityCards();
+          updateGauge(0);
+          return;
+        }
         const tests = buildNormalityResults(rawData);
         updateNormalityTestCards(tests, 0.05);
         calculateNormalityScore(tests);
@@ -843,6 +868,18 @@
           loadSampleNormalityData();
         }, 100);
       }
+    }
+
+    function resetNormalityCards() {
+      document.querySelectorAll('.test-card').forEach(card => {
+        const detailRows = card.querySelectorAll('.detail-value');
+        detailRows.forEach(detail => detail.textContent = '—');
+        const badge = card.querySelector('.test-result');
+        if (badge) {
+          badge.textContent = '—';
+          badge.classList.remove('pass', 'fail');
+        }
+      });
     }
 
     function buildNormalityResults(rawData) {
