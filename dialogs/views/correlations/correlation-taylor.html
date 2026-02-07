@@ -130,6 +130,11 @@
       min-height: 520px;
     }
 
+    #chart {
+      flex: 1;
+      min-height: 520px;
+    }
+
     .example-note {
       width: 240px;
       padding: 10px 12px;
@@ -215,6 +220,9 @@
       }
       .example-note {
         width: 100%;
+      }
+      #chart {
+        min-height: 420px;
       }
     }
     
@@ -1245,6 +1253,7 @@
     let isNormalized = false;  // Toggle between normalized (SD=1.0) and actual values
     let referenceSDActual = 1.0;  // Actual calculated SD of reference data
     let selectedReferenceVariable = null;  // Currently selected reference variable name
+    let resizeTimeout = null;
     window.allVariableData = window.allVariableData || {};
     // High-contrast color palette for maximum discrimination
     const DEFAULT_COLORS = [
@@ -3109,6 +3118,19 @@
     window.requestAllData = requestAllData;
     window.toggleLeftPanel = toggleLeftPanel;
     window.toggleNormalization = toggleNormalization;
+
+    window.addEventListener('resize', () => {
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
+      resizeTimeout = setTimeout(() => {
+        if (chart && typeof chart.reflow === 'function') {
+          chart.reflow();
+        } else if (typeof updateChart === 'function') {
+          updateChart();
+        }
+      }, 150);
+    });
     
 </script>
 <script>
