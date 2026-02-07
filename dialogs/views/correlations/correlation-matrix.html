@@ -451,7 +451,7 @@
     }
 
     .diagonal-cell{
-      background:linear-gradient(135deg, rgba(120,200,255,0.25), rgba(255,165,120,0.25))!important;
+      background:transparent !important;
       position:relative;
     }
 
@@ -1183,17 +1183,21 @@
 
           // P-value
           if (corrData.p !== null) {
-            const pValue = document.createElement('div');
-            pValue.className = 'p-value';
-            pValue.textContent = `p = ${corrData.p.toFixed(4)}`;
-            td.appendChild(pValue);
+            if (!isDiagonal) {
+              const pValue = document.createElement('div');
+              pValue.className = 'p-value';
+              pValue.textContent = `p = ${corrData.p.toFixed(4)}`;
+              td.appendChild(pValue);
+            }
           }
 
           // N value
-          const nValue = document.createElement('div');
-          nValue.className = 'n-value';
-          nValue.textContent = `N = ${corrData.n}`;
-          td.appendChild(nValue);
+          if (!isDiagonal) {
+            const nValue = document.createElement('div');
+            nValue.className = 'n-value';
+            nValue.textContent = `N = ${corrData.n}`;
+            td.appendChild(nValue);
+          }
 
           row.appendChild(td);
         });
