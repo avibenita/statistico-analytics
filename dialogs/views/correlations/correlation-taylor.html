@@ -204,6 +204,36 @@
       border-radius: 6px;
       border: 1px solid var(--border);
     }
+
+    .variable-list::-webkit-scrollbar,
+    .dataset-list::-webkit-scrollbar,
+    .panel-content::-webkit-scrollbar,
+    .reference-panel-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .variable-list::-webkit-scrollbar-track,
+    .dataset-list::-webkit-scrollbar-track,
+    .panel-content::-webkit-scrollbar-track,
+    .reference-panel-content::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.05);
+      border-radius: 6px;
+    }
+
+    .variable-list::-webkit-scrollbar-thumb,
+    .dataset-list::-webkit-scrollbar-thumb,
+    .panel-content::-webkit-scrollbar-thumb,
+    .reference-panel-content::-webkit-scrollbar-thumb {
+      background: rgba(120,200,255,0.6);
+      border-radius: 6px;
+    }
+
+    .variable-list::-webkit-scrollbar-thumb:hover,
+    .dataset-list::-webkit-scrollbar-thumb:hover,
+    .panel-content::-webkit-scrollbar-thumb:hover,
+    .reference-panel-content::-webkit-scrollbar-thumb:hover {
+      background: rgba(120,200,255,0.8);
+    }
     
     .variable-item {
       display: flex;
