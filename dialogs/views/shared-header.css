@@ -65,7 +65,7 @@
 }
 
 .header-view-name {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--text-primary, #ffffff);
 }
@@ -239,7 +239,7 @@
   }
   
   .header-view-name {
-    font-size: 13px;
+    font-size: 15px;
   }
   
   .header-variable {

@@ -119,6 +119,7 @@ const StatisticoHeader = {
       'correlation-network': 'Correlation Network',
       'partial-correlations': 'Partial Correlations',
       'reliability': 'Reliability Coefficients',
+      'taylor-diagram': 'Taylor Diagram',
       'rolling-correlations': 'Rolling Correlations',
       'correlation-tests': 'Correlation Tests'
     };
