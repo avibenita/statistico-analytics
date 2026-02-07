@@ -393,7 +393,7 @@
       left:0;
       z-index:11;
       text-align:left;
-      min-width:150px;
+      min-width:120px;
     }
 
     tbody tr:nth-child(even){
@@ -420,7 +420,7 @@
       text-align:left;
       color:var(--accent-2);
       z-index:2;
-      min-width:150px;
+      min-width:120px;
     }
 
     tbody tr:nth-child(even) td:first-child{
@@ -988,12 +988,10 @@
       </div>
 
       <div id="resultsContainer" style="display:none;">
-        <div class="scroll-hint">
-          <i class="fa-solid fa-arrows-left-right"></i>
-          Scroll horizontally to view all variables • First column stays fixed
+        <div class="table-container" id="tableContainerTop" style="height:12px;">
+          <div id="tableScrollTop" style="height:1px;"></div>
         </div>
-        
-        <div class="table-container">
+        <div class="table-container" id="tableContainer">
           <table id="correlationTable">
             <thead id="tableHead"></thead>
             <tbody id="tableBody"></tbody>
@@ -1001,10 +999,6 @@
         </div>
       </div>
       <div id="heatmapContainer" style="display:none;">
-        <div class="scroll-hint">
-          <i class="fa-solid fa-fire"></i>
-          Heatmap view • Colors show correlation strength (blue = negative, orange = positive)
-        </div>
         <div class="heatmap-container">
           <table id="heatmapTable" class="heatmap-table">
             <thead id="heatmapHead"></thead>
@@ -1208,9 +1202,32 @@
       // Build heatmap
       buildHeatmapMatrix(headers, matrix);
 
+      // Sync top scroll width
+      syncTopScroll();
+
       // Apply display settings
       toggleDisplay();
       applyThresholdFilter();
+    }
+
+    function syncTopScroll() {
+      const tableContainer = document.getElementById('tableContainer');
+      const topContainer = document.getElementById('tableContainerTop');
+      const topScroll = document.getElementById('tableScrollTop');
+      if (!tableContainer || !topContainer || !topScroll) return;
+
+      topScroll.style.width = `${tableContainer.scrollWidth}px`;
+      topContainer.scrollLeft = tableContainer.scrollLeft;
+
+      if (!tableContainer._syncAttached) {
+        tableContainer.addEventListener('scroll', () => {
+          topContainer.scrollLeft = tableContainer.scrollLeft;
+        });
+        topContainer.addEventListener('scroll', () => {
+          tableContainer.scrollLeft = topContainer.scrollLeft;
+        });
+        tableContainer._syncAttached = true;
+      }
     }
 
     function openScatterModal(rowVar, colVar, rValue) {
