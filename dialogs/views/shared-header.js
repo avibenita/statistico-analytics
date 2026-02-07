@@ -202,7 +202,7 @@ const StatisticoHeader = {
       { id: 'correlation-matrix', label: 'Correlation Matrix', file: 'correlations/correlation-matrix.html' },
       { id: 'correlation-network', label: 'Correlation Network', file: 'correlations/correlation-network.html' },
       { id: 'taylor-diagram', label: 'Taylor Diagram', file: 'correlations/correlation-taylor.html' },
-      { id: 'descriptive-stats', label: 'Descriptive Statistics', file: 'univariate/descriptive-stats.html?module=correlations' },
+      { id: 'descriptive-stats', label: 'Descriptive Statistics', file: 'correlations/descriptive-stats.html' },
       { id: 'partial-correlations', label: 'Partial Correlations', file: 'correlations/correlation-partial.html' },
       { id: 'reliability', label: 'Reliability Coefficients', file: 'correlations/correlation-reliability.html' },
       { id: 'separator', label: '---', file: null },
