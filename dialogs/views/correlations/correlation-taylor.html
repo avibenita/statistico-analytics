@@ -841,8 +841,8 @@
       <i class="fas fa-bars"></i> <span id="toggle-text">Hide Panel</span>
     </button>
     <div class="toolbar-spacer"></div>
-    <button class="toggle-panel-btn" onclick="openExampleModal()" title="Show example with explanations">
-      <i class="fas fa-book-open"></i> Example
+    <button class="toggle-panel-btn" onclick="toggleExampleData()" title="Toggle example data">
+      <i class="fas fa-book-open"></i> <span id="exampleButtonLabel">Example</span>
     </button>
     <button class="info-btn" onclick="openInfoModal()" title="Learn about Taylor Diagrams">
       <i class="fas fa-info"></i>
@@ -1768,6 +1768,59 @@
           example.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 50);
+    }
+
+    function toggleExampleData() {
+      if (window.__EXAMPLE_MODE__) {
+        const realPayload = window.__REAL_TAYLOR_DATA__;
+        if (realPayload) {
+          injectDataFromVB6(realPayload);
+          setTimeout(() => {
+            const refSelect = document.getElementById('reference-variable-select');
+            if (refSelect && refSelect.options.length > 0) {
+              refSelect.value = refSelect.options[0].value;
+              setReferenceVariable();
+            }
+          }, 100);
+        }
+        window.__EXAMPLE_MODE__ = false;
+        updateExampleButtonLabel();
+        return;
+      }
+
+      const examplePayload = getExampleData();
+      injectDataFromVB6(examplePayload);
+      setTimeout(() => {
+        const refSelect = document.getElementById('reference-variable-select');
+        if (refSelect) {
+          refSelect.value = 'Reference';
+          setReferenceVariable();
+        }
+      }, 100);
+      window.__EXAMPLE_MODE__ = true;
+      updateExampleButtonLabel();
+      openExampleModal();
+    }
+
+    function updateExampleButtonLabel() {
+      const label = document.getElementById('exampleButtonLabel');
+      if (!label) return;
+      label.textContent = window.__EXAMPLE_MODE__ ? 'Return to real data' : 'Example';
+    }
+
+    function getExampleData() {
+      return {
+        'Var1': [5.3, 4.9, 5.6, 5.0, 5.2, 5.4, 4.8, 5.5, 5.1, 5.3,
+                 5.0, 5.2, 5.4, 5.1, 4.9, 5.3, 5.2, 5.0, 5.4, 5.1],
+        'Var2': [5.1, 4.7, 5.4, 4.8, 5.0, 5.2, 4.6, 5.3, 4.9, 5.1,
+                 4.8, 5.0, 5.2, 4.9, 4.7, 5.1, 5.0, 4.8, 5.2, 4.9],
+        'Var3': [5.4, 4.6, 5.7, 5.1, 5.3, 5.5, 4.5, 5.6, 5.2, 5.4,
+                 5.1, 5.3, 5.5, 5.2, 5.0, 5.4, 5.3, 5.1, 5.5, 5.2],
+        'Var4': [5.0, 5.2, 5.3, 4.7, 4.9, 5.1, 5.0, 5.2, 4.8, 5.0,
+                 5.1, 4.9, 5.2, 4.8, 5.0, 5.1, 4.9, 5.1, 5.0, 4.9],
+        'Reference': [5.2, 4.8, 5.5, 4.9, 5.1, 5.3, 4.7, 5.4, 5.0, 5.2,
+                      4.9, 5.1, 5.3, 5.0, 4.8, 5.2, 5.1, 4.9, 5.3, 5.0]
+      };
     }
     
     /**
@@ -2976,6 +3029,7 @@
         const headers = correlationData.headers || [];
         const rows = correlationData.data || [];
         const payload = buildTaylorPayload(headers, rows);
+        window.__REAL_TAYLOR_DATA__ = payload;
         injectDataFromVB6(payload);
 
         if (typeof StatisticoHeader !== 'undefined') {
