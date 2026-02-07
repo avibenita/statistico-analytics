@@ -1400,7 +1400,10 @@
           
           // Calculate descriptive statistics for selected variables only
           const descriptiveStats = variablesToShow.map((varName, index) => {
-            const values = data.map(row => row[varName]).filter(v => v !== null && !isNaN(v));
+            const values = data
+              .map(row => row[varName])
+              .map(v => typeof v === 'number' ? v : parseFloat(v))
+              .filter(v => isFinite(v));
             
             if (values.length === 0) {
               return null;
@@ -1558,7 +1561,10 @@
       
       // Calculate descriptive statistics for selected variables only
       const descriptiveStats = selectedVariables.map(varName => {
-        const values = window.rawData.map(row => row[varName]).filter(v => v !== null && !isNaN(v));
+        const values = window.rawData
+          .map(row => row[varName])
+          .map(v => typeof v === 'number' ? v : parseFloat(v))
+          .filter(v => isFinite(v));
         
         if (values.length === 0) {
           return null;
