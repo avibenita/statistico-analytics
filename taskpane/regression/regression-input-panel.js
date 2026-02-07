@@ -9,8 +9,8 @@
 
 /* global Office */
 
-let currentRangeData = null;
-let currentRangeAddress = '';
+let regressionRangeData = null;
+let regressionRangeAddress = '';
 let resultsDialog = null;
 
 function onRangeDataLoaded(values, address) {
@@ -21,13 +21,13 @@ function onRangeDataLoaded(values, address) {
     return;
   }
 
-  currentRangeData = values;
-  currentRangeAddress = address || '';
+  regressionRangeData = values;
+  regressionRangeAddress = address || '';
 
   const headers = values[0] || [];
   const dataRows = values.slice(1);
 
-  updateSummary(currentRangeAddress, dataRows.length, headers.length);
+  updateSummary(regressionRangeAddress, dataRows.length, headers.length);
   showPanel(true);
 }
 
@@ -48,7 +48,7 @@ function updateSummary(address, rows, cols) {
 }
 
 function openModelBuilder() {
-  if (!currentRangeData || currentRangeData.length < 2) {
+  if (!regressionRangeData || regressionRangeData.length < 2) {
     return;
   }
 
@@ -94,17 +94,17 @@ function openModelBuilder() {
 }
 
 function sendDialogData() {
-  if (!resultsDialog || !currentRangeData) return;
+  if (!resultsDialog || !regressionRangeData) return;
 
-  const headers = currentRangeData[0] || [];
-  const rows = currentRangeData.slice(1);
+  const headers = regressionRangeData[0] || [];
+  const rows = regressionRangeData.slice(1);
 
   resultsDialog.messageChild(JSON.stringify({
     type: 'REGRESSION_DATA',
     payload: {
       headers,
       rows,
-      address: currentRangeAddress
+      address: regressionRangeAddress
     }
   }));
 }
