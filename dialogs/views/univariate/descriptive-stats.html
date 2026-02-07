@@ -1281,8 +1281,10 @@
 
     // Auto-load data from localStorage on page load
     window.addEventListener('DOMContentLoaded', function() {
+      const params = new URLSearchParams(window.location.search);
+      const moduleOverride = params.get('module');
       if (typeof StatisticoHeader !== 'undefined') {
-        StatisticoHeader.init('descriptive-stats', 'Descriptive Statistics', 0, 'univariate');
+        StatisticoHeader.init('descriptive-stats', 'Descriptive Statistics', 0, moduleOverride || 'univariate');
       }
 
       console.log('🔄 Descriptive Statistics page loaded');
