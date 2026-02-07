@@ -420,9 +420,28 @@
         const message = JSON.parse(arg.message);
         if (message.action === 'loadData' && message.data) {
           handleOfficeData(message.data);
+        } else if (message.type === 'CORRELATION_DATA' && message.payload) {
+          handleCorrelationData(message.payload);
         }
       } catch (e) {
         console.error('Error parsing message from parent:', e);
+      }
+    }
+
+    function handleCorrelationData(payload) {
+      const headers = payload.headers || [];
+      const rows = payload.data || [];
+      window.rawData = rows;
+      window.variableNames = headers.slice();
+
+      if (headers.length > 0) {
+        window.updateDescriptiveStats(headers);
+      }
+
+      if (typeof StatisticoHeader !== 'undefined') {
+        StatisticoHeader.sampleSize = rows.length;
+        StatisticoHeader.variableName = `${headers.length} Variables`;
+        StatisticoHeader.render();
       }
     }
 
