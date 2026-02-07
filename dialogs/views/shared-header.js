@@ -109,6 +109,7 @@ const StatisticoHeader = {
       'qqplot': 'QQ/PP Plot Analysis',
       'normality': 'Normality Tests',
       'kernel': 'Kernel Density',
+      'descriptive-stats': 'Descriptive Statistics',
       'cdf': 'Cumulative Distribution',
       'confidence': 'Confidence Intervals',
       'hypothesis': 'Hypothesis Testing',
@@ -184,6 +185,7 @@ const StatisticoHeader = {
   renderDropdownItems() {
     const univariateViews = [
       { id: 'histogram', label: 'Interactive Histogram', file: 'univariate/histogram-standalone.html' },
+      { id: 'descriptive-stats', label: 'Descriptive Statistics', file: 'univariate/descriptive-stats.html' },
       { id: 'boxplot', label: 'Box Plot Analysis', file: 'univariate/boxplot-standalone.html' },
       { id: 'cdf', label: 'Cumulative Distribution', file: 'univariate/cumulative-distribution.html' },
       { id: 'percentile', label: 'Percentiles', file: 'univariate/percentile-standalone.html' },
