@@ -270,18 +270,6 @@
           </select>
         </div>
         
-        <!-- View Type Section -->
-        <div class="section">
-          <div class="section-title">
-            <i class="fa-solid fa-eye"></i> View Type
-          </div>
-          <select id="viewType">
-            <option value="matrix" selected>Correlation Matrix</option>
-            <option value="network">Network Diagram</option>
-            <option value="taylor">Taylor Diagram</option>
-          </select>
-        </div>
-        
         <!-- Run Button -->
         <button id="btnRun" class="btn-run" onclick="runAnalysis()">
           <i class="fa-solid fa-play"></i> Run Correlation Analysis
@@ -451,15 +439,14 @@
         return;
       }
       
-      // Get method and view type
+      // Get method (view type is always 'matrix')
       var method = document.getElementById('corrMethod').value;
-      var viewType = document.getElementById('viewType').value;
       
       // Send configuration back to parent
       var config = {
         variables: selectedVars,
         method: method,
-        viewType: viewType,
+        viewType: 'matrix',
         data: correlationData
       };
       
