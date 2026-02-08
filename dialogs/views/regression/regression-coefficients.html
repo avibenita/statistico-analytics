@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title id="page-title">Linear Regression Analysis</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --surface-0:#0c1624;
+      --surface-1:#1a1f2e;
+      --surface-2:#242938;
+      --border:#2d3748;
+      --accent-1:rgb(255,165,120);
+      --accent-2:rgb(120,200,255);
+      --text-primary:#fff;
+      --text-secondary:rgba(255,255,255,0.8);
+      --text-muted:rgba(255,255,255,0.6);
+      --panel-radius:10px;
+      --panel-shadow:0 4px 20px rgba(0,0,0,.4);
+      --header-color:var(--accent-1);
+    }
+
+    html,body{height:100%;margin:0;padding:0;}
+    body{background:var(--surface-0);color:var(--text-primary);font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;overflow-x:hidden;}
+
+    .wrap{ display:flex; justify-content:center; padding:clamp(3px,1vh,8px) clamp(6px,2vh,12px) 19px; }
+    .card{
+      width:min(1120px,100%); background:var(--surface-1);
+      min-height: 740px;
+      border-radius:var(--panel-radius); box-shadow:var(--panel-shadow);
+      border:1px solid var(--border); overflow:visible;
+      display:flex; flex-direction:column;
+    }
+    .card-head{
+      display:flex; align-items:center; justify-content:space-between;
+      background:transparent; color:var(--header-color);
+      padding:10px 16px; font-weight:600; font-size:1.2rem; letter-spacing:.3px;
+    }
+    .card-body{ padding:12px; flex:1; min-height:0; overflow:visible; }
+
+    /* Dropdown Navigation Styles */
+    .dropdown-container{ position:relative; }
+    .dropdown-content{
+      display:none; position:absolute; top:100%; right:0; min-width:260px; z-index:1000;
+      background:var(--surface-1); border:1px solid var(--border); border-radius:8px;
+      box-shadow:var(--panel-shadow); padding:8px 0; margin-top:4px;
+      opacity: 0;
+      transform: scaleY(0.95);
+      transform-origin: top;
+      transition: all 0.25s ease-in-out;
+    }
+    .dropdown-content.show{ display:block; opacity:1; transform:scaleY(1); }
+
+    .dropdown-btn{
+      position:relative; transition:.3s; cursor:pointer; border-radius:8px;
+      background:linear-gradient(145deg,#4a5568,#2d3748); border:1px solid #4a5568;
+      color:#e2e8f0; padding:8px 12px; font-size:12px; font-weight:600;
+      box-shadow:0 4px 8px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.1), inset 0 -1px 0 rgba(0,0,0,.2);
+    }
+    .dropdown-btn:hover{ transform:translateY(-1px); }
+    .dropdown-arrow{ display:inline-block; margin-left:8px; transition:transform .3s }
+    .dropdown-btn.open .dropdown-arrow{ transform:rotate(180deg) }
+
+    .dropdown-content a {
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: var(--text-secondary);
+      transition: all 0.25s ease-in-out;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .dropdown-content a:last-child {
+      border-bottom: none;
+    }
+    .dropdown-content a:hover {
+      background-color: var(--accent-1);
+      color: var(--surface-0);
+      transform: translateX(2px);
+    }
+    .dropdown-content a.selected {
+      background-color: var(--accent-1);
+      color: var(--surface-0);
+      font-weight: bold;
+    }
+
+    .dropdown-separator {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 4px 0;
+      pointer-events: none;
+    }
+
+    /* Stats Container */
+    .stats-container {
+      display: flex;
+      gap: 20px;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat-panel {
+      flex: 1;
+      min-width: 280px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--panel-radius);
+      padding: 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-panel-heading {
+      background: linear-gradient(135deg, rgba(0, 51, 102, 0.8), rgba(0, 102, 204, 0.6));
+      color: #ffffff;
+      padding: 8px 12px;
+      border-radius: var(--panel-radius) var(--panel-radius) 0 0;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid var(--accent-1);
+    }
+
+    .stat-panel-body {
+      padding: 10px 12px;
+    }
+
+    .stat-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 4px 0;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stat-field:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .stat-value {
+      background: linear-gradient(135deg, rgba(120, 200, 255, 0.15), rgba(120, 200, 255, 0.05));
+      border: 1px solid rgba(120, 200, 255, 0.3);
+      border-radius: 6px;
+      padding: 6px 12px;
+      min-width: 80px;
+      text-align: center;
+      color: var(--accent-2);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .stat-note {
+      margin-top: 12px;
+      padding: 8px;
+      background: rgba(255, 165, 120, 0.1);
+      border-left: 3px solid var(--accent-1);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-style: italic;
+    }
+
+    /* Table Container */
+    .table-container {
+      width: 100%;
+      margin: 20px auto 0;
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: calc(100vh - 550px);
+      border: 0px solid var(--border) !important;
+      border-radius: 0px;
+      box-shadow: 0px 0px 0px transparent;
+    }
+
+    /* Modern scrollbar styling */
+    .table-container::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, var(--accent-1), rgba(255, 165, 120, 0.7));
+      border-radius: 4px;
+      border: 0px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .table-container::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, rgba(255, 165, 120, 0.9), var(--accent-1));
+      box-shadow: 0 0 8px rgba(255, 165, 120, 0.4);
+    }
+
+    .table-container::-webkit-scrollbar-corner {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Firefox scrollbar styling */
+    .table-container {
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent-1) rgba(255, 255, 255, 0.05);
+    }
+
+    .regression-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      border: 0px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .regression-table th {
+      background: linear-gradient(135deg, rgba(0, 51, 102, 0.9), rgba(0, 102, 204, 0.7));
+      color: #fff;
+      padding: 8px 6px;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      font-weight: 700;
+      text-align: center;
+      white-space: nowrap;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      min-width: 70px;
+    }
+
+    .regression-table th:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 3;
+      text-align: left;
+      min-width: 100px;
+      max-width: 200px;
+    }
+
+    .regression-table td {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 8px;
+      text-align: center;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      min-width: 70px;
+    }
+
+    .regression-table td:first-child {
+      text-align: left;
+      font-weight: 600;
+      white-space: nowrap;
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--accent-1);
+      min-width: 100px;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .regression-table tbody tr:hover {
+      background-color: rgba(255, 221, 87, 0.15);
+    }
+
+    .regression-table tbody tr:nth-child(even) {
+      background-color: rgba(240, 248, 255, 0.03);
+    }
+
+    /* Section separator rows */
+    .regression-table tbody .section-header {
+      background: transparent !important;
+    }
+
+    .regression-table tbody .section-header td {
+      padding: 6px 10px !important;
+      font-weight: 500 !important;
+      font-size: 0.55rem !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      color: rgba(255, 255, 255, 0.5) !important;
+      text-align: left !important;
+      background: transparent !important;
+      position: relative !important;
+      z-index: 0 !important;
+      border-left: 0 !important;
+      border-right: 0 !important;
+      border-bottom: 0 !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    @media screen and (max-width: 768px) {
+      .stats-container {
+        flex-direction: column;
+      }
+      .stat-panel {
+        min-width: 100%;
+      }
+    }
+    
+    /* Regression Equation Section */
+    .equation-section {
+      margin: 20px auto 0;
+      padding: 20px;
+      background: var(--surface-2);
+      border: 2px solid var(--accent-1);
+      border-radius: 8px;
+      box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .equation-title {
+      color: var(--accent-1);
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .equation-formula {
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      color: var(--text-primary);
+      background: var(--surface-0);
+      padding: 16px;
+      border-radius: 6px;
+      border-left: 4px solid var(--accent-2);
+      line-height: 1.8;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    
+    .equation-formula .var {
+      color: var(--accent-1);
+      font-weight: 600;
+    }
+    
+    .equation-formula .coef {
+      color: var(--accent-2);
+      font-weight: 700;
+    }
+    
+    /* Toggle Equation Button */
+    .toggle-equation-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--accent-1);
+      color: var(--accent-1);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 16px auto 0;
+      display: block;
+      transition: all 0.3s ease;
+    }
+    
+    .toggle-equation-btn:hover {
+      background: var(--accent-1);
+      color: var(--surface-0);
+      box-shadow: 0 4px 12px rgba(255, 165, 120, 0.3);
+    }
+    
+    .toggle-equation-btn i {
+      margin-right: 6px;
+      transition: transform 0.3s ease;
+    }
+    
+    .toggle-equation-btn.active i {
+      transform: rotate(180deg);
+    }
+    
+    /* AI Interpret Button Styling */
+    .ai-interpret-btn {
+      position: relative;
+      transition: .3s;
+      cursor: pointer;
+      border-radius: 8px;
+      background: linear-gradient(145deg, #7c3aed, #a855f7) !important;
+      border: 1px solid #9333ea !important;
+      color: #ffffff !important;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 8px rgba(124, 58, 237, 0.3);
+      margin-left: 8px;
+    }
+    
+    .ai-interpret-btn:hover {
+      background: linear-gradient(145deg, #6d28d9, #9333ea) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 12px rgba(124, 58, 237, 0.4);
+    }
+    
+    .ai-interpret-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .ai-interpret-btn i {
+      margin-right: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card" role="main">
+      <div class="card-head">
+        <span><i class="fa-solid fa-chart-line"></i> Linear Regression Analysis</span>
+        <div style="display: flex; gap: 12px; align-items: center;">
+
+          
+          <!-- AI Interpret Button -->
+          <button class="dropdown-btn ai-interpret-btn" id="aiInterpretBtn" onclick="requestRegressionAI()" style="display: none;" title="Get AI-powered interpretation of regression results">
+            <i class="fa-solid fa-robot"></i> AI Interpret
+          </button>
+          
+          <div class="dropdown-container">
+            <button class="dropdown-btn" id="dropdownBtn">
+              Navigation Menu
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="dropdown-content" id="dropdownContent">
+              <a href="http://127.0.0.1:12345?command=Case00" target="_self">Regression Results</a>
+              <a href="http://127.0.0.1:12345?command=Case10" target="_self">Residual Analysis</a>
+              <a href="http://127.0.0.1:12345?command=Case20" target="_self">Diagnostics</a>
+              <a href="http://127.0.0.1:12345?command=Case30" target="_self">Predictions</a>
+              <div class="dropdown-separator"></div>
+              <a href="http://127.0.0.1:12345?command=Case400" target="_self">Descriptive Statistics</a>
+              <a href="http://127.0.0.1:12345?command=Case500" target="_self">Correlation Analysis</a>
+              <div class="dropdown-separator"></div>
+              <a href="http://127.0.0.1:12345?command=Case1000" target="_self">Data & Methods</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <!-- Stats Panels -->
+        <div class="stats-container">
+          <div class="stat-panel">
+            <div class="stat-panel-heading"><i class="fa-solid fa-info-circle"></i> Sample Info</div>
+            <div class="stat-panel-body">
+              <div class="stat-field">
+                <span class="stat-label">Observations:</span>
+                <span id="validObs" class="stat-value">...</span>
+              </div>
+              <div class="stat-field">
+                <span class="stat-label">Include Intercept?:</span>
+                <span id="includeIntercept" class="stat-value">...</span>
+              </div>
+              <div class="stat-field">
+                <span class="stat-label">Numeric Variables:</span>
+                <span id="numNumericVars" class="stat-value">...</span>
+              </div>
+              <div class="stat-field">
+                <span class="stat-label">Categorical Variables:</span>
+                <span id="numCategoricalVars" class="stat-value">...</span>
+              </div>
+              <div class="stat-field">
+                <span class="stat-label">Degrees of Freedom:</span>
+                <span id="degreesOfFreedom" class="stat-value">...</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-panel">
+            <div class="stat-panel-heading"><i class="fa-solid fa-chart-bar"></i> Model Fit</div>
+            <div class="stat-panel-body">
+              <div class="stat-field">
+                <span class="stat-label">R²:</span>
+                <span id="rSquared" class="stat-value">...</span>
+              </div>
+              <div class="stat-field">
+                <span class="stat-label">Adjusted R²:</span>
+                <span id="adjRSquared" class="stat-value">...</span>
+              </div>
+              <div class="stat-field">
+                <span class="stat-label">Root MSE:</span>
+                <span id="rootMSE" class="stat-value">...</span>
+              </div>
+              <div class="stat-field">
+                <span class="stat-label">AIC:</span>
+                <span id="aic" class="stat-value">...</span>
+              </div>
+              <div class="stat-field">
+                <span class="stat-label">BIC:</span>
+                <span id="bic" class="stat-value">...</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-panel">
+            <div class="stat-panel-heading"><i class="fa-solid fa-calculator"></i> F-Test</div>
+            <div class="stat-panel-body">
+              <div class="stat-field">
+                <span class="stat-label">F-Statistic:</span>
+                <span id="fStatistic" class="stat-value">...</span>
+              </div>
+              <div class="stat-field">
+                <span class="stat-label">P-value:</span>
+                <span id="fPValue" class="stat-value">...</span>
+              </div>
+              <div class="stat-field">
+                <span class="stat-label">Sum of Squares (Model):</span>
+                <span id="ssModel" class="stat-value">...</span>
+              </div>
+              <div class="stat-field">
+                <span class="stat-label">Sum of Squares (Residual):</span>
+                <span id="ssResidual" class="stat-value">...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coefficients Table Panel -->
+        <div class="stat-panel" style="min-width: 100%; margin-top: 0;">
+          <div class="stat-panel-heading"><i class="fa-solid fa-table"></i> Regression Coefficients</div>
+          <div class="stat-panel-body" style="padding: 0;">
+            <div class="table-container" style="margin: 0; border: none; border-radius: 0;">
+              <table class="regression-table">
+                <thead>
+                  <tr>
+                    <th><i class="fa-solid fa-tag"></i> Variable</th>
+                    <th>Coefficient</th>
+                    <th>Std. Error</th>
+                    <th>t-value</th>
+                    <th>P-value</th>
+                    <th>95% CI Lower</th>
+                    <th>95% CI Upper</th>
+                    <th>VIF</th>
+                  </tr>
+                </thead>
+                <tbody id="dataTableBody">
+                  <tr>
+                    <td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted); font-style:italic;">
+                      <i class="fa-solid fa-hourglass-half"></i> Awaiting regression results...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Toggle Equation Button -->
+        <button class="toggle-equation-btn" id="toggleEquationBtn" onclick="toggleEquation()" style="display: none;">
+          <i class="fa-solid fa-chevron-down"></i> Show Regression Equation
+        </button>
+        
+        <!-- Regression Equation -->
+        <div class="equation-section" id="equationSection" style="display: none;">
+          <div class="equation-title">
+            <i class="fa-solid fa-function"></i> Regression Equation
+          </div>
+          <div class="equation-formula" id="equationFormula">
+            Awaiting regression results...
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+    <!-- Diagnostics Panel Section (Hidden by default) -->
+    <div class="stat-panel" id="diagnosticsPanel" style="min-width: 100%; margin-top: 20px; display: none;">
+      <div class="stat-panel-heading">
+        <i class="fa-solid fa-stethoscope"></i> Advanced Diagnostics
+        <button id="refreshDiagnosticsBtn" style="float: right; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+          <i class="fa-solid fa-sync"></i> Compute
+        </button>
+      </div>
+      <div class="stat-panel-body">
+        <!-- Multicollinearity Section -->
+        <div style="margin-bottom: 20px;">
+          <h4 style="color: var(--accent-1); font-size: 0.95rem; margin-bottom: 10px;">
+            <i class="fa-solid fa-link"></i> Multicollinearity
+          </h4>
+          <div class="stat-field">
+            <span class="stat-label">Condition Number:</span>
+            <span id="conditionNumber" class="stat-value">...</span>
+          </div>
+          <div class="stat-field">
+            <span class="stat-label">Determinant (R):</span>
+            <span id="determinant" class="stat-value">...</span>
+          </div>
+          <div id="vifContainer" style="margin-top: 10px;">
+            <div style="font-weight: 600; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 5px;">
+              Variance Inflation Factors (VIF):
+            </div>
+            <div id="vifList" style="font-size: 0.85rem; color: var(--text-muted);">
+              Awaiting computation...
+            </div>
+          </div>
+          <div id="highCorrContainer" style="margin-top: 10px; display: none;">
+            <div style="font-weight: 600; color: var(--accent-1); font-size: 0.9rem; margin-bottom: 5px;">
+              <i class="fa-solid fa-exclamation-triangle"></i> High Correlations Detected:
+            </div>
+            <div id="highCorrList" style="font-size: 0.85rem; color: var(--text-muted);"></div>
+          </div>
+        </div>
+        
+        <!-- Autocorrelation Section -->
+        <div style="margin-bottom: 20px;">
+          <h4 style="color: var(--accent-1); font-size: 0.95rem; margin-bottom: 10px;">
+            <i class="fa-solid fa-wave-square"></i> Autocorrelation
+          </h4>
+          <div class="stat-field">
+            <span class="stat-label">Durbin-Watson:</span>
+            <span id="durbinWatson" class="stat-value">...</span>
+          </div>
+          <div class="stat-field">
+            <span class="stat-label">Lag-1 Autocorr:</span>
+            <span id="lag1Autocorr" class="stat-value">...</span>
+          </div>
+        </div>
+        
+        <!-- Leverage & PRESS Section -->
+        <div>
+          <h4 style="color: var(--accent-1); font-size: 0.95rem; margin-bottom: 10px;">
+            <i class="fa-solid fa-chart-area"></i> Prediction & Leverage
+          </h4>
+          <div class="stat-field">
+            <span class="stat-label">PRESS Statistic:</span>
+            <span id="pressStatistic" class="stat-value">...</span>
+          </div>
+          <div class="stat-note">
+            <strong>Note:</strong> High leverage points and influential observations can be examined in detail through the Diagnostics tab.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom awaiting panel instructions for regression -->
+  <script>
+    window.AWAITING_PANEL_INSTRUCTIONS = `
+      <div style="text-align: left; color: #8b95a5; font-size: 14px; line-height: 1.8; max-width: 420px; padding: 0 20px;">
+        <div style="margin-bottom: 8px;">📊 <strong style="color: #ffa500;">Select your data range</strong> in the input panel</div>
+        <div style="margin-bottom: 8px;">🎯 <strong style="color: #ffa500;">Assign Y variable</strong> (response) and predictors (Xn, Xc)</div>
+        <div style="margin-bottom: 8px;">▶️ <strong style="color: #ffa500;">Click "Run Regression"</strong> to see results</div>
+        <div>📈 Regression analysis includes coefficients, R², F-test, and more</div>
+      </div>
+    `;
+  </script>
+
+  <script>
+    // Utility function to send commands to VB6 host
+    function sendToHost(cmd, data) {
+      try {
+        if (typeof vbHost !== 'undefined' && vbHost && typeof vbHost.RaiseMessageEvent === 'function') {
+          var dataStr = typeof data === 'string' ? data : JSON.stringify(data || {});
+          vbHost.RaiseMessageEvent(cmd, dataStr);
+          console.log('📤 Sent to host:', cmd, dataStr.substring(0, 100));
+        } else {
+          console.warn('⚠️ vbHost not available');
+        }
+      } catch(e) {
+        console.error('❌ Error sending to host:', e);
+      }
+    }
+    
+    // Office.js integration for Excel Add-in
+    let receivedRegressionData = null;
+    let receivedModelSpec = null;
+    
+    // Initialize Office.js
+    if (typeof Office !== 'undefined') {
+      Office.onReady((info) => {
+        console.log('✅ Office.js ready in regression coefficients dialog');
+        
+        // Signal that dialog is ready to receive data
+        if (Office.context && Office.context.ui) {
+          Office.context.ui.messageParent(JSON.stringify({ 
+            action: 'ready' 
+          }));
+        }
+        
+        // Listen for messages from parent taskpane
+        Office.context.ui.addHandlerAsync(
+          Office.EventType.DialogParentMessageReceived,
+          (arg) => {
+            try {
+              const message = JSON.parse(arg.message);
+              console.log('📥 Received message from taskpane:', message.type);
+              
+              if (message.type === 'REGRESSION_RESULTS') {
+                receivedRegressionData = message.payload;
+                receivedModelSpec = message.payload.modelSpec;
+                
+                console.log('✅ Received regression data and model spec');
+                console.log('   Headers:', message.payload.headers);
+                console.log('   Rows:', message.payload.rows?.length);
+                console.log('   Model:', receivedModelSpec);
+                
+                // Process and display the regression results
+                processRegressionData();
+              }
+            } catch (e) {
+              console.error('❌ Error handling message from parent:', e);
+            }
+          }
+        );
+      });
+    }
+    
+    // Process the received regression data and run analysis
+    function processRegressionData() {
+      if (!receivedRegressionData || !receivedModelSpec) {
+        console.warn('⚠️ No data or model spec received yet');
+        return;
+      }
+      
+      console.log('🔄 Processing regression data...');
+      
+      const { headers, rows, address } = receivedRegressionData;
+      const { y, xn, xc, intercept } = receivedModelSpec;
+      
+      // Build X matrix and Y vector from the data
+      const yIndex = headers.indexOf(y);
+      const xnIndices = xn.map(varName => headers.indexOf(varName));
+      const xcIndices = xc.map(varName => headers.indexOf(varName));
+      
+      if (yIndex === -1) {
+        console.error('❌ Y variable not found in headers');
+        return;
+      }
+      
+      // Extract Y values
+      const yVector = rows.map(row => parseFloat(row[yIndex])).filter(v => !isNaN(v));
+      
+      // Extract X values (numeric predictors)
+      const xMatrix = [];
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const xRow = [];
+        
+        // Add numeric predictors
+        for (const xnIdx of xnIndices) {
+          const val = parseFloat(row[xnIdx]);
+          if (!isNaN(val)) {
+            xRow.push(val);
+          }
+        }
+        
+        // Add categorical predictors (for now, treat as numeric - proper dummy coding would be more complex)
+        for (const xcIdx of xcIndices) {
+          const val = parseFloat(row[xcIdx]);
+          if (!isNaN(val)) {
+            xRow.push(val);
+          }
+        }
+        
+        if (xRow.length > 0 && xRow.length === (xnIndices.length + xcIndices.length)) {
+          xMatrix.push(xRow);
+        }
+      }
+      
+      console.log('📊 Data prepared:', {
+        observations: yVector.length,
+        predictors: xMatrix[0]?.length || 0,
+        intercept: intercept === 1
+      });
+      
+      // Update page title
+      const pageTitle = document.getElementById('page-title');
+      if (pageTitle) {
+        pageTitle.innerText = `Regression: ${y} ~ ${[...xn, ...xc].join(' + ')}`;
+      }
+      
+      // Prepare data for diagnostics
+      prepareRegressionDataForDiagnostics(xMatrix, yVector, intercept === 1);
+      
+      // TODO: Run actual regression computation here
+      // For now, we'll just prepare the diagnostics data
+      console.log('✅ Regression data processed and ready for analysis');
+    }
+
+    // Function to trigger VB6 regression
+    function runRegression() {
+      console.log('🔄 Running regression...');
+      sendToHost('runRegression', { action: 'run' });
+    }
+
+    // Store the number of numeric variables for table population
+    let numNumericVariables = 0;
+    
+    // Global variable to store regression results for AI
+    let regressionResultsForAI = null;
+    
+    // Function to store results when they arrive
+    function storeRegressionResultsForAI(statsData, tableData) {
+      console.log('📊 Storing regression results for AI...');
+      
+      // Parse the data if strings
+      const stats = typeof statsData === 'string' ? JSON.parse(statsData) : statsData;
+      const coeffs = typeof tableData === 'string' ? JSON.parse(tableData) : tableData;
+      
+      // Store in global variable for AI interpretation
+      regressionResultsForAI = {
+        yVariable: document.getElementById('page-title')?.innerText || 'Y',
+        observations: stats.observations || stats.validObs,
+        numPredictors: (parseInt(stats.numNumericVars || 0) + parseInt(stats.numCategoricalVars || 0)),
+        rSquared: stats.rSquared || stats.R2,
+        adjRSquared: stats.adjRSquared || stats.adjR2,
+        rootMSE: stats.rootMSE || stats.rmse,
+        aic: stats.aic || stats.AIC,
+        bic: stats.bic || stats.BIC,
+        fStatistic: stats.fStatistic || stats.F,
+        fPValue: stats.fPValue || stats.pValue,
+        ssModel: stats.ssModel || stats.SSR,
+        ssResidual: stats.ssResidual || stats.SSE,
+        coefficients: coeffs
+      };
+      
+      // Show AI button now that we have results
+      const aiBtn = document.getElementById('aiInterpretBtn');
+      if (aiBtn) {
+        aiBtn.style.display = 'block';
+        console.log('✅ AI button shown');
+      }
+      
+      console.log('✅ Regression results stored for AI');
+    }
+    
+    // Function to request AI interpretation
+    function requestRegressionAI() {
+      console.log('🤖 Requesting AI interpretation for regression...');
+      
+      if (!regressionResultsForAI) {
+        alert('No regression results available. Please run a regression first.');
+        return;
+      }
+      
+      // Show loading state on button
+      const aiBtn = document.getElementById('aiInterpretBtn');
+      if (aiBtn) {
+        aiBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+        aiBtn.disabled = true;
+      }
+      
+      // Convert to JSON and send to VB6
+      const jsonData = JSON.stringify(regressionResultsForAI);
+      console.log('📤 Sending to VB6 (', jsonData.length, 'chars)');
+      
+      sendToHost('requestRegressionAI', jsonData);
+      
+      // Reset button after a delay
+      setTimeout(() => {
+        if (aiBtn) {
+          aiBtn.innerHTML = '<i class="fa-solid fa-robot"></i> AI Interpret';
+          aiBtn.disabled = false;
+        }
+      }, 2000);
+    }
+    
+    // Function to receive AI interpretation from VB6
+    window.receiveRegressionAI = function(jsonPayload) {
+      console.log('📥 Received AI interpretation from VB6');
+      
+      try {
+        const data = JSON.parse(jsonPayload);
+        
+        if (data.error) {
+          alert('AI Error: ' + data.error);
+          console.error('❌ AI Error:', data.error);
+          return;
+        }
+        
+        if (data.interpretation) {
+          console.log('✅ AI Interpretation received (', data.interpretation.length, 'chars)');
+          console.log('📝 Preview:', data.interpretation.substring(0, 100) + '...');
+          // The VB6 code shows a popup
+        }
+      } catch (e) {
+        console.error('❌ Error parsing AI response:', e);
+        alert('Error displaying AI interpretation: ' + e.message);
+      }
+    };
+
+    // Global array to store regression variables (for navigation to descriptive stats)
+    let regressionVariablesList = [];
+    
+    // VB6 can call this to set the regression variables list
+    window.setRegressionVariablesList = function(variablesArray) {
+      console.log('📥 VB6 setRegressionVariablesList called');
+      
+      if (typeof variablesArray === 'string') {
+        try {
+          regressionVariablesList = JSON.parse(variablesArray);
+          console.log('✅ Regression variables list set:', regressionVariablesList);
+        } catch (e) {
+          console.error('❌ Error parsing variables array:', e);
+        }
+      } else if (Array.isArray(variablesArray)) {
+        regressionVariablesList = variablesArray;
+        console.log('✅ Regression variables list set:', regressionVariablesList);
+      }
+    };
+    
+    // Dropdown toggle functionality
+    (function() {
+      const dropdownBtn = document.getElementById('dropdownBtn');
+      const dropdownContent = document.getElementById('dropdownContent');
+
+      dropdownBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdownContent.classList.toggle('show');
+        dropdownBtn.classList.toggle('open');
+      });
+
+      window.addEventListener('click', function() {
+        dropdownContent.classList.remove('show');
+        dropdownBtn.classList.remove('open');
+      });
+
+      dropdownContent.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+      
+      // Intercept clicks on dropdown links to store regression context
+      dropdownContent.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', function(e) {
+          const href = this.getAttribute('href');
+          
+          // If navigating to descriptive statistics, store regression variables
+          if (href && href.includes('Case400')) {
+            console.log('📊 Navigating to Descriptive Statistics from regression');
+            
+            if (regressionVariablesList.length > 0) {
+              console.log('✅ Storing regression variables:', regressionVariablesList);
+              sessionStorage.setItem('regressionModelVariables', JSON.stringify(regressionVariablesList));
+              sessionStorage.setItem('loadFromRegression', 'true');
+            } else {
+              console.warn('⚠️ No regression variables available yet');
+            }
+          }
+          
+          // If navigating to correlation analysis, store regression variables
+          if (href && href.includes('Case500')) {
+            console.log('📊 Navigating to Correlation Analysis from regression');
+            
+            if (regressionVariablesList.length > 0) {
+              console.log('✅ Storing regression variables:', regressionVariablesList);
+              sessionStorage.setItem('regressionModelVariables', JSON.stringify(regressionVariablesList));
+              sessionStorage.setItem('loadFromRegression', 'true');
+            }
+          }
+        });
+      });
+    })();
+
+    // Function to populate the panels dynamically
+    function populatePanels(data) {
+      const stats = JSON.parse(data);
+      
+      // Store for use in table population
+      numNumericVariables = parseInt(stats.numNumericVars || stats.numXn || '0');
+      
+      // Sample Info
+      document.getElementById('validObs').innerText = stats.observations || stats.validObs || 'N/A';
+      document.getElementById('includeIntercept').innerText = stats.includeIntercept ? 'Yes' : 'No';
+      document.getElementById('numNumericVars').innerText = numNumericVariables || '0';
+      document.getElementById('numCategoricalVars').innerText = stats.numCategoricalVars || stats.numXc || '0';
+      document.getElementById('degreesOfFreedom').innerText = stats.degreesOfFreedom || stats.df || 'N/A';
+      
+      // Model Fit
+      document.getElementById('rSquared').innerText = stats.rSquared || stats.R2 || 'N/A';
+      document.getElementById('adjRSquared').innerText = stats.adjRSquared || stats.adjR2 || 'N/A';
+      document.getElementById('rootMSE').innerText = stats.rootMSE || stats.rmse || 'N/A';
+      document.getElementById('aic').innerText = stats.aic || stats.AIC || 'N/A';
+      document.getElementById('bic').innerText = stats.bic || stats.BIC || 'N/A';
+      
+      // F-Test
+      document.getElementById('fStatistic').innerText = stats.fStatistic || stats.F || 'N/A';
+      document.getElementById('fPValue').innerText = stats.fPValue || stats.pValue || 'N/A';
+      document.getElementById('ssModel').innerText = stats.ssModel || stats.SSR || 'N/A';
+      document.getElementById('ssResidual').innerText = stats.ssResidual || stats.SSE || 'N/A';
+      
+      // Store stats for AI interpretation
+      window.regressionStatsData = stats;
+      
+      // If we already have table data, store for AI
+      if (window.regressionTableData) {
+        storeRegressionResultsForAI(stats, window.regressionTableData);
+      }
+    }
+
+    // Function to populate the regression table dynamically with sections
+    function populateTable(data) {  
+      const tableBody = document.getElementById('dataTableBody');
+      tableBody.innerHTML = ''; // Clear previous content
+
+      const rows = JSON.parse(data);
+      
+      // Store table data for AI interpretation
+      window.regressionTableData = rows;
+      
+      // Extract and store ALL variable names (including Y variable) for navigation
+      regressionVariablesList = [];
+      
+      // Add Y variable if available from page title or session storage
+      const yVariable = sessionStorage.getItem('regressionYVariable') || 'Y';
+      if (yVariable && yVariable !== 'Y') {
+        regressionVariablesList.push(yVariable);
+      }
+      
+      // Add all predictor variables (excluding Intercept)
+      rows.forEach(row => {
+        const varName = row.Variable || '';
+        if (varName && varName !== 'Intercept') {
+          // For categorical variables with dummy coding (e.g., "Category_A"), extract base name
+          const baseName = varName.split('_')[0]; // Gets "Category" from "Category_A"
+          if (!regressionVariablesList.includes(varName)) {
+            regressionVariablesList.push(varName);
+          }
+        }
+      });
+      
+      console.log('📊 Regression model variables extracted:', regressionVariablesList);
+      
+      // Group rows by type: intercept, numeric, categorical
+      // Use index-based approach: first row might be intercept, next N are numeric, rest are categorical
+      const intercept = [];
+      const numericVars = [];
+      const categoricalVars = [];
+      
+      let nonInterceptIndex = 0; // Track position among non-intercept variables
+      
+      rows.forEach((row, index) => {
+        const varName = row.Variable || '';
+        
+        if (varName === 'Intercept') {
+          intercept.push(row);
+        } else {
+          // For non-intercept variables, use the count from VBA
+          // First numNumericVariables are numeric, rest are categorical dummies
+          if (nonInterceptIndex < numNumericVariables) {
+            numericVars.push(row);
+          } else {
+            categoricalVars.push(row);
+          }
+          nonInterceptIndex++;
+        }
+      });
+      
+      console.log('📊 Variable grouping:', {
+        intercept: intercept.length,
+        numeric: numericVars.length,
+        categorical: categoricalVars.length,
+        numNumericVariables: numNumericVariables
+      });
+      
+      // Helper function to create a section header row
+      function createSectionHeader(title) {
+        const tr = document.createElement('tr');
+        tr.className = 'section-header section-header-row';
+        const td = document.createElement('td');
+        td.colSpan = 8;
+        td.textContent = title;
+        tr.appendChild(td);
+        return tr;
+      }
+      
+      // Helper function to create a data row
+      function createDataRow(row) {
+        const tr = document.createElement('tr');
+        Object.values(row).forEach(value => {
+          const td = document.createElement('td');
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        return tr;
+      }
+      
+      // Add Intercept section
+      if (intercept.length > 0) {
+        tableBody.appendChild(createSectionHeader(''));
+        intercept.forEach(row => {
+          tableBody.appendChild(createDataRow(row));
+        });
+      }
+      
+      // Add Numeric Variables section
+      if (numericVars.length > 0) {
+        tableBody.appendChild(createSectionHeader('Numeric Variables'));
+        numericVars.forEach(row => {
+          tableBody.appendChild(createDataRow(row));
+        });
+      }
+      
+      // Add Categorical Variables section
+      if (categoricalVars.length > 0) {
+        tableBody.appendChild(createSectionHeader('Categorical Variables (Dummy Coded)'));
+        categoricalVars.forEach(row => {
+          tableBody.appendChild(createDataRow(row));
+        });
+      }
+      
+      // Build regression equation
+      buildRegressionEquation(rows);
+      
+      // Store data for AI interpretation if we have stats
+      if (window.regressionStatsData) {
+        storeRegressionResultsForAI(window.regressionStatsData, rows);
+      }
+      
+      // Hide awaiting overlay when data is received
+      if (typeof window.notifyDataReceived === 'function') {
+        window.notifyDataReceived();
+        console.log('✅ Regression Results: awaiting overlay hidden');
+      } else if (typeof window.hideAwaitingPanel === 'function') {
+        window.hideAwaitingPanel();
+        console.log('✅ Regression Results: awaiting panel hidden (fallback)');
+      }
+    }
+    
+    function toggleEquation() {
+      const equationSection = document.getElementById('equationSection');
+      const toggleBtn = document.getElementById('toggleEquationBtn');
+      
+      if (equationSection.style.display === 'none') {
+        equationSection.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="fa-solid fa-chevron-up"></i> Hide Regression Equation';
+        toggleBtn.classList.add('active');
+      } else {
+        equationSection.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="fa-solid fa-chevron-down"></i> Show Regression Equation';
+        toggleBtn.classList.remove('active');
+      }
+    }
+    
+    function buildRegressionEquation(rows) {
+      const equationSection = document.getElementById('equationSection');
+      const equationFormula = document.getElementById('equationFormula');
+      const toggleBtn = document.getElementById('toggleEquationBtn');
+      
+      if (!rows || rows.length === 0) {
+        equationSection.style.display = 'none';
+        toggleBtn.style.display = 'none';
+        return;
+      }
+      
+      // Get Y variable name from page title or use default
+      const yVar = 'Y';
+      
+      let equation = `<span class="var">${yVar}</span> = `;
+      
+      rows.forEach((row, index) => {
+        const varName = row.Variable || `X${index}`;
+        const coef = parseFloat(row.Coefficient);
+        
+        if (index === 0 && varName === 'Intercept') {
+          // Intercept term
+          equation += `<span class="coef">${coef.toFixed(4)}</span>`;
+        } else {
+          // Variable terms
+          const sign = coef >= 0 ? '+' : '';
+          equation += ` ${sign} <span class="coef">${coef.toFixed(4)}</span> × <span class="var">${varName}</span>`;
+        }
+      });
+      
+      equation += ' + ε';
+      
+      equationFormula.innerHTML = equation;
+      // Show toggle button, but keep equation hidden by default
+      toggleBtn.style.display = 'block';
+      equationSection.style.display = 'none';
+      toggleBtn.innerHTML = '<i class="fa-solid fa-chevron-down"></i> Show Regression Equation';
+      toggleBtn.classList.remove('active');
+    }
+    
+    // Reset function for Results Panel Manager
+    window.resetResultsPanel = function() {
+      try {
+        console.log('🔄 Regression Results resetResultsPanel called');
+        
+        // Reset the numeric variables counter
+        numNumericVariables = 0;
+        
+        // Show awaiting overlay (full-page)
+        // The results-panel-manager.js will handle this automatically
+        console.log('👁️ Awaiting overlay will be shown by results-panel-manager');
+        
+        // Reset table to awaiting message
+        const tableBody = document.getElementById('dataTableBody');
+        if (tableBody) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted); font-style:italic;">
+                <i class="fa-solid fa-hourglass-half"></i> Awaiting regression results...
+              </td>
+            </tr>
+          `;
+        }
+        
+        // Reset all stats panels to awaiting state
+        ['validObs', 'includeIntercept', 'numNumericVars', 'numCategoricalVars', 'degreesOfFreedom', 
+         'rSquared', 'adjRSquared', 'rootMSE', 'aic', 'bic', 'fStatistic', 'fPValue', 'ssModel', 'ssResidual'].forEach(id => {
+          const elem = document.getElementById(id);
+          if (elem) elem.innerText = '...';
+        });
+        
+        // Hide equation section and toggle button
+        const equationSection = document.getElementById('equationSection');
+        const toggleBtn = document.getElementById('toggleEquationBtn');
+        if (equationSection) equationSection.style.display = 'none';
+        if (toggleBtn) toggleBtn.style.display = 'none';
+        
+        console.log('✅ Regression Results panel reset complete');
+      } catch (error) {
+        console.error('❌ Error resetting regression results panel:', error);
+      }
+    };
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 Linear Regression Results page loaded');
+      console.log('📊 Awaiting regression data...');
+      
+      // Ensure awaiting message is visible on load
+      const tableBody = document.getElementById('dataTableBody');
+      if (tableBody && !tableBody.querySelector('tr')) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted); font-style:italic;">
+              <i class="fa-solid fa-hourglass-half"></i> Awaiting regression results...
+            </td>
+          </tr>
+        `;
+      }
+      
+      // Set all stats to awaiting state
+      ['validObs', 'includeIntercept', 'numNumericVars', 'numCategoricalVars', 'degreesOfFreedom', 
+       'rSquared', 'adjRSquared', 'rootMSE', 'aic', 'bic', 'fStatistic', 'fPValue', 'ssModel', 'ssResidual'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem && (elem.innerText === '' || elem.innerText === 'undefined')) {
+          elem.innerText = '...';
+        }
+      });
+      
+      // Notify VB6 that the regression dashboard is ready for AI responses
+      console.log('📡 Regression dashboard DOM loaded');
+      setTimeout(() => {
+        console.log('📡 Notifying VB6 that regression dashboard is ready...');
+        sendToHost('regressionDashboardReady', '{}');
+      }, 500);
+    });
+    
+    // Also notify on window load (fallback)
+    window.addEventListener('load', function() {
+      console.log('📡 Regression dashboard fully loaded');
+      sendToHost('regressionDashboardReady', '{}');
+    });
+    
+    console.log('✅ Regression AI integration JavaScript loaded');
+    
+    // ========================================
+    // PYTHON CLOUD FUNCTION INTEGRATION
+    // ========================================
+    
+    // Configuration: Set your cloud function URL here
+    const CLOUD_FUNCTION_URL = 'YOUR_CLOUD_FUNCTION_URL_HERE';
+    // Example: 'https://us-central1-your-project.cloudfunctions.net/regression_diagnostics'
+    // Or for local testing: 'http://localhost:8080'
+    
+    // Store regression data for diagnostics computation
+    let regressionDataForDiagnostics = null;
+    
+    /**
+     * Call Python cloud function to compute advanced diagnostics
+     */
+    async function computeDiagnostics() {
+      console.log('🔬 Computing advanced diagnostics via Python cloud function...');
+      
+      if (!regressionDataForDiagnostics) {
+        alert('No regression data available. Please run a regression first.');
+        return;
+      }
+      
+      const btn = document.getElementById('refreshDiagnosticsBtn');
+      if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Computing...';
+        btn.disabled = true;
+      }
+      
+      try {
+        const response = await fetch(CLOUD_FUNCTION_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(regressionDataForDiagnostics)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.ok) {
+          displayDiagnostics(result.diagnostics);
+          console.log('✅ Diagnostics computed successfully');
+        } else {
+          throw new Error(result.error || 'Unknown error from cloud function');
+        }
+        
+      } catch (error) {
+        console.error('❌ Error computing diagnostics:', error);
+        alert(`Error computing diagnostics: ${error.message}\n\nPlease check:\n1. Cloud function URL is correct\n2. Cloud function is deployed\n3. Network connection is available`);
+      } finally {
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-sync"></i> Compute';
+          btn.disabled = false;
+        }
+      }
+    }
+    
+    /**
+     * Display diagnostics results in the HTML panel
+     */
+    function displayDiagnostics(diagnostics) {
+      console.log('📊 Displaying diagnostics results...');
+      
+      // Show diagnostics panel
+      const panel = document.getElementById('diagnosticsPanel');
+      if (panel) panel.style.display = 'block';
+      
+      // Multicollinearity
+      const condNum = diagnostics.multicollinearity.condition_number;
+      document.getElementById('conditionNumber').innerText = 
+        condNum === Infinity ? '∞' : condNum.toFixed(2);
+      
+      document.getElementById('determinant').innerText = 
+        diagnostics.multicollinearity.determinant.toExponential(4);
+      
+      // VIF values
+      const vifList = document.getElementById('vifList');
+      const vifs = diagnostics.multicollinearity.vif;
+      let vifHtml = '<ul style="margin: 5px 0; padding-left: 20px;">';
+      vifs.forEach((vif, idx) => {
+        const varName = idx === 0 ? 'Intercept' : `X${idx}`;
+        const color = vif > 10 ? 'color: #ff6b6b;' : vif > 5 ? 'color: #ffa500;' : '';
+        const warning = vif > 10 ? ' ⚠️ High' : vif > 5 ? ' ⚡ Moderate' : '';
+        vifHtml += `<li style="${color}">${varName}: ${vif.toFixed(2)}${warning}</li>`;
+      });
+      vifHtml += '</ul>';
+      vifList.innerHTML = vifHtml;
+      
+      // High correlations
+      const highCorr = diagnostics.multicollinearity.high_correlations;
+      const highCorrContainer = document.getElementById('highCorrContainer');
+      const highCorrList = document.getElementById('highCorrList');
+      
+      if (highCorr && highCorr.length > 0) {
+        highCorrContainer.style.display = 'block';
+        let corrHtml = '<ul style="margin: 5px 0; padding-left: 20px;">';
+        highCorr.forEach(pair => {
+          const var1 = pair.i === 0 ? 'Intercept' : `X${pair.i}`;
+          const var2 = pair.j === 0 ? 'Intercept' : `X${pair.j}`;
+          const perfect = pair.perfect ? ' (Perfect!)' : '';
+          corrHtml += `<li>${var1} ↔ ${var2}: r = ${pair.r.toFixed(4)}${perfect}</li>`;
+        });
+        corrHtml += '</ul>';
+        highCorrList.innerHTML = corrHtml;
+      } else {
+        highCorrContainer.style.display = 'none';
+      }
+      
+      // Autocorrelation
+      document.getElementById('durbinWatson').innerText = 
+        diagnostics.autocorrelation.durbin_watson.toFixed(4);
+      
+      document.getElementById('lag1Autocorr').innerText = 
+        diagnostics.autocorrelation.lag1_autocorr.toFixed(4);
+      
+      // PRESS
+      document.getElementById('pressStatistic').innerText = 
+        diagnostics.leverage.press.toFixed(4);
+      
+      console.log('✅ Diagnostics displayed successfully');
+    }
+    
+    /**
+     * Prepare regression data for cloud function
+     * Call this when regression results are available
+     */
+    function prepareRegressionDataForDiagnostics(xMatrix, yVector, includeIntercept) {
+      regressionDataForDiagnostics = {
+        x: xMatrix,
+        y: yVector,
+        intercept: includeIntercept,
+        thresholds: {
+          high_corr: 0.9,
+          perfect_corr: 0.9999
+        }
+      };
+      
+      console.log('📦 Regression data prepared for diagnostics');
+      console.log('   Observations:', yVector.length);
+      console.log('   Predictors:', xMatrix[0].length);
+      console.log('   Include intercept:', includeIntercept);
+      
+      // Show diagnostics panel (initially empty)
+      const panel = document.getElementById('diagnosticsPanel');
+      if (panel) panel.style.display = 'block';
+    }
+    
+    /**
+     * VB6 Integration: Receive regression data from VB6
+     * This function should be called from VB6 after regression is computed
+     */
+    window.receiveRegressionDataForDiagnostics = function(jsonPayload) {
+      console.log('📥 Received regression data from VB6 for diagnostics');
+      
+      try {
+        const data = JSON.parse(jsonPayload);
+        prepareRegressionDataForDiagnostics(data.x, data.y, data.intercept);
+        
+        // Optionally auto-compute diagnostics
+        // computeDiagnostics();
+        
+      } catch (e) {
+        console.error('❌ Error parsing regression data:', e);
+      }
+    };
+    
+    // Attach event listener to compute button
+    document.addEventListener('DOMContentLoaded', function() {
+      const btn = document.getElementById('refreshDiagnosticsBtn');
+      if (btn) {
+        btn.addEventListener('click', computeDiagnostics);
+      }
+    });
+    
+    console.log('✅ Python cloud function integration loaded');
+    console.log('🔧 Cloud function URL:', CLOUD_FUNCTION_URL);
+    
+  </script>
+  
+  <!-- Load Results Panel Manager for full-page awaiting overlay -->
+  <script src="./Ressources/results-panel-manager.js"></script>
+</body>
+</html>

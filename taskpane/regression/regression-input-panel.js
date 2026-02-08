@@ -85,6 +85,61 @@ function openModelBuilder() {
               sendDialogData();
             } else if (message.action === 'regressionModel') {
               sessionStorage.setItem('regressionModelSpec', JSON.stringify(message.payload || {}));
+              // Close the model builder dialog
+              resultsDialog.close();
+              resultsDialog = null;
+              // Open the regression coefficients dialog
+              openRegressionCoefficientsDialog();
+            } else if (message.action === 'close') {
+              resultsDialog.close();
+              resultsDialog = null;
+            }
+          } catch (e) {
+            console.error('Error handling dialog message:', e);
+          }
+        });
+
+        resultsDialog.addEventHandler(Office.EventType.DialogEventReceived, () => {
+          resultsDialog = null;
+        });
+      }
+    }
+  );
+}
+
+function openRegressionCoefficientsDialog() {
+  console.log('🪟 Opening Regression Coefficients dialog');
+  
+  const dialogUrl = `${getDialogsBaseUrl()}regression/regression-coefficients.html`;
+
+  if (!Office || !Office.context || !Office.context.ui) {
+    console.error('Office dialog API not available');
+    alert('Dialog API not available. Please reopen the add-in.');
+    return;
+  }
+
+  Office.context.ui.displayDialogAsync(
+    dialogUrl,
+    { height: 90, width: 70, displayInIframe: false },
+    (asyncResult) => {
+      if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+        console.error('Failed to open coefficients dialog:', asyncResult.error);
+        alert(`Failed to open dialog: ${asyncResult.error.message || asyncResult.error}`);
+      } else {
+        resultsDialog = asyncResult.value;
+        console.log('✅ Regression coefficients dialog opened');
+
+        // Send the model spec and data to the dialog when it's ready
+        setTimeout(() => {
+          sendRegressionResults();
+        }, 800);
+
+        resultsDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
+          try {
+            const message = JSON.parse(arg.message);
+
+            if (message.action === 'ready' || message.action === 'requestData') {
+              sendRegressionResults();
             } else if (message.action === 'close') {
               resultsDialog.close();
               resultsDialog = null;
@@ -116,6 +171,26 @@ function sendDialogData() {
       address: regressionRangeAddress
     }
   }));
+}
+
+function sendRegressionResults() {
+  if (!resultsDialog || !regressionRangeData) return;
+
+  const headers = regressionRangeData[0] || [];
+  const rows = regressionRangeData.slice(1);
+  const modelSpec = JSON.parse(sessionStorage.getItem('regressionModelSpec') || '{}');
+
+  resultsDialog.messageChild(JSON.stringify({
+    type: 'REGRESSION_RESULTS',
+    payload: {
+      headers,
+      rows,
+      address: regressionRangeAddress,
+      modelSpec
+    }
+  }));
+  
+  console.log('📤 Sent regression results to coefficients dialog');
 }
 
 function getDialogsBaseUrl() {
