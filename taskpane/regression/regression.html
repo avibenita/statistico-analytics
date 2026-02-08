@@ -14,13 +14,17 @@
 </head>
 
 <body>
-  <div class="taskpane">
+  <div class="taskpane-container">
     <!-- Header -->
-    <div class="taskpane-header">
-      <h1 class="taskpane-title">
+    <div class="module-header">
+      <div class="module-header-title">
         <i class="fa-solid fa-chart-line"></i>
         Regression Analysis
-      </h1>
+      </div>
+      <button class="back-btn" onclick="goBack()">
+        <i class="fa-solid fa-arrow-left"></i>
+        Back
+      </button>
     </div>
     
     <!-- Main Content -->
@@ -45,6 +49,11 @@
   <script src="regression-input-panel.js"></script>
   
   <script>
+    // Go back to hub
+    function goBack() {
+      window.location.href = '../hub.html';
+    }
+    
     // Initialize when Office is ready
     Office.onReady((info) => {
       if (info.host === Office.HostType.Excel) {
