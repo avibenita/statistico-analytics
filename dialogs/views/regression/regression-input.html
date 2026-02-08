@@ -60,43 +60,39 @@
     }
     
     .card-body{ 
-      padding:8px; 
-      flex:1;
-      overflow-y:auto;
-      overflow-x:hidden;
+      flex: 1;
+      overflow: hidden;
       display: flex; 
       flex-direction: column;
+      padding: 0;
     }
     
-    .divider{ height:1px; background:var(--border); margin:6px 0; flex-shrink:0 }
+    .divider{ height:2px; background:var(--border); margin:0; flex-shrink:0 }
     
     /* Three-Panel Layout */
     .split-container {
       display: flex;
       flex-direction: column;
-      gap: 6px;
       flex: 1;
-      min-height: 0;
-      padding-bottom: 6px;
+      overflow: hidden;
+      height: 100%;
     }
     
     /* Panel 1: Range Selection - Fixed height */
     .range-panel {
-      flex: 0 0 auto;
+      flex: 0 0 60px;
       background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      border-bottom: 2px solid var(--border);
       padding: 8px;
+      overflow: hidden;
     }
     
-    /* Panel 2: Variables List - Takes remaining space */
+    /* Panel 2: Variables List - Fixed height */
     .variables-panel {
-      flex: 1;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      flex: 0 0 200px;
+      background: var(--surface-1);
+      border-bottom: 2px solid var(--border);
       padding: 8px;
-      min-height: 180px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -104,10 +100,9 @@
     
     /* Panel 3: Model Assignment - Fixed height */
     .model-panel {
-      flex: 0 0 190px;
+      flex: 0 0 210px;
       background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      border-bottom: 2px solid var(--border);
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -368,8 +363,8 @@
       flex-direction: column;
       gap: 4px;
       flex: 1;
-      min-height: 70px;
-      max-height: 120px;
+      min-height: 60px;
+      max-height: 100px;
       max-width: 360px;
       width: 85%;
       overflow-y: auto;
@@ -780,10 +775,14 @@
     
     /* Action buttons */
     .actions {
+      flex: 0 0 50px;
       display: flex;
-      gap: 8px;
-      margin-top: 8px;
+      gap: 6px;
+      padding: 8px;
       justify-content: flex-end;
+      align-items: center;
+      background: var(--surface-0);
+      border-top: 2px solid var(--border);
       flex-shrink:0;
     }
     
@@ -956,9 +955,10 @@
           background: var(--surface-0);
           border: 1px solid var(--border);
           border-radius: 6px;
-          padding: 10px 12px;
-          margin: 0 0 6px 0;
+          padding: 8px 10px;
+          margin: 0;
           display: none;
+          flex: 0 0 50px;
           flex-shrink: 0;
         ">
           <div style="display: flex; align-items: center; justify-content: space-between;">
