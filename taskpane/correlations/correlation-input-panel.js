@@ -143,7 +143,8 @@ function openCorrelationConfig() {
  * Handle run analysis request from dialog
  */
 function handleRunAnalysis(data) {
-  console.log('Running correlation analysis with:', data);
+  console.log('🔥 handleRunAnalysis called with:', data);
+  alert('handleRunAnalysis triggered! Check console for data.');
   
   // Close the config dialog
   if (correlationDialog) {
@@ -155,6 +156,9 @@ function handleRunAnalysis(data) {
   // where data is { values, address }
   const dataValues = data.data?.values || correlationRangeData?.values || [];
   
+  console.log('📊 dataValues:', dataValues);
+  console.log('📊 correlationRangeData:', correlationRangeData);
+  
   if (!dataValues || dataValues.length < 2) {
     alert('Invalid data structure. Please reload and try again.');
     return;
@@ -162,6 +166,9 @@ function handleRunAnalysis(data) {
   
   const headers = dataValues[0];
   const rows = dataValues.slice(1);
+  
+  console.log('📊 headers:', headers);
+  console.log('📊 rows sample:', rows.slice(0, 2));
   
   // Convert rows to objects with header keys for correlation calculation
   const dataObjects = rows.map(row => {
@@ -175,6 +182,9 @@ function handleRunAnalysis(data) {
   // Filter selected variables
   const selectedVars = data.variables || headers;
   
+  console.log('📊 selectedVars:', selectedVars);
+  console.log('📊 dataObjects sample:', dataObjects.slice(0, 2));
+  
   // Prepare data for matrix dialog
   const matrixData = {
     data: dataObjects,
@@ -184,10 +194,12 @@ function handleRunAnalysis(data) {
     address: data.data?.address || correlationRangeData?.address
   };
   
-  console.log('Prepared matrix data:', matrixData);
+  console.log('📊 Prepared matrix data:', matrixData);
   
   // Store for matrix dialog
   sessionStorage.setItem('correlationMatrixData', JSON.stringify(matrixData));
+  
+  alert('About to open matrix dialog...');
   
   // Open the matrix dialog
   openCorrelationResultDialog('matrix', matrixData);
