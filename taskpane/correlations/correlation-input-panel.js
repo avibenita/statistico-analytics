@@ -151,12 +151,37 @@ function handleRunAnalysis(data) {
     correlationDialog = null;
   }
   
+  // Extract data - it comes as { variables, method, viewType, data }
+  // where data is { values, address }
+  const dataValues = data.data?.values || correlationRangeData?.values || [];
+  
+  if (!dataValues || dataValues.length < 2) {
+    alert('Invalid data structure. Please reload and try again.');
+    return;
+  }
+  
+  const headers = dataValues[0];
+  const rows = dataValues.slice(1);
+  
+  // Convert rows to objects with header keys for correlation calculation
+  const dataObjects = rows.map(row => {
+    const obj = {};
+    headers.forEach((header, idx) => {
+      obj[header] = row[idx];
+    });
+    return obj;
+  });
+  
+  // Filter selected variables
+  const selectedVars = data.variables || headers;
+  
   // Prepare data for matrix dialog
   const matrixData = {
-    data: data.data.values,
-    headers: data.data.values[0],
-    selectedVariables: data.variables,
-    method: data.method || 'pearson'
+    data: dataObjects,
+    headers: selectedVars,
+    selectedVariables: selectedVars,
+    method: data.method || 'pearson',
+    address: data.data?.address || correlationRangeData?.address
   };
   
   console.log('Prepared matrix data:', matrixData);
