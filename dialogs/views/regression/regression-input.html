@@ -818,18 +818,38 @@
     <section class="card" role="main">
       <div class="card-head">
         <span><i class="fa-solid fa-chart-line"></i> Multiple Regression (ANCOVA)</span>
-        <button id="btnHelp" class="btn alt" style="
-          width: 32px;
-          height: 32px;
-          padding: 0;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height:32px;
-        " title="Help & Documentation">
-          <i class="fa-solid fa-question"></i>
-        </button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 6px; background: var(--surface-0); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px;">
+            <input type="checkbox" id="chkIncludeIntercept" checked style="cursor: pointer; width: 16px; height: 16px;" />
+            <label for="chkIncludeIntercept" style="cursor: pointer; color: var(--text-secondary); font-weight: 600; font-size: 12px; margin: 0; white-space: nowrap;">
+              Intercept
+            </label>
+          </div>
+          <button id="btnValidate" class="btn alt" style="
+            width: auto;
+            height: 32px;
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-height:32px;
+            font-size: 12px;
+          " title="Validate Model">
+            <i class="fa-solid fa-check-circle"></i> Validate
+          </button>
+          <button id="btnHelp" class="btn alt" style="
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height:32px;
+          " title="Help & Documentation">
+            <i class="fa-solid fa-question"></i>
+          </button>
+        </div>
       </div>
       
       <div class="card-body">
@@ -930,21 +950,9 @@
         
         <div class="divider"></div>
         
-        <!-- Action Buttons: All on one row -->
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
-          <button id="btnClear" class="btn alt">
-            <i class="fa-solid fa-eraser"></i> Clear
-          </button>
-          <button id="btnValidate" class="btn alt">
-            <i class="fa-solid fa-check-circle"></i> Validate
-          </button>
-          <div style="display: flex; align-items: center; gap: 8px; background: var(--surface-0); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; flex: 1 1 220px;">
-            <input type="checkbox" id="chkIncludeIntercept" checked style="cursor: pointer; width: 18px; height: 18px;" />
-            <label for="chkIncludeIntercept" style="cursor: pointer; color: var(--text-secondary); font-weight: 600; font-size: 13px; margin: 0; white-space: nowrap;">
-              <i class="fa-solid fa-plus"></i> Intercept
-            </label>
-          </div>
-          <button id="btnRunAnalysis" class="btn" disabled style="margin: 0; white-space: nowrap; flex: 1 1 180px;">
+        <!-- Action Buttons: Only Run Regression -->
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; justify-content: flex-end;">
+          <button id="btnRunAnalysis" class="btn" disabled style="margin: 0; white-space: nowrap; padding: 10px 20px;">
             <i class="fa-solid fa-play"></i> Run Regression
           </button>
         </div>
@@ -1799,6 +1807,17 @@
     function showCategoryModal(varName, stats) {
       console.log('📊 Showing category modal for:', varName);
       
+      // Calculate category frequencies first
+      var categoryData = calculateCategoryFrequencies(varName);
+      
+      // Check if too many levels (reasonable max is 20 for ANCOVA)
+      var maxLevels = 20;
+      if (categoryData.categories && categoryData.categories.length > maxLevels) {
+        showToast('Variable "' + varName + '" has ' + categoryData.categories.length + ' levels, which is too many for a categorical predictor. ' +
+              'Maximum recommended: ' + maxLevels + ' levels. Consider using a different variable or grouping the categories.', 'error', 8000);
+        return;
+      }
+      
       // Store pending assignment
       pendingCategoryAssignment = { varName: varName, stats: stats };
       
@@ -1806,8 +1825,7 @@
       qs('categoryModalTitle').textContent = 'Category Distribution: ' + varName;
       qs('categoryVarName').textContent = varName;
       
-      // Calculate category frequencies from loaded data
-      var categoryData = calculateCategoryFrequencies(varName);
+      // Populate modal
       populateCategoryModal(categoryData);
       
       // Show modal
@@ -2052,6 +2070,13 @@
       var xc = STATE.assignments.xc.slice();
       var includeIntercept = qs('chkIncludeIntercept') ? qs('chkIncludeIntercept').checked : true;
 
+      // If Y is not assigned, show incomplete message
+      if (!STATE.assignments.y) {
+        eq.textContent = 'Model: Y = (incomplete)';
+        eq.style.color = 'var(--text-muted)';
+        return;
+      }
+
       var parts = [];
       if (includeIntercept) {
         parts.push('β0');
@@ -2065,6 +2090,7 @@
 
       var rhs = parts.length > 0 ? parts.join(' + ') : '…';
       eq.textContent = 'Model: ' + y + ' = ' + rhs;
+      eq.style.color = 'var(--text-secondary)';
     }
     
     // ============================================================================
@@ -2132,12 +2158,6 @@
     // qs('btnLoadSample').addEventListener('click', function() {
     //   loadSampleData();
     // });
-    
-    qs('btnClear').addEventListener('click', function() {
-      if (confirm('Clear all variable assignments?\n\nAll variables will return to the available list.')) {
-        clearAssignments();
-      }
-    });
     
     qs('btnValidate').addEventListener('click', function() {
       var result = validateModel();
