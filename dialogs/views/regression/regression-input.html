@@ -948,8 +948,6 @@
           
         </div>
         
-        <div class="divider"></div>
-        
         <!-- Action Buttons: Only Run Regression -->
         <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; justify-content: flex-end;">
           <button id="btnRunAnalysis" class="btn" disabled style="margin: 0; white-space: nowrap; padding: 10px 20px;">
@@ -1648,6 +1646,7 @@
         renderVariables(); // Update variables list to show disabled state
         renderAssignments(); // Update drop zones
         validateModel();
+        updateModelEquation(); // Update equation display
       }, 0);
     }
     
@@ -1665,6 +1664,7 @@
       renderAssignments();
       renderVariables(); // Add back to available list
       validateModel();
+      updateModelEquation(); // Update equation display
     }
     
     function renderAssignments() {
@@ -2173,6 +2173,14 @@
     // qs('btnLoadSample').addEventListener('click', function() {
     //   loadSampleData();
     // });
+    
+    // Intercept checkbox listener
+    var interceptCheckbox = qs('chkIncludeIntercept');
+    if (interceptCheckbox) {
+      interceptCheckbox.addEventListener('change', function() {
+        updateModelEquation();
+      });
+    }
     
     qs('btnValidate').addEventListener('click', function() {
       var result = validateModel();
