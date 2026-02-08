@@ -9,18 +9,18 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
   <style>
     :root{
-      --surface-0: #0c1624;
-      --surface-1: #1a1f2e;
-      --surface-2: #242938;
-      --border: #2d3748;
-      --accent-1: rgb(255,165,120);
-      --accent-2: rgb(120,200,255);
-      --accent-3: rgb(152,195,121);
-      --text-primary: #ffffff;
-      --text-secondary: rgba(255,255,255,0.8);
-      --text-muted: rgba(255,255,255,0.6);
+      --surface-0: #f3f4f6;
+      --surface-1: #ffffff;
+      --surface-2: #f9fafb;
+      --border: #e5e7eb;
+      --accent-1: #2563eb;
+      --accent-2: #1d4ed8;
+      --accent-3: #16a34a;
+      --text-primary: #111827;
+      --text-secondary: #4b5563;
+      --text-muted: #6b7280;
       --panel-radius: 10px;
-      --panel-shadow: 0px 4px 20px rgba(0, 0, 0, 0.4);
+      --panel-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08);
       --pad:10px;
     }
     *{ box-sizing:border-box }
@@ -35,7 +35,7 @@
     }
     
     .card{
-      width:min(1200px, 100%);
+      width:min(520px, 100%);
       background:var(--surface-1);
       border-radius:var(--panel-radius);
       box-shadow:var(--panel-shadow);
@@ -49,9 +49,9 @@
     .card-head{ 
       background: transparent; 
       color:var(--accent-1); 
-      padding:10px 14px; 
+      padding:10px 12px; 
       font-weight:600; 
-      font-size:1.2rem; 
+      font-size:1.1rem; 
       letter-spacing:.3px;
       display: flex;
       justify-content: space-between;
@@ -94,7 +94,7 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 8px;
-      min-height: 0;
+      min-height: 220px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -367,8 +367,14 @@
       gap: 4px;
       flex: 1;
       min-height: 0;
+      max-width: 360px;
+      width: 85%;
       overflow-y: auto;
+      align-self: flex-start;
     }
+    .y-zone { align-self: flex-start; }
+    .xn-zone { align-self: center; }
+    .xc-zone { align-self: flex-end; }
     
     .drop-zone.y-zone {
       background: rgba(255, 165, 120, 0.08);
@@ -416,6 +422,27 @@
       border-radius: 4px;
       margin-bottom: 4px;
       flex-shrink: 0;
+    }
+    .drag-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      color: #3730a3;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .model-equation {
+      background: var(--surface-0);
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin: 6px;
     }
     
     .y-zone .drop-zone-info {
@@ -802,18 +829,15 @@
           
           <!-- PANEL 1: RANGE SELECTION -->
           <div class="range-panel">
-            <div style="background: rgba(120, 200, 255, 0.1); border: 1px solid var(--accent-2); border-radius: 6px; padding: 8px;">
-              <div style="color: var(--text-muted); font-size: 0.7rem; margin-bottom: 6px; text-align: center;">
+            <div style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 8px;">
+              <div style="color: var(--text-secondary); font-size: 0.75rem; margin-bottom: 6px; text-align: center;">
                 <i class="fa-solid fa-database"></i> Data selected in taskpane
               </div>
-              <div style="display: flex; gap: 6px; align-items: center;">
-                <input type="text" id="tbRange" placeholder="No range loaded yet" style="flex: 1; font-size: 13px; padding: 6px 10px;" disabled />
-                <button id="btnRefreshData" class="btn" style="background: linear-gradient(135deg, var(--accent-2), #4CAF50); font-weight: 600; padding: 6px 10px; white-space: nowrap;">
-                  <i class="fa-solid fa-rotate"></i> Refresh
-                </button>
+              <div style="background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-weight: 600;">
+                <span id="tbRange">No range loaded yet</span>
               </div>
               <div style="color: var(--text-muted); font-size: 0.7rem; margin-top: 4px;">
-                💡 Select the range in the Regression taskpane, then click Refresh
+                💡 Change the range in the Regression taskpane to update here
               </div>
             </div>
           </div>
@@ -822,6 +846,10 @@
           <div class="variables-panel">
             <div style="background: var(--surface-0); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; flex-shrink:0;">
               <h5 style="color: var(--accent-1); margin: 0 0 4px 0; font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Available Variables</h5>
+              <div class="drag-hint">
+                <i class="fa-solid fa-hand-pointer"></i>
+                Drag variables into Y, X (numeric), or X (categ)
+              </div>
             </div>
             
             <div id="variablesListBox" style="
@@ -835,7 +863,7 @@
               box-shadow: 0 2px 8px rgba(255, 165, 120, 0.2);
             ">
               <div style="color: var(--text-muted); font-style: italic; font-size: 12px; text-align: center; padding: 20px 10px;">
-                No data loaded yet. Use the taskpane to select data, then click Refresh.
+                No data loaded yet. Select a range in the taskpane.
               </div>
             </div>
           </div>
@@ -863,7 +891,10 @@
                 </button>
               </div>
               
-              <!-- Tab Panels -->
+            <div class="model-equation" id="modelEquation">
+              Model: Y = β0 + …
+            </div>
+            <!-- Tab Panels -->
               
               <!-- Y Panel -->
               <div class="tab-panel active" id="panelY">
@@ -1194,7 +1225,7 @@
       var address = data.address || '';
 
       if (qs('tbRange')) {
-        qs('tbRange').value = address || 'Selection';
+        qs('tbRange').textContent = address || 'Selection';
       }
 
       var stats = buildVariableStats(headers, rows, address);
@@ -1690,6 +1721,7 @@
       
       // Update observation monitor
       updateObservationMonitor();
+      updateModelEquation();
     }
     
     function updateObservationMonitor() {
@@ -2032,6 +2064,30 @@
       renderAssignments();
       validateModel();
     }
+
+    function updateModelEquation() {
+      var eq = qs('modelEquation');
+      if (!eq) return;
+
+      var y = STATE.assignments.y || 'Y';
+      var xn = STATE.assignments.xn.slice();
+      var xc = STATE.assignments.xc.slice();
+      var includeIntercept = qs('chkIncludeIntercept') ? qs('chkIncludeIntercept').checked : true;
+
+      var parts = [];
+      if (includeIntercept) {
+        parts.push('β0');
+      }
+      xn.forEach(function(name, i) {
+        parts.push('β' + (includeIntercept ? i + 1 : i + 1) + '·' + name);
+      });
+      xc.forEach(function(name) {
+        parts.push('γ·' + name);
+      });
+
+      var rhs = parts.length > 0 ? parts.join(' + ') : '…';
+      eq.textContent = 'Model: ' + y + ' = ' + rhs;
+    }
     
     // ============================================================================
     // MODEL VALIDATION
@@ -2228,8 +2284,7 @@
         '📊 REGRESSION MODEL (ANCOVA) BUILDER\n\n' +
         'WORKFLOW:\n\n' +
         '1. LOAD DATA\n' +
-        '   • Select named range from dropdown, OR\n' +
-        '   • Enter range address (e.g., Sheet1!A1:D100) and click Pick\n' +
+        '   • Select a range in the Regression taskpane\n' +
         '   • Data must include headers in first row\n\n' +
         '2. ASSIGN VARIABLES\n' +
         '   • Drag variables from the list to model tabs:\n' +
@@ -2274,6 +2329,10 @@
         );
         requestDataFromParent();
         sendToHost('ready', null);
+        var intercept = qs('chkIncludeIntercept');
+        if (intercept) {
+          intercept.addEventListener('change', updateModelEquation);
+        }
       });
     }
     
