@@ -949,15 +949,21 @@
         </div>
         
         <!-- Action Buttons: Only Run Regression -->
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; justify-content: flex-end;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; flex-wrap: wrap;">
+          <div id="obsMonitor" style="
+            display: none;
+            color: var(--text-secondary);
+            font-size: 11px;
+            padding: 4px 0;
+          ">
+            <span>Max usable cases: </span>
+            <span id="obsCount" style="color: var(--text-primary); font-weight: 600;">0</span>
+            <span id="obsPct" style="color: var(--text-muted);">(0%)</span>
+          </div>
           <button id="btnRunAnalysis" class="btn" disabled style="margin: 0; white-space: nowrap; padding: 10px 20px;">
             <i class="fa-solid fa-play"></i> Run Regression
           </button>
         </div>
-
-        <!-- Observation Monitor -->
-       
-        
       </div>
     </section>
     
