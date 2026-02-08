@@ -1713,6 +1713,11 @@
     function updateObservationMonitor() {
       var monitor = qs('obsMonitor');
       
+      // If monitor element was removed, skip this function
+      if (!monitor) {
+        return;
+      }
+      
       // Get all assigned variables
       var allVars = [];
       if (STATE.assignments.y) allVars.push(STATE.assignments.y);
@@ -1774,9 +1779,17 @@
       // Calculate percentage
       var percentage = totalRows > 0 ? Math.round((eligibleCount / totalRows) * 100) : 0;
       
-      // Update display
-      qs('obsCount').textContent = eligibleCount;
-      qs('obsPct').textContent = '(' + percentage + '% of ' + totalRows + ' total)';
+      // Update display (if elements exist)
+      var obsCountElem = qs('obsCount');
+      var obsPctElem = qs('obsPct');
+      
+      if (obsCountElem) {
+        obsCountElem.textContent = eligibleCount;
+      }
+      
+      if (obsPctElem) {
+        obsPctElem.textContent = '(' + percentage + '% of ' + totalRows + ' total)';
+      }
       
       // Update detail text (if element exists)
       var obsDetailElem = qs('obsDetail');
@@ -1790,14 +1803,16 @@
         obsDetailElem.textContent = detailText;
       }
       
-      // Color code based on percentage
+      // Color code based on percentage (if element exists)
       var countElem = qs('obsCount');
-      if (percentage >= 80) {
-        countElem.style.color = 'var(--accent-2)'; // Green
-      } else if (percentage >= 50) {
-        countElem.style.color = '#ffa500'; // Orange
-      } else {
-        countElem.style.color = '#ff4444'; // Red
+      if (countElem) {
+        if (percentage >= 80) {
+          countElem.style.color = 'var(--accent-2)'; // Green
+        } else if (percentage >= 50) {
+          countElem.style.color = '#ffa500'; // Orange
+        } else {
+          countElem.style.color = '#ff4444'; // Red
+        }
       }
     }
     
