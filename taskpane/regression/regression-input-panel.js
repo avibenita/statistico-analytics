@@ -88,8 +88,11 @@ function openModelBuilder() {
               // Close the model builder dialog
               resultsDialog.close();
               resultsDialog = null;
-              // Open the regression coefficients dialog
-              openRegressionCoefficientsDialog();
+              // Wait for dialog to fully close before opening the next one
+              // Office.js doesn't allow multiple dialogs open simultaneously
+              setTimeout(() => {
+                openRegressionCoefficientsDialog();
+              }, 500);
             } else if (message.action === 'close') {
               resultsDialog.close();
               resultsDialog = null;
