@@ -20,7 +20,6 @@ function onRangeDataLoaded(values, address) {
   console.log('Correlation: Range data received', values.length, 'rows');
   
   if (!values || values.length < 2) {
-    hideCorrelationPanel();
     showError('Please select a range with at least a header row and one data row');
     return;
   }
@@ -43,26 +42,21 @@ function onRangeDataLoaded(values, address) {
   const btn = document.getElementById('openCorrelationConfig');
   if (btn) {
     btn.disabled = false;
-    btn.textContent = `Open Configuration (${address})`;
   }
-  
-  showCorrelationPanel();
 }
 
 /**
  * Show correlation panel
  */
 function showCorrelationPanel() {
-  const panel = document.getElementById('correlationPanel');
-  if (panel) panel.style.display = 'block';
+  // Panel is always visible, just for compatibility
 }
 
 /**
  * Hide correlation panel
  */
 function hideCorrelationPanel() {
-  const panel = document.getElementById('correlationPanel');
-  if (panel) panel.style.display = 'none';
+  // Panel is always visible, just for compatibility
 }
 
 /**
