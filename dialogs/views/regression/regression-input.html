@@ -829,15 +829,10 @@
           
           <!-- PANEL 1: RANGE SELECTION -->
           <div class="range-panel">
-            <div style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 8px;">
-              <div style="color: var(--text-secondary); font-size: 0.75rem; margin-bottom: 6px; text-align: center;">
-                <i class="fa-solid fa-database"></i> Data selected in taskpane
-              </div>
-              <div style="background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-weight: 600;">
-                <span id="tbRange">No range loaded yet</span>
-              </div>
-              <div style="color: var(--text-muted); font-size: 0.7rem; margin-top: 4px;">
-                💡 Change the range in the Regression taskpane to update here
+            <div style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 8px; display:flex; align-items:center; gap:8px;">
+              <i class="fa-solid fa-database" style="color: var(--accent-1);"></i>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                Data selected: <strong id="tbRange">No range loaded yet</strong>
               </div>
             </div>
           </div>
