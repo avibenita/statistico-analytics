@@ -84,7 +84,9 @@ function openModelBuilder() {
             if (message.action === 'ready' || message.action === 'requestData') {
               sendDialogData();
             } else if (message.action === 'regressionModel') {
-              sessionStorage.setItem('regressionModelSpec', JSON.stringify(message.payload || {}));
+              const modelSpec = message.payload || message.data || {};
+              console.log('📊 Received model spec:', modelSpec);
+              sessionStorage.setItem('regressionModelSpec', JSON.stringify(modelSpec));
               // Close the model builder dialog
               resultsDialog.close();
               resultsDialog = null;
