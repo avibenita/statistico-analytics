@@ -8,7 +8,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
   
   <!-- Regression computation library -->
-  <script src="../../src/shared/js/core/regression-compute.js"></script>
+  <script src="../../../src/shared/js/core/regression-compute.js"></script>
 
   <style>
     :root{
@@ -817,7 +817,14 @@
         
       } catch (error) {
         console.error('❌ Error computing regression:', error);
-        alert(`Error computing regression: ${error.message}`);
+        console.error('Error details:', error.message, error.stack);
+        // Show error in UI instead of alert
+        const tbody = document.querySelector('#coefficients-table tbody');
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="8" style="color: #ff6b6b; text-align: center; padding: 20px;">
+            <i class="fa-solid fa-exclamation-triangle"></i> Error: ${error.message}
+          </td></tr>`;
+        }
       }
     }
     
