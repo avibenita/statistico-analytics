@@ -48,11 +48,19 @@ function updateSummary(address, rows, cols) {
 }
 
 function openModelBuilder() {
+  console.log('🪟 Open Model Builder clicked');
   if (!regressionRangeData || regressionRangeData.length < 2) {
+    console.warn('No range data available for model builder');
     return;
   }
 
   const dialogUrl = `${getDialogsBaseUrl()}regression/regression-input.html`;
+
+  if (!Office || !Office.context || !Office.context.ui) {
+    console.error('Office dialog API not available');
+    alert('Dialog API not available. Please reopen the add-in.');
+    return;
+  }
 
   Office.context.ui.displayDialogAsync(
     dialogUrl,
@@ -60,6 +68,7 @@ function openModelBuilder() {
     (asyncResult) => {
       if (asyncResult.status === Office.AsyncResultStatus.Failed) {
         console.error('Failed to open dialog:', asyncResult.error);
+        alert(`Failed to open dialog: ${asyncResult.error.message || asyncResult.error}`);
       } else {
         resultsDialog = asyncResult.value;
         console.log('✅ Regression dialog opened');
@@ -129,3 +138,5 @@ Office.onReady((info) => {
     hookUI();
   }
 });
+
+window.openModelBuilder = openModelBuilder;
