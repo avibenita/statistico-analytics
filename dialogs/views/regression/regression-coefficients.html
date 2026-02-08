@@ -732,13 +732,29 @@
       const { headers, rows, address } = receivedRegressionData;
       const { y, xn = [], xc = [], intercept } = receivedModelSpec;
       
+      console.log('📋 Model specification:', {
+        y,
+        xn,
+        xc,
+        intercept
+      });
+      console.log('📋 Available headers:', headers);
+      
       // Build X matrix and Y vector from the data
       const yIndex = headers.indexOf(y);
       const xnIndices = xn.map(varName => headers.indexOf(varName));
       const xcIndices = xc.map(varName => headers.indexOf(varName));
       
+      console.log('🔍 Index lookup results:', {
+        yIndex,
+        xnIndices,
+        xcIndices
+      });
+      
       if (yIndex === -1) {
         console.error('❌ Y variable not found in headers');
+        console.error('   Looking for:', y);
+        console.error('   Available:', headers);
         return;
       }
       
