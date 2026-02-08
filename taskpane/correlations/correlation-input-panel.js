@@ -11,6 +11,7 @@
 // Store current range data
 let correlationRangeData = null;
 let correlationDialog = null;
+let currentResultDialog = null; // Track the current result dialog (matrix, network, etc.)
 
 /**
  * Called when range data is loaded from DataInputPanel
@@ -123,6 +124,10 @@ function openCorrelationConfig() {
                 console.log('🎯 runAnalysis message received!');
                 // Dialog wants to run analysis
                 handleRunAnalysis(message.data);
+              } else if (message.action === 'switchView') {
+                console.log('🔀 switchView message received:', message.view);
+                // Close current dialog and open new view
+                handleSwitchView(message.view);
               } else {
                 console.warn('⚠️ Unknown action:', message.action);
               }
@@ -233,11 +238,11 @@ function openCorrelationResultDialog(viewType, matrixData) {
         console.error('❌ Error message:', error.message);
         console.error('❌ Error name:', error.name);
       } else {
-        const resultDialog = asyncResult.value;
+        currentResultDialog = asyncResult.value; // Store global reference
         console.log('✅ Matrix dialog opened successfully');
         
         // Send data to matrix dialog
-        resultDialog.addEventHandler(
+        currentResultDialog.addEventHandler(
           Office.EventType.DialogMessageReceived,
           (arg) => {
             try {
@@ -246,7 +251,7 @@ function openCorrelationResultDialog(viewType, matrixData) {
               
               if (message.action === 'ready') {
                 console.log('📤 Sending data to matrix dialog:', matrixData);
-                resultDialog.messageChild(JSON.stringify({
+                currentResultDialog.messageChild(JSON.stringify({
                   type: 'CORRELATION_DATA',
                   payload: {
                     data: matrixData.data,
@@ -255,6 +260,9 @@ function openCorrelationResultDialog(viewType, matrixData) {
                     method: matrixData.method
                   }
                 }));
+              } else if (message.action === 'switchView') {
+                console.log('🔀 Matrix dialog requests view switch:', message.view);
+                handleSwitchView(message.view);
               }
             } catch (e) {
               console.error('❌ Error in matrix dialog communication:', e);
@@ -264,4 +272,69 @@ function openCorrelationResultDialog(viewType, matrixData) {
       }
     }
   );
+}
+
+/**
+ * Handle switching between correlation views (matrix, network, taylor, etc.)
+ */
+function handleSwitchView(viewFilename) {
+  console.log('🔀 Switching to view:', viewFilename);
+  
+  // Close current result dialog if open
+  if (currentResultDialog) {
+    console.log('🔒 Closing current dialog...');
+    currentResultDialog.close();
+    currentResultDialog = null;
+  }
+  
+  // Get stored matrix data from session
+  const storedData = sessionStorage.getItem('correlationMatrixData');
+  if (!storedData) {
+    console.error('❌ No correlation data found in session');
+    return;
+  }
+  
+  const matrixData = JSON.parse(storedData);
+  const dialogUrl = `${getDialogsBaseUrl()}${viewFilename}`;
+  
+  console.log('📂 Opening new view:', dialogUrl);
+  
+  // Wait for current dialog to close, then open new one
+  setTimeout(() => {
+    Office.context.ui.displayDialogAsync(
+      dialogUrl,
+      { height: 95, width: 95, displayInIframe: false },
+      (asyncResult) => {
+        if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+          const error = asyncResult.error;
+          console.error('❌ Failed to open new view:', error);
+        } else {
+          currentResultDialog = asyncResult.value;
+          console.log('✅ New view opened successfully');
+          
+          // Send data to new view
+          currentResultDialog.addEventHandler(
+            Office.EventType.DialogMessageReceived,
+            (arg) => {
+              try {
+                const message = JSON.parse(arg.message);
+                
+                if (message.action === 'ready') {
+                  console.log('📤 Sending data to new view');
+                  currentResultDialog.messageChild(JSON.stringify({
+                    type: 'CORRELATION_DATA',
+                    payload: matrixData
+                  }));
+                } else if (message.action === 'switchView') {
+                  handleSwitchView(message.view);
+                }
+              } catch (e) {
+                console.error('❌ Error in new view communication:', e);
+              }
+            }
+          );
+        }
+      }
+    );
+  }, 300);
 }
