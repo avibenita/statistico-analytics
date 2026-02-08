@@ -64,7 +64,7 @@ function openModelBuilder() {
 
   Office.context.ui.displayDialogAsync(
     dialogUrl,
-    { height: 90, width: 60, displayInIframe: false },
+    { height: 90, width: 30, displayInIframe: false },
     (asyncResult) => {
       if (asyncResult.status === Office.AsyncResultStatus.Failed) {
         console.error('Failed to open dialog:', asyncResult.error);
