@@ -106,22 +106,28 @@ function openCorrelationConfig() {
         correlationDialog.addEventHandler(
           Office.EventType.DialogMessageReceived,
           (arg) => {
+            console.log('🔔 RAW message received from dialog:', arg);
             try {
               const message = JSON.parse(arg.message);
-              console.log('Message from correlation dialog:', message);
+              console.log('🔔 PARSED message from correlation dialog:', message);
+              console.log('🔔 Message action:', message.action);
               
               if (message.action === 'ready') {
+                console.log('✅ Dialog ready, sending data...');
                 // Dialog is ready, send data
                 correlationDialog.messageChild(JSON.stringify({
                   type: 'CORRELATION_DATA',
                   payload: correlationRangeData
                 }));
               } else if (message.action === 'runAnalysis') {
+                console.log('🎯 runAnalysis message received!');
                 // Dialog wants to run analysis
                 handleRunAnalysis(message.data);
+              } else {
+                console.warn('⚠️ Unknown action:', message.action);
               }
             } catch (e) {
-              console.error('Error parsing dialog message:', e);
+              console.error('❌ Error parsing dialog message:', e, 'Raw:', arg);
             }
           }
         );

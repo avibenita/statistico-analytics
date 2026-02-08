@@ -463,11 +463,15 @@
     }
     
     function runAnalysis() {
+      console.log('🚀 runAnalysis called');
+      
       // Get selected variables
       var selectedVars = [];
       document.querySelectorAll('.var-checkbox:checked').forEach(function(cb) {
         selectedVars.push(cb.dataset.var);
       });
+      
+      console.log('📊 Selected variables:', selectedVars);
       
       if (selectedVars.length < 2) {
         alert('Please select at least 2 variables for correlation analysis.');
@@ -482,12 +486,18 @@
         data: correlationData
       };
       
-      Office.context.ui.messageParent(JSON.stringify({
+      console.log('📤 Sending config to parent:', config);
+      
+      var message = JSON.stringify({
         action: 'runAnalysis',
         data: config
-      }));
+      });
       
-      console.log('Sent config to parent:', config);
+      console.log('📤 Message string:', message);
+      
+      Office.context.ui.messageParent(message);
+      
+      console.log('✅ Sent config to parent');
     }
   </script>
 </body>
