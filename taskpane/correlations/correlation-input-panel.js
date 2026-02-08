@@ -150,7 +150,6 @@ function openCorrelationConfig() {
  */
 function handleRunAnalysis(data) {
   console.log('🔥 handleRunAnalysis called with:', data);
-  alert('handleRunAnalysis triggered! Check console for data.');
   
   // Close the config dialog
   if (correlationDialog) {
@@ -162,11 +161,11 @@ function handleRunAnalysis(data) {
   // where data is { values, address }
   const dataValues = data.data?.values || correlationRangeData?.values || [];
   
-  console.log('📊 dataValues:', dataValues);
+  console.log('📊 dataValues length:', dataValues.length);
   console.log('📊 correlationRangeData:', correlationRangeData);
   
   if (!dataValues || dataValues.length < 2) {
-    alert('Invalid data structure. Please reload and try again.');
+    console.error('❌ Invalid data structure');
     return;
   }
   
@@ -174,7 +173,7 @@ function handleRunAnalysis(data) {
   const rows = dataValues.slice(1);
   
   console.log('📊 headers:', headers);
-  console.log('📊 rows sample:', rows.slice(0, 2));
+  console.log('📊 rows count:', rows.length);
   
   // Convert rows to objects with header keys for correlation calculation
   const dataObjects = rows.map(row => {
@@ -189,7 +188,7 @@ function handleRunAnalysis(data) {
   const selectedVars = data.variables || headers;
   
   console.log('📊 selectedVars:', selectedVars);
-  console.log('📊 dataObjects sample:', dataObjects.slice(0, 2));
+  console.log('📊 dataObjects count:', dataObjects.length);
   
   // Prepare data for matrix dialog
   const matrixData = {
@@ -200,12 +199,12 @@ function handleRunAnalysis(data) {
     address: data.data?.address || correlationRangeData?.address
   };
   
-  console.log('📊 Prepared matrix data:', matrixData);
+  console.log('📊 Prepared matrix data with', matrixData.headers.length, 'variables');
   
   // Store for matrix dialog
   sessionStorage.setItem('correlationMatrixData', JSON.stringify(matrixData));
   
-  alert('About to open matrix dialog...');
+  console.log('🚀 Opening matrix dialog...');
   
   // Open the matrix dialog
   openCorrelationResultDialog('matrix', matrixData);
