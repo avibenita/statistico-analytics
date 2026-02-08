@@ -391,7 +391,7 @@ function prepareCorrelationData(values, selectedColumns) {
 function openDialogWithData(dialogUrl, correlationData) {
   Office.context.ui.displayDialogAsync(
     dialogUrl,
-    { height: 90, width: 95, displayInIframe: false },
+    { height: 90, width: isLarge ? 85 : 70,, displayInIframe: false },
     (asyncResult) => {
       if (asyncResult.status === Office.AsyncResultStatus.Failed) {
         console.error('Failed to open dialog:', asyncResult.error);
