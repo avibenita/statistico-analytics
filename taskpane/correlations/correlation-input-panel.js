@@ -151,53 +151,65 @@ function handleRunAnalysis(data) {
     correlationDialog = null;
   }
   
-  // Open the appropriate result dialog based on view type
-  openCorrelationResultDialog(data.viewType, data);
+  // Prepare data for matrix dialog
+  const matrixData = {
+    data: data.data.values,
+    headers: data.data.values[0],
+    selectedVariables: data.variables,
+    method: data.method || 'pearson'
+  };
+  
+  console.log('Prepared matrix data:', matrixData);
+  
+  // Store for matrix dialog
+  sessionStorage.setItem('correlationMatrixData', JSON.stringify(matrixData));
+  
+  // Open the matrix dialog
+  openCorrelationResultDialog('matrix', matrixData);
 }
 
 /**
  * Open correlation result dialog
  */
-function openCorrelationResultDialog(viewType, config) {
-  const dialogMap = {
-    'matrix': 'correlation-matrix.html',
-    'network': 'correlation-network.html',
-    'taylor': 'correlation-taylor.html'
-  };
-  
-  const dialogFile = dialogMap[viewType] || 'correlation-matrix.html';
+function openCorrelationResultDialog(viewType, matrixData) {
+  const dialogFile = 'correlation-matrix.html';
   const dialogUrl = `${getDialogsBaseUrl()}correlations/${dialogFile}`;
   
-  console.log('Opening result dialog:', dialogUrl);
+  console.log('Opening matrix dialog:', dialogUrl);
   
   Office.context.ui.displayDialogAsync(
     dialogUrl,
     { height: 95, width: 95, displayInIframe: false },
     (asyncResult) => {
       if (asyncResult.status === Office.AsyncResultStatus.Failed) {
-        console.error('Failed to open result dialog:', asyncResult.error);
-        alert('Failed to open results: ' + asyncResult.error.message);
+        console.error('Failed to open matrix dialog:', asyncResult.error);
+        alert('Failed to open Correlation Matrix: ' + asyncResult.error.message);
       } else {
         const resultDialog = asyncResult.value;
-        console.log('✅ Result dialog opened');
+        console.log('✅ Matrix dialog opened successfully');
         
-        // Send configuration and data to result dialog
+        // Send data to matrix dialog
         resultDialog.addEventHandler(
           Office.EventType.DialogMessageReceived,
           (arg) => {
             try {
               const message = JSON.parse(arg.message);
+              console.log('Message from matrix dialog:', message);
+              
               if (message.action === 'ready') {
+                console.log('Sending data to matrix dialog:', matrixData);
                 resultDialog.messageChild(JSON.stringify({
                   type: 'CORRELATION_DATA',
                   payload: {
-                    ...correlationRangeData,
-                    config: config
+                    data: matrixData.data,
+                    headers: matrixData.headers,
+                    selectedVariables: matrixData.selectedVariables,
+                    method: matrixData.method
                   }
                 }));
               }
             } catch (e) {
-              console.error('Error in result dialog communication:', e);
+              console.error('Error in matrix dialog communication:', e);
             }
           }
         );
