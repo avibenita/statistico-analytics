@@ -873,7 +873,7 @@
           <div class="model-panel">
             
             <!-- Regression Model Header -->
-            <div style="background: var(--surface-0); padding: 8px 12px; border-bottom: 2px solid var(--border); flex-shrink: 0;">
+            <div style="background: var(--surface-0); padding: 8px 12px; border-bottom: 2px solid var(--border); flex-shrink: 0; display:flex; align-items:center; justify-content:space-between; gap:8px;">
               <h3 style="margin: 0; color: var(--accent-1); font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
                 <i class="fa-solid fa-chart-line"></i> Model
               </h3>
@@ -927,35 +927,12 @@
               
           </div>
           
-          <!-- Observation Monitor -->
-          <div id="obsMonitor" style="
-            background: var(--surface-0);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 10px 12px;
-            margin: 8px 12px 0 12px;
-            display: none;
-            flex-shrink: 0;
-          ">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-database" style="color: var(--accent-2); font-size: 16px;"></i>
-                <span style="color: var(--text-secondary); font-weight: 600; font-size: 12px;">Maximum Usable Cases:</span>
-              </div>
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <span id="obsCount" style="color: var(--accent-2); font-weight: 700; font-size: 18px;">0</span>
-                <span id="obsPct" style="color: var(--text-muted); font-size: 11px;">(0%)</span>
-              </div>
-            </div>
-
-          </div>
-          
         </div>
         
         <div class="divider"></div>
         
         <!-- Action Buttons: All on one row -->
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
           <button id="btnClear" class="btn alt">
             <i class="fa-solid fa-eraser"></i> Clear
           </button>
@@ -971,6 +948,29 @@
           <button id="btnRunAnalysis" class="btn" disabled style="margin: 0; white-space: nowrap;">
             <i class="fa-solid fa-play"></i> Run Regression
           </button>
+        </div>
+
+        <!-- Observation Monitor -->
+        <div id="obsMonitor" style="
+          background: var(--surface-0);
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          padding: 10px 12px;
+          margin: 0 0 6px 0;
+          display: none;
+          flex-shrink: 0;
+        ">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-database" style="color: var(--accent-2); font-size: 16px;"></i>
+              <span style="color: var(--text-secondary); font-weight: 600; font-size: 12px;">Maximum Usable Cases:</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span id="obsCount" style="color: var(--accent-2); font-weight: 700; font-size: 18px;">0</span>
+              <span id="obsPct" style="color: var(--text-muted); font-size: 11px;">(0%)</span>
+            </div>
+          </div>
+
         </div>
         
       </div>
