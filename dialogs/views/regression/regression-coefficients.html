@@ -730,7 +730,7 @@
       console.log('🔄 Processing regression data...');
       
       const { headers, rows, address } = receivedRegressionData;
-      const { y, xn, xc, intercept } = receivedModelSpec;
+      const { y, xn = [], xc = [], intercept } = receivedModelSpec;
       
       // Build X matrix and Y vector from the data
       const yIndex = headers.indexOf(y);
