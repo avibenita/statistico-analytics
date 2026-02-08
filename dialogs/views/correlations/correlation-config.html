@@ -238,6 +238,8 @@
                   <th style="width: 40px;" class="center">Include</th>
                   <th>Variable Name</th>
                   <th class="center">n Numeric</th>
+                  <th class="center">Avg</th>
+                  <th class="center">Std</th>
                   <th class="center">n String</th>
                   <th class="center">n Missing</th>
                 </tr>
@@ -255,19 +257,6 @@
           <div class="summary" id="selectionSummary">
             Selected: <strong>0</strong> variables
           </div>
-        </div>
-        
-        <!-- Method Section -->
-        <div class="section">
-          <div class="section-title">
-            <i class="fa-solid fa-calculator"></i> Correlation Method
-          </div>
-          <select id="corrMethod">
-            <option value="pearson" selected>Pearson (parametric)</option>
-            <option value="spearman">Spearman (rank-based)</option>
-            <option value="kendall">Kendall Tau (rank-based)</option>
-            <option value="biweight">Biweight Midcorrelation (robust)</option>
-          </select>
         </div>
         
         <!-- Run Button -->
@@ -338,6 +327,7 @@
       variableStats = {};
       headers.forEach(function(header, colIdx) {
         var numeric = 0, string = 0, missing = 0;
+        var numericValues = [];
         
         dataRows.forEach(function(row) {
           var value = row[colIdx];
@@ -345,22 +335,44 @@
             missing++;
           } else if (typeof value === 'number' && !isNaN(value)) {
             numeric++;
+            numericValues.push(value);
           } else {
             var num = parseFloat(value);
             if (!isNaN(num)) {
               numeric++;
+              numericValues.push(num);
             } else {
               string++;
             }
           }
         });
         
+        // Calculate avg and std
+        var avg = 0, std = 0;
+        if (numericValues.length > 0) {
+          var sum = numericValues.reduce(function(a, b) { return a + b; }, 0);
+          avg = sum / numericValues.length;
+          
+          if (numericValues.length > 1) {
+            var variance = numericValues.reduce(function(acc, val) {
+              return acc + Math.pow(val - avg, 2);
+            }, 0) / numericValues.length;
+            std = Math.sqrt(variance);
+          }
+        }
+        
+        // Determine if variable is valid (>= 5 numeric values and std > 0)
+        var isValid = numeric >= 5 && std > 0;
+        
         variableStats[header] = {
           name: header,
           numeric: numeric,
           string: string,
           missing: missing,
-          selected: true
+          avg: avg,
+          std: std,
+          isValid: isValid,
+          selected: isValid // Only select valid variables by default
         };
       });
       
@@ -377,13 +389,34 @@
           var stats = variableStats[varName];
           var tr = document.createElement('tr');
           
+          var isDisabled = !stats.isValid;
+          var disabledStyle = isDisabled ? 'opacity: 0.4; background: #fee; cursor: not-allowed;' : '';
+          var disabledAttr = isDisabled ? 'disabled' : '';
+          var title = '';
+          
+          if (isDisabled) {
+            if (stats.numeric < 5) {
+              title = 'Insufficient numeric values (need ≥5)';
+            } else if (stats.std === 0) {
+              title = 'Zero standard deviation (constant values)';
+            }
+          }
+          
+          tr.style.cssText = disabledStyle;
+          tr.title = title;
+          
+          var avgDisplay = stats.avg !== 0 ? stats.avg.toFixed(2) : '—';
+          var stdDisplay = stats.std !== 0 ? stats.std.toFixed(2) : '0.00';
+          
           tr.innerHTML = 
             '<td class="center">' +
               '<input type="checkbox" class="checkbox var-checkbox" data-var="' + varName + '" ' +
-              (stats.selected ? 'checked' : '') + ' onchange="updateSelectionSummary()">' +
+              (stats.selected ? 'checked' : '') + ' ' + disabledAttr + ' onchange="updateSelectionSummary()">' +
             '</td>' +
             '<td><strong>' + varName + '</strong></td>' +
             '<td class="center">' + stats.numeric + '</td>' +
+            '<td class="center">' + avgDisplay + '</td>' +
+            '<td class="center">' + stdDisplay + '</td>' +
             '<td class="center">' + stats.string + '</td>' +
             '<td class="center">' + stats.missing + '</td>';
           
@@ -402,10 +435,12 @@
     
     function selectNumericOnly() {
       document.querySelectorAll('.var-checkbox').forEach(function(cb) {
-        var varName = cb.dataset.var;
-        var isNumeric = variableStats[varName].numeric >= 5;
-        cb.checked = isNumeric;
-        variableStats[varName].selected = isNumeric;
+        if (!cb.disabled) {
+          var varName = cb.dataset.var;
+          var isValid = variableStats[varName].isValid;
+          cb.checked = isValid;
+          variableStats[varName].selected = isValid;
+        }
       });
       updateSelectAllCheckbox();
       updateSelectionSummary();
@@ -439,13 +474,10 @@
         return;
       }
       
-      // Get method (view type is always 'matrix')
-      var method = document.getElementById('corrMethod').value;
-      
-      // Send configuration back to parent
+      // Send configuration back to parent (method is always 'pearson')
       var config = {
         variables: selectedVars,
-        method: method,
+        method: 'pearson',
         viewType: 'matrix',
         data: correlationData
       };
