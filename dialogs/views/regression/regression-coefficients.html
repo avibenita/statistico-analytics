@@ -6,6 +6,9 @@
   <title id="page-title">Linear Regression Analysis</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
+  
+  <!-- Regression computation library -->
+  <script src="../../src/shared/js/core/regression-compute.js"></script>
 
   <style>
     :root{
@@ -803,9 +806,81 @@
       // Prepare data for diagnostics
       prepareRegressionDataForDiagnostics(xMatrix, yVector, intercept === 1);
       
-      // TODO: Run actual regression computation here
-      // For now, we'll just prepare the diagnostics data
-      console.log('✅ Regression data processed and ready for analysis');
+      // Compute regression using OLS
+      console.log('🔢 Computing OLS regression...');
+      try {
+        const results = computeOLS(xMatrix, yVector, intercept === 1, 0.05);
+        console.log('✅ Regression computed successfully:', results);
+        
+        // Display results in the UI
+        displayRegressionResults(results, y, xn, xc);
+        
+      } catch (error) {
+        console.error('❌ Error computing regression:', error);
+        alert(`Error computing regression: ${error.message}`);
+      }
+    }
+    
+    // Display regression results in the UI
+    function displayRegressionResults(results, yVarName, xnVars, xcVars) {
+      console.log('📊 Displaying regression results...');
+      
+      // Populate Sample Info panel (find elements by their text content or IDs if available)
+      const sampleInfoElements = document.querySelectorAll('.stat-value');
+      // Update observations
+      const obsElements = document.querySelectorAll('.stat-panel-content');
+      if (obsElements[0]) {
+        obsElements[0].innerHTML = `<div class="stat-label">Observations:</div><div class="stat-value">${results.n}</div>`;
+      }
+      
+      // Populate Model Fit panel (R², Adjusted R², Root MSE, AIC, BIC)
+      const modelStats = [
+        { label: 'R²:', value: results.R2.toFixed(4) },
+        { label: 'Adjusted R²:', value: results.R2_adj.toFixed(4) },
+        { label: 'Root MSE:', value: results.RMSE.toFixed(4) },
+        { label: 'AIC:', value: results.AIC.toFixed(2) },
+        { label: 'BIC:', value: results.BIC.toFixed(2) }
+      ];
+      
+      // Populate F-test panel
+      const ftestStats = [
+        { label: 'F-Statistic:', value: results.F_stat.toFixed(4) },
+        { label: 'P-value:', value: results.F_pvalue < 0.0001 ? '< 0.0001' : results.F_pvalue.toFixed(4) },
+        { label: 'Sum of Squares (Model):', value: results.SSE.toFixed(4) },
+        { label: 'Sum of Squares (Residual):', value: results.SSR.toFixed(4) }
+      ];
+      
+      // Populate coefficients table
+      const tbody = document.querySelector('#coefficients-table tbody');
+      if (tbody) {
+        tbody.innerHTML = '';
+        
+        const allVars = results.includeIntercept ? ['Intercept', ...xnVars, ...xcVars] : [...xnVars, ...xcVars];
+        
+        results.coefficients.forEach((coef, i) => {
+          const row = document.createElement('tr');
+          const varName = allVars[i] || `X${i}`;
+          
+          // Check significance
+          const significant = results.p_values[i] < 0.05;
+          const sigIndicator = significant ? ' *' : '';
+          
+          row.innerHTML = `
+            <td><strong>${varName}</strong></td>
+            <td>${coef.toFixed(6)}${sigIndicator}</td>
+            <td>${results.std_errors[i].toFixed(6)}</td>
+            <td>${results.t_values[i].toFixed(4)}</td>
+            <td>${results.p_values[i] < 0.0001 ? '< 0.0001' : results.p_values[i].toFixed(4)}</td>
+            <td>${results.CI_lower[i].toFixed(6)}</td>
+            <td>${results.CI_upper[i].toFixed(6)}</td>
+            <td>${i === 0 && results.includeIntercept ? '—' : (results.VIF[i - (results.includeIntercept ? 1 : 0)]?.toFixed(2) || '—')}</td>
+          `;
+          
+          tbody.appendChild(row);
+        });
+      }
+      
+      console.log('✅ Results displayed in UI');
     }
 
     // Function to trigger VB6 regression
