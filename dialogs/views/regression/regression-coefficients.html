@@ -819,7 +819,7 @@
         console.error('❌ Error computing regression:', error);
         console.error('Error details:', error.message, error.stack);
         // Show error in UI instead of alert
-        const tbody = document.querySelector('#coefficients-table tbody');
+        const tbody = document.getElementById('dataTableBody');
         if (tbody) {
           tbody.innerHTML = `<tr><td colspan="8" style="color: #ff6b6b; text-align: center; padding: 20px;">
             <i class="fa-solid fa-exclamation-triangle"></i> Error: ${error.message}
@@ -832,33 +832,27 @@
     function displayRegressionResults(results, yVarName, xnVars, xcVars) {
       console.log('📊 Displaying regression results...');
       
-      // Populate Sample Info panel (find elements by their text content or IDs if available)
-      const sampleInfoElements = document.querySelectorAll('.stat-value');
-      // Update observations
-      const obsElements = document.querySelectorAll('.stat-panel-content');
-      if (obsElements[0]) {
-        obsElements[0].innerHTML = `<div class="stat-label">Observations:</div><div class="stat-value">${results.n}</div>`;
-      }
+      // Populate Sample Info panel
+      document.getElementById('validObs').textContent = results.n;
+      document.getElementById('includeIntercept').textContent = results.includeIntercept ? 'Yes' : 'No';
+      document.getElementById('numNumericVars').textContent = xnVars.length;
+      document.getElementById('numCategoricalVars').textContent = xcVars.length;
       
-      // Populate Model Fit panel (R², Adjusted R², Root MSE, AIC, BIC)
-      const modelStats = [
-        { label: 'R²:', value: results.R2.toFixed(4) },
-        { label: 'Adjusted R²:', value: results.R2_adj.toFixed(4) },
-        { label: 'Root MSE:', value: results.RMSE.toFixed(4) },
-        { label: 'AIC:', value: results.AIC.toFixed(2) },
-        { label: 'BIC:', value: results.BIC.toFixed(2) }
-      ];
+      // Populate Model Fit panel
+      document.getElementById('rSquared').textContent = results.R2.toFixed(4);
+      document.getElementById('adjRSquared').textContent = results.R2_adj.toFixed(4);
+      document.getElementById('rootMSE').textContent = results.RMSE.toFixed(4);
+      document.getElementById('aic').textContent = results.AIC.toFixed(2);
+      document.getElementById('bic').textContent = results.BIC.toFixed(2);
       
       // Populate F-test panel
-      const ftestStats = [
-        { label: 'F-Statistic:', value: results.F_stat.toFixed(4) },
-        { label: 'P-value:', value: results.F_pvalue < 0.0001 ? '< 0.0001' : results.F_pvalue.toFixed(4) },
-        { label: 'Sum of Squares (Model):', value: results.SSE.toFixed(4) },
-        { label: 'Sum of Squares (Residual):', value: results.SSR.toFixed(4) }
-      ];
+      document.getElementById('fStatistic').textContent = results.F_stat.toFixed(4);
+      document.getElementById('fPValue').textContent = results.F_pvalue < 0.0001 ? '< 0.0001' : results.F_pvalue.toFixed(4);
+      document.getElementById('ssModel').textContent = results.SSE.toFixed(4);
+      document.getElementById('ssResidual').textContent = results.SSR.toFixed(4);
       
       // Populate coefficients table
-      const tbody = document.querySelector('#coefficients-table tbody');
+      const tbody = document.getElementById('dataTableBody');
       if (tbody) {
         tbody.innerHTML = '';
         
