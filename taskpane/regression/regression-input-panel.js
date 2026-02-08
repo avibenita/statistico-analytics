@@ -132,16 +132,12 @@ function openRegressionCoefficientsDialog() {
         resultsDialog = asyncResult.value;
         console.log('✅ Regression coefficients dialog opened');
 
-        // Send the model spec and data to the dialog when it's ready
-        setTimeout(() => {
-          sendRegressionResults();
-        }, 800);
-
         resultsDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
           try {
             const message = JSON.parse(arg.message);
 
             if (message.action === 'ready' || message.action === 'requestData') {
+              console.log('📨 Dialog is ready, sending regression results');
               sendRegressionResults();
             } else if (message.action === 'close') {
               resultsDialog.close();
@@ -155,6 +151,12 @@ function openRegressionCoefficientsDialog() {
         resultsDialog.addEventHandler(Office.EventType.DialogEventReceived, () => {
           resultsDialog = null;
         });
+        
+        // Also send data after a delay as fallback
+        setTimeout(() => {
+          console.log('⏰ Timeout reached, sending data as fallback');
+          sendRegressionResults();
+        }, 1200);
       }
     }
   );
@@ -177,11 +179,25 @@ function sendDialogData() {
 }
 
 function sendRegressionResults() {
-  if (!resultsDialog || !regressionRangeData) return;
+  if (!resultsDialog) {
+    console.warn('⚠️ No dialog available to send results to');
+    return;
+  }
+  
+  if (!regressionRangeData) {
+    console.warn('⚠️ No regression data available to send');
+    return;
+  }
 
   const headers = regressionRangeData[0] || [];
   const rows = regressionRangeData.slice(1);
   const modelSpec = JSON.parse(sessionStorage.getItem('regressionModelSpec') || '{}');
+
+  console.log('📤 Sending regression results to dialog:', {
+    headers: headers.length,
+    rows: rows.length,
+    modelSpec
+  });
 
   resultsDialog.messageChild(JSON.stringify({
     type: 'REGRESSION_RESULTS',
@@ -193,7 +209,7 @@ function sendRegressionResults() {
     }
   }));
   
-  console.log('📤 Sent regression results to coefficients dialog');
+  console.log('✅ Sent regression results to coefficients dialog');
 }
 
 function getDialogsBaseUrl() {
