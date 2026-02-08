@@ -151,8 +151,9 @@ function openCorrelationConfig() {
 function handleRunAnalysis(data) {
   console.log('🔥 handleRunAnalysis called with:', data);
   
-  // Close the config dialog
+  // Close the config dialog first
   if (correlationDialog) {
+    console.log('🔒 Closing config dialog...');
     correlationDialog.close();
     correlationDialog = null;
   }
@@ -204,10 +205,12 @@ function handleRunAnalysis(data) {
   // Store for matrix dialog
   sessionStorage.setItem('correlationMatrixData', JSON.stringify(matrixData));
   
-  console.log('🚀 Opening matrix dialog...');
-  
-  // Open the matrix dialog
-  openCorrelationResultDialog('matrix', matrixData);
+  // Wait a moment for the config dialog to fully close before opening matrix
+  console.log('⏳ Waiting for dialog to close...');
+  setTimeout(() => {
+    console.log('🚀 Opening matrix dialog...');
+    openCorrelationResultDialog('matrix', matrixData);
+  }, 300);
 }
 
 /**
@@ -217,15 +220,18 @@ function openCorrelationResultDialog(viewType, matrixData) {
   const dialogFile = 'correlation-matrix.html';
   const dialogUrl = `${getDialogsBaseUrl()}correlations/${dialogFile}`;
   
-  console.log('Opening matrix dialog:', dialogUrl);
+  console.log('📂 Opening matrix dialog:', dialogUrl);
   
   Office.context.ui.displayDialogAsync(
     dialogUrl,
     { height: 95, width: 95, displayInIframe: false },
     (asyncResult) => {
       if (asyncResult.status === Office.AsyncResultStatus.Failed) {
-        console.error('Failed to open matrix dialog:', asyncResult.error);
-        alert('Failed to open Correlation Matrix: ' + asyncResult.error.message);
+        const error = asyncResult.error;
+        console.error('❌ Failed to open matrix dialog:', error);
+        console.error('❌ Error code:', error.code);
+        console.error('❌ Error message:', error.message);
+        console.error('❌ Error name:', error.name);
       } else {
         const resultDialog = asyncResult.value;
         console.log('✅ Matrix dialog opened successfully');
@@ -236,10 +242,10 @@ function openCorrelationResultDialog(viewType, matrixData) {
           (arg) => {
             try {
               const message = JSON.parse(arg.message);
-              console.log('Message from matrix dialog:', message);
+              console.log('📨 Message from matrix dialog:', message);
               
               if (message.action === 'ready') {
-                console.log('Sending data to matrix dialog:', matrixData);
+                console.log('📤 Sending data to matrix dialog:', matrixData);
                 resultDialog.messageChild(JSON.stringify({
                   type: 'CORRELATION_DATA',
                   payload: {
@@ -251,7 +257,7 @@ function openCorrelationResultDialog(viewType, matrixData) {
                 }));
               }
             } catch (e) {
-              console.error('Error in matrix dialog communication:', e);
+              console.error('❌ Error in matrix dialog communication:', e);
             }
           }
         );
