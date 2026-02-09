@@ -405,6 +405,28 @@
     // Office.js integration
     if (typeof Office !== 'undefined') {
       Office.initialize = function() {
+        // Check if data was pre-loaded in sessionStorage (e.g., from regression dialog)
+        const storedCorrelationData = sessionStorage.getItem('correlationData');
+        if (storedCorrelationData) {
+          try {
+            const payload = JSON.parse(storedCorrelationData);
+            console.log('📦 Loaded descriptive stats data from sessionStorage:', payload);
+            
+            // If data came from regression model, log it
+            if (payload.source === 'regression-model' && payload.modelInfo) {
+              console.log('📊 Showing stats for regression model:', payload.modelInfo);
+            }
+            
+            // Handle the data
+            handleCorrelationData(payload);
+            
+            // Clear the sessionStorage after loading to prevent stale data
+            sessionStorage.removeItem('correlationData');
+          } catch (e) {
+            console.error('Error loading data from sessionStorage:', e);
+          }
+        }
+        
         Office.context.ui.addHandlerAsync(
           Office.EventType.DialogParentMessageReceived,
           onMessageReceived
