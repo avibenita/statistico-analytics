@@ -100,18 +100,18 @@
     /* Stats Container */
     .stats-container {
       display: flex;
-      gap: 20px;
+      gap: 12px;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       flex-wrap: wrap;
     }
 
     .stat-panel {
       flex: 1;
-      min-width: 280px;
+      min-width: 240px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border);
-      border-radius: var(--panel-radius);
+      border-radius: 6px;
       padding: 0;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
@@ -119,10 +119,10 @@
     .stat-panel-heading {
       background: linear-gradient(135deg, rgba(0, 51, 102, 0.8), rgba(0, 102, 204, 0.6));
       color: #ffffff;
-      padding: 8px 12px;
-      border-radius: var(--panel-radius) var(--panel-radius) 0 0;
+      padding: 6px 10px;
+      border-radius: 6px 6px 0 0;
       font-weight: 700;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       text-align: center;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -130,15 +130,15 @@
     }
 
     .stat-panel-body {
-      padding: 10px 12px;
+      padding: 8px 10px;
     }
 
     .stat-field {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin: 4px 0;
-      padding: 3px 0;
+      margin: 3px 0;
+      padding: 2px 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
@@ -149,19 +149,19 @@
     .stat-label {
       font-weight: 600;
       color: var(--text-secondary);
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
 
     .stat-value {
       background: linear-gradient(135deg, rgba(120, 200, 255, 0.15), rgba(120, 200, 255, 0.05));
       border: 1px solid rgba(120, 200, 255, 0.3);
-      border-radius: 6px;
-      padding: 6px 12px;
-      min-width: 80px;
+      border-radius: 5px;
+      padding: 4px 8px;
+      min-width: 70px;
       text-align: center;
       color: var(--accent-2);
       font-weight: 700;
-      font-size: 0.95rem;
+      font-size: 0.85rem;
     }
 
     .stat-note {
@@ -610,75 +610,6 @@
     </section>
   </div>
 
-    <!-- Diagnostics Panel Section (Hidden by default) -->
-    <div class="stat-panel" id="diagnosticsPanel" style="min-width: 100%; margin-top: 20px; display: none;">
-      <div class="stat-panel-heading">
-        <i class="fa-solid fa-stethoscope"></i> Advanced Diagnostics
-        <button id="refreshDiagnosticsBtn" style="float: right; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
-          <i class="fa-solid fa-sync"></i> Compute
-        </button>
-      </div>
-      <div class="stat-panel-body">
-        <!-- Multicollinearity Section -->
-        <div style="margin-bottom: 20px;">
-          <h4 style="color: var(--accent-1); font-size: 0.95rem; margin-bottom: 10px;">
-            <i class="fa-solid fa-link"></i> Multicollinearity
-          </h4>
-          <div class="stat-field">
-            <span class="stat-label">Condition Number:</span>
-            <span id="conditionNumber" class="stat-value">...</span>
-          </div>
-          <div class="stat-field">
-            <span class="stat-label">Determinant (R):</span>
-            <span id="determinant" class="stat-value">...</span>
-          </div>
-          <div id="vifContainer" style="margin-top: 10px;">
-            <div style="font-weight: 600; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 5px;">
-              Variance Inflation Factors (VIF):
-            </div>
-            <div id="vifList" style="font-size: 0.85rem; color: var(--text-muted);">
-              Awaiting computation...
-            </div>
-          </div>
-          <div id="highCorrContainer" style="margin-top: 10px; display: none;">
-            <div style="font-weight: 600; color: var(--accent-1); font-size: 0.9rem; margin-bottom: 5px;">
-              <i class="fa-solid fa-exclamation-triangle"></i> High Correlations Detected:
-            </div>
-            <div id="highCorrList" style="font-size: 0.85rem; color: var(--text-muted);"></div>
-          </div>
-        </div>
-        
-        <!-- Autocorrelation Section -->
-        <div style="margin-bottom: 20px;">
-          <h4 style="color: var(--accent-1); font-size: 0.95rem; margin-bottom: 10px;">
-            <i class="fa-solid fa-wave-square"></i> Autocorrelation
-          </h4>
-          <div class="stat-field">
-            <span class="stat-label">Durbin-Watson:</span>
-            <span id="durbinWatson" class="stat-value">...</span>
-          </div>
-          <div class="stat-field">
-            <span class="stat-label">Lag-1 Autocorr:</span>
-            <span id="lag1Autocorr" class="stat-value">...</span>
-          </div>
-        </div>
-        
-        <!-- Leverage & PRESS Section -->
-        <div>
-          <h4 style="color: var(--accent-1); font-size: 0.95rem; margin-bottom: 10px;">
-            <i class="fa-solid fa-chart-area"></i> Prediction & Leverage
-          </h4>
-          <div class="stat-field">
-            <span class="stat-label">PRESS Statistic:</span>
-            <span id="pressStatistic" class="stat-value">...</span>
-          </div>
-          <div class="stat-note">
-            <strong>Note:</strong> High leverage points and influential observations can be examined in detail through the Diagnostics tab.
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Custom awaiting panel instructions for regression -->
   <script>
     window.AWAITING_PANEL_INSTRUCTIONS = `
@@ -927,11 +858,6 @@
       const pageTitle = document.getElementById('page-title');
       if (pageTitle) {
         pageTitle.innerText = `Regression: ${y} ~ ${[...xn, ...xc].join(' + ')}`;
-      }
-      
-      // Prepare data for diagnostics (only if xMatrix has data)
-      if (xMatrix.length > 0 && xMatrix[0]) {
-        prepareRegressionDataForDiagnostics(xMatrix, yVector, intercept === 1);
       }
       
       // Compute regression using OLS
