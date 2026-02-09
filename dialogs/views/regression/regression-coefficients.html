@@ -279,18 +279,22 @@
       text-overflow: ellipsis;
     }
     
-    /* Variable type colors */
+    /* Variable type colors - More vibrant and distinct */
     .var-intercept {
-      color: #fbbf24 !important; /* Amber for intercept */
+      color: #fbbf24 !important; /* Bright Amber for intercept */
       font-weight: 700 !important;
+      text-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
     }
     
     .var-numeric {
-      color: #60a5fa !important; /* Blue for numeric */
+      color: #3b82f6 !important; /* Bright Blue for numeric */
+      font-weight: 600 !important;
     }
     
     .var-categorical {
-      color: #a78bfa !important; /* Purple for categorical */
+      color: #f472b6 !important; /* Bright Pink/Magenta for categorical */
+      font-weight: 600 !important;
+      text-shadow: 0 0 6px rgba(244, 114, 182, 0.3);
     }
 
     .regression-table tbody tr:hover {
@@ -986,14 +990,18 @@
           
           // Determine variable type for color coding
           let varClass = '';
+          let rowStyle = '';
           if (i === 0 && results.includeIntercept) {
             varClass = 'var-intercept';
+            rowStyle = 'background: rgba(251, 191, 36, 0.08) !important;';
           } else {
             // Check if it's a categorical variable (contains underscore for dummy coding)
             if (varName.includes('_')) {
               varClass = 'var-categorical';
+              rowStyle = 'background: rgba(244, 114, 182, 0.08) !important;';
             } else {
               varClass = 'var-numeric';
+              rowStyle = 'background: rgba(59, 130, 246, 0.05) !important;';
             }
           }
           
@@ -1006,6 +1014,8 @@
           if (veryHighlySignificant) sigIndicator = ' ***';
           else if (highlySignificant) sigIndicator = ' **';
           else if (significant) sigIndicator = ' *';
+          
+          row.style.cssText = rowStyle;
           
           row.innerHTML = `
             <td><strong class="${varClass}">${varName}</strong></td>
