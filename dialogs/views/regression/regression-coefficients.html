@@ -507,10 +507,9 @@
               <span class="dropdown-arrow">▼</span>
             </button>
             <div class="dropdown-content" id="dropdownContent">
-              <a href="http://127.0.0.1:12345?command=Case00" target="_self">Regression Results</a>
-              <a href="http://127.0.0.1:12345?command=Case10" target="_self">Residual Analysis</a>
-              <a href="http://127.0.0.1:12345?command=Case20" target="_self">Diagnostics</a>
-              <a href="http://127.0.0.1:12345?command=Case30" target="_self">Predictions</a>
+              <a href="javascript:void(0);" onclick="openResidualDiagnostics()" style="cursor: pointer;">
+                <i class="fa-solid fa-chart-line"></i> Residual Diagnostics
+              </a>
               <div class="dropdown-separator"></div>
               <a href="javascript:void(0);" onclick="openModelCorrelations()" style="cursor: pointer;">
                 <i class="fa-solid fa-project-diagram"></i> Model Variable Correlations
@@ -972,6 +971,10 @@
         const results = computeOLS(xMatrix, yVector, intercept === 1, 0.05);
         console.log('✅ Regression computed successfully:', results);
         
+        // Store results globally for residual diagnostics
+        window.regressionResults = results;
+        window.regressionData = { yVector, xMatrix, intercept };
+        
         // Display results in the UI
         displayRegressionResults(results, y, xn, xc);
         
@@ -1272,6 +1275,47 @@
         console.log('✅ Regression variables list set:', regressionVariablesList);
       }
     };
+    
+    // Function to open residual diagnostics
+    function openResidualDiagnostics() {
+      console.log('📊 Opening residual diagnostics...');
+      
+      if (!window.regressionResults || !window.regressionData) {
+        alert('No regression results available. Please run a regression first.');
+        return;
+      }
+      
+      const results = window.regressionResults;
+      const data = window.regressionData;
+      
+      // Calculate fitted values if not already present
+      if (!results.fitted) {
+        const { yVector, xMatrix } = data;
+        const X = data.intercept === 1 
+          ? xMatrix.map(row => [1, ...row])
+          : xMatrix;
+        
+        results.fitted = X.map(row => 
+          row.reduce((sum, xi, i) => sum + xi * results.coefficients[i], 0)
+        );
+      }
+      
+      // Store residual data in sessionStorage
+      sessionStorage.setItem('residualData', JSON.stringify({
+        results: results,
+        fittedValues: results.fitted
+      }));
+      
+      console.log('📦 Stored residual data:', {
+        residuals: results.residuals.length,
+        fitted: results.fitted.length
+      });
+      
+      // Navigate to residual diagnostics
+      const residualUrl = window.location.href.split('/regression/')[0] + '/regression/regression-residuals.html';
+      console.log('🔄 Navigating to residual diagnostics:', residualUrl);
+      window.location.href = residualUrl;
+    }
     
     // Function to open correlation matrix for model variables (Y + numeric X)
     function openModelCorrelations() {
