@@ -761,41 +761,75 @@
         return;
       }
       
-      // Extract Y values
-      const yVector = rows.map(row => parseFloat(row[yIndex])).filter(v => !isNaN(v));
-      
-      // Extract X values (numeric predictors)
+      // Build X matrix and Y vector together with synchronized filtering
       const xMatrix = [];
+      const yVector = [];
+      
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
+        
+        // Get Y value
+        const yVal = parseFloat(row[yIndex]);
+        if (isNaN(yVal)) continue; // Skip if Y is invalid
+        
+        // Build X row
         const xRow = [];
+        let validRow = true;
         
         // Add numeric predictors
         for (const xnIdx of xnIndices) {
           const val = parseFloat(row[xnIdx]);
-          if (!isNaN(val)) {
-            xRow.push(val);
+          if (isNaN(val)) {
+            validRow = false;
+            break;
           }
+          xRow.push(val);
         }
         
-        // Add categorical predictors (for now, treat as numeric - proper dummy coding would be more complex)
+        if (!validRow) continue;
+        
+        // Add categorical predictors
         for (const xcIdx of xcIndices) {
           const val = parseFloat(row[xcIdx]);
-          if (!isNaN(val)) {
-            xRow.push(val);
+          if (isNaN(val)) {
+            validRow = false;
+            break;
           }
+          xRow.push(val);
         }
         
-        if (xRow.length > 0 && xRow.length === (xnIndices.length + xcIndices.length)) {
+        // Only add if all X values are valid
+        if (validRow && xRow.length === (xnIndices.length + xcIndices.length)) {
           xMatrix.push(xRow);
+          yVector.push(yVal);
         }
       }
       
       console.log('📊 Data prepared:', {
         observations: yVector.length,
         predictors: xMatrix[0]?.length || 0,
-        intercept: intercept === 1
+        intercept: intercept === 1,
+        xMatrixRows: xMatrix.length,
+        yVectorLength: yVector.length
       });
+      
+      // Validate data before proceeding
+      if (xMatrix.length === 0 || yVector.length === 0) {
+        console.error('❌ No valid data after filtering');
+        const tbody = document.getElementById('dataTableBody');
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="8" style="color: #ff6b6b; text-align: center; padding: 20px;">
+            <i class="fa-solid fa-exclamation-triangle"></i> No valid observations after removing missing values
+          </td></tr>`;
+        }
+        return;
+      }
+      
+      if (xMatrix.length !== yVector.length) {
+        console.error('❌ Length mismatch between X and Y');
+        console.error('   X rows:', xMatrix.length, 'Y rows:', yVector.length);
+        return;
+      }
       
       // Update page title
       const pageTitle = document.getElementById('page-title');
@@ -803,8 +837,10 @@
         pageTitle.innerText = `Regression: ${y} ~ ${[...xn, ...xc].join(' + ')}`;
       }
       
-      // Prepare data for diagnostics
-      prepareRegressionDataForDiagnostics(xMatrix, yVector, intercept === 1);
+      // Prepare data for diagnostics (only if xMatrix has data)
+      if (xMatrix.length > 0 && xMatrix[0]) {
+        prepareRegressionDataForDiagnostics(xMatrix, yVector, intercept === 1);
+      }
       
       // Compute regression using OLS
       console.log('🔢 Computing OLS regression...');
