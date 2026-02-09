@@ -480,6 +480,75 @@
       font-size: 1rem;
       font-weight: 500;
     }
+    
+    /* Tab Navigation */
+    .tab-navigation {
+      display: flex;
+      gap: 4px;
+      background: var(--surface-2);
+      padding: 8px 12px;
+      border-bottom: 2px solid var(--border);
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+    
+    .tab-button {
+      padding: 10px 18px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 6px 6px 0 0;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .tab-button:hover {
+      background: rgba(255, 165, 120, 0.1);
+      color: var(--text-primary);
+    }
+    
+    .tab-button.active {
+      background: var(--surface-1);
+      color: var(--accent-1);
+      font-weight: 600;
+      border-bottom: 3px solid var(--accent-1);
+    }
+    
+    .tab-button i {
+      font-size: 16px;
+    }
+    
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Tab Panels */
+    .tab-panel {
+      padding: 20px;
+      min-height: 400px;
+    }
   </style>
 </head>
 <body>
@@ -524,7 +593,25 @@
         </div>
       </div>
 
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <button class="tab-button active" onclick="switchTab('results')" data-tab="results">
+          <i class="fa-solid fa-table"></i> Results
+        </button>
+        <button class="tab-button" onclick="switchTab('residuals')" data-tab="residuals">
+          <i class="fa-solid fa-chart-line"></i> Residual Diagnostics
+        </button>
+        <button class="tab-button" onclick="switchTab('correlations')" data-tab="correlations">
+          <i class="fa-solid fa-project-diagram"></i> Correlations
+        </button>
+        <button class="tab-button" onclick="switchTab('descriptive')" data-tab="descriptive">
+          <i class="fa-solid fa-chart-bar"></i> Descriptive Stats
+        </button>
+      </div>
+
       <div class="card-body">
+        <!-- Tab: Results -->
+        <div id="tab-results" class="tab-content active">
         <!-- Stats Panels -->
         <div class="stats-container">
           <div class="stat-panel">
@@ -684,6 +771,39 @@
             Awaiting regression results...
           </div>
         </div>
+        </div>
+        <!-- End Tab: Results -->
+
+        <!-- Tab: Residual Diagnostics -->
+        <div id="tab-residuals" class="tab-content">
+          <div class="tab-panel" id="residualsPanel">
+            <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 15px;"></i>
+              <p>Loading residual diagnostics...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Correlations -->
+        <div id="tab-correlations" class="tab-content">
+          <div class="tab-panel" id="correlationsPanel">
+            <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 15px;"></i>
+              <p>Loading correlations...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Descriptive Stats -->
+        <div id="tab-descriptive" class="tab-content">
+          <div class="tab-panel" id="descriptivePanel">
+            <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 15px;"></i>
+              <p>Loading descriptive statistics...</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
   </div>
@@ -716,6 +836,34 @@
       }
     }
     
+    // Tab Management
+    function switchTab(tabName) {
+      console.log('🔄 Switching to tab:', tabName);
+      
+      // Update tab buttons
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.tab === tabName) {
+          btn.classList.add('active');
+        }
+      });
+      
+      // Update tab content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      
+      // Lazy load tab content if not already loaded
+      if (tabName === 'residuals' && !window.residualsLoaded) {
+        loadResidualsTab();
+      } else if (tabName === 'correlations' && !window.correlationsLoaded) {
+        loadCorrelationsTab();
+      } else if (tabName === 'descriptive' && !window.descriptiveLoaded) {
+        loadDescriptiveTab();
+      }
+    }
+
     // Office.js integration for Excel Add-in
     let receivedRegressionData = null;
     let receivedModelSpec = null;
@@ -971,9 +1119,44 @@
         const results = computeOLS(xMatrix, yVector, intercept === 1, 0.05);
         console.log('✅ Regression computed successfully:', results);
         
-        // Store results globally for residual diagnostics
+        // Calculate fitted values
+        const X = intercept === 1 
+          ? xMatrix.map(row => [1, ...row])
+          : xMatrix;
+        results.fitted = X.map(row => 
+          row.reduce((sum, xi, i) => sum + xi * results.coefficients[i], 0)
+        );
+        
+        // Store results globally for tabs
         window.regressionResults = results;
         window.regressionData = { yVector, xMatrix, intercept };
+        
+        // Pre-store data for all tabs in sessionStorage
+        sessionStorage.setItem('residualData', JSON.stringify({
+          results: results,
+          fittedValues: results.fitted
+        }));
+        
+        // Prepare correlation data
+        const indices = [y, ...xn].map(varName => headers.indexOf(varName)).filter(idx => idx !== -1);
+        const filteredHeaders = indices.map(idx => headers[idx]);
+        const filteredData = rows.map(row => {
+          const rowObj = {};
+          filteredHeaders.forEach((header, i) => {
+            rowObj[header] = row[indices[i]];
+          });
+          return rowObj;
+        });
+        
+        sessionStorage.setItem('correlationData', JSON.stringify({
+          headers: filteredHeaders,
+          data: filteredData,
+          address: address,
+          source: 'regression-model',
+          modelInfo: { y, xn, totalVars: filteredHeaders.length }
+        }));
+        
+        console.log('✅ All tab data pre-stored in sessionStorage');
         
         // Display results in the UI
         displayRegressionResults(results, y, xn, xc);
@@ -1276,166 +1459,73 @@
       }
     };
     
-    // Function to open residual diagnostics
-    function openResidualDiagnostics() {
-      console.log('📊 Opening residual diagnostics...');
-      
+    // Load Residuals Tab Content
+    function loadResidualsTab() {
       if (!window.regressionResults || !window.regressionData) {
-        alert('No regression results available. Please run a regression first.');
+        document.getElementById('residualsPanel').innerHTML = `
+          <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+            <i class="fa-solid fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px;"></i>
+            <p>No regression results available</p>
+          </div>
+        `;
         return;
       }
       
-      const results = window.regressionResults;
-      const data = window.regressionData;
-      
-      // Calculate fitted values if not already present
-      if (!results.fitted) {
-        const { yVector, xMatrix } = data;
-        const X = data.intercept === 1 
-          ? xMatrix.map(row => [1, ...row])
-          : xMatrix;
-        
-        results.fitted = X.map(row => 
-          row.reduce((sum, xi, i) => sum + xi * results.coefficients[i], 0)
-        );
-      }
-      
-      // Store residual data in sessionStorage
-      sessionStorage.setItem('residualData', JSON.stringify({
-        results: results,
-        fittedValues: results.fitted
-      }));
-      
-      console.log('📦 Stored residual data:', {
-        residuals: results.residuals.length,
-        fitted: results.fitted.length
-      });
-      
-      // Navigate to residual diagnostics
-      const residualUrl = window.location.href.split('/regression/')[0] + '/regression/regression-residuals.html';
-      console.log('🔄 Navigating to residual diagnostics:', residualUrl);
-      window.location.href = residualUrl;
+      console.log('📊 Loading residuals tab...');
+      const panel = document.getElementById('residualsPanel');
+      panel.innerHTML = '<iframe src="regression-residuals.html" style="width: 100%; height: 80vh; border: none; background: transparent;"></iframe>';
+      window.residualsLoaded = true;
     }
     
-    // Function to open correlation matrix for model variables (Y + numeric X)
+    // Load Correlations Tab Content  
+    function loadCorrelationsTab() {
+      if (!receivedRegressionData || !receivedModelSpec) {
+        document.getElementById('correlationsPanel').innerHTML = `
+          <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+            <i class="fa-solid fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px;"></i>
+            <p>No data available</p>
+          </div>
+        `;
+        return;
+      }
+      
+      console.log('📊 Loading correlations tab...');
+      const panel = document.getElementById('correlationsPanel');
+      panel.innerHTML = '<iframe src="../correlations/correlation-matrix.html" style="width: 100%; height: 80vh; border: none; background: transparent;"></iframe>';
+      window.correlationsLoaded = true;
+    }
+    
+    // Load Descriptive Stats Tab Content
+    function loadDescriptiveTab() {
+      if (!receivedRegressionData || !receivedModelSpec) {
+        document.getElementById('descriptivePanel').innerHTML = `
+          <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+            <i class="fa-solid fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px;"></i>
+            <p>No data available</p>
+          </div>
+        `;
+        return;
+      }
+      
+      console.log('📊 Loading descriptive stats tab...');
+      const panel = document.getElementById('descriptivePanel');
+      panel.innerHTML = '<iframe src="../correlations/descriptive-stats.html" style="width: 100%; height: 80vh; border: none; background: transparent;"></iframe>';
+      window.descriptiveLoaded = true;
+    }
+    
+    // Function to open residual diagnostics (keep for dropdown compatibility)
+    function openResidualDiagnostics() {
+      switchTab('residuals');
+    }
+    
+    // Function to open correlation matrix for model variables (keep for dropdown compatibility)
     function openModelCorrelations() {
-      console.log('📊 Opening correlations for model variables...');
-      
-      if (!receivedRegressionData || !receivedModelSpec) {
-        alert('No regression data available. Please run a regression first.');
-        return;
-      }
-      
-      const { headers, rows, address } = receivedRegressionData;
-      const { y, xn = [], xc = [] } = receivedModelSpec;
-      
-      // Include Y and only numeric X variables (exclude categorical)
-      const varsToInclude = [y, ...xn];
-      console.log('📋 Variables for correlation:', varsToInclude);
-      
-      // Get column indices
-      const indices = varsToInclude.map(varName => headers.indexOf(varName)).filter(idx => idx !== -1);
-      
-      if (indices.length < 2) {
-        alert('Need at least 2 numeric variables for correlation analysis.');
-        return;
-      }
-      
-      // Filter headers and rows to include only selected variables
-      const filteredHeaders = indices.map(idx => headers[idx]);
-      
-      // Convert rows from array-of-arrays to array-of-objects
-      // Correlation matrix expects: [{varName: value, ...}, ...]
-      const filteredData = rows.map(row => {
-        const rowObj = {};
-        filteredHeaders.forEach((header, i) => {
-          rowObj[header] = row[indices[i]];
-        });
-        return rowObj;
-      });
-      
-      console.log('📊 Prepared data for correlation:', {
-        headers: filteredHeaders,
-        sampleSize: filteredData.length
-      });
-      
-      // Store data in sessionStorage for the correlation page
-      sessionStorage.setItem('correlationData', JSON.stringify({
-        headers: filteredHeaders,
-        data: filteredData,  // Array of objects, not arrays
-        address: address,
-        source: 'regression-model',
-        modelInfo: {
-          y: y,
-          xn: xn,
-          totalVars: varsToInclude.length
-        }
-      }));
-      
-      // Navigate to correlation matrix in the same dialog window
-      const correlationUrl = window.location.href.split('/regression/')[0] + '/correlations/correlation-matrix.html';
-      console.log('🔄 Navigating to correlation matrix:', correlationUrl);
-      window.location.href = correlationUrl;
+      switchTab('correlations');
     }
     
-    // Function to open descriptive statistics for model variables (Y + numeric X)
+    // Function to open descriptive statistics for model variables (keep for dropdown compatibility)
     function openModelDescriptiveStats() {
-      console.log('📊 Opening descriptive statistics for model variables...');
-      
-      if (!receivedRegressionData || !receivedModelSpec) {
-        alert('No regression data available. Please run a regression first.');
-        return;
-      }
-      
-      const { headers, rows, address } = receivedRegressionData;
-      const { y, xn = [], xc = [] } = receivedModelSpec;
-      
-      // Include Y and only numeric X variables (exclude categorical)
-      const varsToInclude = [y, ...xn];
-      console.log('📋 Variables for descriptive stats:', varsToInclude);
-      
-      // Get column indices
-      const indices = varsToInclude.map(varName => headers.indexOf(varName)).filter(idx => idx !== -1);
-      
-      if (indices.length < 1) {
-        alert('No numeric variables available for descriptive statistics.');
-        return;
-      }
-      
-      // Filter headers and rows to include only selected variables
-      const filteredHeaders = indices.map(idx => headers[idx]);
-      
-      // Convert rows from array-of-arrays to array-of-objects
-      const filteredData = rows.map(row => {
-        const rowObj = {};
-        filteredHeaders.forEach((header, i) => {
-          rowObj[header] = row[indices[i]];
-        });
-        return rowObj;
-      });
-      
-      console.log('📊 Prepared data for descriptive stats:', {
-        headers: filteredHeaders,
-        sampleSize: filteredData.length
-      });
-      
-      // Store data in sessionStorage for the descriptive stats page
-      sessionStorage.setItem('correlationData', JSON.stringify({
-        headers: filteredHeaders,
-        data: filteredData,
-        address: address,
-        source: 'regression-model',
-        modelInfo: {
-          y: y,
-          xn: xn,
-          totalVars: varsToInclude.length
-        }
-      }));
-      
-      // Navigate to descriptive stats in the same dialog window
-      const statsUrl = window.location.href.split('/regression/')[0] + '/correlations/descriptive-stats.html';
-      console.log('🔄 Navigating to descriptive statistics:', statsUrl);
-      window.location.href = statsUrl;
+      switchTab('descriptive');
     }
     
     // Dropdown toggle functionality
