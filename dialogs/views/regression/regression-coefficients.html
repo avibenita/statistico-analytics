@@ -1297,12 +1297,26 @@
       
       // Filter headers and rows to include only selected variables
       const filteredHeaders = indices.map(idx => headers[idx]);
-      const filteredRows = rows.map(row => indices.map(idx => row[idx]));
+      
+      // Convert rows from array-of-arrays to array-of-objects
+      // Correlation matrix expects: [{varName: value, ...}, ...]
+      const filteredData = rows.map(row => {
+        const rowObj = {};
+        filteredHeaders.forEach((header, i) => {
+          rowObj[header] = row[indices[i]];
+        });
+        return rowObj;
+      });
+      
+      console.log('📊 Prepared data for correlation:', {
+        headers: filteredHeaders,
+        sampleSize: filteredData.length
+      });
       
       // Store data in sessionStorage for the correlation page
       sessionStorage.setItem('correlationData', JSON.stringify({
         headers: filteredHeaders,
-        rows: filteredRows,
+        data: filteredData,  // Array of objects, not arrays
         address: address,
         source: 'regression-model',
         modelInfo: {
