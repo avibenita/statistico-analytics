@@ -28,6 +28,7 @@ function onRangeDataLoaded(values, address) {
   const dataRows = values.slice(1);
 
   updateSummary(regressionRangeAddress, dataRows.length, headers.length);
+  updateButtonState(); // Update button text based on saved model
   showPanel(true);
 }
 
@@ -144,10 +145,8 @@ function openRegressionCoefficientsDialog() {
             } else if (message.action === 'close') {
               resultsDialog.close();
               resultsDialog = null;
-              // Reopen model builder after closing coefficients dialog
-              setTimeout(() => {
-                openModelBuilder();
-              }, 500);
+              // Update taskpane button state after closing dialog
+              updateButtonState();
             }
           } catch (e) {
             console.error('Error handling dialog message:', e);
@@ -155,12 +154,10 @@ function openRegressionCoefficientsDialog() {
         });
 
         resultsDialog.addEventHandler(Office.EventType.DialogEventReceived, () => {
-          console.log('🔄 Coefficients dialog closed by user, reopening model builder');
+          console.log('📊 Coefficients dialog closed by user');
           resultsDialog = null;
-          // Reopen model builder when dialog is closed
-          setTimeout(() => {
-            openModelBuilder();
-          }, 500);
+          // Update taskpane button state after closing dialog
+          updateButtonState();
         });
         
         // Also send data after a delay as fallback
@@ -234,6 +231,81 @@ function getDialogsBaseUrl() {
     return `${href.split('/taskpane/')[0]}/dialogs/views/`;
   }
   return `${window.location.origin}/statistico-analytics/dialogs/views/`;
+}
+
+function updateButtonState() {
+  const savedModelSpec = sessionStorage.getItem('regressionModelSpec');
+  const hasSavedModel = savedModelSpec && savedModelSpec !== '{}';
+  
+  const mainBtn = document.getElementById('openModelBuilder');
+  const resetBtn = document.getElementById('resetModelBtn');
+  const note = document.getElementById('regressionNote');
+  
+  if (hasSavedModel) {
+    // Show "Run Last Model" button
+    if (mainBtn) {
+      mainBtn.innerHTML = '<i class="fa-solid fa-play"></i> Run Last Model';
+    }
+    if (resetBtn) {
+      resetBtn.style.display = 'block';
+    }
+    if (note) {
+      try {
+        const modelSpec = JSON.parse(savedModelSpec);
+        const yVar = modelSpec.y || 'Y';
+        const xCount = (modelSpec.xn?.length || 0) + (modelSpec.xc?.length || 0);
+        note.textContent = `Last model: ${yVar} ~ ${xCount} predictor${xCount !== 1 ? 's' : ''}. Click to view/modify or reset to start fresh.`;
+        note.style.background = '#f0fdf4';
+        note.style.borderColor = '#86efac';
+        note.style.color = '#166534';
+      } catch (e) {
+        note.textContent = 'A previous model configuration is saved. Click to run it again or reset to start fresh.';
+      }
+    }
+  } else {
+    // Show "Open Model Builder" button
+    if (mainBtn) {
+      mainBtn.innerHTML = '<i class="fa-solid fa-up-right-from-square"></i> Open Model Builder';
+    }
+    if (resetBtn) {
+      resetBtn.style.display = 'none';
+    }
+    if (note) {
+      note.textContent = 'Select data above, then build your ANCOVA model in the popup (supports categorical predictors).';
+      note.style.background = '#eff6ff';
+      note.style.borderColor = '#bfdbfe';
+      note.style.color = '#1e40af';
+    }
+  }
+  
+  console.log('🔄 Button state updated. Has saved model:', hasSavedModel);
+}
+
+function resetModel() {
+  console.log('🔄 Resetting model configuration');
+  sessionStorage.removeItem('regressionModelSpec');
+  updateButtonState();
+  
+  // Show a brief confirmation
+  const note = document.getElementById('regressionNote');
+  if (note) {
+    const originalText = note.textContent;
+    const originalBg = note.style.background;
+    const originalBorder = note.style.borderColor;
+    const originalColor = note.style.color;
+    
+    note.textContent = '✓ Model configuration cleared. Ready to build a new model!';
+    note.style.background = '#f0fdf4';
+    note.style.borderColor = '#86efac';
+    note.style.color = '#166534';
+    
+    setTimeout(() => {
+      note.textContent = originalText;
+      note.style.background = originalBg;
+      note.style.borderColor = originalBorder;
+      note.style.color = originalColor;
+    }, 2000);
+  }
 }
 
 function hookUI() {
