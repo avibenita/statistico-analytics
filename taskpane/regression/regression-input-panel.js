@@ -144,6 +144,10 @@ function openRegressionCoefficientsDialog() {
             } else if (message.action === 'close') {
               resultsDialog.close();
               resultsDialog = null;
+              // Reopen model builder after closing coefficients dialog
+              setTimeout(() => {
+                openModelBuilder();
+              }, 500);
             }
           } catch (e) {
             console.error('Error handling dialog message:', e);
@@ -151,7 +155,12 @@ function openRegressionCoefficientsDialog() {
         });
 
         resultsDialog.addEventHandler(Office.EventType.DialogEventReceived, () => {
+          console.log('🔄 Coefficients dialog closed by user, reopening model builder');
           resultsDialog = null;
+          // Reopen model builder when dialog is closed
+          setTimeout(() => {
+            openModelBuilder();
+          }, 500);
         });
         
         // Also send data after a delay as fallback
@@ -169,13 +178,18 @@ function sendDialogData() {
 
   const headers = regressionRangeData[0] || [];
   const rows = regressionRangeData.slice(1);
+  
+  // Include saved model spec if it exists (for reopening with previous configuration)
+  const savedModelSpec = sessionStorage.getItem('regressionModelSpec');
+  const modelSpec = savedModelSpec ? JSON.parse(savedModelSpec) : null;
 
   resultsDialog.messageChild(JSON.stringify({
     type: 'REGRESSION_DATA',
     payload: {
       headers,
       rows,
-      address: regressionRangeAddress
+      address: regressionRangeAddress,
+      savedModelSpec: modelSpec  // Include the saved model configuration
     }
   }));
 }

@@ -1213,6 +1213,7 @@
       var headers = data.headers;
       var rows = data.rows;
       var address = data.address || '';
+      var savedModelSpec = data.savedModelSpec || null;  // Get saved model spec if provided
 
       if (qs('tbRange')) {
         qs('tbRange').textContent = address || 'Selection';
@@ -1242,7 +1243,14 @@
 
       console.log('✅ Processed variables:', STATE.variables);
       renderVariables();
-      clearAssignments();
+      
+      // Restore saved model configuration if it exists
+      if (savedModelSpec && (savedModelSpec.y || savedModelSpec.xn || savedModelSpec.xc)) {
+        console.log('🔄 Restoring saved model configuration:', savedModelSpec);
+        restoreModelConfiguration(savedModelSpec);
+      } else {
+        clearAssignments();
+      }
     }
 
     function buildVariableStats(headers, rows, address) {
@@ -2080,6 +2088,58 @@
       renderVariables(); // Re-enable all variables in the list
       renderAssignments();
       validateModel();
+    }
+    
+    function restoreModelConfiguration(modelSpec) {
+      console.log('🔄 Restoring model configuration:', modelSpec);
+      
+      // Restore Y variable
+      if (modelSpec.y) {
+        var yVar = STATE.variables.find(function(v) { return v.name === modelSpec.y; });
+        if (yVar) {
+          STATE.assignments.y = modelSpec.y;
+          console.log('✅ Restored Y:', modelSpec.y);
+        }
+      }
+      
+      // Restore numeric X variables
+      if (modelSpec.xn && Array.isArray(modelSpec.xn)) {
+        modelSpec.xn.forEach(function(varName) {
+          var xnVar = STATE.variables.find(function(v) { return v.name === varName; });
+          if (xnVar && STATE.assignments.xn.indexOf(varName) === -1) {
+            STATE.assignments.xn.push(varName);
+            console.log('✅ Restored numeric X:', varName);
+          }
+        });
+      }
+      
+      // Restore categorical X variables
+      if (modelSpec.xc && Array.isArray(modelSpec.xc)) {
+        modelSpec.xc.forEach(function(varName) {
+          var xcVar = STATE.variables.find(function(v) { return v.name === varName; });
+          if (xcVar && STATE.assignments.xc.indexOf(varName) === -1) {
+            STATE.assignments.xc.push(varName);
+            console.log('✅ Restored categorical X:', varName);
+          }
+        });
+      }
+      
+      // Restore intercept setting
+      if (typeof modelSpec.intercept !== 'undefined') {
+        var interceptCheckbox = qs('chkIncludeIntercept');
+        if (interceptCheckbox) {
+          interceptCheckbox.checked = (modelSpec.intercept === 1);
+          console.log('✅ Restored intercept:', modelSpec.intercept === 1);
+        }
+      }
+      
+      // Update UI to reflect restored configuration
+      renderVariables();
+      renderAssignments();
+      validateModel();
+      updateModelEquation();
+      
+      console.log('✅ Model configuration restored successfully');
     }
 
     function updateModelEquation() {
