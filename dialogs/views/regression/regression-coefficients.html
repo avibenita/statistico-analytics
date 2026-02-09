@@ -31,7 +31,7 @@
 
     .wrap{ display:flex; justify-content:center; padding:clamp(3px,1vh,8px) clamp(6px,2vh,12px) 19px; }
     .card{
-      width:min(1120px,100%); background:var(--surface-1);
+      width:min(1400px,98%); background:var(--surface-1);
       min-height: 740px;
       border-radius:var(--panel-radius); box-shadow:var(--panel-shadow);
       border:1px solid var(--border); overflow:visible;
@@ -534,8 +534,36 @@
           </div>
         </div>
 
+        <!-- ANOVA Table Panel -->
+        <div class="stat-panel" style="min-width: 100%; margin-top: 20px;">
+          <div class="stat-panel-heading"><i class="fa-solid fa-chart-pie"></i> Analysis of Variance (ANOVA)</div>
+          <div class="stat-panel-body" style="padding: 0;">
+            <div class="table-container" style="margin: 0; border: none; border-radius: 0;">
+              <table class="regression-table">
+                <thead>
+                  <tr>
+                    <th>Source</th>
+                    <th>DF</th>
+                    <th>Sum of Squares</th>
+                    <th>Mean Square</th>
+                    <th>F-Value</th>
+                    <th>P-Value</th>
+                  </tr>
+                </thead>
+                <tbody id="anovaTableBody">
+                  <tr>
+                    <td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted); font-style:italic;">
+                      <i class="fa-solid fa-hourglass-half"></i> Awaiting regression results...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <!-- Coefficients Table Panel -->
-        <div class="stat-panel" style="min-width: 100%; margin-top: 0;">
+        <div class="stat-panel" style="min-width: 100%; margin-top: 20px;">
           <div class="stat-panel-heading"><i class="fa-solid fa-table"></i> Regression Coefficients</div>
           <div class="stat-panel-body" style="padding: 0;">
             <div class="table-container" style="margin: 0; border: none; border-radius: 0;">
@@ -953,6 +981,46 @@
       document.getElementById('fPValue').textContent = results.F_pvalue < 0.0001 ? '< 0.0001' : results.F_pvalue.toFixed(4);
       document.getElementById('ssModel').textContent = results.SSE.toFixed(4);
       document.getElementById('ssResidual').textContent = results.SSR.toFixed(4);
+      
+      // Populate ANOVA table
+      const anovaBody = document.getElementById('anovaTableBody');
+      if (anovaBody) {
+        // Calculate degrees of freedom
+        const df_model = results.k - 1; // k - 1 for model (k includes intercept)
+        const df_residual = results.df; // n - k
+        const df_total = results.n - 1;
+        
+        // Calculate mean squares
+        const ms_model = results.SSE / df_model;
+        const ms_residual = results.SSR / df_residual;
+        
+        anovaBody.innerHTML = `
+          <tr style="background: rgba(74, 85, 104, 0.3);">
+            <td><strong>Model</strong></td>
+            <td>${df_model}</td>
+            <td>${results.SSE.toFixed(4)}</td>
+            <td>${ms_model.toFixed(4)}</td>
+            <td>${results.F_stat.toFixed(4)}</td>
+            <td>${results.F_pvalue < 0.0001 ? '< 0.0001' : results.F_pvalue.toFixed(4)}</td>
+          </tr>
+          <tr>
+            <td><strong>Residual</strong></td>
+            <td>${df_residual}</td>
+            <td>${results.SSR.toFixed(4)}</td>
+            <td>${ms_residual.toFixed(4)}</td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+          <tr style="background: rgba(255, 165, 120, 0.2); font-weight: 600;">
+            <td><strong>Total</strong></td>
+            <td>${df_total}</td>
+            <td>${results.TSS.toFixed(4)}</td>
+            <td>—</td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+        `;
+      }
       
       // Populate coefficients table
       const tbody = document.getElementById('dataTableBody');
