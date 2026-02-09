@@ -723,6 +723,31 @@
       });
     }
     
+    // Helper function to get unique categories from a column
+    function getUniqueCategories(rows, colIndex) {
+      const categories = new Set();
+      for (const row of rows) {
+        const val = row[colIndex];
+        if (val !== null && val !== undefined && val !== '') {
+          categories.add(String(val));
+        }
+      }
+      return Array.from(categories).sort();
+    }
+    
+    // Helper function to create dummy variables for a categorical column
+    function createDummyVariables(value, categories, varName) {
+      // Create k-1 dummy variables (first category is reference)
+      const dummies = [];
+      const strValue = String(value);
+      
+      for (let i = 1; i < categories.length; i++) {
+        dummies.push(strValue === categories[i] ? 1 : 0);
+      }
+      
+      return dummies;
+    }
+    
     // Process the received regression data and run analysis
     function processRegressionData() {
       if (!receivedRegressionData || !receivedModelSpec) {
@@ -761,7 +786,40 @@
         return;
       }
       
-      // Build X matrix and Y vector together with synchronized filtering
+      // Step 1: Identify unique categories for each categorical variable
+      const categoricalInfo = [];
+      for (let i = 0; i < xc.length; i++) {
+        const xcIdx = xcIndices[i];
+        const varName = xc[i];
+        const categories = getUniqueCategories(rows, xcIdx);
+        
+        console.log(`📊 Categorical variable "${varName}":`, categories);
+        
+        if (categories.length < 2) {
+          console.warn(`⚠️ Categorical variable "${varName}" has less than 2 categories. Skipping.`);
+          continue;
+        }
+        
+        categoricalInfo.push({
+          name: varName,
+          index: xcIdx,
+          categories: categories,
+          // Create dummy variable names (k-1 dummies, first category is reference)
+          dummyNames: categories.slice(1).map(cat => `${varName}_${cat}`)
+        });
+      }
+      
+      console.log('🎯 Categorical dummy coding:', categoricalInfo);
+      
+      // Build variable names list (for display)
+      const variableNames = [...xn]; // Start with numeric variables
+      for (const catInfo of categoricalInfo) {
+        variableNames.push(...catInfo.dummyNames);
+      }
+      
+      console.log('📋 Final variable names:', variableNames);
+      
+      // Step 2: Build X matrix and Y vector together with synchronized filtering
       const xMatrix = [];
       const yVector = [];
       
@@ -788,22 +846,28 @@
         
         if (!validRow) continue;
         
-        // Add categorical predictors
-        for (const xcIdx of xcIndices) {
-          const val = parseFloat(row[xcIdx]);
-          if (isNaN(val)) {
+        // Add categorical predictors as dummy variables
+        for (const catInfo of categoricalInfo) {
+          const catValue = row[catInfo.index];
+          if (catValue === null || catValue === undefined || catValue === '') {
             validRow = false;
             break;
           }
-          xRow.push(val);
+          
+          // Create dummy variables for this categorical
+          const dummies = createDummyVariables(catValue, catInfo.categories, catInfo.name);
+          xRow.push(...dummies);
         }
         
-        // Only add if all X values are valid
-        if (validRow && xRow.length === (xnIndices.length + xcIndices.length)) {
+        // Only add if all values are valid
+        if (validRow) {
           xMatrix.push(xRow);
           yVector.push(yVal);
         }
       }
+      
+      // Store variable names globally for display
+      window.regressionVariableNames = variableNames;
       
       console.log('📊 Data prepared:', {
         observations: yVector.length,
@@ -868,6 +932,9 @@
     function displayRegressionResults(results, yVarName, xnVars, xcVars) {
       console.log('📊 Displaying regression results...');
       
+      // Get the proper variable names (with dummy coding)
+      const varNames = window.regressionVariableNames || [...xnVars, ...xcVars];
+      
       // Populate Sample Info panel
       document.getElementById('validObs').textContent = results.n;
       document.getElementById('includeIntercept').textContent = results.includeIntercept ? 'Yes' : 'No';
@@ -892,7 +959,8 @@
       if (tbody) {
         tbody.innerHTML = '';
         
-        const allVars = results.includeIntercept ? ['Intercept', ...xnVars, ...xcVars] : [...xnVars, ...xcVars];
+        // Build complete variable list with proper names
+        const allVars = results.includeIntercept ? ['Intercept', ...varNames] : varNames;
         
         results.coefficients.forEach((coef, i) => {
           const row = document.createElement('tr');
@@ -900,7 +968,13 @@
           
           // Check significance
           const significant = results.p_values[i] < 0.05;
-          const sigIndicator = significant ? ' *' : '';
+          const highlySignificant = results.p_values[i] < 0.01;
+          const veryHighlySignificant = results.p_values[i] < 0.001;
+          
+          let sigIndicator = '';
+          if (veryHighlySignificant) sigIndicator = ' ***';
+          else if (highlySignificant) sigIndicator = ' **';
+          else if (significant) sigIndicator = ' *';
           
           row.innerHTML = `
             <td><strong>${varName}</strong></td>
