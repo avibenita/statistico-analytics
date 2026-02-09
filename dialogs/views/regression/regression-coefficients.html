@@ -913,6 +913,9 @@
       // Get the proper variable names (with dummy coding)
       const varNames = window.regressionVariableNames || [...xnVars, ...xcVars];
       
+      // Build complete variable list with proper names (for use throughout)
+      const allVars = results.includeIntercept ? ['Intercept', ...varNames] : varNames;
+      
       // Populate Sample Info panel
       document.getElementById('validObs').textContent = results.n;
       document.getElementById('includeIntercept').textContent = results.includeIntercept ? 'Yes' : 'No';
@@ -976,9 +979,6 @@
       const tbody = document.getElementById('dataTableBody');
       if (tbody) {
         tbody.innerHTML = '';
-        
-        // Build complete variable list with proper names
-        const allVars = results.includeIntercept ? ['Intercept', ...varNames] : varNames;
         
         results.coefficients.forEach((coef, i) => {
           const row = document.createElement('tr');
