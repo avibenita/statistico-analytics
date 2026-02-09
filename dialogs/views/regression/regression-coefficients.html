@@ -1706,18 +1706,24 @@
       document.getElementById('determinant').innerText = 
         diagnostics.multicollinearity.determinant.toExponential(4);
       
-      // VIF values
+      // VIF values (skip if not computed for performance)
       const vifList = document.getElementById('vifList');
-      const vifs = diagnostics.multicollinearity.vif;
-      let vifHtml = '<ul style="margin: 5px 0; padding-left: 20px;">';
-      vifs.forEach((vif, idx) => {
-        const varName = idx === 0 ? 'Intercept' : `X${idx}`;
-        const color = vif > 10 ? 'color: #ff6b6b;' : vif > 5 ? 'color: #ffa500;' : '';
-        const warning = vif > 10 ? ' ⚠️ High' : vif > 5 ? ' ⚡ Moderate' : '';
-        vifHtml += `<li style="${color}">${varName}: ${vif.toFixed(2)}${warning}</li>`;
-      });
-      vifHtml += '</ul>';
-      vifList.innerHTML = vifHtml;
+      if (vifList) {
+        const vifs = diagnostics.multicollinearity.vif || [];
+        if (vifs.length > 0) {
+          let vifHtml = '<ul style="margin: 5px 0; padding-left: 20px;">';
+          vifs.forEach((vif, idx) => {
+            const varName = idx === 0 ? 'Intercept' : `X${idx}`;
+            const color = vif > 10 ? 'color: #ff6b6b;' : vif > 5 ? 'color: #ffa500;' : '';
+            const warning = vif > 10 ? ' ⚠️ High' : vif > 5 ? ' ⚡ Moderate' : '';
+            vifHtml += `<li style="${color}">${varName}: ${vif.toFixed(2)}${warning}</li>`;
+          });
+          vifHtml += '</ul>';
+          vifList.innerHTML = vifHtml;
+        } else {
+          vifList.innerHTML = '<p style="margin: 5px 0; color: #888; font-style: italic;">VIF not computed (disabled for performance)</p>';
+        }
+      }
       
       // High correlations
       const highCorr = diagnostics.multicollinearity.high_correlations;

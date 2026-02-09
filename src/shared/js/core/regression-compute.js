@@ -7,7 +7,7 @@
 // MAIN OLS COMPUTATION
 // ============================================================================
 
-function computeOLS(X, Y, includeIntercept = true, alpha = 0.05) {
+function computeOLS(X, Y, includeIntercept = true, alpha = 0.05, computeVIFFlag = false) {
     const n = Y.length;
     const p = X[0].length;
     
@@ -70,8 +70,8 @@ function computeOLS(X, Y, includeIntercept = true, alpha = 0.05) {
     const AIC = n * Math.log(SSR / n) + 2 * k;
     const BIC = n * Math.log(SSR / n) + k * Math.log(n);
     
-    // VIF calculation
-    const VIF = computeVIF(X, includeIntercept);
+    // VIF calculation (optional - expensive for large models)
+    const VIF = computeVIFFlag ? computeVIF(X, includeIntercept) : [];
     
     return {
         coefficients: beta,
