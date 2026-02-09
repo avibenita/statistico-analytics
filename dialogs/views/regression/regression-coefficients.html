@@ -31,7 +31,7 @@
 
     .wrap{ display:flex; justify-content:center; padding:clamp(3px,1vh,8px) clamp(6px,2vh,12px) 19px; }
     .card{
-      width:min(1400px,98%); background:var(--surface-1);
+      width:min(1600px,99%); background:var(--surface-1);
       min-height: 740px;
       border-radius:var(--panel-radius); box-shadow:var(--panel-shadow);
       border:1px solid var(--border); overflow:visible;
@@ -277,6 +277,20 @@
       max-width: 180px;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    
+    /* Variable type colors */
+    .var-intercept {
+      color: #fbbf24 !important; /* Amber for intercept */
+      font-weight: 700 !important;
+    }
+    
+    .var-numeric {
+      color: #60a5fa !important; /* Blue for numeric */
+    }
+    
+    .var-categorical {
+      color: #a78bfa !important; /* Purple for categorical */
     }
 
     .regression-table tbody tr:hover {
@@ -588,6 +602,16 @@
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Regression Equation Display -->
+        <div class="stat-panel" style="min-width: 100%; margin-top: 8px;">
+          <div class="stat-panel-heading"><i class="fa-solid fa-function"></i> Regression Equation</div>
+          <div class="stat-panel-body">
+            <div id="regressionEquation" style="font-family: 'Courier New', monospace; font-size: 0.8rem; color: var(--text-primary); background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px; overflow-x: auto; white-space: nowrap;">
+              Awaiting regression results...
             </div>
           </div>
         </div>
@@ -960,6 +984,19 @@
           const row = document.createElement('tr');
           const varName = allVars[i] || `X${i}`;
           
+          // Determine variable type for color coding
+          let varClass = '';
+          if (i === 0 && results.includeIntercept) {
+            varClass = 'var-intercept';
+          } else {
+            // Check if it's a categorical variable (contains underscore for dummy coding)
+            if (varName.includes('_')) {
+              varClass = 'var-categorical';
+            } else {
+              varClass = 'var-numeric';
+            }
+          }
+          
           // Check significance
           const significant = results.p_values[i] < 0.05;
           const highlySignificant = results.p_values[i] < 0.01;
@@ -971,7 +1008,7 @@
           else if (significant) sigIndicator = ' *';
           
           row.innerHTML = `
-            <td><strong>${varName}</strong></td>
+            <td><strong class="${varClass}">${varName}</strong></td>
             <td>${coef.toFixed(2)}${sigIndicator}</td>
             <td>${results.std_errors[i].toFixed(2)}</td>
             <td>${results.t_values[i].toFixed(2)}</td>
@@ -983,6 +1020,31 @@
           
           tbody.appendChild(row);
         });
+      }
+      
+      // Generate and display regression equation
+      const equationDiv = document.getElementById('regressionEquation');
+      if (equationDiv) {
+        let equation = `${yVarName} = `;
+        
+        // Add intercept if included
+        if (results.includeIntercept && results.coefficients.length > 0) {
+          equation += `${results.coefficients[0].toFixed(2)}`;
+        }
+        
+        // Add all predictor terms
+        const startIdx = results.includeIntercept ? 1 : 0;
+        for (let i = startIdx; i < results.coefficients.length; i++) {
+          const coef = results.coefficients[i];
+          const varName = allVars[i] || `X${i}`;
+          const sign = coef >= 0 ? ' + ' : ' - ';
+          const absCoef = Math.abs(coef).toFixed(2);
+          
+          equation += `${sign}${absCoef} × ${varName}`;
+        }
+        
+        equation += ' + ε';
+        equationDiv.textContent = equation;
       }
       
       console.log('✅ Results displayed in UI');
