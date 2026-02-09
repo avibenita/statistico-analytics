@@ -512,6 +512,9 @@
               <a href="http://127.0.0.1:12345?command=Case20" target="_self">Diagnostics</a>
               <a href="http://127.0.0.1:12345?command=Case30" target="_self">Predictions</a>
               <div class="dropdown-separator"></div>
+              <a href="javascript:void(0);" onclick="openModelCorrelations()" style="cursor: pointer;">
+                <i class="fa-solid fa-project-diagram"></i> Model Variable Correlations
+              </a>
               <a href="http://127.0.0.1:12345?command=Case400" target="_self">Descriptive Statistics</a>
               <a href="http://127.0.0.1:12345?command=Case500" target="_self">Correlation Analysis</a>
               <div class="dropdown-separator"></div>
@@ -1268,6 +1271,86 @@
         console.log('✅ Regression variables list set:', regressionVariablesList);
       }
     };
+    
+    // Function to open correlation matrix for model variables (Y + numeric X)
+    function openModelCorrelations() {
+      console.log('📊 Opening correlations for model variables...');
+      
+      if (!receivedRegressionData || !receivedModelSpec) {
+        alert('No regression data available. Please run a regression first.');
+        return;
+      }
+      
+      const { headers, rows, address } = receivedRegressionData;
+      const { y, xn = [], xc = [] } = receivedModelSpec;
+      
+      // Include Y and only numeric X variables (exclude categorical)
+      const varsToInclude = [y, ...xn];
+      console.log('📋 Variables for correlation:', varsToInclude);
+      
+      // Get column indices
+      const indices = varsToInclude.map(varName => headers.indexOf(varName)).filter(idx => idx !== -1);
+      
+      if (indices.length < 2) {
+        alert('Need at least 2 numeric variables for correlation analysis.');
+        return;
+      }
+      
+      // Filter headers and rows to include only selected variables
+      const filteredHeaders = indices.map(idx => headers[idx]);
+      const filteredRows = rows.map(row => indices.map(idx => row[idx]));
+      
+      // Store data in sessionStorage for the correlation dialog
+      sessionStorage.setItem('correlationData', JSON.stringify({
+        headers: filteredHeaders,
+        rows: filteredRows,
+        address: address,
+        source: 'regression-model',
+        modelInfo: {
+          y: y,
+          xn: xn,
+          totalVars: varsToInclude.length
+        }
+      }));
+      
+      // Open correlation matrix dialog
+      const dialogUrl = window.location.href.split('/regression/')[0] + '/correlations/correlation-matrix.html';
+      console.log('🪟 Opening correlation dialog:', dialogUrl);
+      
+      if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+        Office.context.ui.displayDialogAsync(
+          dialogUrl,
+          { height: 90, width: 90, displayInIframe: false },
+          (asyncResult) => {
+            if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+              console.error('Failed to open correlation dialog:', asyncResult.error);
+              alert(`Failed to open correlation dialog: ${asyncResult.error.message || asyncResult.error}`);
+            } else {
+              console.log('✅ Correlation dialog opened');
+              const correlationDialog = asyncResult.value;
+              
+              // Send data to dialog when ready
+              correlationDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
+                try {
+                  const message = JSON.parse(arg.message);
+                  if (message.action === 'ready' || message.action === 'requestData') {
+                    const data = JSON.parse(sessionStorage.getItem('correlationData'));
+                    correlationDialog.messageChild(JSON.stringify({
+                      type: 'CORRELATION_DATA',
+                      payload: data
+                    }));
+                  }
+                } catch (e) {
+                  console.error('Error handling correlation dialog message:', e);
+                }
+              });
+            }
+          }
+        );
+      } else {
+        alert('Office dialog API not available.');
+      }
+    }
     
     // Dropdown toggle functionality
     (function() {
