@@ -1299,7 +1299,7 @@
       const filteredHeaders = indices.map(idx => headers[idx]);
       const filteredRows = rows.map(row => indices.map(idx => row[idx]));
       
-      // Store data in sessionStorage for the correlation dialog
+      // Store data in sessionStorage for the correlation page
       sessionStorage.setItem('correlationData', JSON.stringify({
         headers: filteredHeaders,
         rows: filteredRows,
@@ -1312,43 +1312,10 @@
         }
       }));
       
-      // Open correlation matrix dialog
-      const dialogUrl = window.location.href.split('/regression/')[0] + '/correlations/correlation-matrix.html';
-      console.log('🪟 Opening correlation dialog:', dialogUrl);
-      
-      if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
-        Office.context.ui.displayDialogAsync(
-          dialogUrl,
-          { height: 90, width: 90, displayInIframe: false },
-          (asyncResult) => {
-            if (asyncResult.status === Office.AsyncResultStatus.Failed) {
-              console.error('Failed to open correlation dialog:', asyncResult.error);
-              alert(`Failed to open correlation dialog: ${asyncResult.error.message || asyncResult.error}`);
-            } else {
-              console.log('✅ Correlation dialog opened');
-              const correlationDialog = asyncResult.value;
-              
-              // Send data to dialog when ready
-              correlationDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
-                try {
-                  const message = JSON.parse(arg.message);
-                  if (message.action === 'ready' || message.action === 'requestData') {
-                    const data = JSON.parse(sessionStorage.getItem('correlationData'));
-                    correlationDialog.messageChild(JSON.stringify({
-                      type: 'CORRELATION_DATA',
-                      payload: data
-                    }));
-                  }
-                } catch (e) {
-                  console.error('Error handling correlation dialog message:', e);
-                }
-              });
-            }
-          }
-        );
-      } else {
-        alert('Office dialog API not available.');
-      }
+      // Navigate to correlation matrix in the same dialog window
+      const correlationUrl = window.location.href.split('/regression/')[0] + '/correlations/correlation-matrix.html';
+      console.log('🔄 Navigating to correlation matrix:', correlationUrl);
+      window.location.href = correlationUrl;
     }
     
     // Dropdown toggle functionality
