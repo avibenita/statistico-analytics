@@ -1192,6 +1192,9 @@
     }
 
     function createResidualsVsLeverage(leverage, standardized, cooksD) {
+      console.log('🎯 Creating Residuals vs Leverage plot with Cook\'s D contours');
+      console.log('Max Cook\'s D:', Math.max(...cooksD));
+      
       // Highlight high influence points
       const data = leverage.map((l, i) => ({
         x: l,
@@ -1206,27 +1209,33 @@
 
       // Generate Cook's distance contour lines (0.5 and 1.0)
       const maxLev = Math.max(...leverage);
-      const contourSeries = [];
+      const k = regressionResults.k || 2;
+      console.log('📊 k =', k, ', maxLev =', maxLev);
       
       // Contour for Cook's D = 0.5
       const contour05_pos = [];
       const contour05_neg = [];
       for (let h = 0.001; h <= maxLev; h += maxLev/50) {
-        const k = regressionResults.k || 2;
-        const sr = Math.sqrt(0.5 * k * (1-h)*(1-h) / h);
-        contour05_pos.push([h, sr]);
-        contour05_neg.push([h, -sr]);
+        const sr = Math.sqrt(Math.abs(0.5 * k * (1-h)*(1-h) / h));
+        if (isFinite(sr)) {
+          contour05_pos.push([h, sr]);
+          contour05_neg.push([h, -sr]);
+        }
       }
       
       // Contour for Cook's D = 1.0
       const contour10_pos = [];
       const contour10_neg = [];
       for (let h = 0.001; h <= maxLev; h += maxLev/50) {
-        const k = regressionResults.k || 2;
-        const sr = Math.sqrt(1.0 * k * (1-h)*(1-h) / h);
-        contour10_pos.push([h, sr]);
-        contour10_neg.push([h, -sr]);
+        const sr = Math.sqrt(Math.abs(1.0 * k * (1-h)*(1-h) / h));
+        if (isFinite(sr)) {
+          contour10_pos.push([h, sr]);
+          contour10_neg.push([h, -sr]);
+        }
       }
+      
+      console.log('📈 Contour 0.5 points:', contour05_pos.length);
+      console.log('📈 Contour 1.0 points:', contour10_pos.length);
 
       Highcharts.chart('chart4', {
         chart: {
@@ -1528,13 +1537,31 @@
     }
 
     function displayCooksDistanceChart(cooksD) {
+      console.log('📊 Creating Cook\'s Distance Bar Chart');
+      console.log('📊 Number of observations:', cooksD.length);
+      console.log('📊 Max Cook\'s D:', Math.max(...cooksD));
+      
       const influentialCount = cooksD.filter(d => d > 0.5).length;
       const highInfluenceCount = cooksD.filter(d => d > 1).length;
       
+      console.log('📊 Influential count:', influentialCount);
+      console.log('📊 High influence count:', highInfluenceCount);
+      
       // Update badge
-      document.getElementById('cooksBadge').textContent = 
-        `Influential: ${influentialCount} (D > 0.5) | High: ${highInfluenceCount} (D > 1.0)`;
+      const badge = document.getElementById('cooksBadge');
+      if (badge) {
+        badge.textContent = `Influential: ${influentialCount} (D > 0.5) | High: ${highInfluenceCount} (D > 1.0)`;
+      } else {
+        console.error('❌ cooksBadge element not found!');
+      }
 
+      // Check if chart container exists
+      const chartContainer = document.getElementById('cooksChart');
+      if (!chartContainer) {
+        console.error('❌ cooksChart element not found!');
+        return;
+      }
+      
       // Prepare data for bar chart
       const data = cooksD.map((d, i) => ({
         x: i + 1,
@@ -1546,8 +1573,11 @@
         }
       }));
 
+      console.log('📊 Creating chart with', data.length, 'data points');
+      
       // Create Highcharts bar chart
-      Highcharts.chart('cooksChart', {
+      try {
+        Highcharts.chart('cooksChart', {
         chart: {
           type: 'column',
           backgroundColor: 'transparent',
@@ -1616,6 +1646,10 @@
         },
         credits: { enabled: false }
       });
+      console.log('✅ Cook\'s Distance chart created successfully');
+      } catch (error) {
+        console.error('❌ Error creating Cook\'s Distance chart:', error);
+      }
     }
 
     function displayAIAssessment(cooksD) {
