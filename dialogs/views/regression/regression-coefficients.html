@@ -368,6 +368,16 @@
       white-space: nowrap;
     }
     
+    .equation-formula .y-var {
+      color: var(--accent-1);
+      font-weight: 900;
+      font-size: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px rgba(255, 165, 120, 0.5);
+      padding: 0 4px;
+    }
+    
     .equation-formula .var {
       color: var(--accent-1);
       font-weight: 600;
@@ -1952,7 +1962,7 @@
       // Get Y variable name from page title or use default
       const yVar = 'Y';
       
-      let equation = `<span class="var">${yVar}</span> = `;
+      let equation = `<span class="y-var">${yVar}</span> = `;
       
       rows.forEach((row, index) => {
         const varName = row.Variable || `X${index}`;
