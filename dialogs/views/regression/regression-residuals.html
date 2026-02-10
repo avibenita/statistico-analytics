@@ -84,6 +84,74 @@
       font-size: 14px;
     }
 
+    /* Diagnostic Verdict Strip */
+    .verdict-strip {
+      background: linear-gradient(135deg, var(--surface-1) 0%, var(--surface-2) 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .verdict-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent-1);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .verdict-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .verdict-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: var(--surface-2);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .verdict-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .verdict-icon.pass { color: var(--success); }
+    .verdict-icon.warning { color: var(--warning); }
+    .verdict-icon.fail { color: var(--danger); }
+
+    .verdict-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .verdict-overall {
+      margin-top: 15px;
+      padding: 15px;
+      background: rgba(255, 165, 120, 0.1);
+      border: 1px solid var(--accent-1);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .verdict-overall i {
+      margin-right: 8px;
+    }
+
     /* Statistical Tests Panel */
     .tests-panel {
       background: var(--surface-1);
@@ -133,6 +201,15 @@
       font-size: 12px;
       color: var(--text-secondary);
       margin-bottom: 4px;
+    }
+
+    .test-impact {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-style: italic;
     }
 
     .test-result {
@@ -209,6 +286,47 @@
 
     .chart-container {
       height: 350px;
+      width: 100%;
+    }
+
+    /* Outliers Histogram */
+    .histogram-panel {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .histogram-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .histogram-title {
+      font-size: 18px;
+      color: var(--accent-2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .histogram-badge {
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid var(--warning);
+      color: var(--warning);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .histogram-chart {
+      height: 300px;
       width: 100%;
     }
 
@@ -307,6 +425,71 @@
       margin-bottom: 10px;
       color: var(--text-secondary);
     }
+
+    /* AI Assessment Box */
+    .ai-assessment {
+      background: linear-gradient(135deg, rgba(120, 200, 255, 0.1) 0%, rgba(255, 165, 120, 0.1) 100%);
+      border: 2px solid var(--accent-2);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .ai-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent-2);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ai-findings {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .ai-findings li {
+      font-size: 13px;
+      color: var(--text-secondary);
+      padding: 8px 0;
+      padding-left: 24px;
+      position: relative;
+    }
+
+    .ai-findings li::before {
+      content: '•';
+      position: absolute;
+      left: 8px;
+      color: var(--accent-2);
+      font-size: 16px;
+    }
+
+    .ai-findings li.success::before { color: var(--success); }
+    .ai-findings li.warning::before { color: var(--warning); }
+    .ai-findings li.danger::before { color: var(--danger); }
+
+    .ai-link {
+      display: inline-block;
+      margin-top: 12px;
+      color: var(--accent-2);
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .ai-link:hover {
+      color: var(--accent-1);
+      transform: translateX(3px);
+    }
+
+    .ai-link i {
+      margin-left: 5px;
+    }
   </style>
 </head>
 <body>
@@ -325,6 +508,20 @@
     </div>
 
     <div id="contentArea" style="display: none;">
+      <!-- Diagnostic Verdict Strip -->
+      <div class="verdict-strip">
+        <div class="verdict-title">
+          <i class="fa-solid fa-gauge-high"></i>
+          Model Diagnostics Summary
+        </div>
+        <div class="verdict-grid" id="verdictGrid">
+          <!-- Populated dynamically -->
+        </div>
+        <div class="verdict-overall" id="verdictOverall">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
       <!-- Statistical Tests -->
       <div class="tests-panel">
         <h2>
@@ -387,6 +584,20 @@
         </div>
       </div>
 
+      <!-- Outliers Histogram -->
+      <div class="histogram-panel">
+        <div class="histogram-header">
+          <div class="histogram-title">
+            <i class="fa-solid fa-chart-column"></i>
+            Residual Extremes Distribution
+          </div>
+          <div class="histogram-badge" id="outliersBadge">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+        <div id="histogramChart" class="histogram-chart"></div>
+      </div>
+
       <!-- Influential Observations -->
       <div class="outliers-panel">
         <h2>
@@ -403,6 +614,7 @@
                 <th>Leverage</th>
                 <th>Cook's D</th>
                 <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="outliersTable">
@@ -410,6 +622,17 @@
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- AI Preliminary Assessment -->
+      <div class="ai-assessment">
+        <div class="ai-title">
+          <i class="fa-solid fa-robot"></i>
+          Preliminary AI Assessment
+        </div>
+        <ul class="ai-findings" id="aiFindings">
+          <!-- Populated dynamically -->
+        </ul>
       </div>
     </div>
 
@@ -501,14 +724,23 @@
       // Display statistical tests
       displayTests(residuals, standardized);
 
+      // Display diagnostic verdict strip
+      displayVerdictStrip();
+
       // Create 4 diagnostic plots
       createResidualsVsFitted(fitted, residuals);
       createQQPlot(standardized);
       createScaleLocation(fitted, standardized);
       createResidualsVsLeverage(leverage, standardized, cooksD);
 
+      // Display outliers histogram
+      displayOutliersHistogram(standardized);
+
       // Display influential observations
       displayInfluentialObs(residuals, standardized, leverage, cooksD);
+
+      // Display AI preliminary assessment
+      displayAIAssessment(cooksD);
     }
 
     function calculateDiagnostics() {
@@ -545,6 +777,9 @@
       // Durbin-Watson Test
       const dwResult = durbinWatsonTest(residuals);
 
+      const outlierCount = standardized.filter(s => Math.abs(s) > 2).length;
+      const severeCount = standardized.filter(s => Math.abs(s) > 3).length;
+      
       testsGrid.innerHTML = `
         <div class="test-card">
           <div class="test-name">
@@ -554,6 +789,9 @@
           <div class="test-stat">p-value: ${swResult.p < 0.001 ? '< 0.001' : swResult.p.toFixed(4)}</div>
           <div class="test-result ${swResult.p > 0.05 ? 'pass' : 'fail'}">
             ${swResult.p > 0.05 ? '✓ Normality Assumed' : '✗ Non-Normal'}
+          </div>
+          <div class="test-impact">
+            ${swResult.p > 0.05 ? 'Impact: Inference is reliable' : 'Impact: Inference may be biased'}
           </div>
         </div>
 
@@ -566,6 +804,9 @@
           <div class="test-result ${bpResult.p > 0.05 ? 'pass' : 'fail'}">
             ${bpResult.p > 0.05 ? '✓ Homoscedastic' : '✗ Heteroscedastic'}
           </div>
+          <div class="test-impact">
+            ${bpResult.p > 0.05 ? 'Impact: Standard errors are valid' : 'Impact: Standard errors may be unreliable'}
+          </div>
         </div>
 
         <div class="test-card">
@@ -577,6 +818,9 @@
           <div class="test-result ${Math.abs(dwResult.DW - 2) < 0.5 ? 'pass' : dwResult.DW < 1.5 || dwResult.DW > 2.5 ? 'fail' : 'warning'}">
             ${Math.abs(dwResult.DW - 2) < 0.5 ? '✓ No Autocorrelation' : '⚠ Check Autocorrelation'}
           </div>
+          <div class="test-impact">
+            ${Math.abs(dwResult.DW - 2) < 0.5 ? 'Impact: Residuals are independent' : 'Impact: Standard errors unreliable'}
+          </div>
         </div>
 
         <div class="test-card">
@@ -585,11 +829,24 @@
           </div>
           <div class="test-stat">Mean: ${residuals.reduce((a,b)=>a+b,0)/residuals.length < 0.001 ? '≈ 0.000' : (residuals.reduce((a,b)=>a+b,0)/residuals.length).toFixed(4)}</div>
           <div class="test-stat">Std Dev: ${Math.sqrt(residuals.reduce((s,r)=>s+r*r,0)/residuals.length).toFixed(4)}</div>
-          <div class="test-result pass">
-            ✓ ${residuals.length} Observations
+          <div class="test-stat">Outliers: ${outlierCount} (${(outlierCount/residuals.length*100).toFixed(1)}%)</div>
+          <div class="test-result ${outlierCount < residuals.length * 0.05 ? 'pass' : 'warning'}">
+            ${outlierCount < residuals.length * 0.05 ? '✓' : '⚠'} ${residuals.length} Observations
           </div>
         </div>
       `;
+      
+      // Store test results for verdict strip and AI assessment
+      window.diagnosticResults = {
+        normality: swResult.p > 0.05,
+        homoscedasticity: bpResult.p > 0.05,
+        independence: Math.abs(dwResult.DW - 2) < 0.5,
+        outlierCount: outlierCount,
+        severeCount: severeCount,
+        outlierPct: outlierCount / residuals.length * 100,
+        nObs: residuals.length,
+        tests: { swResult, bpResult, dwResult }
+      };
     }
 
     function shapiroWilkTest(data) {
@@ -822,7 +1079,7 @@
       if (influential.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-muted);">
+            <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">
               <i class="fa-solid fa-check-circle" style="font-size: 24px; margin-bottom: 10px; display: block; color: var(--success);"></i>
               No influential observations detected
             </td>
@@ -837,6 +1094,16 @@
         const status = isHighInfluence ? 'High Influence' : isHighLeverage ? 'High Leverage' : 'Outlier';
         const statusClass = isHighInfluence ? 'high-influence' : isHighLeverage ? 'high-leverage' : '';
         
+        // Determine action based on status
+        let action = '';
+        if (isHighInfluence) {
+          action = 'Consider exclusion';
+        } else if (isHighLeverage) {
+          action = 'Validate data';
+        } else {
+          action = 'Review data';
+        }
+        
         return `
           <tr>
             <td>${obs.index}</td>
@@ -845,9 +1112,211 @@
             <td>${obs.leverage.toFixed(4)}</td>
             <td>${obs.cooksD.toFixed(4)}</td>
             <td class="${statusClass}">${status}</td>
+            <td style="font-size: 12px; color: var(--text-muted);">${action}</td>
           </tr>
         `;
       }).join('');
+    }
+
+    function displayVerdictStrip() {
+      const results = window.diagnosticResults;
+      if (!results) return;
+
+      const verdictGrid = document.getElementById('verdictGrid');
+      const verdictOverall = document.getElementById('verdictOverall');
+
+      // Create verdict items
+      const normIcon = results.normality ? 'fa-check-circle' : 'fa-times-circle';
+      const normClass = results.normality ? 'pass' : 'fail';
+      const homoIcon = results.homoscedasticity ? 'fa-check-circle' : 'fa-times-circle';
+      const homoClass = results.homoscedasticity ? 'pass' : 'fail';
+      const indepIcon = results.independence ? 'fa-check-circle' : 'fa-exclamation-circle';
+      const indepClass = results.independence ? 'pass' : 'warning';
+      const outlierIcon = results.outlierCount > 0 ? 'fa-exclamation-triangle' : 'fa-check-circle';
+      const outlierClass = results.outlierCount > results.nObs * 0.05 ? 'warning' : 'pass';
+
+      verdictGrid.innerHTML = `
+        <div class="verdict-item">
+          <i class="fa-solid ${normIcon} verdict-icon ${normClass}"></i>
+          <div>
+            <div class="verdict-label">Normality</div>
+            <div style="font-size: 11px; color: var(--text-muted);">${results.normality ? '✓' : '✗'}</div>
+          </div>
+        </div>
+        <div class="verdict-item">
+          <i class="fa-solid ${homoIcon} verdict-icon ${homoClass}"></i>
+          <div>
+            <div class="verdict-label">Homoscedasticity</div>
+            <div style="font-size: 11px; color: var(--text-muted);">${results.homoscedasticity ? '✓' : '✗'}</div>
+          </div>
+        </div>
+        <div class="verdict-item">
+          <i class="fa-solid ${indepIcon} verdict-icon ${indepClass}"></i>
+          <div>
+            <div class="verdict-label">Independence</div>
+            <div style="font-size: 11px; color: var(--text-muted);">${results.independence ? '✓' : '⚠'}</div>
+          </div>
+        </div>
+        <div class="verdict-item">
+          <i class="fa-solid ${outlierIcon} verdict-icon ${outlierClass}"></i>
+          <div>
+            <div class="verdict-label">Outliers</div>
+            <div style="font-size: 11px; color: var(--text-muted);">${results.outlierCount} (${results.outlierPct.toFixed(1)}%)</div>
+          </div>
+        </div>
+      `;
+
+      // Overall status
+      const issueCount = [!results.normality, !results.homoscedasticity, !results.independence].filter(Boolean).length;
+      let overallIcon, overallText, overallColor;
+      
+      if (issueCount === 0 && results.outlierCount < results.nObs * 0.05) {
+        overallIcon = 'fa-check-circle';
+        overallText = 'Model assumptions are largely satisfied';
+        overallColor = 'var(--success)';
+      } else if (issueCount <= 1 && results.outlierCount < results.nObs * 0.1) {
+        overallIcon = 'fa-exclamation-triangle';
+        overallText = 'Model has minor assumption violations';
+        overallColor = 'var(--warning)';
+      } else {
+        overallIcon = 'fa-times-circle';
+        overallText = 'Model has significant assumption violations';
+        overallColor = 'var(--danger)';
+      }
+
+      verdictOverall.innerHTML = `
+        <i class="fa-solid ${overallIcon}" style="color: ${overallColor};"></i>
+        Overall Status: ${overallText}
+      `;
+      verdictOverall.style.borderColor = overallColor;
+    }
+
+    function displayOutliersHistogram(standardized) {
+      const outlierCount = standardized.filter(s => Math.abs(s) > 2).length;
+      const severeCount = standardized.filter(s => Math.abs(s) > 3).length;
+      
+      // Update badge
+      document.getElementById('outliersBadge').textContent = 
+        `Outliers: ${outlierCount} (${(outlierCount/standardized.length*100).toFixed(1)}%) | Severe: ${severeCount} (${(severeCount/standardized.length*100).toFixed(1)}%)`;
+
+      // Create histogram bins
+      const bins = [];
+      const binWidth = 0.5;
+      const minBin = -4;
+      const maxBin = 4;
+      
+      for (let bin = minBin; bin < maxBin; bin += binWidth) {
+        const count = standardized.filter(s => s >= bin && s < bin + binWidth).length;
+        bins.push({
+          x: bin + binWidth/2,
+          y: count,
+          color: Math.abs(bin + binWidth/2) >= 3 ? '#ef4444' : 
+                 Math.abs(bin + binWidth/2) >= 2 ? '#f59e0b' : '#3b82f6'
+        });
+      }
+
+      // Create Highcharts histogram
+      Highcharts.chart('histogramChart', {
+        chart: {
+          type: 'column',
+          backgroundColor: 'transparent',
+          style: { fontFamily: 'inherit' }
+        },
+        title: { text: null },
+        xAxis: {
+          title: { text: 'Standardized Residuals', style: { color: '#fff' } },
+          gridLineColor: 'rgba(255,255,255,0.1)',
+          labels: { style: { color: '#aaa' } },
+          plotLines: [
+            { value: -3, color: '#ef4444', width: 1, dashStyle: 'Dash', label: { text: '-3', style: { color: '#ef4444' } } },
+            { value: -2, color: '#f59e0b', width: 1, dashStyle: 'Dash', label: { text: '-2', style: { color: '#f59e0b' } } },
+            { value: 0, color: 'rgba(255,255,255,0.3)', width: 1 },
+            { value: 2, color: '#f59e0b', width: 1, dashStyle: 'Dash', label: { text: '+2', style: { color: '#f59e0b' } } },
+            { value: 3, color: '#ef4444', width: 1, dashStyle: 'Dash', label: { text: '+3', style: { color: '#ef4444' } } }
+          ]
+        },
+        yAxis: {
+          title: { text: 'Frequency', style: { color: '#fff' } },
+          gridLineColor: 'rgba(255,255,255,0.1)',
+          labels: { style: { color: '#aaa' } }
+        },
+        legend: { enabled: false },
+        plotOptions: {
+          column: {
+            pointPadding: 0,
+            borderWidth: 0,
+            groupPadding: 0,
+            shadow: false
+          }
+        },
+        series: [{
+          name: 'Frequency',
+          data: bins.map(b => ({
+            x: b.x,
+            y: b.y,
+            color: b.color
+          })),
+          pointWidth: 20
+        }],
+        tooltip: {
+          formatter: function() {
+            return `<b>${this.y}</b> observations<br/>Residual: ${this.x.toFixed(2)}`;
+          }
+        },
+        credits: { enabled: false }
+      });
+    }
+
+    function displayAIAssessment(cooksD) {
+      const results = window.diagnosticResults;
+      if (!results) return;
+
+      const aiFindings = document.getElementById('aiFindings');
+      const findings = [];
+
+      // Normality
+      if (results.normality) {
+        findings.push({ text: 'Residuals are approximately normally distributed', class: 'success' });
+      } else {
+        findings.push({ text: 'Normality assumption violated - inference may be biased', class: 'danger' });
+      }
+
+      // Homoscedasticity
+      if (results.homoscedasticity) {
+        findings.push({ text: 'No heteroscedasticity detected - constant variance confirmed', class: 'success' });
+      } else {
+        findings.push({ text: 'Heteroscedasticity detected - standard errors may be unreliable', class: 'warning' });
+      }
+
+      // Independence
+      if (results.independence) {
+        findings.push({ text: 'No autocorrelation detected - residuals are independent', class: 'success' });
+      } else {
+        findings.push({ text: 'Potential autocorrelation detected - check data ordering', class: 'warning' });
+      }
+
+      // Outliers
+      if (results.outlierCount === 0) {
+        findings.push({ text: 'No outliers detected', class: 'success' });
+      } else if (results.outlierCount < results.nObs * 0.05) {
+        findings.push({ text: `${results.outlierCount} moderate outliers detected (acceptable)`, class: 'success' });
+      } else {
+        findings.push({ text: `${results.outlierCount} outliers detected - may affect model stability`, class: 'warning' });
+      }
+
+      // Influential observations
+      const maxCook = Math.max(...cooksD);
+      if (maxCook > 1) {
+        findings.push({ text: 'Influential observations detected - model may be sensitive to specific data points', class: 'warning' });
+      } else if (maxCook > 0.5) {
+        findings.push({ text: 'Moderate influence detected in some observations', class: 'warning' });
+      } else {
+        findings.push({ text: 'No highly influential observations detected', class: 'success' });
+      }
+
+      aiFindings.innerHTML = findings.map(f => 
+        `<li class="${f.class}">${f.text}</li>`
+      ).join('');
     }
   </script>
 </body>
