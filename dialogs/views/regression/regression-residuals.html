@@ -56,60 +56,55 @@
       max-width: 100%;
       margin: 0 auto;
       padding: 0;
+      overflow-y: auto;
+      height: 100vh;
     }
 
-    /* Tabs Navigation */
+    /* Sub-Tabs Navigation (Smaller, Different Style) */
     .tabs-nav {
       display: flex;
-      gap: 4px;
-      padding: 15px 20px 0 20px;
-      background: var(--surface-0);
-      border-bottom: 2px solid var(--border);
+      gap: 8px;
+      padding: 12px 20px;
+      background: rgba(12, 22, 36, 0.5);
+      border-bottom: 1px solid rgba(45, 55, 72, 0.5);
       overflow-x: auto;
-      scrollbar-width: thin;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
 
     .tabs-nav::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    .tabs-nav::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 3px;
+      display: none;
     }
 
     .tab-btn {
-      padding: 12px 20px;
-      background: transparent;
-      border: none;
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
       color: var(--text-muted);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
       white-space: nowrap;
-      position: relative;
-      border: 1px solid transparent;
-      border-bottom: none;
     }
 
     .tab-btn:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.08);
       color: var(--text-secondary);
+      border-color: rgba(255, 255, 255, 0.15);
     }
 
     .tab-btn.active {
-      background: var(--surface-1);
+      background: linear-gradient(135deg, rgba(255, 165, 120, 0.2), rgba(120, 200, 255, 0.2));
       color: var(--accent-1);
-      border-color: var(--border);
-      border-bottom: 2px solid var(--surface-1);
-      margin-bottom: -2px;
+      border-color: var(--accent-1);
+      box-shadow: 0 0 12px rgba(255, 165, 120, 0.3);
     }
 
     .tab-btn i {
       margin-right: 6px;
+      font-size: 11px;
     }
 
     /* Tab Content */
@@ -117,6 +112,8 @@
       display: none;
       padding: 20px;
       animation: fadeIn 0.3s ease-in;
+      overflow-y: auto;
+      max-height: calc(100vh - 60px);
     }
 
     .tab-content.active {
@@ -178,6 +175,63 @@
       font-size: 13px;
       color: var(--text-secondary);
       font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .verdict-help {
+      font-size: 10px;
+      color: var(--text-muted);
+      cursor: help;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+
+    .verdict-help:hover {
+      opacity: 1;
+    }
+
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 220px;
+      background-color: var(--surface-2);
+      color: var(--text-primary);
+      text-align: left;
+      border-radius: 6px;
+      padding: 8px 12px;
+      position: absolute;
+      z-index: 1000;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -110px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 11px;
+      line-height: 1.4;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .tooltip .tooltiptext::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: var(--surface-2) transparent transparent transparent;
+    }
+
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
     }
 
     .verdict-overall {
@@ -217,8 +271,20 @@
 
     .tests-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 15px;
+    }
+
+    @media (max-width: 1400px) {
+      .tests-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .tests-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .test-card {
@@ -1230,28 +1296,52 @@
         <div class="verdict-item">
           <i class="fa-solid ${normIcon} verdict-icon ${normClass}"></i>
           <div>
-            <div class="verdict-label">Normality</div>
+            <div class="verdict-label">
+              Normality
+              <span class="tooltip">
+                <i class="fa-solid fa-circle-question verdict-help"></i>
+                <span class="tooltiptext">Residuals should be normally distributed. Based on Shapiro-Wilk test. Important for valid inference.</span>
+              </span>
+            </div>
             <div style="font-size: 11px; color: var(--text-muted);">${results.normality ? '✓' : '✗'}</div>
           </div>
         </div>
         <div class="verdict-item">
           <i class="fa-solid ${homoIcon} verdict-icon ${homoClass}"></i>
           <div>
-            <div class="verdict-label">Homoscedasticity</div>
+            <div class="verdict-label">
+              Homoscedasticity
+              <span class="tooltip">
+                <i class="fa-solid fa-circle-question verdict-help"></i>
+                <span class="tooltiptext">Constant variance of residuals. Based on Breusch-Pagan test. Ensures reliable standard errors.</span>
+              </span>
+            </div>
             <div style="font-size: 11px; color: var(--text-muted);">${results.homoscedasticity ? '✓' : '✗'}</div>
           </div>
         </div>
         <div class="verdict-item">
           <i class="fa-solid ${indepIcon} verdict-icon ${indepClass}"></i>
           <div>
-            <div class="verdict-label">Independence</div>
+            <div class="verdict-label">
+              Independence
+              <span class="tooltip">
+                <i class="fa-solid fa-circle-question verdict-help"></i>
+                <span class="tooltiptext">Checks if residuals are independent (no autocorrelation). Based on Durbin-Watson test. Important for time-series or ordered data.</span>
+              </span>
+            </div>
             <div style="font-size: 11px; color: var(--text-muted);">${results.independence ? '✓' : '⚠'}</div>
           </div>
         </div>
         <div class="verdict-item">
           <i class="fa-solid ${outlierIcon} verdict-icon ${outlierClass}"></i>
           <div>
-            <div class="verdict-label">Outliers</div>
+            <div class="verdict-label">
+              Outliers
+              <span class="tooltip">
+                <i class="fa-solid fa-circle-question verdict-help"></i>
+                <span class="tooltiptext">Observations with standardized residuals > ±2. May indicate unusual cases or model limitations.</span>
+              </span>
+            </div>
             <div style="font-size: 11px; color: var(--text-muted);">${results.outlierCount} (${results.outlierPct.toFixed(1)}%)</div>
           </div>
         </div>
