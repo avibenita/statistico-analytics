@@ -1029,11 +1029,41 @@
       background: rgba(120, 200, 255, 0.2);
       border-color: var(--accent-2);
       color: var(--accent-2);
+      position: relative;
     }
 
     .scenario-btn.load:hover {
       background: var(--accent-2);
       color: var(--surface-0);
+    }
+
+    .scenario-btn.load:hover::after {
+      content: 'Restore these slider values';
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      white-space: nowrap;
+      z-index: 1000;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .scenario-btn.load:hover::before {
+      content: '';
+      position: absolute;
+      bottom: calc(100% + 2px);
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      pointer-events: none;
     }
 
     .scenario-btn.delete {
@@ -1602,6 +1632,9 @@
                     </tr>
                   </tbody>
                 </table>
+              </div>
+              <div style="margin-top: 8px; padding: 8px; background: rgba(120, 200, 255, 0.05); border-left: 3px solid var(--accent-2); border-radius: 4px; font-size: 0.8rem; color: var(--text-muted);">
+                <i class="fa-solid fa-info-circle"></i> <strong>Tip:</strong> Click <span style="color: var(--accent-2);"><i class="fa-solid fa-play"></i> Apply</span> to instantly restore slider values from any saved scenario.
               </div>
             </div>
 
@@ -3444,103 +3477,62 @@
       // Draw prediction interval (wider, blue)
       const pi_x1 = (prediction.pi_lower - min) * scale + offsetX;
       const pi_x2 = (prediction.pi_upper - min) * scale + offsetX;
-      const pi_y = 45;
-      const pi_height = 18;
+      const pi_y = 48;
+      const pi_height = 24;
       
       ctx.fillStyle = 'rgba(120, 200, 255, 0.25)';
       ctx.fillRect(pi_x1, pi_y, pi_x2 - pi_x1, pi_height);
       ctx.strokeStyle = 'rgba(120, 200, 255, 0.8)';
       ctx.lineWidth = 2;
       ctx.strokeRect(pi_x1, pi_y, pi_x2 - pi_x1, pi_height);
-      
-      // Label for prediction interval
-      ctx.fillStyle = 'rgba(120, 200, 255, 1)';
-      ctx.textAlign = 'left';
-      ctx.font = 'bold 10px "Segoe UI", sans-serif';
-      ctx.fillText('95% PI', pi_x1, pi_y - 5);
 
       // Draw confidence interval (narrower, orange)
       const ci_x1 = (prediction.ci_lower - min) * scale + offsetX;
       const ci_x2 = (prediction.ci_upper - min) * scale + offsetX;
-      const ci_y = 48;
-      const ci_height = 12;
+      const ci_y = 52;
+      const ci_height = 16;
       
       ctx.fillStyle = 'rgba(255, 165, 120, 0.4)';
       ctx.fillRect(ci_x1, ci_y, ci_x2 - ci_x1, ci_height);
       ctx.strokeStyle = 'rgba(255, 165, 120, 1)';
       ctx.lineWidth = 2;
       ctx.strokeRect(ci_x1, ci_y, ci_x2 - ci_x1, ci_height);
-      
-      // Label for confidence interval
-      ctx.fillStyle = 'rgba(255, 165, 120, 1)';
-      ctx.textAlign = 'left';
-      ctx.font = 'bold 10px "Segoe UI", sans-serif';
-      ctx.fillText('95% CI', ci_x1, ci_y - 5);
 
       // Draw point prediction (center line)
       const pred_x = (prediction.value - min) * scale + offsetX;
       ctx.strokeStyle = '#FFA578';
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(pred_x, 40);
-      ctx.lineTo(pred_x, 68);
+      ctx.moveTo(pred_x, 44);
+      ctx.lineTo(pred_x, 76);
       ctx.stroke();
 
       // Draw point marker
       ctx.fillStyle = '#FFA578';
       ctx.beginPath();
-      ctx.arc(pred_x, 54, 7, 0, 2 * Math.PI);
+      ctx.arc(pred_x, 60, 7, 0, 2 * Math.PI);
       ctx.fill();
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Label for predicted value
+      // Label for predicted value (above)
       ctx.fillStyle = '#FFA578';
-      ctx.font = 'bold 11px "Segoe UI", sans-serif';
+      ctx.font = 'bold 13px "Segoe UI", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(prediction.value.toFixed(2), pred_x, 30);
 
-      // Draw value labels at endpoints
+      // Draw value labels at endpoints (bottom)
       ctx.font = '10px "Segoe UI", sans-serif';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
       
       // PI lower
-      ctx.textAlign = 'center';
-      ctx.fillText(prediction.pi_lower.toFixed(1), pi_x1, 82);
+      ctx.textAlign = 'left';
+      ctx.fillText(prediction.pi_lower.toFixed(1), pi_x1 - 5, 85);
       
       // PI upper
-      ctx.fillText(prediction.pi_upper.toFixed(1), pi_x2, 82);
-
-      // Draw legend at top
-      const legendY = 12;
-      ctx.font = '10px "Segoe UI", sans-serif';
-      ctx.textAlign = 'left';
-      
-      // Legend: Prediction Interval
-      ctx.fillStyle = 'rgba(120, 200, 255, 0.6)';
-      ctx.fillRect(10, legendY - 7, 12, 8);
-      ctx.strokeStyle = 'rgba(120, 200, 255, 0.8)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(10, legendY - 7, 12, 8);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.fillText('Prediction Interval', 26, legendY);
-      
-      // Legend: Confidence Interval
-      ctx.fillStyle = 'rgba(255, 165, 120, 0.6)';
-      ctx.fillRect(160, legendY - 7, 12, 8);
-      ctx.strokeStyle = 'rgba(255, 165, 120, 0.8)';
-      ctx.strokeRect(160, legendY - 7, 12, 8);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.fillText('Confidence Interval', 176, legendY);
-      
-      // Legend: Point Estimate
-      ctx.fillStyle = '#FFA578';
-      ctx.beginPath();
-      ctx.arc(320, legendY - 3, 4, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.fillText('Point Estimate', 330, legendY);
+      ctx.textAlign = 'right';
+      ctx.fillText(prediction.pi_upper.toFixed(1), pi_x2 + 5, 85);
     }
 
     /**
@@ -3623,7 +3615,7 @@
           <td style="font-size: 0.85rem;">[${scenario.prediction.ci_lower.toFixed(2)}, ${scenario.prediction.ci_upper.toFixed(2)}]</td>
           <td style="font-size: 0.85rem;">[${scenario.prediction.pi_lower.toFixed(2)}, ${scenario.prediction.pi_upper.toFixed(2)}]</td>
           <td class="scenario-actions">
-            <button class="scenario-btn load" onclick="loadScenario(${index})" title="Apply this scenario to sliders">
+            <button class="scenario-btn load" onclick="loadScenario(${index})">
               <i class="fa-solid fa-play"></i> Apply
             </button>
             <button class="scenario-btn delete" onclick="deleteScenario(${index})" title="Delete this scenario">
