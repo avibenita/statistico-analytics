@@ -480,19 +480,28 @@
     }
 
     function handleCorrelationData(payload) {
+      console.log('📊 handleCorrelationData called with payload:', payload);
       const headers = payload.headers || [];
       const rows = payload.data || [];
+      console.log('📋 Headers:', headers);
+      console.log('📋 Rows count:', rows.length);
+      
       window.rawData = rows;
       window.variableNames = headers.slice();
 
       if (headers.length > 0) {
+        console.log('✅ Calling updateDescriptiveStats with headers:', headers);
         window.updateDescriptiveStats(headers);
+      } else {
+        console.warn('⚠️ No headers found in payload');
       }
 
+      // Hide StatisticoHeader if it exists (not needed in iframe context)
       if (typeof StatisticoHeader !== 'undefined') {
-        StatisticoHeader.sampleSize = rows.length;
-        StatisticoHeader.variableName = `${headers.length} Variables`;
-        StatisticoHeader.render();
+        const headerContainer = document.getElementById('header-container');
+        if (headerContainer) {
+          headerContainer.style.display = 'none';
+        }
       }
     }
 
