@@ -917,7 +917,7 @@
   </style>
 </head>
 <body>
-  <div id="header-container"></div>
+    <div id="header-container"></div>
   <div class="panel-toolbar">
     <button class="toggle-panel-btn" onclick="toggleLeftPanel()" title="Toggle control panel (Press 'P')">
       <i class="fas fa-bars"></i> <span id="toggle-text">Hide Panel</span>
@@ -1072,12 +1072,12 @@
   
   <div class="main-container">
     <!-- Left Panel: Variable Selection & Dataset Management -->
-    <div class="left-panel">
+      <div class="left-panel">
       <div class="panel-header">
         <i class="fas fa-layer-group"></i> Dataset Configuration
         <span id="examplePanelBadge" class="example-badge">Example</span>
       </div>
-      <div class="panel-content">
+        <div class="panel-content">
         
         <!-- Variable Selection -->
         <div class="variable-section">
@@ -1089,9 +1089,9 @@
             <div style="text-align:center;color:var(--text-muted);font-size:0.85rem;padding:20px;">
               Awaiting data injection...
             </div>
-          </div>
         </div>
-        
+      </div>
+
         <!-- Reference Configuration Panel -->
         <div class="reference-panel">
           <div class="reference-panel-header">
@@ -1164,7 +1164,7 @@
     </div>
     
     <!-- Chart Container -->
-    <div class="chart-container">
+      <div class="chart-container">
       <div id="await-chart" class="await-message">
         <div>
           <i class="fas fa-chart-scatter" style="font-size:3rem;margin-bottom:15px;opacity:0.5;"></i>
@@ -1177,13 +1177,13 @@
         <div id="exampleNote" class="example-note">
           <strong>Example dataset only.</strong> These variables are demo BP measurements
           to illustrate how the Taylor diagram works. Click “Return to real data” to switch back.
-        </div>
-      </div>
+    </div>
+  </div>
 
-</div>
+  </div>
 
 
-<script>
+  <script>
     /* ============================================
      * TAYLOR DIAGRAM - VB6 DATA INJECTION GUIDE
      * ============================================
@@ -2735,8 +2735,8 @@
       console.log('  🎨 Creating new Highcharts Taylor diagram...');
       
       chart = Highcharts.chart('chart', {
-  chart: {
-    polar: true,
+        chart: {
+          polar: true,
           type: 'scatter',
           backgroundColor: 'transparent',
           height: '100%',
@@ -2764,17 +2764,17 @@
           }
   },
 
-  pane: {
-    startAngle: 0,
+        pane: {
+          startAngle: 0,
           endAngle: 90,
           size: '85%'
-  },
+        },
 
-  xAxis: {
+        xAxis: {
     tickInterval: 15,
-    min: 0,
+          min: 0,
     max: 90,
-    labels: {
+          labels: {
             formatter: function() {
         const r = Math.cos(this.value * Math.PI / 180).toFixed(2);
               return `<span style="font-weight:600;">r=${r}</span>`;
@@ -2804,8 +2804,8 @@
           gridLineWidth: 1
   },
 
-  yAxis: {
-    min: 0,
+        yAxis: {
+          min: 0,
           max: axisMax,
           tickInterval: axisMax > 2 ? 0.5 : 0.25,
     title: {
@@ -2834,7 +2834,7 @@
           gridLineWidth: 1
   },
 
-  tooltip: {
+        tooltip: {
           backgroundColor: 'rgba(26, 31, 46, 0.95)',
           borderColor: '#2d3748',
           style: { color: '#fff' },
@@ -3182,8 +3182,8 @@
       });
     });
     return payload;
-  }
-</script>
+    }
+  </script>
 </body>
 </html>
 

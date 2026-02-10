@@ -591,6 +591,21 @@
         <span><i class="fa-solid fa-chart-line"></i> Linear Regression Analysis</span>
         <div style="display: flex; gap: 12px; align-items: center;">
 
+          <!-- Decimal Precision Control -->
+          <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+            <label for="decimalSelect" style="font-size: 12px; color: var(--text-secondary); font-weight: 500; white-space: nowrap;">
+              <i class="fa-solid fa-hashtag"></i> Decimals:
+            </label>
+            <select id="decimalSelect" onchange="updateDecimalPrecision()" style="background: var(--surface-2); color: var(--text-primary); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer;">
+              <option value="auto">Auto</option>
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </div>
           
           <!-- AI Interpret Button -->
           <button class="dropdown-btn ai-interpret-btn" id="aiInterpretBtn" onclick="requestRegressionAI()" style="display: none;" title="Get AI-powered interpretation of regression results">
@@ -891,6 +906,42 @@
       }
     }
 
+    // Global decimal precision setting
+    let globalDecimalPrecision = 'auto'; // 'auto', '0', '1', '2', '3', '4', '5'
+    
+    // Smart number formatting based on global precision
+    function formatNumber(val, forceDecimals = null) {
+      const decimals = forceDecimals !== null ? forceDecimals : 
+                       (globalDecimalPrecision === 'auto' ? null : parseInt(globalDecimalPrecision));
+      
+      if (globalDecimalPrecision === 'auto' || decimals === null) {
+        // Auto mode: adaptive formatting
+        if (Math.abs(val) < 0.01 && val !== 0) {
+          return val.toExponential(3);
+        } else if (Math.abs(val) < 1 && val !== 0) {
+          return val.toFixed(4);
+        } else {
+          return val.toFixed(2);
+        }
+      } else {
+        // User-specified precision
+        return val.toFixed(decimals);
+      }
+    }
+    
+    // Function to update decimal precision and refresh display
+    function updateDecimalPrecision() {
+      const select = document.getElementById('decimalSelect');
+      globalDecimalPrecision = select.value;
+      console.log('🔢 Decimal precision changed to:', globalDecimalPrecision);
+      
+      // Re-render results if they exist
+      if (window.regressionResults && receivedModelSpec) {
+        const { y, xn = [], xc = [] } = receivedModelSpec;
+        displayRegressionResults(window.regressionResults, y, xn, xc);
+      }
+    }
+    
     // Office.js integration for Excel Add-in
     let receivedRegressionData = null;
     let receivedModelSpec = null;
@@ -1231,17 +1282,17 @@
       document.getElementById('degreesOfFreedom').textContent = results.df; // Residual degrees of freedom (n - k)
       
       // Populate Model Fit panel
-      document.getElementById('rSquared').textContent = results.R2.toFixed(4); // Keep precision for R²
-      document.getElementById('adjRSquared').textContent = results.R2_adj.toFixed(4); // Keep precision for R²
-      document.getElementById('rootMSE').textContent = results.RMSE.toFixed(2);
-      document.getElementById('aic').textContent = results.AIC.toFixed(2);
-      document.getElementById('bic').textContent = results.BIC.toFixed(2);
+      document.getElementById('rSquared').textContent = results.R2.toFixed(4); // Always 4 decimals for R²
+      document.getElementById('adjRSquared').textContent = results.R2_adj.toFixed(4); // Always 4 decimals for R²
+      document.getElementById('rootMSE').textContent = formatNumber(results.RMSE);
+      document.getElementById('aic').textContent = formatNumber(results.AIC);
+      document.getElementById('bic').textContent = formatNumber(results.BIC);
       
       // Populate F-test panel
-      document.getElementById('fStatistic').textContent = results.F_stat.toFixed(2);
-      document.getElementById('fPValue').textContent = results.F_pvalue < 0.0001 ? '< 0.0001' : results.F_pvalue.toFixed(4); // Keep precision for p-value
-      document.getElementById('ssModel').textContent = results.SSE.toFixed(2);
-      document.getElementById('ssResidual').textContent = results.SSR.toFixed(2);
+      document.getElementById('fStatistic').textContent = formatNumber(results.F_stat);
+      document.getElementById('fPValue').textContent = results.F_pvalue < 0.0001 ? '< 0.0001' : results.F_pvalue.toFixed(4); // Always 4 decimals for p-value
+      document.getElementById('ssModel').textContent = formatNumber(results.SSE);
+      document.getElementById('ssResidual').textContent = formatNumber(results.SSR);
       
       // Populate ANOVA table
       const anovaBody = document.getElementById('anovaTableBody');
@@ -1259,23 +1310,23 @@
           <tr style="background: rgba(74, 85, 104, 0.3);">
             <td><strong>Model</strong></td>
             <td>${df_model}</td>
-            <td>${results.SSE.toFixed(2)}</td>
-            <td>${ms_model.toFixed(2)}</td>
-            <td>${results.F_stat.toFixed(2)}</td>
+            <td>${formatNumber(results.SSE)}</td>
+            <td>${formatNumber(ms_model)}</td>
+            <td>${formatNumber(results.F_stat)}</td>
             <td>${results.F_pvalue < 0.0001 ? '< 0.0001' : results.F_pvalue.toFixed(4)}</td>
           </tr>
           <tr>
             <td><strong>Residual</strong></td>
             <td>${df_residual}</td>
-            <td>${results.SSR.toFixed(2)}</td>
-            <td>${ms_residual.toFixed(2)}</td>
+            <td>${formatNumber(results.SSR)}</td>
+            <td>${formatNumber(ms_residual)}</td>
             <td>—</td>
             <td>—</td>
           </tr>
           <tr style="background: rgba(255, 165, 120, 0.2); font-weight: 600;">
             <td><strong>Total</strong></td>
             <td>${df_total}</td>
-            <td>${results.TSS.toFixed(2)}</td>
+            <td>${formatNumber(results.TSS)}</td>
             <td>—</td>
             <td>—</td>
             <td>—</td>
@@ -1321,26 +1372,9 @@
           
           row.style.cssText = rowStyle;
           
-          // Smart formatting for coefficients - use scientific notation for very small values
-          const formatCoef = (val) => {
-            if (Math.abs(val) < 0.01 && val !== 0) {
-              return val.toExponential(3);  // Scientific notation for tiny values
-            } else if (Math.abs(val) < 1 && val !== 0) {
-              return val.toFixed(4);  // 4 decimals for small values
-            } else {
-              return val.toFixed(2);  // 2 decimals for normal values
-            }
-          };
-          
-          const formatSE = (val) => {
-            if (Math.abs(val) < 0.01 && val !== 0) {
-              return val.toExponential(3);
-            } else if (Math.abs(val) < 1) {
-              return val.toFixed(4);
-            } else {
-              return val.toFixed(2);
-            }
-          };
+          // Use global formatNumber function for all values
+          const formatCoef = (val) => formatNumber(val);
+          const formatSE = (val) => formatNumber(val);
           
           row.innerHTML = `
             <td><strong class="${varClass}">${varName}</strong></td>
