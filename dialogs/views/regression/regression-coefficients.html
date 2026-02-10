@@ -1046,6 +1046,202 @@
       background: #ef4444;
       color: #ffffff;
     }
+
+    /* ===== AI ASSESSMENT MODULE STYLES ===== */
+    .ai-assessment-container {
+      padding: 12px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .ai-header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(138, 43, 226, 0.15), rgba(75, 0, 130, 0.15));
+      border-radius: 10px;
+      border: 2px solid rgba(138, 43, 226, 0.3);
+    }
+
+    .ai-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #9d4edd;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .ai-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .ai-status-card {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 24px;
+      background: var(--surface-2);
+      border: 2px solid rgba(138, 43, 226, 0.3);
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .ai-status-icon {
+      font-size: 48px;
+      color: #9d4edd;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+    }
+
+    .ai-status-content {
+      flex: 1;
+    }
+
+    .ai-status-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .ai-status-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .ai-generate-btn {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #9d4edd, #7b2cbf);
+      border: none;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+    }
+
+    .ai-generate-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(138, 43, 226, 0.5);
+    }
+
+    .ai-generate-btn:active {
+      transform: translateY(0);
+    }
+
+    .ai-results {
+      animation: fadeIn 0.5s ease;
+    }
+
+    .ai-section {
+      margin-bottom: 20px;
+    }
+
+    .ai-section-header {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #9d4edd;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid rgba(138, 43, 226, 0.3);
+    }
+
+    .ai-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      min-height: 100px;
+    }
+
+    .ai-technical {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(138, 43, 226, 0.2);
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .ai-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text-muted);
+      font-size: 1rem;
+      padding: 40px;
+    }
+
+    .ai-loading i {
+      font-size: 24px;
+    }
+
+    .ai-insight {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: rgba(157, 78, 221, 0.1);
+      border-left: 4px solid #9d4edd;
+      border-radius: 4px;
+    }
+
+    .ai-insight-title {
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .ai-insight-text {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .ai-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .ai-badge.good {
+      background: rgba(46, 204, 113, 0.2);
+      color: #2ecc71;
+      border: 1px solid #2ecc71;
+    }
+
+    .ai-badge.warning {
+      background: rgba(241, 196, 15, 0.2);
+      color: #f1c40f;
+      border: 1px solid #f1c40f;
+    }
+
+    .ai-badge.error {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+      border: 1px solid #e74c3c;
+    }
+
+    .ai-badge.info {
+      background: rgba(52, 152, 219, 0.2);
+      color: #3498db;
+      border: 1px solid #3498db;
+    }
     
     /* Tab Panels */
     .tab-panel {
@@ -1127,6 +1323,9 @@
         </button>
         <button class="tab-button" onclick="switchTab('descriptive')" data-tab="descriptive">
           <i class="fa-solid fa-chart-bar"></i> Descriptive Stats
+        </button>
+        <button class="tab-button" onclick="switchTab('ai-assessment')" data-tab="ai-assessment">
+          <i class="fa-solid fa-brain"></i> AI Assessment
         </button>
       </div>
 
@@ -1439,6 +1638,115 @@
             </div>
           </div>
         </div>
+
+        <!-- Tab: AI Assessment -->
+        <div id="tab-ai-assessment" class="tab-content">
+          <div class="ai-assessment-container">
+            
+            <!-- AI Header -->
+            <div class="ai-header">
+              <div class="ai-title">
+                <i class="fa-solid fa-brain"></i> AI-Powered Model Assessment
+              </div>
+              <div class="ai-subtitle">
+                Comprehensive analysis and recommendations based on your regression results
+              </div>
+            </div>
+
+            <!-- AI Status Card -->
+            <div class="ai-status-card" id="aiStatusCard">
+              <div class="ai-status-icon">
+                <i class="fa-solid fa-robot"></i>
+              </div>
+              <div class="ai-status-content">
+                <div class="ai-status-title">Ready to Analyze</div>
+                <div class="ai-status-desc">Click "Generate AI Assessment" to get intelligent insights about your model</div>
+              </div>
+              <button class="ai-generate-btn" onclick="generateAIAssessment()" id="aiGenerateBtn">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Generate AI Assessment
+              </button>
+            </div>
+
+            <!-- AI Results Container -->
+            <div class="ai-results" id="aiResults" style="display: none;">
+              
+              <!-- Overall Assessment -->
+              <div class="ai-section">
+                <div class="ai-section-header">
+                  <i class="fa-solid fa-gauge-high"></i> Overall Model Quality
+                </div>
+                <div class="ai-card" id="overallAssessment">
+                  <div class="ai-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Analyzing...
+                  </div>
+                </div>
+              </div>
+
+              <!-- Key Findings -->
+              <div class="ai-section">
+                <div class="ai-section-header">
+                  <i class="fa-solid fa-lightbulb"></i> Key Findings
+                </div>
+                <div class="ai-card" id="keyFindings">
+                  <div class="ai-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Analyzing...
+                  </div>
+                </div>
+              </div>
+
+              <!-- Variable Insights -->
+              <div class="ai-section">
+                <div class="ai-section-header">
+                  <i class="fa-solid fa-chart-line"></i> Variable Insights
+                </div>
+                <div class="ai-card" id="variableInsights">
+                  <div class="ai-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Analyzing...
+                  </div>
+                </div>
+              </div>
+
+              <!-- Assumption Checks -->
+              <div class="ai-section">
+                <div class="ai-section-header">
+                  <i class="fa-solid fa-check-circle"></i> Assumption Validation
+                </div>
+                <div class="ai-card" id="assumptionChecks">
+                  <div class="ai-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Analyzing...
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recommendations -->
+              <div class="ai-section">
+                <div class="ai-section-header">
+                  <i class="fa-solid fa-tasks"></i> Recommendations
+                </div>
+                <div class="ai-card" id="recommendations">
+                  <div class="ai-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Analyzing...
+                  </div>
+                </div>
+              </div>
+
+              <!-- Technical Summary -->
+              <div class="ai-section">
+                <div class="ai-section-header">
+                  <i class="fa-solid fa-file-alt"></i> Technical Summary
+                </div>
+                <div class="ai-card ai-technical" id="technicalSummary">
+                  <div class="ai-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Preparing data payload...
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+        <!-- End Tab: AI Assessment -->
 
       </div>
     </section>
@@ -3356,6 +3664,343 @@
     function deleteScenario(index) {
       predictionData.savedScenarios.splice(index, 1);
       updateScenariosTable();
+    }
+
+    /* ========================================
+       AI ASSESSMENT MODULE
+       Comprehensive model analysis and insights
+    ======================================== */
+
+    /**
+     * Generate AI Assessment
+     * Prepares comprehensive data payload and displays AI insights
+     */
+    async function generateAIAssessment() {
+      console.log('🤖 Generating AI Assessment...');
+      
+      // Check if we have regression results
+      if (!window.globalRegressionResults || !window.regressionResults) {
+        alert('No regression results available. Please run a regression analysis first.');
+        return;
+      }
+
+      // Show results container
+      document.getElementById('aiResults').style.display = 'block';
+      document.getElementById('aiStatusCard').style.display = 'none';
+
+      // Prepare comprehensive data payload
+      const aiPayload = prepareAIPayload();
+      
+      // Display technical summary
+      displayTechnicalSummary(aiPayload);
+
+      // Simulate AI processing (in production, this would call an AI API)
+      await simulateAIProcessing();
+
+      // Display AI insights
+      displayAIInsights(aiPayload);
+    }
+
+    /**
+     * Prepare AI data payload following best practices
+     * Based on guidelines: send summaries + flags, not raw vectors
+     */
+    function prepareAIPayload() {
+      const results = window.globalRegressionResults;
+      const yVar = window.globalYVar || 'Y';
+      const xnVars = window.globalXnVars || [];
+      const xcVars = window.globalXcVars || [];
+      const rawHeaders = window.globalRawHeaders || [];
+      const rawRows = window.globalRawRows || [];
+      const includeIntercept = window.globalIncludeIntercept;
+
+      // A. Metadata
+      const meta = {
+        model: 'LinearRegression',
+        yName: yVar,
+        n: results.n,
+        p: results.k,
+        dfResid: results.df,
+        hasIntercept: includeIntercept === 1,
+        predictors: {
+          numeric: xnVars,
+          categorical: xcVars.map(varName => ({
+            name: varName,
+            reference: '(First level)' // Would need to track actual reference
+          }))
+        }
+      };
+
+      // B. Model fit / overall test
+      const fit = {
+        r2: parseFloat(results.R2.toFixed(4)),
+        adjR2: parseFloat(results.R2_adj.toFixed(4)),
+        rmse: parseFloat(results.RMSE.toFixed(4)),
+        aic: parseFloat(results.AIC.toFixed(2)),
+        bic: parseFloat(results.BIC.toFixed(2)),
+        f: parseFloat(results.F_stat.toFixed(2)),
+        p: results.F_pvalue
+      };
+
+      // C. Coefficients table
+      const coefficients = results.coefficients.map((coef, i) => {
+        const varName = window.regressionVariableNames ? window.regressionVariableNames[i] : `Var${i}`;
+        return {
+          name: varName,
+          beta: parseFloat(coef.toFixed(6)),
+          se: parseFloat(results.se[i].toFixed(6)),
+          t: parseFloat(results.t_stats[i].toFixed(4)),
+          p: results.p_values[i],
+          ciLow: parseFloat(results.ci_lower[i].toFixed(4)),
+          ciHigh: parseFloat(results.ci_upper[i].toFixed(4))
+        };
+      });
+
+      // D. Residual diagnostics (from residuals tab if available)
+      const diagnostics = {
+        normality: { test: 'ShapiroWilk', p: null },
+        heteroscedasticity: { test: 'BreuschPagan', p: null },
+        independence: { test: 'DurbinWatson', stat: null },
+        outliers: {
+          gt2: null,
+          gt3: null,
+          maxAbsStdResid: null
+        },
+        influence: {
+          maxCooksD: null,
+          cooksGt1: null,
+          maxLeverage: null,
+          highLeverageCount: null
+        }
+      };
+
+      // E. Flags
+      const flags = {
+        nonNormal: false,
+        heteroscedastic: false,
+        autocorrelation: false,
+        influentialPoints: false,
+        multicollinearity: false
+      };
+
+      // Add model quality flag
+      if (fit.adjR2 < 0.3) flags.poorFit = true;
+      if (fit.p > 0.05) flags.notSignificant = true;
+
+      return {
+        meta,
+        fit,
+        coefficients,
+        diagnostics,
+        flags,
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    /**
+     * Display technical summary (JSON payload)
+     */
+    function displayTechnicalSummary(payload) {
+      const container = document.getElementById('technicalSummary');
+      container.innerHTML = `<pre style="margin: 0; color: #9d4edd; white-space: pre-wrap;">${JSON.stringify(payload, null, 2)}</pre>`;
+    }
+
+    /**
+     * Simulate AI processing delay
+     */
+    function simulateAIProcessing() {
+      return new Promise(resolve => setTimeout(resolve, 1500));
+    }
+
+    /**
+     * Display AI-generated insights
+     */
+    function displayAIInsights(payload) {
+      displayOverallAssessment(payload);
+      displayKeyFindings(payload);
+      displayVariableInsights(payload);
+      displayAssumptionChecks(payload);
+      displayRecommendations(payload);
+    }
+
+    /**
+     * Overall Assessment
+     */
+    function displayOverallAssessment(payload) {
+      const { fit, flags } = payload;
+      let quality = 'Good';
+      let badge = 'good';
+      let icon = 'fa-check-circle';
+
+      if (fit.adjR2 < 0.5) {
+        quality = 'Moderate';
+        badge = 'warning';
+        icon = 'fa-exclamation-circle';
+      }
+      if (fit.adjR2 < 0.3) {
+        quality = 'Needs Improvement';
+        badge = 'error';
+        icon = 'fa-times-circle';
+      }
+
+      const html = `
+        <div style="text-align: center; padding: 20px;">
+          <i class="fa-solid ${icon}" style="font-size: 64px; color: ${badge === 'good' ? '#2ecc71' : badge === 'warning' ? '#f1c40f' : '#e74c3c'}; margin-bottom: 16px;"></i>
+          <div style="font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;">${quality} Model Quality</div>
+          <div style="font-size: 1rem; color: var(--text-muted); margin-bottom: 20px;">
+            Your model explains <strong>${(fit.adjR2 * 100).toFixed(1)}%</strong> of the variance in ${payload.meta.yName}
+          </div>
+          <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <span class="ai-badge ${badge}">R² = ${fit.r2.toFixed(3)}</span>
+            <span class="ai-badge ${badge}">Adj R² = ${fit.adjR2.toFixed(3)}</span>
+            <span class="ai-badge ${fit.p < 0.001 ? 'good' : fit.p < 0.05 ? 'info' : 'warning'}">p < ${fit.p < 0.001 ? '0.001' : fit.p.toFixed(3)}</span>
+            <span class="ai-badge info">RMSE = ${fit.rmse.toFixed(2)}</span>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('overallAssessment').innerHTML = html;
+    }
+
+    /**
+     * Key Findings
+     */
+    function displayKeyFindings(payload) {
+      const { coefficients, fit } = payload;
+      const significantVars = coefficients.filter(c => c.p < 0.05 && c.name !== 'Intercept');
+
+      let findings = '';
+
+      if (significantVars.length > 0) {
+        findings += `
+          <div class="ai-insight">
+            <div class="ai-insight-title"><i class="fa-solid fa-star"></i> Significant Predictors Found</div>
+            <div class="ai-insight-text">
+              ${significantVars.length} out of ${coefficients.length - 1} predictor(s) show statistically significant relationships with ${payload.meta.yName}:
+              <ul style="margin: 8px 0 0 20px;">
+                ${significantVars.map(v => `<li><strong>${v.name}</strong> (p = ${v.p < 0.001 ? '<0.001' : v.p.toFixed(4)})</li>`).join('')}
+              </ul>
+            </div>
+          </div>
+        `;
+      }
+
+      findings += `
+        <div class="ai-insight">
+          <div class="ai-insight-title"><i class="fa-solid fa-chart-line"></i> Model Performance</div>
+          <div class="ai-insight-text">
+            The model's R² of ${fit.r2.toFixed(3)} indicates ${fit.r2 > 0.7 ? 'strong' : fit.r2 > 0.5 ? 'moderate' : 'weak'} explanatory power. 
+            The adjusted R² (${fit.adjR2.toFixed(3)}) accounts for the number of predictors, providing a more conservative estimate.
+            ${fit.p < 0.001 ? 'The overall model is highly significant (p < 0.001).' : fit.p < 0.05 ? 'The model is statistically significant (p < 0.05).' : 'The model may not be statistically significant.'}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('keyFindings').innerHTML = findings;
+    }
+
+    /**
+     * Variable Insights
+     */
+    function displayVariableInsights(payload) {
+      const { coefficients } = payload;
+      let insights = '';
+
+      coefficients.forEach(coef => {
+        if (coef.name === 'Intercept') return;
+
+        const direction = coef.beta > 0 ? 'positive' : 'negative';
+        const magnitude = Math.abs(coef.beta);
+        const significance = coef.p < 0.001 ? 'highly significant' : coef.p < 0.05 ? 'significant' : 'not significant';
+
+        insights += `
+          <div class="ai-insight">
+            <div class="ai-insight-title">
+              <i class="fa-solid fa-arrow-${direction === 'positive' ? 'up' : 'down'}"></i> ${coef.name}
+              <span class="ai-badge ${coef.p < 0.05 ? 'good' : 'warning'}" style="float: right;">${significance}</span>
+            </div>
+            <div class="ai-insight-text">
+              <strong>${direction === 'positive' ? 'Positive' : 'Negative'} relationship:</strong> 
+              For each unit increase in ${coef.name}, ${payload.meta.yName} ${direction === 'positive' ? 'increases' : 'decreases'} by approximately ${magnitude.toFixed(4)} units 
+              (95% CI: [${coef.ciLow.toFixed(4)}, ${coef.ciHigh.toFixed(4)}], p = ${coef.p < 0.001 ? '<0.001' : coef.p.toFixed(4)}).
+            </div>
+          </div>
+        `;
+      });
+
+      document.getElementById('variableInsights').innerHTML = insights || '<p style="color: var(--text-muted);">No variable insights available.</p>';
+    }
+
+    /**
+     * Assumption Checks
+     */
+    function displayAssumptionChecks(payload) {
+      const html = `
+        <div class="ai-insight">
+          <div class="ai-insight-title"><i class="fa-solid fa-info-circle"></i> Diagnostic Tests</div>
+          <div class="ai-insight-text">
+            For detailed assumption validation (normality, heteroscedasticity, independence, influential observations), 
+            please refer to the <strong>Residual Diagnostics</strong> tab where comprehensive statistical tests and visualizations are available.
+            <div style="margin-top: 12px;">
+              <button onclick="switchTab('residuals')" style="padding: 8px 16px; background: var(--accent-2); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                <i class="fa-solid fa-arrow-right"></i> View Residual Diagnostics
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('assumptionChecks').innerHTML = html;
+    }
+
+    /**
+     * Recommendations
+     */
+    function displayRecommendations(payload) {
+      const { fit, coefficients, flags } = payload;
+      let recommendations = '';
+
+      if (fit.adjR2 < 0.5) {
+        recommendations += `
+          <div class="ai-insight">
+            <div class="ai-insight-title"><i class="fa-solid fa-lightbulb"></i> Consider Additional Predictors</div>
+            <div class="ai-insight-text">
+              The current model explains ${(fit.adjR2 * 100).toFixed(1)}% of variance. Consider adding more relevant predictors, 
+              interaction terms, or polynomial terms to improve model fit.
+            </div>
+          </div>
+        `;
+      }
+
+      const nonSigVars = coefficients.filter(c => c.p >= 0.10 && c.name !== 'Intercept');
+      if (nonSigVars.length > 0) {
+        recommendations += `
+          <div class="ai-insight">
+            <div class="ai-insight-title"><i class="fa-solid fa-filter"></i> Review Non-Significant Variables</div>
+            <div class="ai-insight-text">
+              ${nonSigVars.length} variable(s) show weak or no significant relationship: 
+              ${nonSigVars.map(v => v.name).join(', ')}. Consider removing these to simplify your model.
+            </div>
+          </div>
+        `;
+      }
+
+      recommendations += `
+        <div class="ai-insight">
+          <div class="ai-insight-title"><i class="fa-solid fa-check"></i> Next Steps</div>
+          <div class="ai-insight-text">
+            <ul style="margin: 8px 0 0 20px; line-height: 1.8;">
+              <li>Check residual diagnostics for assumption violations</li>
+              <li>Look for influential observations that might affect results</li>
+              <li>Use the Predictions tab to explore model behavior</li>
+              <li>Consider cross-validation for model validation</li>
+              <li>Document your findings and limitations</li>
+            </ul>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('recommendations').innerHTML = recommendations;
     }
     
   </script>
