@@ -1365,9 +1365,12 @@
               <div class="scenarios-header">
                 <div>
                   <i class="fa-solid fa-table"></i> Saved Scenarios
+                  <div style="font-size: 0.75rem; font-weight: 400; color: var(--text-muted); margin-top: 2px;">
+                    Save and compare different input combinations
+                  </div>
                 </div>
                 <button class="save-scenario-btn" onclick="saveCurrentScenario()">
-                  <i class="fa-solid fa-bookmark"></i> Save Current Scenario
+                  <i class="fa-solid fa-bookmark"></i> Save Current
                 </button>
               </div>
               <div class="scenarios-table-container">
@@ -1384,7 +1387,8 @@
                   <tbody id="scenariosTableBody">
                     <tr class="no-scenarios">
                       <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">
-                        <i class="fa-solid fa-info-circle"></i> No scenarios saved yet. Adjust variables above and click "Save Current Scenario"
+                        <i class="fa-solid fa-info-circle"></i> No scenarios saved yet. 
+                        <br><span style="font-size: 0.85rem;">Adjust sliders above, then click "Save Current" to bookmark this combination.</span>
                       </td>
                     </tr>
                   </tbody>
@@ -3283,7 +3287,8 @@
         tbody.innerHTML = `
           <tr class="no-scenarios">
             <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">
-              <i class="fa-solid fa-info-circle"></i> No scenarios saved yet. Adjust variables above and click "Save Current Scenario"
+              <i class="fa-solid fa-info-circle"></i> No scenarios saved yet. 
+              <br><span style="font-size: 0.85rem;">Adjust sliders above, then click "Save Current" to bookmark this combination.</span>
             </td>
           </tr>
         `;
@@ -3300,10 +3305,10 @@
           <td style="font-size: 0.85rem;">[${scenario.prediction.ci_lower.toFixed(2)}, ${scenario.prediction.ci_upper.toFixed(2)}]</td>
           <td style="font-size: 0.85rem;">[${scenario.prediction.pi_lower.toFixed(2)}, ${scenario.prediction.pi_upper.toFixed(2)}]</td>
           <td class="scenario-actions">
-            <button class="scenario-btn load" onclick="loadScenario(${index})">
-              <i class="fa-solid fa-upload"></i> Load
+            <button class="scenario-btn load" onclick="loadScenario(${index})" title="Apply this scenario to sliders">
+              <i class="fa-solid fa-play"></i> Apply
             </button>
-            <button class="scenario-btn delete" onclick="deleteScenario(${index})">
+            <button class="scenario-btn delete" onclick="deleteScenario(${index})" title="Delete this scenario">
               <i class="fa-solid fa-trash"></i> Delete
             </button>
           </td>
