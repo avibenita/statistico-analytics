@@ -1557,7 +1557,7 @@
               <!-- Right Panel: Prediction Output -->
               <div class="prediction-output">
                 <div class="output-card main-prediction">
-                  <div class="output-label">Predicted Value</div>
+                  <div class="output-label">Predicted <span id="predictedVariableName" style="text-transform: uppercase; font-weight: 800; color: var(--accent-1);">Value</span></div>
                   <div class="output-value" id="predictedValue">-</div>
                   <div class="output-sublabel">Point Estimate</div>
                 </div>
@@ -2149,6 +2149,7 @@
         
         // Store global variables for predictions module
         window.globalRegressionResults = results;
+        window.globalYVar = y;
         window.globalXnVars = xn;
         window.globalXcVars = xc;
         window.globalRawHeaders = headers;
@@ -3233,10 +3234,17 @@
       predictionData.stats = results;
 
       // Get variable info from global data
+      const yVar = window.globalYVar || 'Y';
       const xnVars = window.globalXnVars || [];
       const xcVars = window.globalXcVars || [];
       const rawHeaders = window.globalRawHeaders || [];
       const rawRows = window.globalRawRows || [];
+
+      // Display the predicted variable name
+      const predictedVarNameEl = document.getElementById('predictedVariableName');
+      if (predictedVarNameEl) {
+        predictedVarNameEl.textContent = yVar;
+      }
 
       predictionData.numericVars = xnVars;
       predictionData.categoricalVars = xcVars;
