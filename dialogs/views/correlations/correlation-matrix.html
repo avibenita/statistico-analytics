@@ -1046,19 +1046,35 @@
     const isInIframe = window.self !== window.top;
     
     if (isInIframe) {
-      // Running in iframe - skip Office.js, just load data
-      console.log('📊 Running in iframe, loading data directly');
-      document.addEventListener('DOMContentLoaded', function() {
-        const storedData = sessionStorage.getItem('correlationData');
-        if (storedData) {
-          try {
-            correlationData = JSON.parse(storedData);
-            console.log('📦 Loaded correlation data from sessionStorage:', correlationData);
-            renderMatrix();
-          } catch (e) {
-            console.error('Error loading data from sessionStorage:', e);
-          }
+      // Running in iframe - listen for postMessage
+      console.log('📊 Running in iframe, waiting for data via postMessage');
+      
+      window.addEventListener('message', function(event) {
+        console.log('📥 Received postMessage:', event.data);
+        if (event.data && event.data.type === 'CORRELATION_DATA') {
+          correlationData = event.data.payload;
+          console.log('✅ Data received via postMessage');
+          renderMatrix();
         }
+      });
+      
+      // Also try sessionStorage as fallback
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          if (!correlationData) {
+            console.log('⏰ Trying sessionStorage as fallback');
+            const storedData = sessionStorage.getItem('correlationData');
+            if (storedData) {
+              try {
+                correlationData = JSON.parse(storedData);
+                console.log('📦 Loaded correlation data from sessionStorage:', correlationData);
+                renderMatrix();
+              } catch (e) {
+                console.error('Error loading data from sessionStorage:', e);
+              }
+            }
+          }
+        }, 1000);
       });
     } else {
       // Initialize Office.js (standalone dialog)

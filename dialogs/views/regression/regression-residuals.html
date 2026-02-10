@@ -430,10 +430,27 @@
     const isInIframe = window.self !== window.top;
     
     if (isInIframe) {
-      // Running in iframe - skip Office.js, just load data
-      console.log('📊 Running in iframe, loading data directly');
+      // Running in iframe - listen for postMessage
+      console.log('📊 Running in iframe, waiting for data via postMessage');
+      
+      window.addEventListener('message', function(event) {
+        console.log('📥 Received postMessage:', event.data);
+        if (event.data && event.data.type === 'RESIDUAL_DATA') {
+          residualData = event.data.payload;
+          regressionResults = event.data.payload.results;
+          console.log('✅ Data received via postMessage');
+          displayDiagnostics();
+        }
+      });
+      
+      // Also try sessionStorage as fallback
       document.addEventListener('DOMContentLoaded', () => {
-        loadResidualData();
+        setTimeout(() => {
+          if (!residualData) {
+            console.log('⏰ Trying sessionStorage as fallback');
+            loadResidualData();
+          }
+        }, 1000);
       });
     } else if (typeof Office !== 'undefined') {
       // Initialize Office.js (standalone dialog)
