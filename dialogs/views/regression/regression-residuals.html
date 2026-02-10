@@ -1644,26 +1644,33 @@
           title: { text: "Cook's Distance", style: { color: '#fff' } },
           gridLineColor: 'rgba(255,255,255,0.1)',
           labels: { style: { color: '#aaa' } },
+          min: 0,
+          max: Math.max(1.2, Math.max(...cooksD) * 1.1),
+          tickInterval: 0.1,
           plotLines: [
             {
               value: 0.5,
               color: '#f59e0b',
-              width: 2,
-              dashStyle: 'Dash',
+              width: 3,
+              dashStyle: 'Solid',
               label: { 
-                text: 'Influential (0.5)',
-                style: { color: '#f59e0b', fontSize: '11px' }
-              }
+                text: 'Influential Threshold (0.5)',
+                align: 'right',
+                style: { color: '#f59e0b', fontSize: '11px', fontWeight: 'bold' }
+              },
+              zIndex: 5
             },
             {
               value: 1.0,
               color: '#ef4444',
-              width: 2,
-              dashStyle: 'Dash',
+              width: 3,
+              dashStyle: 'Solid',
               label: { 
                 text: 'High Influence (1.0)',
-                style: { color: '#ef4444', fontSize: '11px' }
-              }
+                align: 'right',
+                style: { color: '#ef4444', fontSize: '11px', fontWeight: 'bold' }
+              },
+              zIndex: 5
             }
           ]
         },
