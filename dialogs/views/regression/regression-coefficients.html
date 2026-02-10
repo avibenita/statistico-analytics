@@ -2064,7 +2064,10 @@
           type: 'RESIDUAL_DATA',
           payload: {
             results: results,
-            fittedValues: results.fitted
+            fittedValues: results.fitted,
+            yVector: data.yVector,
+            xMatrix: data.xMatrix,
+            intercept: data.intercept
           }
         }, '*');
       };

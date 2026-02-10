@@ -1922,7 +1922,8 @@
       console.log('🔄 Refitting model without outliers');
       
       if (!residualData || !window.influentialIndices || window.influentialIndices.length === 0) {
-        alert('No influential observations to exclude');
+        console.warn('⚠️ No influential observations to exclude');
+        showErrorMessage('No influential observations to exclude');
         return;
       }
 
@@ -1933,7 +1934,14 @@
 
       try {
         // Get original data
-        const { yVector, xMatrix } = residualData;
+        const yVector = residualData.yVector;
+        const xMatrix = residualData.xMatrix;
+        
+        if (!yVector || !xMatrix) {
+          console.error('❌ Missing original data for refitting');
+          showErrorMessage('Original data not available. Please recompute the regression.');
+          return;
+        }
         
         // Create filtered data (exclude influential observations)
         const excludeSet = new Set(window.influentialIndices);
@@ -1965,8 +1973,38 @@
         
       } catch (error) {
         console.error('❌ Error refitting model:', error);
-        alert(`Error refitting model: ${error.message}`);
+        showErrorMessage(`Error refitting model: ${error.message}`);
       }
+    }
+
+    function showErrorMessage(message) {
+      // Create a temporary error banner
+      const banner = document.createElement('div');
+      banner.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        z-index: 10000;
+        font-weight: 600;
+        font-size: 14px;
+        max-width: 500px;
+        text-align: center;
+      `;
+      banner.innerHTML = `<i class="fa-solid fa-exclamation-circle"></i> ${message}`;
+      document.body.appendChild(banner);
+      
+      // Remove after 5 seconds
+      setTimeout(() => {
+        banner.style.opacity = '0';
+        banner.style.transition = 'opacity 0.5s';
+        setTimeout(() => banner.remove(), 500);
+      }, 5000);
     }
 
     function restoreOriginalModel() {
