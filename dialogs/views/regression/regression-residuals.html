@@ -618,6 +618,122 @@
     .ai-link i {
       margin-left: 5px;
     }
+
+    /* Refit Button */
+    .refit-btn {
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    .refit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(245, 158, 11, 0.5);
+    }
+
+    .refit-btn i {
+      margin-right: 8px;
+    }
+
+    /* Comparison Panel */
+    .comparison-panel {
+      background: linear-gradient(135deg, rgba(120, 200, 255, 0.1), rgba(255, 165, 120, 0.1));
+      border: 2px solid var(--accent-2);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .comparison-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent-2);
+    }
+
+    .restore-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .restore-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--accent-2);
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .comparison-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 15px;
+    }
+
+    .comparison-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .comparison-stats {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .comparison-stats div {
+      margin: 5px 0;
+    }
+
+    .comparison-arrow {
+      font-size: 32px;
+      color: var(--accent-1);
+      font-weight: bold;
+    }
+
+    .comparison-summary {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--success);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 13px;
+      color: var(--text-primary);
+      text-align: center;
+    }
+
+    .stat-improved {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .stat-worse {
+      color: var(--danger);
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -764,10 +880,38 @@
 
       <!-- Influential Observations -->
       <div class="outliers-panel">
-        <h2>
-          <i class="fa-solid fa-triangle-exclamation"></i>
-          Influential Observations
-        </h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h2 style="margin-bottom: 0;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Influential Observations
+          </h2>
+          <button id="refitBtn" class="refit-btn" onclick="refitWithoutOutliers()" style="display: none;">
+            <i class="fa-solid fa-rotate"></i> Refit Model Excluding Flagged Points
+          </button>
+        </div>
+        
+        <!-- Comparison Panel (hidden initially) -->
+        <div id="comparisonPanel" class="comparison-panel" style="display: none;">
+          <div class="comparison-header">
+            <i class="fa-solid fa-chart-line"></i> Model Comparison
+            <button class="restore-btn" onclick="restoreOriginalModel()">
+              <i class="fa-solid fa-undo"></i> Restore Original
+            </button>
+          </div>
+          <div class="comparison-grid">
+            <div class="comparison-card">
+              <div class="comparison-label">Original Model</div>
+              <div class="comparison-stats" id="originalStats"></div>
+            </div>
+            <div class="comparison-arrow">→</div>
+            <div class="comparison-card">
+              <div class="comparison-label">Refitted Model</div>
+              <div class="comparison-stats" id="refittedStats"></div>
+            </div>
+          </div>
+          <div class="comparison-summary" id="comparisonSummary"></div>
+        </div>
+        
         <div style="max-height: 400px; overflow-y: auto;">
           <table class="outliers-table">
             <thead>
@@ -1372,6 +1516,15 @@
         Math.abs(obs.standardized) > 2 || obs.leverage > (3 * regressionResults.k / residuals.length) || obs.cooksD > 0.5
       ).sort((a, b) => b.cooksD - a.cooksD);
 
+      // Store influential indices for refitting
+      window.influentialIndices = influential.map(obs => obs.index - 1);
+      
+      // Show/hide refit button
+      const refitBtn = document.getElementById('refitBtn');
+      if (refitBtn) {
+        refitBtn.style.display = influential.length > 0 ? 'block' : 'none';
+      }
+
       if (influential.length === 0) {
         tbody.innerHTML = `
           <tr>
@@ -1757,6 +1910,133 @@
       aiFindings.innerHTML = findings.map(f => 
         `<li class="${f.class}">${f.text}</li>`
       ).join('');
+    }
+
+    // Store original model for restoration
+    let originalResults = null;
+    let refittedResults = null;
+
+    function refitWithoutOutliers() {
+      console.log('🔄 Refitting model without outliers');
+      
+      if (!residualData || !window.influentialIndices || window.influentialIndices.length === 0) {
+        alert('No influential observations to exclude');
+        return;
+      }
+
+      // Store original if not already stored
+      if (!originalResults) {
+        originalResults = JSON.parse(JSON.stringify(regressionResults));
+      }
+
+      try {
+        // Get original data
+        const { yVector, xMatrix } = residualData;
+        
+        // Create filtered data (exclude influential observations)
+        const excludeSet = new Set(window.influentialIndices);
+        const newY = [];
+        const newX = [];
+        
+        yVector.forEach((y, i) => {
+          if (!excludeSet.has(i)) {
+            newY.push(y);
+            newX.push(xMatrix[i]);
+          }
+        });
+
+        console.log(`📊 Original n: ${yVector.length}, New n: ${newY.length}, Excluded: ${window.influentialIndices.length}`);
+
+        // Recompute OLS
+        refittedResults = computeOLS(newX, newY, regressionResults.includeIntercept, false);
+        
+        console.log('✅ Refitted model computed successfully');
+        
+        // Display comparison
+        displayComparison(originalResults, refittedResults, window.influentialIndices.length);
+        
+        // Update the main results display
+        regressionResults = refittedResults;
+        
+        // Re-run diagnostics with new model
+        displayDiagnostics();
+        
+      } catch (error) {
+        console.error('❌ Error refitting model:', error);
+        alert(`Error refitting model: ${error.message}`);
+      }
+    }
+
+    function restoreOriginalModel() {
+      console.log('↩️ Restoring original model');
+      
+      if (!originalResults) {
+        return;
+      }
+
+      // Restore original results
+      regressionResults = originalResults;
+      originalResults = null;
+      refittedResults = null;
+      
+      // Hide comparison panel
+      document.getElementById('comparisonPanel').style.display = 'none';
+      
+      // Re-run diagnostics with original model
+      displayDiagnostics();
+    }
+
+    function displayComparison(original, refitted, excludedCount) {
+      const panel = document.getElementById('comparisonPanel');
+      const originalStats = document.getElementById('originalStats');
+      const refittedStats = document.getElementById('refittedStats');
+      const summary = document.getElementById('comparisonSummary');
+      
+      // Show panel
+      panel.style.display = 'block';
+      
+      // Format statistics
+      const formatStat = (label, orig, refit) => {
+        const diff = refit - orig;
+        const better = (label === 'R²' || label === 'Adj R²') ? diff > 0 : diff < 0;
+        const cls = better ? 'stat-improved' : 'stat-worse';
+        const arrow = better ? '↑' : '↓';
+        const sign = diff > 0 ? '+' : '';
+        return `<div><strong>${label}:</strong> ${orig.toFixed(4)} → <span class="${cls}">${refit.toFixed(4)} ${arrow}</span></div>`;
+      };
+      
+      originalStats.innerHTML = `
+        <div><strong>n:</strong> ${original.n}</div>
+        <div><strong>R²:</strong> ${original.R2.toFixed(4)}</div>
+        <div><strong>Adj R²:</strong> ${original.R2_adj.toFixed(4)}</div>
+        <div><strong>RMSE:</strong> ${original.RMSE.toFixed(4)}</div>
+        <div><strong>AIC:</strong> ${original.AIC.toFixed(2)}</div>
+      `;
+      
+      refittedStats.innerHTML = `
+        <div><strong>n:</strong> ${refitted.n} <span class="stat-improved">(-${excludedCount})</span></div>
+        <div><strong>R²:</strong> ${refitted.R2.toFixed(4)}</div>
+        <div><strong>Adj R²:</strong> ${refitted.R2_adj.toFixed(4)}</div>
+        <div><strong>RMSE:</strong> ${refitted.RMSE.toFixed(4)}</div>
+        <div><strong>AIC:</strong> ${refitted.AIC.toFixed(2)}</div>
+      `;
+      
+      // Summary
+      const r2Improved = refitted.R2 > original.R2;
+      const rmseImproved = refitted.RMSE < original.RMSE;
+      
+      let summaryText = `<i class="fa-solid fa-circle-check"></i> `;
+      if (r2Improved && rmseImproved) {
+        summaryText += `<strong>Model improved!</strong> R² increased by ${((refitted.R2 - original.R2) * 100).toFixed(2)}% and RMSE decreased by ${((original.RMSE - refitted.RMSE) / original.RMSE * 100).toFixed(2)}% after excluding ${excludedCount} flagged observation(s).`;
+      } else if (r2Improved) {
+        summaryText += `R² improved by ${((refitted.R2 - original.R2) * 100).toFixed(2)}% after excluding ${excludedCount} observation(s).`;
+      } else if (rmseImproved) {
+        summaryText += `RMSE improved by ${((original.RMSE - refitted.RMSE) / original.RMSE * 100).toFixed(2)}% after excluding ${excludedCount} observation(s).`;
+      } else {
+        summaryText = `<i class="fa-solid fa-info-circle"></i> Model metrics changed after excluding ${excludedCount} observation(s). Review coefficients for significance changes.`;
+      }
+      
+      summary.innerHTML = summaryText;
     }
   </script>
 </body>
