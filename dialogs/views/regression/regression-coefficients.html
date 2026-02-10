@@ -1386,6 +1386,9 @@
         loadCorrelationsTab();
       } else if (tabName === 'descriptive' && !window.descriptiveLoaded) {
         loadDescriptiveTab();
+      } else if (tabName === 'predictions' && !window.predictionsLoaded) {
+        initializePredictions();
+        window.predictionsLoaded = true;
       }
     }
 
@@ -1691,6 +1694,14 @@
         // Store results globally for tabs
         window.regressionResults = results;
         window.regressionData = { yVector, xMatrix, intercept };
+        
+        // Store global variables for predictions module
+        window.globalRegressionResults = results;
+        window.globalXnVars = xnVars;
+        window.globalXcVars = xcVars;
+        window.globalRawHeaders = headers;
+        window.globalRawRows = rows;
+        window.globalIncludeIntercept = intercept;
         
         // Pre-store data for all tabs in sessionStorage
         sessionStorage.setItem('residualData', JSON.stringify({
@@ -3162,18 +3173,6 @@
       predictionData.savedScenarios.splice(index, 1);
       updateScenariosTable();
     }
-
-    // Initialize predictions when tab is first opened
-    const originalSwitchTab = window.switchTab;
-    window.switchTab = function(tabName) {
-      originalSwitchTab(tabName);
-      
-      // Initialize predictions on first view
-      if (tabName === 'predictions' && !predictionData.initialized) {
-        initializePredictions();
-        predictionData.initialized = true;
-      }
-    };
     
   </script>
   
