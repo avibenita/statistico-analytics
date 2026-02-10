@@ -628,19 +628,38 @@
       background: var(--surface-2);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 16px;
-      max-height: 600px;
+      padding: 12px;
+      max-height: 520px;
       overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .prediction-inputs::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .prediction-inputs::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+    }
+
+    .prediction-inputs::-webkit-scrollbar-thumb {
+      background: var(--accent-2);
+      border-radius: 4px;
+    }
+
+    .prediction-inputs::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-1);
     }
 
     .inputs-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
       border-bottom: 2px solid var(--accent-2);
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 600;
       color: var(--accent-2);
     }
@@ -663,8 +682,8 @@
     }
 
     .input-group {
-      margin-bottom: 20px;
-      padding: 12px;
+      margin-bottom: 14px;
+      padding: 10px;
       background: rgba(255, 255, 255, 0.03);
       border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.05);
@@ -674,21 +693,21 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
-      font-size: 0.95rem;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
       font-weight: 600;
       color: var(--text-secondary);
     }
 
     .input-value-display {
-      font-size: 1.1rem;
+      font-size: 1rem;
       color: var(--accent-1);
       font-weight: 700;
     }
 
     .slider-container {
       position: relative;
-      padding: 8px 0;
+      padding: 6px 0;
     }
 
     .input-slider {
@@ -2970,18 +2989,20 @@
         prediction += xVector[i] * results.coefficients[i];
       }
 
-      // Calculate standard error for confidence interval
-      // SE_mean = sqrt(MSE * x' * (X'X)^-1 * x)
-      const mse = results.mse || (results.sse / results.df_resid);
-      const se_mean = Math.sqrt(mse * 0.1); // Simplified - would need (X'X)^-1 for exact calculation
+      // Calculate standard errors using proper MSE
+      // MSE = SSR / df_residual (using correct property names from computeOLS)
+      const SSR = results.SSR || results.sse || 0;
+      const df_residual = results.df || results.df_resid || results.n - results.k;
+      const mse = SSR / df_residual;
+      
+      // Approximate standard errors (simplified without X'X inverse)
+      // Use RMSE as a reasonable approximation
+      const rmse = results.RMSE || Math.sqrt(mse);
+      const se_mean = rmse * 0.3; // Approximation for mean prediction
+      const se_pred = rmse * 1.1; // Approximation for individual prediction
 
-      // Calculate standard error for prediction interval
-      // SE_pred = sqrt(MSE * (1 + x' * (X'X)^-1 * x))
-      const se_pred = Math.sqrt(mse * (1 + 0.1)); // Simplified
-
-      // t-critical value for 95% CI (approximate)
-      const df = results.df_resid || 10;
-      const t_crit = 2.0; // Approximation for df > 10
+      // t-critical value for 95% CI
+      const t_crit = df_residual > 30 ? 1.96 : 2.0; // Use 1.96 for large samples
 
       return {
         value: prediction,
