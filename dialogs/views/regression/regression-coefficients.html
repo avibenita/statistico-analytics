@@ -484,44 +484,71 @@
     /* Tab Navigation */
     .tab-navigation {
       display: flex;
-      gap: 4px;
+      gap: 8px;
       background: var(--surface-2);
-      padding: 8px 12px;
+      padding: 12px 16px 0 16px;
       border-bottom: 2px solid var(--border);
       overflow-x: auto;
       scrollbar-width: thin;
     }
     
     .tab-button {
-      padding: 10px 18px;
-      background: transparent;
-      border: none;
+      padding: 12px 24px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: none;
       color: var(--text-muted);
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
-      border-radius: 6px 6px 0 0;
-      transition: all 0.2s ease;
+      border-radius: 12px 12px 0 0;
+      transition: all 0.3s ease;
       white-space: nowrap;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      position: relative;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .tab-button::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: transparent;
+      transition: all 0.3s ease;
     }
     
     .tab-button:hover {
-      background: rgba(255, 165, 120, 0.1);
+      background: rgba(255, 165, 120, 0.15);
       color: var(--text-primary);
+      transform: translateY(-2px);
+      border-color: rgba(255, 165, 120, 0.3);
     }
     
     .tab-button.active {
       background: var(--surface-1);
       color: var(--accent-1);
       font-weight: 600;
-      border-bottom: 3px solid var(--accent-1);
+      border-color: var(--accent-1);
+      box-shadow: 0 -4px 16px rgba(255, 165, 120, 0.3);
+      transform: translateY(-4px);
+    }
+    
+    .tab-button.active::before {
+      background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
     }
     
     .tab-button i {
-      font-size: 16px;
+      font-size: 18px;
+      transition: transform 0.3s ease;
+    }
+    
+    .tab-button.active i {
+      transform: scale(1.1);
     }
     
     .tab-content {
@@ -1473,7 +1500,10 @@
       
       console.log('📊 Loading residuals tab...');
       const panel = document.getElementById('residualsPanel');
-      panel.innerHTML = '<iframe src="regression-residuals.html" style="width: 100%; height: 80vh; border: none; background: transparent;"></iframe>';
+      const baseUrl = window.location.href.split('/regression/')[0];
+      const iframeUrl = `${baseUrl}/regression/regression-residuals.html`;
+      console.log('Loading iframe:', iframeUrl);
+      panel.innerHTML = `<iframe src="${iframeUrl}" style="width: 100%; height: 80vh; border: none; background: transparent;"></iframe>`;
       window.residualsLoaded = true;
     }
     
@@ -1491,7 +1521,10 @@
       
       console.log('📊 Loading correlations tab...');
       const panel = document.getElementById('correlationsPanel');
-      panel.innerHTML = '<iframe src="../correlations/correlation-matrix.html" style="width: 100%; height: 80vh; border: none; background: transparent;"></iframe>';
+      const baseUrl = window.location.href.split('/regression/')[0];
+      const iframeUrl = `${baseUrl}/correlations/correlation-matrix.html`;
+      console.log('Loading iframe:', iframeUrl);
+      panel.innerHTML = `<iframe src="${iframeUrl}" style="width: 100%; height: 80vh; border: none; background: transparent;"></iframe>`;
       window.correlationsLoaded = true;
     }
     
@@ -1509,7 +1542,10 @@
       
       console.log('📊 Loading descriptive stats tab...');
       const panel = document.getElementById('descriptivePanel');
-      panel.innerHTML = '<iframe src="../correlations/descriptive-stats.html" style="width: 100%; height: 80vh; border: none; background: transparent;"></iframe>';
+      const baseUrl = window.location.href.split('/regression/')[0];
+      const iframeUrl = `${baseUrl}/correlations/descriptive-stats.html`;
+      console.log('Loading iframe:', iframeUrl);
+      panel.innerHTML = `<iframe src="${iframeUrl}" style="width: 100%; height: 80vh; border: none; background: transparent;"></iframe>`;
       window.descriptiveLoaded = true;
     }
     
