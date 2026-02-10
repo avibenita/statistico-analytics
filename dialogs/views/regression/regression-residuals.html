@@ -893,10 +893,17 @@
     }
 
     function displayDiagnostics() {
-      document.getElementById('loadingState').style.display = 'none';
-      document.getElementById('contentArea').style.display = 'block';
+      console.log('🚀 displayDiagnostics called');
+      console.log('📦 residualData:', residualData);
+      console.log('📦 regressionResults:', regressionResults);
+      
+      try {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('contentArea').style.display = 'block';
 
-      const { residuals, fitted, standardized, leverage, cooksD } = calculateDiagnostics();
+        const diagnosticsData = calculateDiagnostics();
+        console.log('📊 Diagnostics calculated:', diagnosticsData);
+        const { residuals, fitted, standardized, leverage, cooksD } = diagnosticsData;
 
       // Display statistical tests
       displayTests(residuals, standardized);
@@ -921,6 +928,19 @@
 
       // Display AI preliminary assessment
       displayAIAssessment(cooksD);
+      
+      console.log('✅ All diagnostics displayed successfully');
+      } catch (error) {
+        console.error('❌ Error in displayDiagnostics:', error);
+        console.error('Error stack:', error.stack);
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('emptyState').innerHTML = `
+          <i class="fa-solid fa-exclamation-triangle"></i>
+          <h3>Error Loading Diagnostics</h3>
+          <p>${error.message}</p>
+        `;
+      }
     }
 
     function calculateDiagnostics() {
