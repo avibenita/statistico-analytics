@@ -1042,49 +1042,69 @@
     let currentHeaders = null;
     let currentView = 'table';
 
-    // Initialize Office.js
-    Office.onReady(function(info) {
-      console.log('Office initialized in correlation matrix dialog');
-      
-      // Initialize shared header
-      if (typeof StatisticoHeader !== 'undefined') {
-        StatisticoHeader.init('correlation-matrix', 'Correlation Matrix', 0, 'correlations');
-      }
-      
-      // Check if data was pre-loaded in sessionStorage (e.g., from regression dialog)
-      const storedData = sessionStorage.getItem('correlationData');
-      if (storedData) {
-        try {
-          correlationData = JSON.parse(storedData);
-          console.log('📦 Loaded correlation data from sessionStorage:', correlationData);
-          
-          // If data came from regression model, update the title
-          if (correlationData.source === 'regression-model' && correlationData.modelInfo) {
-            const modelInfo = correlationData.modelInfo;
-            console.log('📊 Showing correlations for regression model:', modelInfo);
+    // Check if we're in an iframe
+    const isInIframe = window.self !== window.top;
+    
+    if (isInIframe) {
+      // Running in iframe - skip Office.js, just load data
+      console.log('📊 Running in iframe, loading data directly');
+      document.addEventListener('DOMContentLoaded', function() {
+        const storedData = sessionStorage.getItem('correlationData');
+        if (storedData) {
+          try {
+            correlationData = JSON.parse(storedData);
+            console.log('📦 Loaded correlation data from sessionStorage:', correlationData);
+            renderMatrix();
+          } catch (e) {
+            console.error('Error loading data from sessionStorage:', e);
           }
-          
-          // Render the matrix immediately
-          renderMatrix();
-          
-          // Clear the sessionStorage after loading to prevent stale data
-          sessionStorage.removeItem('correlationData');
-        } catch (e) {
-          console.error('Error loading data from sessionStorage:', e);
         }
-      }
-      
-      // Listen for messages from parent (for normal dialog usage)
-      Office.context.ui.addHandlerAsync(
-        Office.EventType.DialogParentMessageReceived,
-        onMessageFromParent
-      );
-      
-      // Notify parent that dialog is ready (if opened as a child dialog)
-      Office.context.ui.messageParent(JSON.stringify({
-        action: 'ready'
-      }));
-    });
+      });
+    } else {
+      // Initialize Office.js (standalone dialog)
+      Office.onReady(function(info) {
+        console.log('Office initialized in correlation matrix dialog');
+        
+        // Initialize shared header
+        if (typeof StatisticoHeader !== 'undefined') {
+          StatisticoHeader.init('correlation-matrix', 'Correlation Matrix', 0, 'correlations');
+        }
+        
+        // Check if data was pre-loaded in sessionStorage (e.g., from regression dialog)
+        const storedData = sessionStorage.getItem('correlationData');
+        if (storedData) {
+          try {
+            correlationData = JSON.parse(storedData);
+            console.log('📦 Loaded correlation data from sessionStorage:', correlationData);
+            
+            // If data came from regression model, update the title
+            if (correlationData.source === 'regression-model' && correlationData.modelInfo) {
+              const modelInfo = correlationData.modelInfo;
+              console.log('📊 Showing correlations for regression model:', modelInfo);
+            }
+            
+            // Render the matrix immediately
+            renderMatrix();
+            
+            // Clear the sessionStorage after loading to prevent stale data
+            sessionStorage.removeItem('correlationData');
+          } catch (e) {
+            console.error('Error loading data from sessionStorage:', e);
+          }
+        }
+        
+        // Listen for messages from parent (for normal dialog usage)
+        Office.context.ui.addHandlerAsync(
+          Office.EventType.DialogParentMessageReceived,
+          onMessageFromParent
+        );
+        
+        // Notify parent that dialog is ready (if opened as a child dialog)
+        Office.context.ui.messageParent(JSON.stringify({
+          action: 'ready'
+        }));
+      });
+    }
 
     /**
      * Handle messages from parent taskpane

@@ -426,12 +426,19 @@
     let residualData = null;
     let regressionResults = null;
 
-    // Initialize Office.js
-    if (typeof Office !== 'undefined') {
+    // Check if we're in an iframe
+    const isInIframe = window.self !== window.top;
+    
+    if (isInIframe) {
+      // Running in iframe - skip Office.js, just load data
+      console.log('📊 Running in iframe, loading data directly');
+      document.addEventListener('DOMContentLoaded', () => {
+        loadResidualData();
+      });
+    } else if (typeof Office !== 'undefined') {
+      // Initialize Office.js (standalone dialog)
       Office.onReady((info) => {
         console.log('✅ Office.js ready in residual diagnostics');
-        
-        // Load data from sessionStorage
         loadResidualData();
       });
     } else {
