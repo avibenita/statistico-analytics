@@ -1303,7 +1303,6 @@
                 <span class="tooltiptext">Residuals should be normally distributed. Based on Shapiro-Wilk test. Important for valid inference.</span>
               </span>
             </div>
-            <div style="font-size: 11px; color: var(--text-muted);">${results.normality ? '✓' : '✗'}</div>
           </div>
         </div>
         <div class="verdict-item">
@@ -1316,7 +1315,6 @@
                 <span class="tooltiptext">Constant variance of residuals. Based on Breusch-Pagan test. Ensures reliable standard errors.</span>
               </span>
             </div>
-            <div style="font-size: 11px; color: var(--text-muted);">${results.homoscedasticity ? '✓' : '✗'}</div>
           </div>
         </div>
         <div class="verdict-item">
@@ -1329,7 +1327,6 @@
                 <span class="tooltiptext">Checks if residuals are independent (no autocorrelation). Based on Durbin-Watson test. Important for time-series or ordered data.</span>
               </span>
             </div>
-            <div style="font-size: 11px; color: var(--text-muted);">${results.independence ? '✓' : '⚠'}</div>
           </div>
         </div>
         <div class="verdict-item">
@@ -1342,7 +1339,7 @@
                 <span class="tooltiptext">Observations with standardized residuals > ±2. May indicate unusual cases or model limitations.</span>
               </span>
             </div>
-            <div style="font-size: 11px; color: var(--text-muted);">${results.outlierCount} (${results.outlierPct.toFixed(1)}%)</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${results.outlierCount} (${results.outlierPct.toFixed(1)}%)</div>
           </div>
         </div>
       `;
