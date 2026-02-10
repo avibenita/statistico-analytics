@@ -1321,14 +1321,35 @@
           
           row.style.cssText = rowStyle;
           
+          // Smart formatting for coefficients - use scientific notation for very small values
+          const formatCoef = (val) => {
+            if (Math.abs(val) < 0.01 && val !== 0) {
+              return val.toExponential(3);  // Scientific notation for tiny values
+            } else if (Math.abs(val) < 1 && val !== 0) {
+              return val.toFixed(4);  // 4 decimals for small values
+            } else {
+              return val.toFixed(2);  // 2 decimals for normal values
+            }
+          };
+          
+          const formatSE = (val) => {
+            if (Math.abs(val) < 0.01 && val !== 0) {
+              return val.toExponential(3);
+            } else if (Math.abs(val) < 1) {
+              return val.toFixed(4);
+            } else {
+              return val.toFixed(2);
+            }
+          };
+          
           row.innerHTML = `
             <td><strong class="${varClass}">${varName}</strong></td>
-            <td>${coef.toFixed(2)}${sigIndicator}</td>
-            <td>${results.std_errors[i].toFixed(2)}</td>
+            <td>${formatCoef(coef)}${sigIndicator}</td>
+            <td>${formatSE(results.std_errors[i])}</td>
             <td>${results.t_values[i].toFixed(2)}</td>
             <td>${results.p_values[i] < 0.0001 ? '< 0.0001' : results.p_values[i].toFixed(4)}</td>
-            <td>${results.CI_lower[i].toFixed(2)}</td>
-            <td>${results.CI_upper[i].toFixed(2)}</td>
+            <td>${formatCoef(results.CI_lower[i])}</td>
+            <td>${formatCoef(results.CI_upper[i])}</td>
             <td>${i === 0 && results.includeIntercept ? '—' : (results.VIF[i - (results.includeIntercept ? 1 : 0)]?.toFixed(2) || '—')}</td>
           `;
           
