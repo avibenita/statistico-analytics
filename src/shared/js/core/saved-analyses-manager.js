@@ -10,6 +10,48 @@ const SavedAnalysesManager = (function() {
 
   const PROPERTY_KEY = 'STATISTICO_ANALYSES';
   const MAX_ANALYSES = 100; // Safety limit
+  
+  /**
+   * Check if Office.js is ready and settings API is available
+   * @returns {boolean}
+   */
+  function isOfficeReady() {
+    return typeof Office !== 'undefined' && 
+           Office.context && 
+           Office.context.document && 
+           Office.context.document.settings;
+  }
+  
+  /**
+   * Wait for Office.js to be ready
+   * @returns {Promise<void>}
+   */
+  function ensureOfficeReady() {
+    return new Promise((resolve) => {
+      if (isOfficeReady()) {
+        resolve();
+        return;
+      }
+      
+      // Wait for Office.onReady
+      if (typeof Office !== 'undefined' && Office.onReady) {
+        Office.onReady(() => {
+          // Double-check after onReady
+          if (isOfficeReady()) {
+            resolve();
+          } else {
+            // If still not ready, wait a bit and resolve anyway
+            setTimeout(resolve, 500);
+          }
+        });
+      } else {
+        // Office.js not loaded yet, wait and retry
+        setTimeout(() => {
+          ensureOfficeReady().then(resolve);
+        }, 100);
+      }
+    });
+  }
 
   /**
    * Save an analysis configuration to the workbook
@@ -19,6 +61,13 @@ const SavedAnalysesManager = (function() {
   async function saveAnalysis(analysisData) {
     try {
       console.log('💾 Saving analysis to workbook:', analysisData.name);
+      
+      // Ensure Office.js is ready
+      await ensureOfficeReady();
+      
+      if (!isOfficeReady()) {
+        throw new Error('Office.js settings API is not available');
+      }
       
       // Load existing analyses
       const allAnalyses = await loadAllAnalyses();
@@ -70,6 +119,14 @@ const SavedAnalysesManager = (function() {
    */
   async function loadAllAnalyses() {
     try {
+      // Ensure Office.js is ready
+      await ensureOfficeReady();
+      
+      if (!isOfficeReady()) {
+        console.warn('⚠️ Office.js settings API not available');
+        return [];
+      }
+      
       return new Promise((resolve) => {
         try {
           const settings = Office.context.document.settings;
@@ -113,6 +170,13 @@ const SavedAnalysesManager = (function() {
   async function deleteAnalysis(analysisId) {
     try {
       console.log('🗑️ Deleting analysis:', analysisId);
+      
+      // Ensure Office.js is ready
+      await ensureOfficeReady();
+      
+      if (!isOfficeReady()) {
+        throw new Error('Office.js settings API is not available');
+      }
       
       const allAnalyses = await loadAllAnalyses();
       const filtered = allAnalyses.filter(a => a.id !== analysisId);
