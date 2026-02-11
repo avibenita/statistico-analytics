@@ -14,7 +14,28 @@
   <script src="../shared-header.js"></script>
   <script src="../../shared/views/normality-view.js"></script>
   <style>
-    :root{--surface-0:#0c1624;--surface-1:#1a1f2e;--surface-2:#242938;--border:#2d3748;--accent-1:rgb(255,165,120);--text-primary:#fff;--text-secondary:rgba(255,255,255,0.85);}
+    /* Dark Theme (Default) */
+    :root{
+      --surface-0:#0c1624;
+      --surface-1:#1a1f2e;
+      --surface-2:#242938;
+      --border:#2d3748;
+      --accent-1:rgb(255,165,120);
+      --text-primary:#fff;
+      --text-secondary:rgba(255,255,255,0.85);
+    }
+    
+    /* Light Theme */
+    :root[data-theme="light"]{
+      --surface-0:#f3f4f6;
+      --surface-1:#ffffff;
+      --surface-2:#f9fafb;
+      --border:#e5e7eb;
+      --accent-1:#2563eb;
+      --text-primary:#111827;
+      --text-secondary:#4b5563;
+    }
+    
     html,body{height:100%;margin:0;padding:0;}
     body{background:var(--surface-0);color:var(--text-primary);font-family:'Segoe UI', Tahoma, sans-serif;overflow-x:hidden;display:flex;flex-direction:column;min-height:100vh;}
     .wrap{display:flex;justify-content:center;padding:12px;flex:1;min-height:0;box-sizing:border-box;}
@@ -414,8 +435,31 @@
         if (event.data && event.data.type === 'CORRELATION_DATA') {
           console.log('✅ Data received via postMessage');
           handleCorrelationData(event.data.payload);
+        } else if (event.data && event.data.type === 'THEME_CHANGE') {
+          console.log('🎨 Theme change received:', event.data.theme);
+          applyTheme(event.data.theme);
         }
       });
+      
+      // Function to apply theme
+      function applyTheme(theme) {
+        const root = document.documentElement;
+        if (theme === 'light') {
+          root.setAttribute('data-theme', 'light');
+          console.log('☀️ Applied Light Theme to descriptive stats');
+        } else {
+          root.removeAttribute('data-theme');
+          console.log('🌙 Applied Dark Theme to descriptive stats');
+        }
+        
+        // Force table reflow to fix rendering issue
+        const table = document.getElementById('stats-table');
+        if (table) {
+          table.style.display = 'none';
+          table.offsetHeight; // Force reflow
+          table.style.display = '';
+        }
+      }
       
       // Also try sessionStorage as fallback
       document.addEventListener('DOMContentLoaded', function() {
@@ -680,6 +724,19 @@
         });
         tbody.appendChild(tr);
       });
+      
+      // Force table reflow to fix rendering issue
+      // This addresses the bug where table content doesn't show until zoom/resize
+      setTimeout(() => {
+        const table = document.getElementById('stats-table');
+        if (table) {
+          const currentDisplay = table.style.display;
+          table.style.display = 'none';
+          table.offsetHeight; // Trigger reflow
+          table.style.display = currentDisplay || '';
+          console.log('✅ Table reflow forced');
+        }
+      }, 50);
     }
 
     // Handle row click - select row and show histogram (used for auto-selection)

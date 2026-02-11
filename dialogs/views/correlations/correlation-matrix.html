@@ -23,6 +23,7 @@
   <script src="../shared-header.js?v=20260206-003"></script>
 
   <style>
+    /* Dark Theme (Default) */
     :root{
       --surface-0:#0c1624;
       --surface-1:#1a1f2e;
@@ -33,6 +34,19 @@
       --text-primary:#fff;
       --text-secondary:rgba(255,255,255,0.8);
       --text-muted:rgba(255,255,255,0.5);
+    }
+    
+    /* Light Theme */
+    :root[data-theme="light"]{
+      --surface-0:#f3f4f6;
+      --surface-1:#ffffff;
+      --surface-2:#f9fafb;
+      --border:#e5e7eb;
+      --accent-1:#2563eb;
+      --accent-2:#1d4ed8;
+      --text-primary:#111827;
+      --text-secondary:#4b5563;
+      --text-muted:#6b7280;
     }
 
     *{
@@ -1051,8 +1065,23 @@
           correlationData = event.data.payload;
           console.log('✅ Data received via postMessage');
           renderMatrix();
+        } else if (event.data && event.data.type === 'THEME_CHANGE') {
+          console.log('🎨 Theme change received:', event.data.theme);
+          applyTheme(event.data.theme);
         }
       });
+      
+      // Function to apply theme
+      function applyTheme(theme) {
+        const root = document.documentElement;
+        if (theme === 'light') {
+          root.setAttribute('data-theme', 'light');
+          console.log('☀️ Applied Light Theme to correlation matrix');
+        } else {
+          root.removeAttribute('data-theme');
+          console.log('🌙 Applied Dark Theme to correlation matrix');
+        }
+      }
       
       // Also try sessionStorage as fallback
       document.addEventListener('DOMContentLoaded', function() {

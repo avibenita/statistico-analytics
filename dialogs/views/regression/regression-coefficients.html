@@ -2488,6 +2488,31 @@
       } catch (e) {
         console.warn('Could not save theme preference:', e);
       }
+      
+      // Broadcast theme change to all iframes
+      broadcastThemeToIframes(newTheme);
+    }
+    
+    /**
+     * Broadcast theme change to all iframe children
+     */
+    function broadcastThemeToIframes(theme) {
+      const iframes = document.querySelectorAll('iframe');
+      console.log(`📡 Broadcasting theme '${theme}' to ${iframes.length} iframe(s)`);
+      
+      iframes.forEach((iframe, index) => {
+        try {
+          if (iframe.contentWindow) {
+            iframe.contentWindow.postMessage({
+              type: 'THEME_CHANGE',
+              theme: theme
+            }, '*');
+            console.log(`  ✓ Sent to iframe ${index + 1}`);
+          }
+        } catch (e) {
+          console.warn(`Failed to send theme to iframe ${index + 1}:`, e);
+        }
+      });
     }
     
     /**
@@ -3657,6 +3682,16 @@
             intercept: data.intercept
           }
         }, '*');
+        
+        // Send current theme to iframe
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        setTimeout(() => {
+          iframe.contentWindow.postMessage({
+            type: 'THEME_CHANGE',
+            theme: currentTheme
+          }, '*');
+          console.log(`🎨 Sent theme '${currentTheme}' to residuals iframe`);
+        }, 100);
       };
       
       panel.innerHTML = '';
@@ -3711,6 +3746,16 @@
             source: 'regression-model'
           }
         }, '*');
+        
+        // Send current theme to iframe
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        setTimeout(() => {
+          iframe.contentWindow.postMessage({
+            type: 'THEME_CHANGE',
+            theme: currentTheme
+          }, '*');
+          console.log(`🎨 Sent theme '${currentTheme}' to correlations iframe`);
+        }, 100);
       };
       
       panel.innerHTML = '';
@@ -3765,6 +3810,16 @@
             source: 'regression-model'
           }
         }, '*');
+        
+        // Send current theme to iframe
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        setTimeout(() => {
+          iframe.contentWindow.postMessage({
+            type: 'THEME_CHANGE',
+            theme: currentTheme
+          }, '*');
+          console.log(`🎨 Sent theme '${currentTheme}' to descriptive stats iframe`);
+        }, 100);
       };
       
       panel.innerHTML = '';
