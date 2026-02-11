@@ -142,6 +142,18 @@ function openRegressionCoefficientsDialog() {
             if (message.action === 'ready' || message.action === 'requestData') {
               console.log('📨 Dialog is ready, sending regression results');
               sendRegressionResults();
+            } else if (message.action === 'SAVE_ANALYSIS') {
+              // Handle save analysis request from dialog
+              console.log('💾 Received SAVE_ANALYSIS request from dialog');
+              handleSaveAnalysisFromDialog(message.data);
+            } else if (message.action === 'LOAD_ANALYSIS') {
+              // Handle load analysis request from dialog
+              console.log('📂 Received LOAD_ANALYSIS request from dialog');
+              handleLoadAnalysisFromDialog(message.data);
+            } else if (message.action === 'DELETE_ANALYSIS') {
+              // Handle delete analysis request from dialog
+              console.log('🗑️ Received DELETE_ANALYSIS request from dialog');
+              handleDeleteAnalysisFromDialog(message.data);
             } else if (message.action === 'close') {
               resultsDialog.close();
               resultsDialog = null;
@@ -231,6 +243,63 @@ function getDialogsBaseUrl() {
     return `${href.split('/taskpane/')[0]}/dialogs/views/`;
   }
   return `${window.location.origin}/statistico-analytics/dialogs/views/`;
+}
+
+// ============================================================================
+// SAVED ANALYSES HANDLERS (from dialog message passing)
+// ============================================================================
+
+/**
+ * Handle save analysis request from dialog
+ * The dialog can't access settings API, so we do it here in the taskpane
+ */
+async function handleSaveAnalysisFromDialog(analysisData) {
+  try {
+    console.log('💾 Taskpane: Saving analysis received from dialog:', analysisData.name);
+    
+    // Use SavedAnalysesManager which will work in taskpane context
+    if (typeof SavedAnalysesManager !== 'undefined') {
+      await SavedAnalysesManager.saveAnalysis(analysisData);
+      console.log('✅ Analysis saved successfully from taskpane');
+    } else {
+      console.error('❌ SavedAnalysesManager not available');
+    }
+  } catch (error) {
+    console.error('❌ Error saving analysis in taskpane:', error);
+  }
+}
+
+/**
+ * Handle load analysis request from dialog
+ */
+async function handleLoadAnalysisFromDialog(analysisId) {
+  try {
+    console.log('📂 Taskpane: Loading analysis:', analysisId);
+    
+    if (typeof SavedAnalysesManager !== 'undefined') {
+      const analysis = await SavedAnalysesManager.loadAnalysisById(analysisId);
+      console.log('✅ Analysis loaded:', analysis);
+      // Could send back to dialog if needed
+    }
+  } catch (error) {
+    console.error('❌ Error loading analysis in taskpane:', error);
+  }
+}
+
+/**
+ * Handle delete analysis request from dialog
+ */
+async function handleDeleteAnalysisFromDialog(analysisId) {
+  try {
+    console.log('🗑️ Taskpane: Deleting analysis:', analysisId);
+    
+    if (typeof SavedAnalysesManager !== 'undefined') {
+      await SavedAnalysesManager.deleteAnalysis(analysisId);
+      console.log('✅ Analysis deleted successfully');
+    }
+  } catch (error) {
+    console.error('❌ Error deleting analysis in taskpane:', error);
+  }
 }
 
 function updateButtonState() {

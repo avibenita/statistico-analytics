@@ -12,6 +12,17 @@ const SavedAnalysesManager = (function() {
   const MAX_ANALYSES = 100; // Safety limit
   
   /**
+   * Check if we're running in a dialog context
+   * @returns {boolean}
+   */
+  function isDialogContext() {
+    return typeof Office !== 'undefined' && 
+           Office.context && 
+           Office.context.ui && 
+           typeof Office.context.ui.messageParent === 'function';
+  }
+  
+  /**
    * Check if Office.js is ready and settings API is available
    * @returns {boolean}
    */
@@ -54,6 +65,35 @@ const SavedAnalysesManager = (function() {
   }
 
   /**
+   * Save via message to parent taskpane (for dialog contexts)
+   * @param {string} action - The action to perform
+   * @param {Object} data - The data to send
+   * @returns {Promise<any>} Response from parent
+   */
+  function sendMessageToParent(action, data) {
+    return new Promise((resolve, reject) => {
+      try {
+        const messageId = `msg_${Date.now()}_${Math.random()}`;
+        const message = JSON.stringify({
+          action: action,
+          data: data,
+          messageId: messageId
+        });
+        
+        console.log('📤 Sending message to parent:', action);
+        Office.context.ui.messageParent(message);
+        
+        // For now, resolve immediately as we can't get a response back easily
+        // The parent will handle the save
+        setTimeout(() => resolve(true), 100);
+        
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+  
+  /**
    * Save an analysis configuration to the workbook
    * @param {Object} analysisData - The analysis configuration
    * @returns {Promise<boolean>} Success status
@@ -65,6 +105,14 @@ const SavedAnalysesManager = (function() {
       // Ensure Office.js is ready
       await ensureOfficeReady();
       
+      // Check if we're in a dialog context
+      if (isDialogContext()) {
+        console.log('📡 Dialog context detected, using message passing');
+        // In dialog context, send message to parent taskpane
+        return await sendMessageToParent('SAVE_ANALYSIS', analysisData);
+      }
+      
+      // In taskpane context, use settings API directly
       if (!isOfficeReady()) {
         throw new Error('Office.js settings API is not available');
       }
@@ -87,7 +135,6 @@ const SavedAnalysesManager = (function() {
       }
       
       // Save using Office.context.document.settings
-      // This works from both taskpanes and dialogs
       return new Promise((resolve, reject) => {
         try {
           const settings = Office.context.document.settings;
@@ -121,6 +168,13 @@ const SavedAnalysesManager = (function() {
     try {
       // Ensure Office.js is ready
       await ensureOfficeReady();
+      
+      // In dialog context, we can't load directly
+      // The taskpane should handle this
+      if (isDialogContext()) {
+        console.log('📡 Dialog context: Cannot load analyses directly');
+        return [];
+      }
       
       if (!isOfficeReady()) {
         console.warn('⚠️ Office.js settings API not available');
@@ -173,6 +227,12 @@ const SavedAnalysesManager = (function() {
       
       // Ensure Office.js is ready
       await ensureOfficeReady();
+      
+      // Check if we're in a dialog context
+      if (isDialogContext()) {
+        console.log('📡 Dialog context detected, using message passing');
+        return await sendMessageToParent('DELETE_ANALYSIS', analysisId);
+      }
       
       if (!isOfficeReady()) {
         throw new Error('Office.js settings API is not available');
