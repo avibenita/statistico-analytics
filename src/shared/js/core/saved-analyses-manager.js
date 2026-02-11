@@ -2,7 +2,7 @@
  * Statistico Analytics - Universal Saved Analyses Manager
  * 
  * Manages saving and loading analysis configurations across all modules
- * using Excel Custom Document Properties (workbook-specific storage)
+ * using Office.context.document.settings (workbook-specific storage)
  */
 
 const SavedAnalysesManager = (function() {
@@ -20,42 +20,44 @@ const SavedAnalysesManager = (function() {
     try {
       console.log('💾 Saving analysis to workbook:', analysisData.name);
       
-      await Excel.run(async (context) => {
-        const properties = context.workbook.properties.custom;
-        
-        // Load existing analyses
-        const allAnalyses = await loadAllAnalyses();
-        
-        // Check if updating existing or adding new
-        const existingIndex = allAnalyses.findIndex(a => a.id === analysisData.id);
-        if (existingIndex >= 0) {
-          allAnalyses[existingIndex] = analysisData;
-          console.log('📝 Updated existing analysis');
-        } else {
-          // Check limit
-          if (allAnalyses.length >= MAX_ANALYSES) {
-            throw new Error(`Maximum of ${MAX_ANALYSES} saved analyses reached`);
-          }
-          allAnalyses.push(analysisData);
-          console.log('➕ Added new analysis');
+      // Load existing analyses
+      const allAnalyses = await loadAllAnalyses();
+      
+      // Check if updating existing or adding new
+      const existingIndex = allAnalyses.findIndex(a => a.id === analysisData.id);
+      if (existingIndex >= 0) {
+        allAnalyses[existingIndex] = analysisData;
+        console.log('📝 Updated existing analysis');
+      } else {
+        // Check limit
+        if (allAnalyses.length >= MAX_ANALYSES) {
+          throw new Error(`Maximum of ${MAX_ANALYSES} saved analyses reached`);
         }
-        
-        // Save to Excel custom property
-        const prop = properties.getItemOrNullObject(PROPERTY_KEY);
-        await context.sync();
-        
-        if (prop.isNullObject) {
-          properties.add(PROPERTY_KEY, JSON.stringify(allAnalyses));
-        } else {
-          prop.value = JSON.stringify(allAnalyses);
+        allAnalyses.push(analysisData);
+        console.log('➕ Added new analysis');
+      }
+      
+      // Save using Office.context.document.settings
+      // This works from both taskpanes and dialogs
+      return new Promise((resolve, reject) => {
+        try {
+          const settings = Office.context.document.settings;
+          settings.set(PROPERTY_KEY, JSON.stringify(allAnalyses));
+          
+          settings.saveAsync((asyncResult) => {
+            if (asyncResult.status === Office.AsyncResultStatus.Succeeded) {
+              console.log('✅ Analysis saved successfully');
+              resolve(true);
+            } else {
+              console.error('❌ Failed to save:', asyncResult.error);
+              reject(new Error(asyncResult.error.message));
+            }
+          });
+        } catch (error) {
+          reject(error);
         }
-        
-        await context.sync();
-        console.log('✅ Analysis saved successfully');
-        return true;
       });
       
-      return true;
     } catch (error) {
       console.error('❌ Error saving analysis:', error);
       throw error;
@@ -68,20 +70,23 @@ const SavedAnalysesManager = (function() {
    */
   async function loadAllAnalyses() {
     try {
-      return await Excel.run(async (context) => {
-        const properties = context.workbook.properties.custom;
-        const prop = properties.getItemOrNullObject(PROPERTY_KEY);
-        prop.load("value");
-        await context.sync();
-        
-        if (!prop.isNullObject && prop.value) {
-          const analyses = JSON.parse(prop.value);
-          console.log(`📂 Loaded ${analyses.length} saved analyses`);
-          return analyses;
+      return new Promise((resolve) => {
+        try {
+          const settings = Office.context.document.settings;
+          const data = settings.get(PROPERTY_KEY);
+          
+          if (data) {
+            const analyses = JSON.parse(data);
+            console.log(`📂 Loaded ${analyses.length} saved analyses`);
+            resolve(analyses);
+          } else {
+            console.log('📂 No saved analyses found');
+            resolve([]);
+          }
+        } catch (error) {
+          console.error('❌ Error loading analyses:', error);
+          resolve([]);
         }
-        
-        console.log('📂 No saved analyses found');
-        return [];
       });
     } catch (error) {
       console.error('❌ Error loading analyses:', error);
@@ -109,26 +114,33 @@ const SavedAnalysesManager = (function() {
     try {
       console.log('🗑️ Deleting analysis:', analysisId);
       
-      await Excel.run(async (context) => {
-        const properties = context.workbook.properties.custom;
-        const allAnalyses = await loadAllAnalyses();
-        
-        const filtered = allAnalyses.filter(a => a.id !== analysisId);
-        
-        if (filtered.length === allAnalyses.length) {
-          console.warn('⚠️ Analysis not found:', analysisId);
-          return false;
+      const allAnalyses = await loadAllAnalyses();
+      const filtered = allAnalyses.filter(a => a.id !== analysisId);
+      
+      if (filtered.length === allAnalyses.length) {
+        console.warn('⚠️ Analysis not found:', analysisId);
+        return false;
+      }
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const settings = Office.context.document.settings;
+          settings.set(PROPERTY_KEY, JSON.stringify(filtered));
+          
+          settings.saveAsync((asyncResult) => {
+            if (asyncResult.status === Office.AsyncResultStatus.Succeeded) {
+              console.log('✅ Analysis deleted successfully');
+              resolve(true);
+            } else {
+              console.error('❌ Failed to delete:', asyncResult.error);
+              reject(new Error(asyncResult.error.message));
+            }
+          });
+        } catch (error) {
+          reject(error);
         }
-        
-        const prop = properties.getItem(PROPERTY_KEY);
-        prop.value = JSON.stringify(filtered);
-        await context.sync();
-        
-        console.log('✅ Analysis deleted successfully');
-        return true;
       });
       
-      return true;
     } catch (error) {
       console.error('❌ Error deleting analysis:', error);
       throw error;
@@ -201,13 +213,19 @@ const SavedAnalysesManager = (function() {
 
   /**
    * Validate data range still exists in workbook
+   * Note: This function uses Excel.run and should only be called from taskpanes, not dialogs
    * @param {string} dataRange - Excel range reference
    * @returns {Promise<boolean>} True if valid
    */
   async function validateDataRange(dataRange) {
     try {
+      // Check if Excel API is available
+      if (typeof Excel === 'undefined' || !Excel.run) {
+        console.warn('⚠️ Excel API not available, skipping validation');
+        return true; // Assume valid if we can't check
+      }
+      
       await Excel.run(async (context) => {
-        const range = context.workbook.getSelectedDataRange();
         // Try to get the range - will throw if invalid
         const testRange = context.workbook.worksheets.getActiveWorksheet().getRange(dataRange);
         testRange.load('address');
@@ -216,7 +234,7 @@ const SavedAnalysesManager = (function() {
       });
       return true;
     } catch (error) {
-      console.warn('⚠️ Data range validation failed:', dataRange);
+      console.warn('⚠️ Data range validation failed:', dataRange, error);
       return false;
     }
   }
