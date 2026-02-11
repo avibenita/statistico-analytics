@@ -5292,6 +5292,8 @@
      * Compute adjusted means for each group
      */
     function computeAdjustedMeans() {
+      console.log('📊 Computing adjusted means...');
+      
       const results = window.globalRegressionResults;
       const coeffs = results.coefficients || [];
       const xc = window.globalXcVars || [];
@@ -5299,9 +5301,18 @@
       const headers = window.globalRawHeaders || [];
       const rows = window.globalRawRows || [];
       
+      console.log('  Rows available:', rows.length);
+      console.log('  Categorical vars (xc):', xc);
+      console.log('  Continuous vars (xn):', xn);
+      console.log('  Coefficients:', coeffs.length);
+      
       if (rows.length === 0) {
+        console.warn('⚠️ No raw data available for adjusted means');
         document.getElementById('adjustedMeansContainer').innerHTML = `
-          <p style="color: var(--danger);">No data available for adjusted means calculation.</p>
+          <p style="color: var(--danger);">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            No data available for adjusted means calculation. Raw data may not be accessible.
+          </p>
         `;
         return;
       }
@@ -5310,7 +5321,10 @@
       const covariateMeans = {};
       xn.forEach(varName => {
         const colIdx = headers.indexOf(varName);
-        if (colIdx === -1) return;
+        if (colIdx === -1) {
+          console.warn(`⚠️ Covariate "${varName}" not found in headers`);
+          return;
+        }
         
         const values = rows.map(row => parseFloat(row[colIdx])).filter(v => isFinite(v));
         covariateMeans[varName] = values.reduce((sum, v) => sum + v, 0) / values.length;
@@ -5320,14 +5334,17 @@
       const factorLevels = {};
       xc.forEach(varName => {
         const colIdx = headers.indexOf(varName);
-        if (colIdx === -1) return;
+        if (colIdx === -1) {
+          console.warn(`⚠️ Factor "${varName}" not found in headers`);
+          return;
+        }
         
         const levels = [...new Set(rows.map(row => row[colIdx]))].filter(v => v != null && v !== '');
         factorLevels[varName] = levels.sort();
       });
 
-      console.log('Covariate means:', covariateMeans);
-      console.log('Factor levels:', factorLevels);
+      console.log('  Covariate means:', covariateMeans);
+      console.log('  Factor levels:', factorLevels);
 
       // For each factor level, compute adjusted mean
       // Adjusted mean = predicted Y at covariate means for that level
@@ -5338,8 +5355,12 @@
       const levels = factorLevels[firstFactor] || [];
       
       if (levels.length === 0) {
+        console.warn('⚠️ No factor levels found for', firstFactor);
         document.getElementById('adjustedMeansContainer').innerHTML = `
-          <p style="color: var(--danger);">No factor levels found.</p>
+          <p style="color: var(--danger);">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            No factor levels found for "${firstFactor}".
+          </p>
         `;
         return;
       }
@@ -5347,6 +5368,8 @@
       // Find intercept coefficient
       const interceptCoeff = coeffs.find(c => c.variable.toLowerCase() === 'intercept');
       const interceptValue = interceptCoeff ? interceptCoeff.coefficient : 0;
+      
+      console.log('  Intercept:', interceptValue);
 
       levels.forEach((level, idx) => {
         // Base prediction = intercept
@@ -5397,6 +5420,8 @@
           ${Object.entries(covariateMeans).map(([k, v]) => `${k}=${v.toFixed(2)}`).join(', ')}
         </p>
       `;
+      
+      console.log('✅ Adjusted means computed successfully');
     }
 
     /**
