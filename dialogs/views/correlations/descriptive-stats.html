@@ -36,6 +36,33 @@
       --text-secondary:#4b5563;
     }
     
+    /* Light Theme Table Overrides */
+    :root[data-theme="light"] #stats-table {
+      color: var(--text-primary);
+    }
+    
+    :root[data-theme="light"] #stats-table thead th {
+      background: #2563eb;
+      color: #ffffff;
+    }
+    
+    :root[data-theme="light"] #stats-table tbody tr td {
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+    
+    :root[data-theme="light"] #stats-table tbody tr:nth-child(even) td {
+      background: #f3f4f6;
+    }
+    
+    :root[data-theme="light"] #stats-table tbody tr:hover td {
+      background: #dbeafe;
+    }
+    
+    :root[data-theme="light"] #stats-table tbody tr.selected td {
+      background: #bfdbfe;
+    }
+    
     html,body{height:100%;margin:0;padding:0;}
     body{background:var(--surface-0);color:var(--text-primary);font-family:'Segoe UI', Tahoma, sans-serif;overflow-x:hidden;display:flex;flex-direction:column;min-height:100vh;}
     .wrap{display:flex;justify-content:center;padding:12px;flex:1;min-height:0;box-sizing:border-box;}
