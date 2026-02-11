@@ -91,10 +91,10 @@
     .control-group {display: flex;align-items: center;gap: 10px;}
     .decimal-control {display: flex;align-items: center;gap: 5px;}
     .decimal-control label {font-size: 14px;color: var(--text-secondary);font-weight: 500;}
-    .table-wrap{max-height:260px;overflow-y:auto;overflow-x:hidden;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);flex-shrink:0;}
-    #stats-table{width:100%;border-collapse:collapse;table-layout:fixed;}
-    #stats-table th,#stats-table td{padding:8px 10px;border:1px solid rgba(255,255,255,.18);box-sizing:border-box;text-align:right;font-size:11px;line-height:18px;height:36px;}
-    #stats-table th:first-child,#stats-table td:first-child{text-align:left}
+    .table-wrap{max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);flex-shrink:0;}
+    #stats-table{width:100%;min-width:820px;border-collapse:collapse;table-layout:auto;}
+    #stats-table th,#stats-table td{padding:8px 10px;border:1px solid rgba(255,255,255,.18);box-sizing:border-box;text-align:right;font-size:11px;line-height:18px;height:36px;white-space:nowrap;}
+    #stats-table th:first-child,#stats-table td:first-child{text-align:left;min-width:140px;max-width:200px;overflow:hidden;text-overflow:ellipsis;}
     #stats-table thead th{position:sticky;top:0;background:#003366cc;color:#fff;z-index:2;cursor:pointer;}
     #stats-table tbody tr:nth-child(even) td{background:rgba(255,255,255,.05)}
     #stats-table tbody tr:hover td{background:rgba(255,221,87,.18)}
@@ -183,8 +183,15 @@
         <div class="table-wrap">
           <table id="stats-table">
             <colgroup>
-              <col style="width: 140px"><col style="width: 70px"><col style="width: 90px"><col style="width: 90px">
-              <col style="width: 90px"><col style="width: 90px"><col style="width: 90px"><col style="width: 80px"><col style="width: 80px">
+              <col style="min-width: 140px; max-width: 200px;">
+              <col style="min-width: 70px;">
+              <col style="min-width: 90px;">
+              <col style="min-width: 90px;">
+              <col style="min-width: 90px;">
+              <col style="min-width: 90px;">
+              <col style="min-width: 90px;">
+              <col style="min-width: 80px;">
+              <col style="min-width: 80px;">
             </colgroup>
             <thead>
               <tr>
