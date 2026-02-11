@@ -234,14 +234,18 @@
         }
         
         console.log('📂 Loading saved analysis:', analysis.name);
+        console.log('  Config:', analysis.config);
         
-        // TODO: Populate the model builder with the saved configuration
-        // This requires integration with the regression-input-panel.js
+        // Save the model spec to sessionStorage so the model builder can restore it
+        sessionStorage.setItem('regressionModelSpec', JSON.stringify(analysis.config));
         
-        console.log(`✅ Model "${analysis.name}" configuration loaded:`, analysis.config);
-        console.log('Y:', analysis.config.y);
-        console.log('X (numeric):', analysis.config.xn.join(', ') || 'None');
-        console.log('X (categorical):', analysis.config.xc.join(', ') || 'None');
+        // Open the model builder with the saved configuration
+        if (typeof openModelBuilder === 'function') {
+          openModelBuilder();
+        } else {
+          console.warn('⚠️ openModelBuilder function not available. Model config saved to sessionStorage.');
+          console.log('💡 The model builder will restore this config when opened.');
+        }
         
       } catch (error) {
         console.error('Error loading analysis:', error);
@@ -259,12 +263,24 @@
         console.log('▶️ Running saved analysis:', analysis.name);
         console.log('📊 Model config:', analysis.config);
         
-        // TODO: Full implementation - select data range, populate model, and run
-        // For now, just log the action
-        console.log(`Model "${analysis.name}" would run with:`);
-        console.log('  Data range:', analysis.config.dataRange);
-        console.log('  Y variable:', analysis.config.y);
-        console.log('  X variables:', [...analysis.config.xn, ...analysis.config.xc].join(', '));
+        // Save the model spec to sessionStorage
+        sessionStorage.setItem('regressionModelSpec', JSON.stringify(analysis.config));
+        
+        // Check if we have the data range available
+        if (!regressionRangeData || regressionRangeData.length < 2) {
+          console.warn('⚠️ No data range selected. Please select a data range first.');
+          console.log('💡 Use "Load" button to open model builder and select data, then run from there.');
+          return;
+        }
+        
+        // Directly open the results dialog to run the regression
+        if (typeof openRegressionCoefficientsDialog === 'function') {
+          console.log('🚀 Opening regression results dialog...');
+          openRegressionCoefficientsDialog();
+        } else {
+          console.warn('⚠️ openRegressionCoefficientsDialog function not available');
+          console.log('💡 Try using the "Load" button instead to open the model builder.');
+        }
         
       } catch (error) {
         console.error('Error running analysis:', error);
