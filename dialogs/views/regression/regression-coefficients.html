@@ -9,6 +9,9 @@
   
   <!-- Regression computation library -->
   <script src="../../../src/shared/js/core/regression-compute.js"></script>
+  
+  <!-- Saved analyses manager -->
+  <script src="../../../src/shared/js/core/saved-analyses-manager.js"></script>
 
   <style>
     :root{
@@ -416,6 +419,38 @@
     
     .toggle-equation-btn.active i {
       transform: rotate(180deg);
+    }
+    
+    /* Save Analysis Button Styling */
+    .save-analysis-btn {
+      position: relative;
+      transition: .3s;
+      cursor: pointer;
+      border-radius: 8px;
+      background: linear-gradient(145deg, #10b981, #059669) !important;
+      border: 1px solid #047857 !important;
+      color: #ffffff !important;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .save-analysis-btn:hover {
+      transform: translateY(-1px);
+      background: linear-gradient(145deg, #059669, #047857) !important;
+      box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+    }
+    
+    .save-analysis-btn:active {
+      transform: translateY(0);
+    }
+    
+    .save-analysis-btn i {
+      font-size: 14px;
     }
     
     /* AI Interpret Button Styling */
@@ -1447,6 +1482,11 @@
             </select>
           </div>
           
+          <!-- Save Analysis Button -->
+          <button class="save-analysis-btn" id="saveAnalysisBtn" onclick="saveCurrentRegressionAnalysis()" title="Save this model configuration to the workbook">
+            <i class="fa-solid fa-floppy-disk"></i> Save Model
+          </button>
+          
           <!-- AI Interpret Button -->
           <button class="dropdown-btn ai-interpret-btn" id="aiInterpretBtn" onclick="requestRegressionAI()" style="display: none;" title="Get AI-powered interpretation of regression results">
             <i class="fa-solid fa-robot"></i> AI Interpret
@@ -2259,6 +2299,123 @@
       
       console.log('✅ Single-page view populated');
     }
+    
+    // ============================================================================
+    // SAVED ANALYSES - Module-specific implementation
+    // ============================================================================
+    
+    /**
+     * Get current regression configuration for saving
+     */
+    function getCurrentModuleConfig() {
+      if (!receivedModelSpec || !window.regressionResults) {
+        console.error('❌ No model or results available to save');
+        return null;
+      }
+      
+      return {
+        y: receivedModelSpec.y,
+        xn: receivedModelSpec.xn || [],
+        xc: receivedModelSpec.xc || [],
+        intercept: receivedModelSpec.intercept !== undefined ? receivedModelSpec.intercept : true,
+        dataRange: receivedRegressionData ? receivedRegressionData.range : 'Unknown'
+      };
+    }
+    
+    /**
+     * Get results summary for display
+     */
+    function getResultsSummary() {
+      if (!window.regressionResults) return null;
+      
+      const results = window.regressionResults;
+      return {
+        rSquared: results.rSquared || 0,
+        rSquaredAdj: results.rSquaredAdj || 0,
+        fStatistic: results.fStatistic || 0,
+        fPValue: results.fPValue || 1,
+        observations: results.n || 0,
+        rmse: results.rmse || 0
+      };
+    }
+    
+    /**
+     * Save current regression analysis to workbook
+     */
+    async function saveCurrentRegressionAnalysis() {
+      try {
+        const config = getCurrentModuleConfig();
+        if (!config) {
+          alert('No regression model available to save. Please run a regression first.');
+          return;
+        }
+        
+        // Prompt for model name
+        const defaultName = SavedAnalysesManager.generateDefaultName('regression', config);
+        const modelName = prompt('Enter a name for this regression model:', defaultName);
+        
+        if (!modelName || modelName.trim() === '') {
+          console.log('❌ Save cancelled - no name provided');
+          return;
+        }
+        
+        // Create analysis data structure
+        const analysisData = {
+          id: `analysis_${Date.now()}`,
+          name: modelName.trim(),
+          module: 'regression',
+          starred: false,
+          timestamp: new Date().toISOString(),
+          workbookName: 'Current Workbook', // Will be updated by Excel
+          dataRange: config.dataRange,
+          config: config,
+          lastResults: getResultsSummary()
+        };
+        
+        // Save to workbook
+        console.log('💾 Saving analysis:', analysisData);
+        await SavedAnalysesManager.saveAnalysis(analysisData);
+        
+        // Show success message
+        alert(`✅ Model "${modelName}" saved successfully!\n\nYou can load it from the taskpane's "Saved Analyses" panel.`);
+        
+      } catch (error) {
+        console.error('❌ Error saving analysis:', error);
+        alert(`Failed to save model: ${error.message}`);
+      }
+    }
+    
+    /**
+     * Load a saved regression configuration
+     * Called from taskpane when user clicks "Load"
+     */
+    window.loadRegressionConfig = async function(analysisId) {
+      try {
+        const analysis = await SavedAnalysesManager.loadAnalysisById(analysisId);
+        if (!analysis || analysis.module !== 'regression') {
+          throw new Error('Invalid or incompatible analysis');
+        }
+        
+        console.log('📂 Loading regression config:', analysis.name);
+        
+        // Store the config
+        receivedModelSpec = analysis.config;
+        
+        // TODO: We need to communicate with taskpane to reload data and run
+        // For now, just log the config
+        console.log('Config loaded:', analysis.config);
+        
+        alert(`Model "${analysis.name}" loaded.\n\nY: ${analysis.config.y}\nX (numeric): ${analysis.config.xn.join(', ')}\nX (categorical): ${analysis.config.xc.join(', ')}`);
+        
+      } catch (error) {
+        console.error('❌ Error loading analysis:', error);
+        alert(`Failed to load model: ${error.message}`);
+      }
+    };
+    
+    // ============================================================================
+    // END SAVED ANALYSES
+    // ============================================================================
     
     // Office.js integration for Excel Add-in
     let receivedRegressionData = null;
