@@ -182,6 +182,64 @@ function openRegressionCoefficientsDialog() {
   );
 }
 
+// Temporary launcher to preview the logistic dashboard template using current data context.
+// This does not run logistic estimation yet; it sends a lightweight bundle so UI wiring can be validated.
+function openLogisticResultsDialog() {
+  console.log('🪟 Opening Logistic Results dialog');
+
+  const dialogUrl = `${getDialogsBaseUrl()}logistic/logistic-results.html`;
+
+  if (!Office || !Office.context || !Office.context.ui) {
+    console.error('Office dialog API not available');
+    alert('Dialog API not available. Please reopen the add-in.');
+    return;
+  }
+
+  Office.context.ui.displayDialogAsync(
+    dialogUrl,
+    { height: 90, width: 70, displayInIframe: false },
+    (asyncResult) => {
+      if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+        console.error('Failed to open logistic dialog:', asyncResult.error);
+        alert(`Failed to open dialog: ${asyncResult.error.message || asyncResult.error}`);
+      } else {
+        resultsDialog = asyncResult.value;
+        console.log('✅ Logistic results dialog opened');
+
+        resultsDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
+          try {
+            const message = JSON.parse(arg.message);
+            if (message.action === 'ready') {
+              // Placeholder payload for UI smoke-testing.
+              resultsDialog.messageChild(JSON.stringify({
+                type: 'LOGISTIC_BUNDLE',
+                payload: {
+                  results: {
+                    observations: regressionRangeData ? Math.max((regressionRangeData.length - 1), 0) : 0,
+                    link: 'Logit'
+                  }
+                }
+              }));
+            } else if (message.action === 'close') {
+              resultsDialog.close();
+              resultsDialog = null;
+            }
+          } catch (e) {
+            console.error('Error handling logistic dialog message:', e);
+          }
+        });
+
+        resultsDialog.addEventHandler(Office.EventType.DialogEventReceived, () => {
+          console.log('📊 Logistic dialog closed by user');
+          resultsDialog = null;
+        });
+      }
+    }
+  );
+}
+
+window.openLogisticResultsDialog = openLogisticResultsDialog;
+
 function sendDialogData() {
   if (!resultsDialog || !regressionRangeData) return;
 
