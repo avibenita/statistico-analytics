@@ -5366,8 +5366,25 @@
       }
 
       // Find intercept coefficient
-      const interceptCoeff = coeffs.find(c => c.variable.toLowerCase() === 'intercept');
-      const interceptValue = interceptCoeff ? interceptCoeff.coefficient : 0;
+      // Need to build variable names list: Intercept (if included) + xn vars + xc dummy vars
+      const varNames = [];
+      if (results.includeIntercept) {
+        varNames.push('Intercept');
+      }
+      varNames.push(...xn);
+      // Add categorical dummy variables (all but reference level)
+      xc.forEach(factor => {
+        const levels = factorLevels[factor] || [];
+        levels.slice(1).forEach(level => {  // Skip first level (reference)
+          varNames.push(`${factor}_${level}`);
+        });
+      });
+      
+      console.log('  Variable names:', varNames);
+      console.log('  Coefficients array:', results.coefficients);
+      
+      const interceptIdx = varNames.indexOf('Intercept');
+      const interceptValue = interceptIdx >= 0 ? results.coefficients[interceptIdx] : 0;
       
       console.log('  Intercept:', interceptValue);
 
@@ -5377,9 +5394,9 @@
         
         // Add covariate contributions (at their means)
         xn.forEach(varName => {
-          const coeff = coeffs.find(c => c.variable === varName);
-          if (coeff) {
-            prediction += coeff.coefficient * covariateMeans[varName];
+          const coeffIdx = varNames.indexOf(varName);
+          if (coeffIdx >= 0) {
+            prediction += results.coefficients[coeffIdx] * covariateMeans[varName];
           }
         });
 
@@ -5387,9 +5404,9 @@
         // First level is reference (coefficient = 0)
         if (idx > 0) {
           const dummyName = `${firstFactor}_${level}`;
-          const coeff = coeffs.find(c => c.variable === dummyName);
-          if (coeff) {
-            prediction += coeff.coefficient;
+          const coeffIdx = varNames.indexOf(dummyName);
+          if (coeffIdx >= 0) {
+            prediction += results.coefficients[coeffIdx];
           }
         }
 
@@ -5463,6 +5480,21 @@
 
       // Get unique factor levels
       const levels = [...new Set(rows.map(row => row[factorIdx]))].filter(v => v != null && v !== '').sort();
+      console.log('  Factor levels:', levels);
+      
+      // Build variable names list for coefficient lookup
+      const varNames = [];
+      if (window.globalRegressionResults.includeIntercept) {
+        varNames.push('Intercept');
+      }
+      varNames.push(...xn);
+      xc.forEach(f => {
+        levels.slice(1).forEach(lev => {
+          varNames.push(`${f}_${lev}`);
+        });
+      });
+      
+      console.log('  Variable names:', varNames);
 
       // Prepare data series for each group
       const series = [];
@@ -5478,6 +5510,8 @@
           })
           .filter(point => point !== null);
 
+        console.log(`  Level "${level}": ${levelData.length} points`);
+
         // Add scatter plot
         series.push({
           name: `${factor}: ${level}`,
@@ -5489,14 +5523,20 @@
         });
 
         // Add regression line for this group
-        // Get coefficients
-        const interceptCoeff = coeffs.find(c => c.variable.toLowerCase() === 'intercept');
-        const covariateCoeff = coeffs.find(c => c.variable === covariate);
-        const dummyCoeff = idx === 0 ? null : coeffs.find(c => c.variable === `${factor}_${level}`);
+        // Get coefficient indices
+        const interceptIdx = varNames.indexOf('Intercept');
+        const covariateIdx = varNames.indexOf(covariate);
+        const dummyIdx = idx === 0 ? -1 : varNames.indexOf(`${factor}_${level}`);
 
-        if (interceptCoeff && covariateCoeff) {
-          const intercept = interceptCoeff.coefficient + (dummyCoeff ? dummyCoeff.coefficient : 0);
-          const slope = covariateCoeff.coefficient;
+        if (interceptIdx >= 0 && covariateIdx >= 0) {
+          const interceptVal = window.globalRegressionResults.coefficients[interceptIdx];
+          const slopeVal = window.globalRegressionResults.coefficients[covariateIdx];
+          const dummyVal = dummyIdx >= 0 ? window.globalRegressionResults.coefficients[dummyIdx] : 0;
+          
+          const intercept = interceptVal + dummyVal;
+          const slope = slopeVal;
+
+          console.log(`  Line for "${level}": intercept=${intercept.toFixed(2)}, slope=${slope.toFixed(2)}`);
 
           // Find min and max X for this group
           const xValues = levelData.map(d => d[0]);
