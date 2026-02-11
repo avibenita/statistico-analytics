@@ -40,6 +40,116 @@
       border:1px solid var(--border); overflow:visible;
       display:flex; flex-direction:column;
     }
+    /* Hero Section - Completely Separate Design */
+    .hero-section {
+      background: linear-gradient(135deg, #1a2332 0%, #0f1419 100%);
+      border-bottom: 3px solid var(--accent-2);
+      padding: 20px 24px;
+      margin: -1px -1px 0 -1px; /* Extend to edges */
+      border-radius: var(--panel-radius) var(--panel-radius) 0 0;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 -1px 0 rgba(120, 200, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        var(--accent-2) 20%, 
+        var(--accent-1) 50%, 
+        var(--accent-2) 80%, 
+        transparent 100%);
+      opacity: 0.6;
+    }
+    
+    .hero-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .hero-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      text-shadow: 0 2px 10px rgba(120, 200, 255, 0.3);
+    }
+    
+    .hero-title i {
+      font-size: 1.6rem;
+      color: var(--accent-2);
+      filter: drop-shadow(0 0 8px rgba(120, 200, 255, 0.6));
+    }
+    
+    .hero-controls {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+    
+    .hero-control-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      border: 1px solid rgba(120, 200, 255, 0.2);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    
+    .hero-control-group:hover {
+      background: rgba(0, 0, 0, 0.5);
+      border-color: rgba(120, 200, 255, 0.4);
+      box-shadow: 0 4px 12px rgba(120, 200, 255, 0.2);
+    }
+    
+    .hero-control-group label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .hero-control-group select {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .hero-control-group select:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(120, 200, 255, 0.4);
+    }
+    
+    .hero-control-group select:focus {
+      outline: none;
+      border-color: var(--accent-2);
+      box-shadow: 0 0 0 3px rgba(120, 200, 255, 0.2);
+    }
+    
     .card-head{
       display:flex; align-items:center; justify-content:space-between;
       background:transparent; color:var(--header-color);
@@ -61,12 +171,18 @@
     .dropdown-content.show{ display:block; opacity:1; transform:scaleY(1); }
 
     .dropdown-btn{
-      position:relative; transition:.3s; cursor:pointer; border-radius:8px;
-      background:linear-gradient(145deg,#4a5568,#2d3748); border:1px solid #4a5568;
-      color:#e2e8f0; padding:8px 12px; font-size:12px; font-weight:600;
-      box-shadow:0 4px 8px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.1), inset 0 -1px 0 rgba(0,0,0,.2);
+      position:relative; transition: all .3s ease; cursor:pointer; border-radius:8px;
+      background:linear-gradient(145deg,#4a5568,#2d3748); border:2px solid rgba(120, 200, 255, 0.3);
+      color:#e2e8f0; padding:10px 16px; font-size:13px; font-weight:700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow:0 4px 8px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.1);
     }
-    .dropdown-btn:hover{ transform:translateY(-1px); }
+    .dropdown-btn:hover{ 
+      transform:translateY(-2px); 
+      border-color: rgba(120, 200, 255, 0.5);
+      box-shadow:0 6px 12px rgba(120, 200, 255, 0.3);
+    }
     .dropdown-arrow{ display:inline-block; margin-left:8px; transition:transform .3s }
     .dropdown-btn.open .dropdown-arrow{ transform:rotate(180deg) }
 
@@ -421,28 +537,31 @@
       transform: rotate(180deg);
     }
     
-    /* Save Analysis Button Styling */
+    /* Save Analysis Button Styling - Hero Version */
     .save-analysis-btn {
       position: relative;
-      transition: .3s;
+      transition: all .3s ease;
       cursor: pointer;
       border-radius: 8px;
       background: linear-gradient(145deg, #10b981, #059669) !important;
-      border: 1px solid #047857 !important;
+      border: 2px solid #10b981 !important;
       color: #ffffff !important;
-      padding: 8px 16px;
-      font-size: 12px;
-      font-weight: 600;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .1);
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, .15);
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
     
     .save-analysis-btn:hover {
-      transform: translateY(-1px);
+      transform: translateY(-2px);
       background: linear-gradient(145deg, #059669, #047857) !important;
-      box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.6), 0 0 20px rgba(16, 185, 129, 0.3);
+      border-color: #059669 !important;
     }
     
     .save-analysis-btn:active {
@@ -450,7 +569,8 @@
     }
     
     .save-analysis-btn i {
-      font-size: 14px;
+      font-size: 15px;
+      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
     }
     
     /* AI Interpret Button Styling */
@@ -777,7 +897,7 @@
       color: #ef4444;
     }
 
-    /* Tab Navigation */
+    /* Tab Navigation - Visually Separated from Hero */
     .tab-navigation {
       display: flex;
       gap: 8px;
@@ -786,6 +906,7 @@
       border-bottom: 2px solid var(--border);
       overflow-x: auto;
       scrollbar-width: thin;
+      margin-top: 12px; /* Space from hero */
     }
     
     .tab-button {
@@ -1575,65 +1696,73 @@
   
   <div class="wrap">
     <section class="card" role="main">
-      <div class="card-head">
-        <span><i class="fa-solid fa-chart-line"></i> Linear Regression Analysis</span>
-        <div style="display: flex; gap: 12px; align-items: center;">
-
-          <!-- View Mode Toggle -->
-          <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
-            <label style="font-size: 12px; color: var(--text-secondary); font-weight: 500; white-space: nowrap;">
-              <i class="fa-solid fa-eye"></i> View:
-            </label>
-            <select id="viewModeSelect" onchange="switchViewMode()" style="background: var(--surface-2); color: var(--text-primary); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer;">
-              <option value="tabbed" selected>Tabbed</option>
-              <option value="single">Single Page</option>
-            </select>
+      <!-- Hero Section - Completely Separate Design -->
+      <div class="hero-section">
+        <div class="hero-content">
+          <!-- Hero Title -->
+          <div class="hero-title">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Linear Regression Analysis</span>
           </div>
 
-          <!-- Decimal Precision Control -->
-          <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
-            <label for="decimalSelect" style="font-size: 12px; color: var(--text-secondary); font-weight: 500; white-space: nowrap;">
-              <i class="fa-solid fa-hashtag"></i> Decimals:
-            </label>
-            <select id="decimalSelect" onchange="updateDecimalPrecision()" style="background: var(--surface-2); color: var(--text-primary); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer;">
-              <option value="auto">Auto</option>
-              <option value="0">0</option>
-              <option value="1">1</option>
-              <option value="2" selected>2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-            </select>
-          </div>
-          
-          <!-- Save Analysis Button -->
-          <button class="save-analysis-btn" id="saveAnalysisBtn" onclick="saveCurrentRegressionAnalysis()" title="Save this model configuration to the workbook">
-            <i class="fa-solid fa-floppy-disk"></i> Save Model
-          </button>
-          
-          <!-- AI Interpret Button -->
-          <button class="dropdown-btn ai-interpret-btn" id="aiInterpretBtn" onclick="requestRegressionAI()" style="display: none;" title="Get AI-powered interpretation of regression results">
-            <i class="fa-solid fa-robot"></i> AI Interpret
-          </button>
-          
-          <div class="dropdown-container">
-            <button class="dropdown-btn" id="dropdownBtn">
-              Navigation Menu
-              <span class="dropdown-arrow">▼</span>
+          <!-- Hero Controls -->
+          <div class="hero-controls">
+            <!-- View Mode Toggle -->
+            <div class="hero-control-group">
+              <label>
+                <i class="fa-solid fa-eye"></i> View:
+              </label>
+              <select id="viewModeSelect" onchange="switchViewMode()">
+                <option value="tabbed" selected>Tabbed</option>
+                <option value="single">Single Page</option>
+              </select>
+            </div>
+
+            <!-- Decimal Precision Control -->
+            <div class="hero-control-group">
+              <label for="decimalSelect">
+                <i class="fa-solid fa-hashtag"></i> Decimals:
+              </label>
+              <select id="decimalSelect" onchange="updateDecimalPrecision()">
+                <option value="auto">Auto</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+            
+            <!-- Save Analysis Button -->
+            <button class="save-analysis-btn" id="saveAnalysisBtn" onclick="saveCurrentRegressionAnalysis()" title="Save this model configuration to the workbook">
+              <i class="fa-solid fa-floppy-disk"></i> Save Model
             </button>
-            <div class="dropdown-content" id="dropdownContent">
-              <a href="javascript:void(0);" onclick="openResidualDiagnostics()" style="cursor: pointer;">
-                <i class="fa-solid fa-chart-line"></i> Residual Diagnostics
-              </a>
-              <div class="dropdown-separator"></div>
-              <a href="javascript:void(0);" onclick="openModelCorrelations()" style="cursor: pointer;">
-                <i class="fa-solid fa-project-diagram"></i> Model Variable Correlations
-              </a>
-              <a href="javascript:void(0);" onclick="openModelDescriptiveStats()" style="cursor: pointer;">
-                <i class="fa-solid fa-chart-bar"></i> Model Variable Statistics
-              </a>
-              <div class="dropdown-separator"></div>
-              <a href="http://127.0.0.1:12345?command=Case1000" target="_self">Data & Methods</a>
+            
+            <!-- AI Interpret Button -->
+            <button class="dropdown-btn ai-interpret-btn" id="aiInterpretBtn" onclick="requestRegressionAI()" style="display: none;" title="Get AI-powered interpretation of regression results">
+              <i class="fa-solid fa-robot"></i> AI Interpret
+            </button>
+            
+            <div class="dropdown-container">
+              <button class="dropdown-btn" id="dropdownBtn">
+                Navigation Menu
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div class="dropdown-content" id="dropdownContent">
+                <a href="javascript:void(0);" onclick="openResidualDiagnostics()" style="cursor: pointer;">
+                  <i class="fa-solid fa-chart-line"></i> Residual Diagnostics
+                </a>
+                <div class="dropdown-separator"></div>
+                <a href="javascript:void(0);" onclick="openModelCorrelations()" style="cursor: pointer;">
+                  <i class="fa-solid fa-project-diagram"></i> Model Variable Correlations
+                </a>
+                <a href="javascript:void(0);" onclick="openModelDescriptiveStats()" style="cursor: pointer;">
+                  <i class="fa-solid fa-chart-bar"></i> Model Variable Statistics
+                </a>
+                <div class="dropdown-separator"></div>
+                <a href="http://127.0.0.1:12345?command=Case1000" target="_self">Data & Methods</a>
+              </div>
             </div>
           </div>
         </div>
