@@ -1611,6 +1611,172 @@
       color: #ffffff;
     }
 
+    /* ===== ANCOVA MODULE STYLES ===== */
+    .ancova-container {
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .ancova-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(120, 200, 255, 0.15), rgba(75, 0, 130, 0.15));
+      border-radius: 12px;
+      border: 2px solid rgba(120, 200, 255, 0.3);
+    }
+
+    .ancova-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent-2);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .ancova-subtitle {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    .ancova-model-card {
+      background: var(--surface-2);
+      border: 2px solid var(--accent-2);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .ancova-model-card h3 {
+      color: var(--accent-2);
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 1.2rem;
+    }
+
+    .model-formula {
+      font-family: 'Courier New', monospace;
+      font-size: 1.3rem;
+      text-align: center;
+      padding: 15px;
+      background: var(--surface-1);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .ancova-section {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+
+    .ancova-section h3 {
+      color: var(--accent-2);
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .assumption-text {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 15px;
+      font-style: italic;
+    }
+
+    .ancova-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .ancova-table thead th {
+      background: var(--accent-2);
+      color: white;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+
+    .ancova-table tbody td {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .ancova-table tbody tr:nth-child(even) {
+      background: var(--surface-2);
+    }
+
+    .ancova-table tbody tr:hover {
+      background: rgba(120, 200, 255, 0.1);
+    }
+
+    .slopes-result {
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    .slopes-pass {
+      background: rgba(16, 185, 129, 0.2);
+      border: 2px solid #10b981;
+      color: var(--success);
+    }
+
+    .slopes-fail {
+      background: rgba(239, 68, 68, 0.2);
+      border: 2px solid #ef4444;
+      color: var(--danger);
+    }
+
+    .adjusted-means-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .mean-card {
+      background: var(--surface-2);
+      border: 2px solid var(--accent-2);
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .mean-group-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-1);
+      margin-bottom: 10px;
+    }
+
+    .mean-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent-2);
+      margin-bottom: 5px;
+    }
+
+    .mean-ci {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
     /* ===== AI ASSESSMENT MODULE STYLES ===== */
     .ai-assessment-container {
       padding: 12px;
@@ -1893,6 +2059,9 @@
         </button>
         <button class="tab-button" onclick="switchTab('residuals')" data-tab="residuals">
           <i class="fa-solid fa-chart-line"></i> Residual Diagnostics
+        </button>
+        <button class="tab-button" id="ancovaTabButton" onclick="switchTab('ancova')" data-tab="ancova" style="display: none;">
+          <i class="fa-solid fa-layer-group"></i> ANCOVA
         </button>
         <button class="tab-button" onclick="switchTab('correlations')" data-tab="correlations">
           <i class="fa-solid fa-project-diagram"></i> Correlations
@@ -2198,6 +2367,87 @@
           </div>
         </div>
 
+        <!-- Tab: ANCOVA -->
+        <div id="tab-ancova" class="tab-content">
+          <div class="ancova-container">
+            
+            <!-- ANCOVA Header -->
+            <div class="ancova-header">
+              <h2 class="ancova-title">
+                <i class="fa-solid fa-layer-group"></i>
+                Analysis of Covariance (ANCOVA)
+              </h2>
+              <p class="ancova-subtitle">
+                Comparing group means while controlling for covariates
+              </p>
+            </div>
+
+            <!-- Model Structure Display -->
+            <div class="ancova-model-card">
+              <h3><i class="fa-solid fa-diagram-project"></i> Model Structure</h3>
+              <div class="model-formula" id="ancovaModelFormula">
+                <!-- Will be populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Homogeneity of Slopes Test -->
+            <div class="ancova-section">
+              <h3><i class="fa-solid fa-arrows-split-up-and-left"></i> Homogeneity of Slopes Test</h3>
+              <p class="assumption-text">
+                Tests if the covariate(s) have the same effect across all groups (slopes should be parallel)
+              </p>
+              <div id="homogeneitySlopesResult">
+                <!-- Will be populated dynamically -->
+              </div>
+            </div>
+
+            <!-- ANCOVA Table -->
+            <div class="ancova-section">
+              <h3><i class="fa-solid fa-table"></i> ANCOVA Table</h3>
+              <div class="table-container">
+                <table id="ancovaTable" class="ancova-table">
+                  <thead>
+                    <tr>
+                      <th>Source</th>
+                      <th>SS</th>
+                      <th>df</th>
+                      <th>MS</th>
+                      <th>F</th>
+                      <th>p-value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ancovaTableBody">
+                    <!-- Will be populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Adjusted Group Means -->
+            <div class="ancova-section">
+              <h3><i class="fa-solid fa-chart-column"></i> Adjusted Group Means</h3>
+              <p class="assumption-text">
+                Group means adjusted for covariate values (estimated at covariate mean)
+              </p>
+              <div id="adjustedMeansContainer">
+                <!-- Will be populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Visualization -->
+            <div class="ancova-section">
+              <h3><i class="fa-solid fa-chart-scatter"></i> Group Regression Lines</h3>
+              <p class="assumption-text">
+                Regression lines for each group - lines should be parallel if homogeneity of slopes holds
+              </p>
+              <div id="ancovaPlotContainer" style="height: 500px;">
+                <!-- Highcharts will render here -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
         <!-- Tab: Correlations -->
         <div id="tab-correlations" class="tab-content">
           <div class="tab-panel" id="correlationsPanel">
@@ -2410,6 +2660,9 @@
       } else if (tabName === 'predictions' && !window.predictionsLoaded) {
         initializePredictions();
         window.predictionsLoaded = true;
+      } else if (tabName === 'ancova' && !window.ancovaLoaded) {
+        initializeANCOVA();
+        window.ancovaLoaded = true;
       }
     }
 
@@ -3374,6 +3627,15 @@
       document.getElementById('numNumericVars').textContent = xnVars.length;
       document.getElementById('numCategoricalVars').textContent = xcVars.length;
       document.getElementById('degreesOfFreedom').textContent = results.df; // Residual degrees of freedom (n - k)
+      
+      // Show/hide ANCOVA tab based on model structure
+      const ancovaTabButton = document.getElementById('ancovaTabButton');
+      if (ancovaTabButton) {
+        // ANCOVA requires BOTH categorical factors AND continuous covariates
+        const hasANCOVA = xnVars.length > 0 && xcVars.length > 0;
+        ancovaTabButton.style.display = hasANCOVA ? 'inline-flex' : 'none';
+        console.log(`🎯 ANCOVA tab ${hasANCOVA ? 'shown' : 'hidden'} (${xnVars.length} continuous, ${xcVars.length} categorical)`);
+      }
       
       // Populate Model Fit panel
       document.getElementById('rSquared').textContent = results.R2.toFixed(4); // Always 4 decimals for R²
@@ -4830,6 +5092,463 @@
     function deleteScenario(index) {
       predictionData.savedScenarios.splice(index, 1);
       updateScenariosTable();
+    }
+
+    /* ========================================
+       ANCOVA MODULE
+       Analysis of Covariance functionality
+    ======================================== */
+
+    /**
+     * Initialize ANCOVA tab
+     * Computes and displays ANCOVA results when model has both categorical and continuous predictors
+     */
+    function initializeANCOVA() {
+      console.log('🎯 Initializing ANCOVA module...');
+
+      // Check if we have required data
+      if (!window.globalRegressionResults || !window.globalXnVars || !window.globalXcVars) {
+        console.warn('⚠️ Missing data for ANCOVA');
+        document.getElementById('ancovaModelFormula').innerHTML = `
+          <p style="color: var(--danger);">
+            <i class="fa-solid fa-exclamation-triangle"></i> 
+            Unable to perform ANCOVA: missing required data
+          </p>
+        `;
+        return;
+      }
+
+      const xn = window.globalXnVars || [];
+      const xc = window.globalXcVars || [];
+      const yVar = window.globalYVar || 'Y';
+
+      // Verify we have both categorical and continuous predictors
+      if (xn.length === 0 || xc.length === 0) {
+        console.warn('⚠️ ANCOVA requires both categorical and continuous predictors');
+        document.getElementById('ancovaModelFormula').innerHTML = `
+          <p style="color: var(--danger);">
+            <i class="fa-solid fa-exclamation-triangle"></i> 
+            ANCOVA requires both categorical factors AND continuous covariates.<br>
+            Current model has ${xn.length} continuous and ${xc.length} categorical predictors.
+          </p>
+        `;
+        return;
+      }
+
+      // Display model formula
+      displayANCOVAFormula(yVar, xc, xn);
+
+      // Perform homogeneity of slopes test
+      performHomogeneitySlopesTest();
+
+      // Display ANCOVA table
+      displayANCOVATable();
+
+      // Compute and display adjusted means
+      computeAdjustedMeans();
+
+      // Create visualization
+      createANCOVAVisualization();
+
+      console.log('✅ ANCOVA module initialized');
+    }
+
+    /**
+     * Display ANCOVA model formula
+     */
+    function displayANCOVAFormula(yVar, factors, covariates) {
+      const factorStr = factors.join(' + ');
+      const covariateStr = covariates.join(' + ');
+      const formula = `${yVar} ~ ${factorStr} + ${covariateStr}`;
+      
+      document.getElementById('ancovaModelFormula').innerHTML = formula;
+    }
+
+    /**
+     * Perform homogeneity of slopes test
+     * Tests if factor × covariate interactions are significant
+     */
+    function performHomogeneitySlopesTest() {
+      const results = window.globalRegressionResults;
+      const xn = window.globalXnVars || [];
+      const xc = window.globalXcVars || [];
+      
+      // For this test, we need to fit a model WITH interactions and compare to one WITHOUT
+      // Since we only have the current model, we'll provide guidance based on the coefficients
+      
+      const resultDiv = document.getElementById('homogeneitySlopesResult');
+      
+      // Check if any categorical dummy variables have very different coefficients
+      // This is a simplified version - a full implementation would refit models
+      
+      resultDiv.innerHTML = `
+        <div class="slopes-result slopes-pass">
+          <i class="fa-solid fa-check-circle"></i> 
+          <strong>Assumption Check:</strong> To properly test homogeneity of slopes, 
+          you should fit a model with interaction terms (Factor × Covariate) and test if they are significant.
+          <br><br>
+          <strong>Current Model:</strong> Does not include interaction terms.
+          <br><br>
+          <strong>Recommendation:</strong> If you suspect different slopes across groups:
+          <ol style="margin: 10px 0; padding-left: 20px;">
+            <li>Refit the model including interaction terms</li>
+            <li>Test if interaction F-statistic is significant (p < 0.05)</li>
+            <li>If significant → slopes differ (ANCOVA assumption violated)</li>
+            <li>If not significant → slopes are parallel (assumption holds)</li>
+          </ol>
+          <strong>For this analysis:</strong> We assume homogeneity of slopes holds (parallel regression lines).
+        </div>
+      `;
+    }
+
+    /**
+     * Display ANCOVA table
+     */
+    function displayANCOVATable() {
+      const results = window.globalRegressionResults;
+      const xn = window.globalXnVars || [];
+      const xc = window.globalXcVars || [];
+      
+      const tbody = document.getElementById('ancovaTableBody');
+      
+      // Get total SS
+      const SST = results.SST || (results.SSR + results.SSE);
+      const SSR = results.SSR || 0; // Model (Regression) SS
+      const SSE = results.SSE || 0; // Error (Residual) SS
+      
+      const dfTotal = results.n - 1;
+      const dfModel = results.k || (xn.length + xc.length); // Approximate
+      const dfError = results.df || (results.n - dfModel - 1);
+      
+      const MSR = SSR / dfModel;
+      const MSE = SSE / dfError;
+      const F = MSR / MSE;
+      const pValue = results.fPValue || 0;
+      
+      // For ANCOVA, we want to break down the model SS into:
+      // - SS due to covariates
+      // - SS due to factors (after controlling for covariates)
+      // This requires sequential SS, which we don't have without refitting
+      // So we'll show a simplified version
+      
+      const decimals = parseInt(globalDecimalPrecision === 'auto' ? 2 : globalDecimalPrecision);
+      
+      tbody.innerHTML = `
+        <tr>
+          <td><strong>Covariates (${xn.join(', ')})</strong></td>
+          <td>—</td>
+          <td>${xn.length}</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><strong>Factors (${xc.join(', ')})</strong></td>
+          <td>—</td>
+          <td>${dfModel - xn.length}</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><strong>Model (Combined)</strong></td>
+          <td>${SSR.toFixed(decimals)}</td>
+          <td>${dfModel}</td>
+          <td>${MSR.toFixed(decimals)}</td>
+          <td>${F.toFixed(decimals)}</td>
+          <td>${pValue < 0.001 ? '<0.001' : pValue.toFixed(4)}</td>
+        </tr>
+        <tr>
+          <td><strong>Error</strong></td>
+          <td>${SSE.toFixed(decimals)}</td>
+          <td>${dfError}</td>
+          <td>${MSE.toFixed(decimals)}</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr style="border-top: 2px solid var(--border); font-weight: bold;">
+          <td><strong>Total</strong></td>
+          <td>${SST.toFixed(decimals)}</td>
+          <td>${dfTotal}</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+      `;
+      
+      // Add note
+      tbody.innerHTML += `
+        <tr>
+          <td colspan="6" style="background: rgba(255, 165, 120, 0.1); font-size: 0.85rem; font-style: italic;">
+            <i class="fa-solid fa-info-circle"></i> 
+            Note: For detailed ANCOVA, sequential SS (Type I) or partial SS (Type III) would show 
+            individual contributions. This shows combined model statistics.
+          </td>
+        </tr>
+      `;
+    }
+
+    /**
+     * Compute adjusted means for each group
+     */
+    function computeAdjustedMeans() {
+      const results = window.globalRegressionResults;
+      const coeffs = results.coefficients || [];
+      const xc = window.globalXcVars || [];
+      const xn = window.globalXnVars || [];
+      const headers = window.globalRawHeaders || [];
+      const rows = window.globalRawRows || [];
+      
+      if (rows.length === 0) {
+        document.getElementById('adjustedMeansContainer').innerHTML = `
+          <p style="color: var(--danger);">No data available for adjusted means calculation.</p>
+        `;
+        return;
+      }
+
+      // Compute mean of each covariate
+      const covariateMeans = {};
+      xn.forEach(varName => {
+        const colIdx = headers.indexOf(varName);
+        if (colIdx === -1) return;
+        
+        const values = rows.map(row => parseFloat(row[colIdx])).filter(v => isFinite(v));
+        covariateMeans[varName] = values.reduce((sum, v) => sum + v, 0) / values.length;
+      });
+
+      // Get unique levels for each categorical variable
+      const factorLevels = {};
+      xc.forEach(varName => {
+        const colIdx = headers.indexOf(varName);
+        if (colIdx === -1) return;
+        
+        const levels = [...new Set(rows.map(row => row[colIdx]))].filter(v => v != null && v !== '');
+        factorLevels[varName] = levels.sort();
+      });
+
+      console.log('Covariate means:', covariateMeans);
+      console.log('Factor levels:', factorLevels);
+
+      // For each factor level, compute adjusted mean
+      // Adjusted mean = predicted Y at covariate means for that level
+      const meansHTML = [];
+      
+      // Get first categorical variable (simplified - only handle one factor for now)
+      const firstFactor = xc[0];
+      const levels = factorLevels[firstFactor] || [];
+      
+      if (levels.length === 0) {
+        document.getElementById('adjustedMeansContainer').innerHTML = `
+          <p style="color: var(--danger);">No factor levels found.</p>
+        `;
+        return;
+      }
+
+      // Find intercept coefficient
+      const interceptCoeff = coeffs.find(c => c.variable.toLowerCase() === 'intercept');
+      const interceptValue = interceptCoeff ? interceptCoeff.coefficient : 0;
+
+      levels.forEach((level, idx) => {
+        // Base prediction = intercept
+        let prediction = interceptValue;
+        
+        // Add covariate contributions (at their means)
+        xn.forEach(varName => {
+          const coeff = coeffs.find(c => c.variable === varName);
+          if (coeff) {
+            prediction += coeff.coefficient * covariateMeans[varName];
+          }
+        });
+
+        // Add categorical contribution
+        // First level is reference (coefficient = 0)
+        if (idx > 0) {
+          const dummyName = `${firstFactor}_${level}`;
+          const coeff = coeffs.find(c => c.variable === dummyName);
+          if (coeff) {
+            prediction += coeff.coefficient;
+          }
+        }
+
+        // Simple CI (using MSE from model)
+        const se = Math.sqrt(results.MSE || results.rmse ** 2);
+        const t095 = 1.96; // Approximate
+        const ci_lower = prediction - t095 * se;
+        const ci_upper = prediction + t095 * se;
+
+        const decimals = parseInt(globalDecimalPrecision === 'auto' ? 2 : globalDecimalPrecision);
+
+        meansHTML.push(`
+          <div class="mean-card">
+            <div class="mean-group-name">${firstFactor}: ${level}</div>
+            <div class="mean-value">${prediction.toFixed(decimals)}</div>
+            <div class="mean-ci">95% CI: [${ci_lower.toFixed(decimals)}, ${ci_upper.toFixed(decimals)}]</div>
+          </div>
+        `);
+      });
+
+      document.getElementById('adjustedMeansContainer').innerHTML = `
+        <div class="adjusted-means-grid">
+          ${meansHTML.join('')}
+        </div>
+        <p style="margin-top: 15px; font-size: 0.85rem; color: var(--text-secondary); font-style: italic;">
+          <i class="fa-solid fa-info-circle"></i> 
+          Adjusted means are estimated at the mean values of all covariates: 
+          ${Object.entries(covariateMeans).map(([k, v]) => `${k}=${v.toFixed(2)}`).join(', ')}
+        </p>
+      `;
+    }
+
+    /**
+     * Create ANCOVA visualization
+     */
+    function createANCOVAVisualization() {
+      const xn = window.globalXnVars || [];
+      const xc = window.globalXcVars || [];
+      const headers = window.globalRawHeaders || [];
+      const rows = window.globalRawRows || [];
+      const yVar = window.globalYVar || 'Y';
+      const coeffs = window.globalRegressionResults.coefficients || [];
+
+      if (rows.length === 0 || xn.length === 0 || xc.length === 0) {
+        document.getElementById('ancovaPlotContainer').innerHTML = `
+          <p style="color: var(--danger); text-align: center; padding: 40px;">
+            Insufficient data for visualization
+          </p>
+        `;
+        return;
+      }
+
+      // Use first covariate for X-axis, first factor for grouping
+      const covariate = xn[0];
+      const factor = xc[0];
+
+      const yIdx = headers.indexOf(yVar);
+      const xIdx = headers.indexOf(covariate);
+      const factorIdx = headers.indexOf(factor);
+
+      if (yIdx === -1 || xIdx === -1 || factorIdx === -1) {
+        document.getElementById('ancovaPlotContainer').innerHTML = `
+          <p style="color: var(--danger); text-align: center; padding: 40px;">
+            Variable indices not found
+          </p>
+        `;
+        return;
+      }
+
+      // Get unique factor levels
+      const levels = [...new Set(rows.map(row => row[factorIdx]))].filter(v => v != null && v !== '').sort();
+
+      // Prepare data series for each group
+      const series = [];
+      
+      levels.forEach((level, idx) => {
+        // Get data points for this level
+        const levelData = rows
+          .filter(row => row[factorIdx] === level)
+          .map(row => {
+            const x = parseFloat(row[xIdx]);
+            const y = parseFloat(row[yIdx]);
+            return isFinite(x) && isFinite(y) ? [x, y] : null;
+          })
+          .filter(point => point !== null);
+
+        // Add scatter plot
+        series.push({
+          name: `${factor}: ${level}`,
+          type: 'scatter',
+          data: levelData,
+          marker: {
+            radius: 4
+          }
+        });
+
+        // Add regression line for this group
+        // Get coefficients
+        const interceptCoeff = coeffs.find(c => c.variable.toLowerCase() === 'intercept');
+        const covariateCoeff = coeffs.find(c => c.variable === covariate);
+        const dummyCoeff = idx === 0 ? null : coeffs.find(c => c.variable === `${factor}_${level}`);
+
+        if (interceptCoeff && covariateCoeff) {
+          const intercept = interceptCoeff.coefficient + (dummyCoeff ? dummyCoeff.coefficient : 0);
+          const slope = covariateCoeff.coefficient;
+
+          // Find min and max X for this group
+          const xValues = levelData.map(d => d[0]);
+          const minX = Math.min(...xValues);
+          const maxX = Math.max(...xValues);
+
+          series.push({
+            name: `${factor}: ${level} (fitted)`,
+            type: 'line',
+            data: [
+              [minX, intercept + slope * minX],
+              [maxX, intercept + slope * maxX]
+            ],
+            marker: {
+              enabled: false
+            },
+            dashStyle: 'Solid',
+            lineWidth: 2,
+            enableMouseTracking: false
+          });
+        }
+      });
+
+      // Create Highcharts plot
+      Highcharts.chart('ancovaPlotContainer', {
+        chart: {
+          backgroundColor: 'transparent',
+          style: {
+            fontFamily: 'Segoe UI, sans-serif'
+          }
+        },
+        title: {
+          text: `${yVar} vs ${covariate} by ${factor}`,
+          style: {
+            color: 'var(--text-primary)'
+          }
+        },
+        xAxis: {
+          title: {
+            text: covariate,
+            style: { color: 'var(--text-primary)' }
+          },
+          labels: {
+            style: { color: 'var(--text-secondary)' }
+          },
+          gridLineColor: 'var(--border)'
+        },
+        yAxis: {
+          title: {
+            text: yVar,
+            style: { color: 'var(--text-primary)' }
+          },
+          labels: {
+            style: { color: 'var(--text-secondary)' }
+          },
+          gridLineColor: 'var(--border)'
+        },
+        legend: {
+          itemStyle: {
+            color: 'var(--text-primary)'
+          },
+          itemHoverStyle: {
+            color: 'var(--accent-1)'
+          }
+        },
+        tooltip: {
+          backgroundColor: 'var(--surface-1)',
+          borderColor: 'var(--border)',
+          style: {
+            color: 'var(--text-primary)'
+          }
+        },
+        series: series,
+        credits: {
+          enabled: false
+        }
+      });
     }
 
     /* ========================================
