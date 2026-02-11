@@ -652,6 +652,130 @@
       color: var(--text-primary);
       overflow-x: auto;
     }
+    
+    /* Custom Modal Dialog Styles */
+    .custom-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      animation: fadeIn 0.2s ease-in;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .custom-modal {
+      background: var(--surface-1);
+      border: 2px solid var(--accent-2);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .custom-modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent-2);
+    }
+    
+    .custom-modal-header i {
+      font-size: 24px;
+    }
+    
+    .custom-modal-body {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    
+    .custom-modal-input {
+      width: 100%;
+      padding: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 14px;
+      margin-top: 12px;
+      box-sizing: border-box;
+    }
+    
+    .custom-modal-input:focus {
+      outline: none;
+      border-color: var(--accent-2);
+      box-shadow: 0 0 0 3px rgba(120, 200, 255, 0.2);
+    }
+    
+    .custom-modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    
+    .custom-modal-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .custom-modal-btn-primary {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+    
+    .custom-modal-btn-primary:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-1px);
+    }
+    
+    .custom-modal-btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    
+    .custom-modal-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .success-message {
+      color: #10b981;
+    }
+    
+    .error-message {
+      color: #ef4444;
+    }
 
     /* Tab Navigation */
     .tab-navigation {
@@ -2301,6 +2425,152 @@
     }
     
     // ============================================================================
+    // CUSTOM MODAL DIALOGS (Office.js compatible)
+    // ============================================================================
+    
+    /**
+     * Show custom prompt dialog (replaces window.prompt)
+     */
+    function customPrompt(message, defaultValue = '') {
+      return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'custom-modal-overlay';
+        
+        overlay.innerHTML = `
+          <div class="custom-modal">
+            <div class="custom-modal-header">
+              <i class="fa-solid fa-pen-to-square"></i>
+              <span>Save Model</span>
+            </div>
+            <div class="custom-modal-body">
+              ${message}
+              <input type="text" class="custom-modal-input" id="modalInput" value="${defaultValue}" />
+            </div>
+            <div class="custom-modal-actions">
+              <button class="custom-modal-btn custom-modal-btn-secondary" id="modalCancel">Cancel</button>
+              <button class="custom-modal-btn custom-modal-btn-primary" id="modalOk">Save</button>
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        const input = overlay.querySelector('#modalInput');
+        const okBtn = overlay.querySelector('#modalOk');
+        const cancelBtn = overlay.querySelector('#modalCancel');
+        
+        input.focus();
+        input.select();
+        
+        const cleanup = (value) => {
+          overlay.remove();
+          resolve(value);
+        };
+        
+        okBtn.onclick = () => cleanup(input.value.trim());
+        cancelBtn.onclick = () => cleanup(null);
+        
+        input.onkeydown = (e) => {
+          if (e.key === 'Enter') cleanup(input.value.trim());
+          if (e.key === 'Escape') cleanup(null);
+        };
+      });
+    }
+    
+    /**
+     * Show custom alert dialog (replaces window.alert)
+     */
+    function customAlert(message, type = 'info') {
+      return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'custom-modal-overlay';
+        
+        const icons = {
+          success: '<i class="fa-solid fa-circle-check" style="color: #10b981;"></i>',
+          error: '<i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i>',
+          info: '<i class="fa-solid fa-circle-info" style="color: #3b82f6;"></i>',
+          warning: '<i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b;"></i>'
+        };
+        
+        overlay.innerHTML = `
+          <div class="custom-modal">
+            <div class="custom-modal-header">
+              ${icons[type] || icons.info}
+              <span>${type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Information'}</span>
+            </div>
+            <div class="custom-modal-body" style="white-space: pre-line;">
+              ${message}
+            </div>
+            <div class="custom-modal-actions">
+              <button class="custom-modal-btn custom-modal-btn-primary" id="modalOk">OK</button>
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        const okBtn = overlay.querySelector('#modalOk');
+        
+        const cleanup = () => {
+          overlay.remove();
+          resolve();
+        };
+        
+        okBtn.onclick = cleanup;
+        okBtn.focus();
+        
+        overlay.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === 'Escape') cleanup();
+        };
+      });
+    }
+    
+    /**
+     * Show custom confirm dialog
+     */
+    function customConfirm(message) {
+      return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'custom-modal-overlay';
+        
+        overlay.innerHTML = `
+          <div class="custom-modal">
+            <div class="custom-modal-header">
+              <i class="fa-solid fa-circle-question" style="color: #f59e0b;"></i>
+              <span>Confirm</span>
+            </div>
+            <div class="custom-modal-body" style="white-space: pre-line;">
+              ${message}
+            </div>
+            <div class="custom-modal-actions">
+              <button class="custom-modal-btn custom-modal-btn-secondary" id="modalCancel">Cancel</button>
+              <button class="custom-modal-btn custom-modal-btn-primary" id="modalOk">OK</button>
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        const okBtn = overlay.querySelector('#modalOk');
+        const cancelBtn = overlay.querySelector('#modalCancel');
+        
+        const cleanup = (value) => {
+          overlay.remove();
+          resolve(value);
+        };
+        
+        okBtn.onclick = () => cleanup(true);
+        cancelBtn.onclick = () => cleanup(false);
+        okBtn.focus();
+        
+        overlay.onkeydown = (e) => {
+          if (e.key === 'Enter') cleanup(true);
+          if (e.key === 'Escape') cleanup(false);
+        };
+      });
+    }
+    
+    // ============================================================================
     // SAVED ANALYSES - Module-specific implementation
     // ============================================================================
     
@@ -2346,13 +2616,13 @@
       try {
         const config = getCurrentModuleConfig();
         if (!config) {
-          alert('No regression model available to save. Please run a regression first.');
+          await customAlert('No regression model available to save. Please run a regression first.', 'error');
           return;
         }
         
         // Prompt for model name
         const defaultName = SavedAnalysesManager.generateDefaultName('regression', config);
-        const modelName = prompt('Enter a name for this regression model:', defaultName);
+        const modelName = await customPrompt('Enter a name for this regression model:', defaultName);
         
         if (!modelName || modelName.trim() === '') {
           console.log('❌ Save cancelled - no name provided');
@@ -2377,11 +2647,11 @@
         await SavedAnalysesManager.saveAnalysis(analysisData);
         
         // Show success message
-        alert(`✅ Model "${modelName}" saved successfully!\n\nYou can load it from the taskpane's "Saved Analyses" panel.`);
+        await customAlert(`✅ Model "${modelName}" saved successfully!\n\nYou can load it from the taskpane's "Saved Analyses" panel.`, 'success');
         
       } catch (error) {
         console.error('❌ Error saving analysis:', error);
-        alert(`Failed to save model: ${error.message}`);
+        await customAlert(`Failed to save model: ${error.message}`, 'error');
       }
     }
     
@@ -2405,11 +2675,11 @@
         // For now, just log the config
         console.log('Config loaded:', analysis.config);
         
-        alert(`Model "${analysis.name}" loaded.\n\nY: ${analysis.config.y}\nX (numeric): ${analysis.config.xn.join(', ')}\nX (categorical): ${analysis.config.xc.join(', ')}`);
+        await customAlert(`Model "${analysis.name}" loaded.\n\nY: ${analysis.config.y}\nX (numeric): ${analysis.config.xn.join(', ') || 'None'}\nX (categorical): ${analysis.config.xc.join(', ') || 'None'}`, 'success');
         
       } catch (error) {
         console.error('❌ Error loading analysis:', error);
-        alert(`Failed to load model: ${error.message}`);
+        await customAlert(`Failed to load model: ${error.message}`, 'error');
       }
     };
     
