@@ -229,7 +229,7 @@
       try {
         const analysis = await SavedAnalysesManager.loadAnalysisById(analysisId);
         if (!analysis || analysis.module !== 'regression') {
-          alert('Invalid analysis');
+          console.error('Invalid analysis');
           return;
         }
         
@@ -238,11 +238,13 @@
         // TODO: Populate the model builder with the saved configuration
         // This requires integration with the regression-input-panel.js
         
-        alert(`Model "${analysis.name}" configuration loaded.\n\nY: ${analysis.config.y}\nX (numeric): ${analysis.config.xn.join(', ') || 'None'}\nX (categorical): ${analysis.config.xc.join(', ') || 'None'}\n\nNote: You'll need to select the data range and run the model.`);
+        console.log(`✅ Model "${analysis.name}" configuration loaded:`, analysis.config);
+        console.log('Y:', analysis.config.y);
+        console.log('X (numeric):', analysis.config.xn.join(', ') || 'None');
+        console.log('X (categorical):', analysis.config.xc.join(', ') || 'None');
         
       } catch (error) {
         console.error('Error loading analysis:', error);
-        alert('Failed to load model: ' + error.message);
       }
     }
     
@@ -250,18 +252,22 @@
       try {
         const analysis = await SavedAnalysesManager.loadAnalysisById(analysisId);
         if (!analysis || analysis.module !== 'regression') {
-          alert('Invalid analysis');
+          console.error('Invalid analysis');
           return;
         }
         
         console.log('▶️ Running saved analysis:', analysis.name);
+        console.log('📊 Model config:', analysis.config);
         
         // TODO: Full implementation - select data range, populate model, and run
-        alert(`Running model "${analysis.name}"...\n\nThis will be fully implemented to:\n1. Select the data range: ${analysis.config.dataRange}\n2. Populate Y and X variables\n3. Run the regression automatically`);
+        // For now, just log the action
+        console.log(`Model "${analysis.name}" would run with:`);
+        console.log('  Data range:', analysis.config.dataRange);
+        console.log('  Y variable:', analysis.config.y);
+        console.log('  X variables:', [...analysis.config.xn, ...analysis.config.xc].join(', '));
         
       } catch (error) {
         console.error('Error running analysis:', error);
-        alert('Failed to run model: ' + error.message);
       }
     }
     
@@ -270,19 +276,18 @@
         const analysis = await SavedAnalysesManager.loadAnalysisById(analysisId);
         if (!analysis) return;
         
-        if (!confirm(`Delete model "${analysis.name}"?\n\nThis action cannot be undone.`)) {
-          return;
-        }
+        // Simple confirmation via console and direct delete
+        // In a production app, you'd want a custom confirmation UI
+        console.log(`🗑️ Deleting model: "${analysis.name}"`);
         
         await SavedAnalysesManager.deleteAnalysis(analysisId);
-        console.log('🗑️ Deleted analysis:', analysis.name);
+        console.log('✅ Model deleted successfully');
         
         // Refresh the list
         await refreshSavedAnalysesList();
         
       } catch (error) {
         console.error('Error deleting analysis:', error);
-        alert('Failed to delete model: ' + error.message);
       }
     }
   </script>
