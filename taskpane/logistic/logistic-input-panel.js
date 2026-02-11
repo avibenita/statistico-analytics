@@ -45,7 +45,7 @@ function getDialogsBaseUrl() {
 function openLogisticModelBuilder() {
   if (!logisticRangeData || logisticRangeData.length < 2) return;
 
-  const dialogUrl = `${getDialogsBaseUrl()}regression/regression-input.html`;
+  const dialogUrl = `${getDialogsBaseUrl()}logistic/logistic-input.html`;
 
   Office.context.ui.displayDialogAsync(
     dialogUrl,
@@ -63,9 +63,10 @@ function openLogisticModelBuilder() {
             const message = JSON.parse(arg.message);
             if (message.action === "ready" || message.action === "requestData") {
               sendDialogData();
-            } else if (message.action === "regressionModel") {
+            } else if (message.action === "logisticModel" || message.action === "regressionModel") {
               // Reuse existing model builder output and store under logistic spec key.
               const modelSpec = message.payload || message.data || {};
+              modelSpec.analysisMode = "logistic";
               sessionStorage.setItem("logisticModelSpec", JSON.stringify(modelSpec));
               logisticDialog.close();
               logisticDialog = null;
@@ -96,11 +97,12 @@ function sendDialogData() {
   const modelSpec = savedModelSpec ? JSON.parse(savedModelSpec) : null;
 
   logisticDialog.messageChild(JSON.stringify({
-    type: "REGRESSION_DATA",
+    type: "LOGISTIC_DATA",
     payload: {
       headers,
       rows,
       address: logisticRangeAddress,
+      analysisMode: "logistic",
       savedModelSpec: modelSpec
     }
   }));
