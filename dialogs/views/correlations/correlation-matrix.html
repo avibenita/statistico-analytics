@@ -1106,9 +1106,12 @@
       Office.onReady(function(info) {
         console.log('Office initialized in correlation matrix dialog');
         
-        // Initialize shared header
-        if (typeof StatisticoHeader !== 'undefined') {
+        // Only initialize header if NOT in iframe mode (standalone mode)
+        const isInIframe = window.self !== window.top;
+        if (!isInIframe && typeof StatisticoHeader !== 'undefined') {
           StatisticoHeader.init('correlation-matrix', 'Correlation Matrix', 0, 'correlations');
+        } else if (isInIframe) {
+          console.log('📦 Running in iframe mode - header hidden');
         }
         
         // Check if data was pre-loaded in sessionStorage (e.g., from regression dialog)
@@ -1185,8 +1188,9 @@
       // Calculate sample size
       const sampleSize = correlationData.data ? correlationData.data.length : 0;
       
-      // Update header with correct sample size
-      if (typeof StatisticoHeader !== 'undefined') {
+      // Update header with correct sample size (only if not in iframe)
+      const isInIframe = window.self !== window.top;
+      if (!isInIframe && typeof StatisticoHeader !== 'undefined') {
         StatisticoHeader.sampleSize = sampleSize;
         StatisticoHeader.variableName = `${correlationData.headers.length} Variables`;
         StatisticoHeader.render();

@@ -628,7 +628,8 @@
       renderTable();
       handleRowClick(row);
 
-      if (typeof StatisticoHeader !== 'undefined') {
+      const isInIframe = window.self !== window.top;
+      if (!isInIframe && typeof StatisticoHeader !== 'undefined') {
         StatisticoHeader.updateVariable(row.Variable, row.N || 0);
       }
     }
@@ -1483,8 +1484,13 @@
     window.addEventListener('DOMContentLoaded', function() {
       const params = new URLSearchParams(window.location.search);
       const moduleOverride = params.get('module');
-      if (typeof StatisticoHeader !== 'undefined') {
+      
+      // Only initialize header if NOT in iframe mode (standalone mode)
+      const isInIframe = window.self !== window.top;
+      if (!isInIframe && typeof StatisticoHeader !== 'undefined') {
         StatisticoHeader.init('descriptive-stats', 'Descriptive Statistics', 0, 'correlations');
+      } else if (isInIframe) {
+        console.log('📦 Running in iframe mode - header hidden');
       }
 
       console.log('🔄 Descriptive Statistics page loaded');
