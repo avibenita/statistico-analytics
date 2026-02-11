@@ -491,6 +491,133 @@
       font-weight: 500;
     }
     
+    /* View Mode Control */
+    .view-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    .single-page-view {
+      display: none;
+      padding: 16px;
+      overflow-y: auto;
+      height: 100%;
+    }
+    
+    .single-page-view.active {
+      display: block;
+    }
+    
+    .tabbed-view-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    .tabbed-view-container.hidden {
+      display: none;
+    }
+    
+    /* Single Page View Styles (matching input screen) */
+    .sp-section {
+      margin-bottom: 20px;
+      background: var(--surface-1);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    
+    .sp-section-header {
+      padding: 12px 16px;
+      background: linear-gradient(135deg, rgba(58, 123, 213, 0.15), rgba(58, 123, 213, 0.05));
+      border-bottom: 2px solid var(--accent-2);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--accent-2);
+    }
+    
+    .sp-section-body {
+      padding: 16px;
+    }
+    
+    .sp-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .sp-stat-box {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .sp-stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    
+    .sp-stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .sp-table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+    
+    .sp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    
+    .sp-table th {
+      background: linear-gradient(135deg, rgba(58, 123, 213, 0.2), rgba(58, 123, 213, 0.1));
+      color: var(--accent-2);
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid var(--accent-2);
+    }
+    
+    .sp-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-secondary);
+    }
+    
+    .sp-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .sp-equation {
+      background: linear-gradient(135deg, rgba(255, 165, 120, 0.1), rgba(255, 165, 120, 0.05));
+      border: 2px solid var(--accent-1);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text-primary);
+      overflow-x: auto;
+    }
+
     /* Tab Navigation */
     .tab-navigation {
       display: flex;
@@ -1293,6 +1420,17 @@
         <span><i class="fa-solid fa-chart-line"></i> Linear Regression Analysis</span>
         <div style="display: flex; gap: 12px; align-items: center;">
 
+          <!-- View Mode Toggle -->
+          <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+            <label style="font-size: 12px; color: var(--text-secondary); font-weight: 500; white-space: nowrap;">
+              <i class="fa-solid fa-eye"></i> View:
+            </label>
+            <select id="viewModeSelect" onchange="switchViewMode()" style="background: var(--surface-2); color: var(--text-primary); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer;">
+              <option value="tabbed" selected>Tabbed</option>
+              <option value="single">Single Page</option>
+            </select>
+          </div>
+
           <!-- Decimal Precision Control -->
           <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
             <label for="decimalSelect" style="font-size: 12px; color: var(--text-secondary); font-weight: 500; white-space: nowrap;">
@@ -1337,8 +1475,12 @@
         </div>
       </div>
 
-      <!-- Tab Navigation -->
-      <div class="tab-navigation">
+      <!-- View Container: wraps both tabbed and single-page views -->
+      <div class="view-container">
+        <!-- Tabbed View -->
+        <div class="tabbed-view-container">
+          <!-- Tab Navigation -->
+          <div class="tab-navigation">
         <button class="tab-button active" onclick="switchTab('results')" data-tab="results">
           <i class="fa-solid fa-table"></i> Results
         </button>
@@ -1782,6 +1924,17 @@
         <!-- End Tab: AI Assessment -->
 
       </div>
+      <!-- End of card-body -->
+        </div>
+        <!-- End of tabbed-view-container -->
+
+        <!-- Single Page View -->
+        <div class="single-page-view" id="singlePageView">
+          <!-- Will be populated dynamically -->
+        </div>
+
+      </div>
+      <!-- End of view-container -->
     </section>
   </div>
 
@@ -1878,6 +2031,233 @@
         const { y, xn = [], xc = [] } = receivedModelSpec;
         displayRegressionResults(window.regressionResults, y, xn, xc);
       }
+    }
+    
+    // Function to switch between tabbed and single-page views
+    function switchViewMode() {
+      const select = document.getElementById('viewModeSelect');
+      const viewMode = select.value;
+      const tabbedView = document.querySelector('.tabbed-view-container');
+      const singlePageView = document.getElementById('singlePageView');
+      
+      console.log('👁️ Switching to view mode:', viewMode);
+      
+      if (viewMode === 'single') {
+        // Hide tabbed view, show single-page view
+        tabbedView.classList.add('hidden');
+        singlePageView.classList.add('active');
+        
+        // Populate single-page view if results exist
+        if (window.regressionResults && receivedModelSpec) {
+          populateSinglePageView();
+        }
+      } else {
+        // Show tabbed view, hide single-page view
+        tabbedView.classList.remove('hidden');
+        singlePageView.classList.remove('active');
+      }
+    }
+    
+    // Function to populate the single-page view with regression results
+    function populateSinglePageView() {
+      const container = document.getElementById('singlePageView');
+      const results = window.regressionResults;
+      const { y, xn = [], xc = [] } = receivedModelSpec;
+      
+      // Build the single-page layout HTML
+      let html = `
+        <!-- Model Summary Section -->
+        <div class="sp-section">
+          <div class="sp-section-header">
+            <i class="fa-solid fa-chart-line"></i> Model Summary
+          </div>
+          <div class="sp-section-body">
+            <div class="sp-stats-grid">
+              <div class="sp-stat-box">
+                <div class="sp-stat-label">R-Squared (R²)</div>
+                <div class="sp-stat-value">${results.rSquared ? results.rSquared.toFixed(4) : 'N/A'}</div>
+              </div>
+              <div class="sp-stat-box">
+                <div class="sp-stat-label">Adjusted R²</div>
+                <div class="sp-stat-value">${results.rSquaredAdj ? results.rSquaredAdj.toFixed(4) : 'N/A'}</div>
+              </div>
+              <div class="sp-stat-box">
+                <div class="sp-stat-label">F-Statistic</div>
+                <div class="sp-stat-value">${results.fStatistic ? formatNumber(results.fStatistic) : 'N/A'}</div>
+              </div>
+              <div class="sp-stat-box">
+                <div class="sp-stat-label">P-Value (F-test)</div>
+                <div class="sp-stat-value">${results.fPValue ? (results.fPValue < 0.0001 ? '< 0.0001' : results.fPValue.toFixed(4)) : 'N/A'}</div>
+              </div>
+              <div class="sp-stat-box">
+                <div class="sp-stat-label">RMSE</div>
+                <div class="sp-stat-value">${results.rmse ? formatNumber(results.rmse) : 'N/A'}</div>
+              </div>
+              <div class="sp-stat-box">
+                <div class="sp-stat-label">Observations</div>
+                <div class="sp-stat-value">${results.n || 'N/A'}</div>
+              </div>
+              <div class="sp-stat-box">
+                <div class="sp-stat-label">Degrees of Freedom</div>
+                <div class="sp-stat-value">${results.df || 'N/A'}</div>
+              </div>
+              <div class="sp-stat-box">
+                <div class="sp-stat-label">AIC</div>
+                <div class="sp-stat-value">${results.aic ? formatNumber(results.aic) : 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Regression Coefficients Section -->
+        <div class="sp-section">
+          <div class="sp-section-header">
+            <i class="fa-solid fa-table"></i> Regression Coefficients
+          </div>
+          <div class="sp-section-body">
+            <div class="sp-table-container">
+              <table class="sp-table">
+                <thead>
+                  <tr>
+                    <th>Variable</th>
+                    <th>Coefficient</th>
+                    <th>Std. Error</th>
+                    <th>t-Value</th>
+                    <th>P-Value</th>
+                    <th>95% CI Lower</th>
+                    <th>95% CI Upper</th>
+                  </tr>
+                </thead>
+                <tbody id="sp-coefficients-tbody">
+                  <!-- Will be populated below -->
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Regression Equation -->
+            <div class="sp-equation" id="sp-equation">
+              <!-- Will be populated below -->
+            </div>
+          </div>
+        </div>
+        
+        <!-- ANOVA Table Section -->
+        <div class="sp-section">
+          <div class="sp-section-header">
+            <i class="fa-solid fa-calculator"></i> Analysis of Variance (ANOVA)
+          </div>
+          <div class="sp-section-body">
+            <div class="sp-table-container">
+              <table class="sp-table">
+                <thead>
+                  <tr>
+                    <th>Source</th>
+                    <th>Sum of Squares</th>
+                    <th>DF</th>
+                    <th>Mean Square</th>
+                    <th>F-Statistic</th>
+                    <th>P-Value</th>
+                  </tr>
+                </thead>
+                <tbody id="sp-anova-tbody">
+                  <!-- Will be populated below -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      container.innerHTML = html;
+      
+      // Populate coefficients table
+      const coeffTbody = document.getElementById('sp-coefficients-tbody');
+      if (results.coefficients && results.coefficients.length > 0) {
+        results.coefficients.forEach((coef, idx) => {
+          const row = document.createElement('tr');
+          const varClass = coef.variable === 'Intercept' ? 'intercept-var' : 
+                          (xn.includes(coef.variable.split('_')[0]) ? 'numeric-var' : 'categorical-var');
+          
+          row.innerHTML = `
+            <td class="${varClass}" style="font-weight: 600;">${coef.variable}</td>
+            <td>${formatCoefficient(coef.coefficient)}</td>
+            <td>${formatNumber(coef.se)}</td>
+            <td>${formatNumber(coef.tValue)}</td>
+            <td>${coef.pValue < 0.0001 ? '< 0.0001' : coef.pValue.toFixed(4)}</td>
+            <td>${formatNumber(coef.ciLower)}</td>
+            <td>${formatNumber(coef.ciUpper)}</td>
+          `;
+          coeffTbody.appendChild(row);
+        });
+      }
+      
+      // Populate ANOVA table
+      const anovaTbody = document.getElementById('sp-anova-tbody');
+      if (results.anova) {
+        const anovaRows = [
+          {
+            source: 'Regression',
+            ss: results.anova.SSM,
+            df: results.anova.dfM,
+            ms: results.anova.MSM,
+            f: results.fStatistic,
+            p: results.fPValue
+          },
+          {
+            source: 'Residual',
+            ss: results.anova.SSR,
+            df: results.anova.dfR,
+            ms: results.anova.MSR,
+            f: '—',
+            p: '—'
+          },
+          {
+            source: 'Total',
+            ss: results.anova.SST,
+            df: results.anova.dfT,
+            ms: '—',
+            f: '—',
+            p: '—'
+          }
+        ];
+        
+        anovaRows.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="font-weight: 600;">${row.source}</td>
+            <td>${row.ss !== '—' ? formatNumber(row.ss) : '—'}</td>
+            <td>${row.df !== '—' ? row.df : '—'}</td>
+            <td>${row.ms !== '—' ? formatNumber(row.ms) : '—'}</td>
+            <td>${row.f !== '—' ? formatNumber(row.f) : '—'}</td>
+            <td>${row.p !== '—' ? (row.p < 0.0001 ? '< 0.0001' : row.p.toFixed(4)) : '—'}</td>
+          `;
+          anovaTbody.appendChild(tr);
+        });
+      }
+      
+      // Populate regression equation
+      const equationDiv = document.getElementById('sp-equation');
+      if (results.coefficients && results.coefficients.length > 0) {
+        let equationText = `<span style="font-size: 16px; font-weight: 800; color: var(--accent-1); text-transform: uppercase; letter-spacing: 1px;">${y}</span> = `;
+        results.coefficients.forEach((coef, idx) => {
+          if (idx > 0 && coef.coefficient >= 0) {
+            equationText += ' + ';
+          } else if (idx > 0) {
+            equationText += ' ';
+          }
+          
+          if (coef.variable === 'Intercept') {
+            equationText += formatCoefficient(coef.coefficient);
+          } else {
+            const coefStr = formatCoefficient(Math.abs(coef.coefficient));
+            const sign = coef.coefficient < 0 ? '−' : (idx === 0 ? '' : '');
+            equationText += `${sign}${coefStr} × ${coef.variable}`;
+          }
+        });
+        equationDiv.innerHTML = equationText;
+      }
+      
+      console.log('✅ Single-page view populated');
     }
     
     // Office.js integration for Excel Add-in
