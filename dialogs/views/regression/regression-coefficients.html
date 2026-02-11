@@ -2355,6 +2355,18 @@
   </script>
 
   <script>
+    // Global prediction data storage (declared early to avoid temporal dead zone issues)
+    let predictionData = {
+      coefficients: [],
+      variables: [],
+      numericVars: [],
+      categoricalVars: [],
+      categoricalLevels: {},
+      stats: {},
+      savedScenarios: [],
+      currentInputs: {}
+    };
+    
     // Utility function to send commands to VB6 host
     function sendToHost(cmd, data) {
       try {
@@ -4370,17 +4382,6 @@
        PREDICTIONS MODULE
        Interactive prediction engine with sliders
     ======================================== */
-    
-    let predictionData = {
-      coefficients: [],
-      variables: [],
-      numericVars: [],
-      categoricalVars: [],
-      categoricalLevels: {},
-      stats: {},
-      savedScenarios: [],
-      currentInputs: {}
-    };
 
     /**
      * Initialize prediction inputs based on regression model
