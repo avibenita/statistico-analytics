@@ -228,6 +228,42 @@
       color:var(--text-muted);
       font-size:.84rem;
     }
+    .roc-curve-panel{
+      margin-top: 12px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      border-radius: var(--panel-radius);
+      padding: 12px;
+    }
+    .roc-curve-title{
+      font-size: .88rem;
+      font-weight: 700;
+      color: var(--accent-2);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .roc-svg-wrap{
+      width: 100%;
+      min-height: 280px;
+      background: rgba(12,22,36,.55);
+      border: 1px solid rgba(120,200,255,.18);
+      border-radius: 8px;
+      padding: 8px;
+    }
+    .roc-svg{
+      width: 100%;
+      height: 280px;
+      display: block;
+    }
+    .roc-empty{
+      color: var(--text-muted);
+      font-size: .85rem;
+      text-align: center;
+      padding: 18px 8px 8px;
+      font-style: italic;
+    }
     .info-tip{
       position: relative;
       display: inline-flex;
@@ -563,6 +599,20 @@
               </div>
             </div>
           </div>
+          <div class="roc-curve-panel">
+            <div class="roc-curve-title"><i class="fa-solid fa-chart-line"></i> Logistic ROC Curve</div>
+            <div class="roc-svg-wrap">
+              <svg id="rocCurveSvg" class="roc-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <rect x="10" y="10" width="80" height="80" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.14)" stroke-width="0.5"></rect>
+                <line x1="10" y1="90" x2="90" y2="10" stroke="rgba(255,255,255,0.25)" stroke-width="0.6" stroke-dasharray="2 2"></line>
+                <path id="rocPath" d="" fill="none" stroke="rgba(120,200,255,1)" stroke-width="1.2"></path>
+                <circle id="rocPoint" cx="10" cy="90" r="1.2" fill="rgba(255,165,120,0.95)" style="display:none;"></circle>
+                <text x="50" y="98" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="3.2">False Positive Rate</text>
+                <text x="2.5" y="50" transform="rotate(-90 2.5 50)" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="3.2">True Positive Rate</text>
+              </svg>
+              <div id="rocEmptyMsg" class="roc-empty">ROC curve will render when prediction probabilities are available.</div>
+            </div>
+          </div>
           <div class="section-note">Discrimination view: this replaces linear-only quality framing and highlights classification performance.</div>
         </section>
 
@@ -632,6 +682,7 @@
     }
 
     let logisticPayloadForAI = null;
+    let latestLogisticPredictions = [];
 
     function setText(id, value, fallback) {
       var el = document.getElementById(id);
@@ -645,6 +696,9 @@
       document.querySelectorAll(".tab-panel").forEach(function(panel) {
         panel.classList.toggle("active", panel.id === "tab-" + tabKey);
       });
+      if (tabKey === "roc" && latestLogisticPredictions.length > 0) {
+        renderRocCurveFromPredictions(latestLogisticPredictions);
+      }
     }
 
     function wireNavigation() {
@@ -669,6 +723,84 @@
       if (v.indexOf("%") >= 0) v = v.replace("%", "");
       var n = Number(v);
       return isFinite(n) ? n : NaN;
+    }
+
+    function extractPredictionPair(row) {
+      var observedRaw = row.Observed || row.observed || row.Actual || row.actual || row.Y || row.y;
+      var probRaw = row["Predicted Probability"] || row.Probability || row.predictedProbability || row.probability || row.prob || row.Pred || row.pred;
+      var y = parseMaybeNumber(observedRaw);
+      var p = parseMaybeNumber(probRaw);
+      if (!isFinite(y) || !isFinite(p)) return null;
+      y = y >= 0.5 ? 1 : 0;
+      p = Math.max(0, Math.min(1, p));
+      return { y: y, p: p };
+    }
+
+    function renderRocCurveFromPredictions(rows) {
+      var svg = document.getElementById("rocCurveSvg");
+      var path = document.getElementById("rocPath");
+      var point = document.getElementById("rocPoint");
+      var empty = document.getElementById("rocEmptyMsg");
+      if (!svg || !path || !empty) return;
+
+      var pairs = (rows || []).map(extractPredictionPair).filter(Boolean);
+      var positives = pairs.filter(function(d) { return d.y === 1; }).length;
+      var negatives = pairs.length - positives;
+      if (pairs.length < 2 || positives === 0 || negatives === 0) {
+        path.setAttribute("d", "");
+        if (point) point.style.display = "none";
+        empty.style.display = "block";
+        return;
+      }
+
+      var thresholds = pairs.map(function(d) { return d.p; }).sort(function(a, b) { return b - a; });
+      thresholds = [1].concat(thresholds).concat([0]);
+
+      var rocPoints = [];
+      thresholds.forEach(function(t) {
+        var tp = 0, fp = 0;
+        pairs.forEach(function(d) {
+          var predPos = d.p >= t;
+          if (predPos && d.y === 1) tp++;
+          if (predPos && d.y === 0) fp++;
+        });
+        rocPoints.push({ fpr: fp / negatives, tpr: tp / positives });
+      });
+
+      rocPoints.sort(function(a, b) { return a.fpr - b.fpr; });
+      if (rocPoints[0].fpr !== 0 || rocPoints[0].tpr !== 0) rocPoints.unshift({ fpr: 0, tpr: 0 });
+      var last = rocPoints[rocPoints.length - 1];
+      if (last.fpr !== 1 || last.tpr !== 1) rocPoints.push({ fpr: 1, tpr: 1 });
+
+      var d = rocPoints.map(function(pt, idx) {
+        var x = 10 + (pt.fpr * 80);
+        var y = 90 - (pt.tpr * 80);
+        return (idx === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2);
+      }).join(" ");
+      path.setAttribute("d", d);
+
+      if (point) {
+        point.style.display = "block";
+        point.setAttribute("cx", "90");
+        point.setAttribute("cy", "10");
+      }
+      empty.style.display = "none";
+
+      // Update AUC/Gini if not yet provided by host payload.
+      var aucEl = document.getElementById("auc");
+      var giniEl = document.getElementById("gini");
+      var aucMissing = !aucEl || !aucEl.innerText || aucEl.innerText === "..." || aucEl.innerText === "N/A";
+      var giniMissing = !giniEl || !giniEl.innerText || giniEl.innerText === "..." || giniEl.innerText === "N/A";
+      if (aucMissing || giniMissing) {
+        var auc = 0;
+        for (var i = 1; i < rocPoints.length; i++) {
+          var x1 = rocPoints[i - 1].fpr, y1 = rocPoints[i - 1].tpr;
+          var x2 = rocPoints[i].fpr, y2 = rocPoints[i].tpr;
+          auc += ((y1 + y2) / 2) * (x2 - x1);
+        }
+        if (aucEl && aucMissing) aucEl.innerText = auc.toFixed(4);
+        if (giniEl && giniMissing) giniEl.innerText = (2 * auc - 1).toFixed(4);
+      }
     }
 
     function renderTopEffects(rows) {
@@ -816,6 +948,7 @@
 
     window.populateLogisticPredictions = function(data) {
       var rows = typeof data === "string" ? JSON.parse(data) : data;
+      latestLogisticPredictions = rows || [];
       var tbody = document.getElementById("predictionTableBody");
       tbody.innerHTML = "";
 
@@ -836,6 +969,7 @@
       });
 
       logisticPayloadForAI = Object.assign({}, logisticPayloadForAI || {}, { predictions: rows });
+      renderRocCurveFromPredictions(rows);
     };
 
     window.populateLogisticDiagnostics = function(data) {
@@ -934,6 +1068,13 @@
       document.getElementById("thresholdValue").innerText = "0.50";
       document.getElementById("aiInterpretBtn").style.display = "none";
       logisticPayloadForAI = null;
+      latestLogisticPredictions = [];
+      var rocPath = document.getElementById("rocPath");
+      var rocPoint = document.getElementById("rocPoint");
+      var rocEmpty = document.getElementById("rocEmptyMsg");
+      if (rocPath) rocPath.setAttribute("d", "");
+      if (rocPoint) rocPoint.style.display = "none";
+      if (rocEmpty) rocEmpty.style.display = "block";
       switchTab("results");
     };
 
