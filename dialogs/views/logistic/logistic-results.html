@@ -220,14 +220,56 @@
       font-size:.84rem;
     }
     .info-tip{
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
       color: var(--text-muted);
-      font-size: 0.78rem;
+      border: 1px solid rgba(255,255,255,0.4);
+      font-size: 0.58rem;
       margin-left: 6px;
+      margin-right: 6px;
       cursor: help;
       vertical-align: middle;
+      line-height: 1;
+      pointer-events: auto;
     }
     .info-tip:hover{
       color: var(--accent-2);
+      border-color: rgba(120,200,255,0.7);
+      background: rgba(120,200,255,0.08);
+    }
+    .info-tip::after{
+      content: attr(title);
+      position: absolute;
+      left: 0;
+      top: 145%;
+      min-width: 220px;
+      max-width: 300px;
+      white-space: normal;
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: 500;
+      font-size: 0.75rem;
+      line-height: 1.35;
+      color: #eaf1ff;
+      background: rgba(8,14,24,0.96);
+      border: 1px solid rgba(120,200,255,0.55);
+      border-radius: 8px;
+      padding: 7px 9px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.45);
+      opacity: 0;
+      transform: translateY(-2px);
+      pointer-events: none;
+      transition: opacity .15s ease, transform .15s ease;
+      z-index: 50;
+    }
+    .info-tip:hover::after{
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .threshold-wrap{
@@ -301,7 +343,7 @@
                 <div class="stat-field"><span class="stat-label">Events:</span><span class="stat-value" id="eventCount">...</span></div>
                 <div class="stat-field"><span class="stat-label">Non-events:</span><span class="stat-value" id="noneventCount">...</span></div>
                 <div class="stat-field"><span class="stat-label">Predictors:</span><span class="stat-value" id="predictorCount">...</span></div>
-                <div class="stat-field"><span class="stat-label">Link <i class="fa-solid fa-circle-info info-tip" title="Logit link maps probability p to log-odds log(p/(1-p))."></i>:</span><span class="stat-value" id="linkType">Logit</span></div>
+                <div class="stat-field"><span class="stat-label">Link <i class="fa-solid fa-circle-info info-tip" title="What it means: the model predicts event probability through log-odds. This is the standard link for binary outcomes."></i>:</span><span class="stat-value" id="linkType">Logit</span></div>
                 <div class="stat-field"><span class="stat-label">Intercept:</span><span class="stat-value" id="interceptFlag">...</span></div>
               </div>
             </div>
@@ -309,23 +351,23 @@
             <div class="stat-panel compact-card">
               <div class="stat-panel-heading"><i class="fa-solid fa-chart-bar"></i> Model Fit</div>
               <div class="stat-panel-body">
-                <div class="stat-field"><span class="stat-label">-2 Log Likelihood <i class="fa-solid fa-circle-info info-tip" title="Lower values indicate better in-sample fit."></i>:</span><span class="stat-value" id="n2ll">...</span></div>
-                <div class="stat-field"><span class="stat-label">Deviance <i class="fa-solid fa-circle-info info-tip" title="Model deviance is -2 log likelihood for the fitted model."></i>:</span><span class="stat-value" id="deviance">...</span></div>
-                <div class="stat-field"><span class="stat-label">AIC <i class="fa-solid fa-circle-info info-tip" title="Akaike Information Criterion balances fit and complexity. Lower is better."></i>:</span><span class="stat-value" id="aic">...</span></div>
-                <div class="stat-field"><span class="stat-label">BIC <i class="fa-solid fa-circle-info info-tip" title="Bayesian Information Criterion penalizes complexity more strongly than AIC."></i>:</span><span class="stat-value" id="bic">...</span></div>
-                <div class="stat-field"><span class="stat-label">McFadden R2 <i class="fa-solid fa-circle-info info-tip" title="Pseudo-R2 based on log-likelihood improvement over null model."></i>:</span><span class="stat-value" id="mcfaddenR2">...</span></div>
-                <div class="stat-field"><span class="stat-label">Cox-Snell R2 <i class="fa-solid fa-circle-info info-tip" title="Likelihood-based pseudo-R2 with upper bound below 1."></i>:</span><span class="stat-value" id="coxSnellR2">...</span></div>
-                <div class="stat-field"><span class="stat-label">Nagelkerke R2 <i class="fa-solid fa-circle-info info-tip" title="Rescaled Cox-Snell pseudo-R2 to range approximately from 0 to 1."></i>:</span><span class="stat-value" id="nagelkerkeR2">...</span></div>
+                <div class="stat-field"><span class="stat-label">-2 Log Likelihood <i class="fa-solid fa-circle-info info-tip" title="What it means: smaller values indicate a better fit to observed outcomes (use mainly to compare models on same data)."></i>:</span><span class="stat-value" id="n2ll">...</span></div>
+                <div class="stat-field"><span class="stat-label">Deviance <i class="fa-solid fa-circle-info info-tip" title="What it means: overall model error on the log-likelihood scale; lower is better."></i>:</span><span class="stat-value" id="deviance">...</span></div>
+                <div class="stat-field"><span class="stat-label">AIC <i class="fa-solid fa-circle-info info-tip" title="What it means: fit adjusted for complexity; lower AIC usually means a better practical model."></i>:</span><span class="stat-value" id="aic">...</span></div>
+                <div class="stat-field"><span class="stat-label">BIC <i class="fa-solid fa-circle-info info-tip" title="What it means: like AIC but stricter on extra variables; lower BIC favors simpler models."></i>:</span><span class="stat-value" id="bic">...</span></div>
+                <div class="stat-field"><span class="stat-label">McFadden R2 <i class="fa-solid fa-circle-info info-tip" title="What it means: improvement over intercept-only model; higher means predictors add useful signal."></i>:</span><span class="stat-value" id="mcfaddenR2">...</span></div>
+                <div class="stat-field"><span class="stat-label">Cox-Snell R2 <i class="fa-solid fa-circle-info info-tip" title="What it means: pseudo-R2 for relative fit quality; useful for comparing alternative models."></i>:</span><span class="stat-value" id="coxSnellR2">...</span></div>
+                <div class="stat-field"><span class="stat-label">Nagelkerke R2 <i class="fa-solid fa-circle-info info-tip" title="What it means: scaled pseudo-R2 (0 to 1 style); higher generally means better explanatory power."></i>:</span><span class="stat-value" id="nagelkerkeR2">...</span></div>
               </div>
             </div>
 
             <div class="stat-panel compact-card">
               <div class="stat-panel-heading"><i class="fa-solid fa-vial"></i> Global Tests</div>
               <div class="stat-panel-body">
-                <div class="stat-field"><span class="stat-label">Likelihood Ratio <i class="fa-solid fa-circle-info info-tip" title="Compares fitted model versus intercept-only model."></i>:</span><span class="stat-value" id="lrTest">...</span></div>
-                <div class="stat-field"><span class="stat-label">Wald Test <i class="fa-solid fa-circle-info info-tip" title="Tests whether coefficients are jointly or individually different from zero."></i>:</span><span class="stat-value" id="waldTest">...</span></div>
-                <div class="stat-field"><span class="stat-label">Score Test <i class="fa-solid fa-circle-info info-tip" title="Alternative test based on gradient at null parameter values."></i>:</span><span class="stat-value" id="scoreTest">...</span></div>
-                <div class="stat-field"><span class="stat-label">Overall p-value <i class="fa-solid fa-circle-info info-tip" title="Global significance for model-level effect."></i>:</span><span class="stat-value" id="overallPValue">...</span></div>
+                <div class="stat-field"><span class="stat-label">Likelihood Ratio <i class="fa-solid fa-circle-info info-tip" title="What it means: asks whether this model is better than no-predictor baseline. Large value + small p-value is good."></i>:</span><span class="stat-value" id="lrTest">...</span></div>
+                <div class="stat-field"><span class="stat-label">Wald Test <i class="fa-solid fa-circle-info info-tip" title="What it means: checks if effects are meaningfully different from zero. Small p-values suggest real signal."></i>:</span><span class="stat-value" id="waldTest">...</span></div>
+                <div class="stat-field"><span class="stat-label">Score Test <i class="fa-solid fa-circle-info info-tip" title="What it means: another global significance check; should align with LR/Wald conclusions."></i>:</span><span class="stat-value" id="scoreTest">...</span></div>
+                <div class="stat-field"><span class="stat-label">Overall p-value <i class="fa-solid fa-circle-info info-tip" title="What it means: if small (e.g., < 0.05), the model provides useful predictive information overall."></i>:</span><span class="stat-value" id="overallPValue">...</span></div>
               </div>
             </div>
           </div>
@@ -337,14 +379,14 @@
                   <thead>
                     <tr>
                       <th>Variable</th>
-                      <th>Beta <i class="fa-solid fa-circle-info info-tip" title="Log-odds coefficient."></i></th>
-                      <th>SE <i class="fa-solid fa-circle-info info-tip" title="Standard error of coefficient estimate."></i></th>
-                      <th>Wald z <i class="fa-solid fa-circle-info info-tip" title="Wald statistic z = Beta / SE."></i></th>
+                      <th>Beta <i class="fa-solid fa-circle-info info-tip" title="What it means: positive Beta raises event odds, negative Beta lowers them."></i></th>
+                      <th>SE <i class="fa-solid fa-circle-info info-tip" title="What it means: uncertainty of Beta; smaller SE means more stable estimate."></i></th>
+                      <th>Wald z <i class="fa-solid fa-circle-info info-tip" title="What it means: effect strength relative to uncertainty; bigger |z| suggests stronger evidence."></i></th>
                       <th>p-value</th>
-                      <th>OR <i class="fa-solid fa-circle-info info-tip" title="Odds ratio, OR = exp(Beta)."></i></th>
-                      <th>OR CI Lower <i class="fa-solid fa-circle-info info-tip" title="Lower bound of confidence interval for OR."></i></th>
-                      <th>OR CI Upper <i class="fa-solid fa-circle-info info-tip" title="Upper bound of confidence interval for OR."></i></th>
-                      <th>Reference Category <i class="fa-solid fa-circle-info info-tip" title="Baseline category used for dummy coding of factors."></i></th>
+                      <th>OR <i class="fa-solid fa-circle-info info-tip" title="What it means: multiplicative change in odds (OR>1 increases odds, OR<1 decreases odds)."></i></th>
+                      <th>OR CI Lower <i class="fa-solid fa-circle-info info-tip" title="What it means: conservative lower estimate of the OR effect size."></i></th>
+                      <th>OR CI Upper <i class="fa-solid fa-circle-info info-tip" title="What it means: optimistic upper estimate of the OR effect size."></i></th>
+                      <th>Reference Category <i class="fa-solid fa-circle-info info-tip" title="What it means: all factor-category effects are interpreted relative to this baseline level."></i></th>
                     </tr>
                   </thead>
                   <tbody id="coefTableBodyResults">
@@ -386,14 +428,14 @@
                   <thead>
                     <tr>
                       <th>Variable</th>
-                      <th>Beta <i class="fa-solid fa-circle-info info-tip" title="Log-odds coefficient."></i></th>
-                      <th>SE <i class="fa-solid fa-circle-info info-tip" title="Standard error of coefficient estimate."></i></th>
-                      <th>Wald z <i class="fa-solid fa-circle-info info-tip" title="Wald statistic z = Beta / SE."></i></th>
+                      <th>Beta <i class="fa-solid fa-circle-info info-tip" title="What it means: positive Beta raises event odds, negative Beta lowers them."></i></th>
+                      <th>SE <i class="fa-solid fa-circle-info info-tip" title="What it means: uncertainty of Beta; smaller SE means more stable estimate."></i></th>
+                      <th>Wald z <i class="fa-solid fa-circle-info info-tip" title="What it means: effect strength relative to uncertainty; bigger |z| suggests stronger evidence."></i></th>
                       <th>p-value</th>
-                      <th>OR <i class="fa-solid fa-circle-info info-tip" title="Odds ratio, OR = exp(Beta)."></i></th>
-                      <th>OR CI Lower <i class="fa-solid fa-circle-info info-tip" title="Lower bound of confidence interval for OR."></i></th>
-                      <th>OR CI Upper <i class="fa-solid fa-circle-info info-tip" title="Upper bound of confidence interval for OR."></i></th>
-                      <th>Reference Category <i class="fa-solid fa-circle-info info-tip" title="Baseline category used for dummy coding of factors."></i></th>
+                      <th>OR <i class="fa-solid fa-circle-info info-tip" title="What it means: multiplicative change in odds (OR>1 increases odds, OR<1 decreases odds)."></i></th>
+                      <th>OR CI Lower <i class="fa-solid fa-circle-info info-tip" title="What it means: conservative lower estimate of the OR effect size."></i></th>
+                      <th>OR CI Upper <i class="fa-solid fa-circle-info info-tip" title="What it means: optimistic upper estimate of the OR effect size."></i></th>
+                      <th>Reference Category <i class="fa-solid fa-circle-info info-tip" title="What it means: all factor-category effects are interpreted relative to this baseline level."></i></th>
                     </tr>
                   </thead>
                   <tbody id="coefTableBody">
@@ -412,10 +454,10 @@
               <div class="stat-panel-heading"><i class="fa-solid fa-check-double"></i> Classification Metrics</div>
               <div class="stat-panel-body">
                 <div class="stat-field"><span class="stat-label">Accuracy:</span><span class="stat-value" id="acc">...</span></div>
-                <div class="stat-field"><span class="stat-label">Sensitivity <i class="fa-solid fa-circle-info info-tip" title="True Positive Rate (Recall)."></i>:</span><span class="stat-value" id="sens">...</span></div>
-                <div class="stat-field"><span class="stat-label">Specificity <i class="fa-solid fa-circle-info info-tip" title="True Negative Rate."></i>:</span><span class="stat-value" id="spec">...</span></div>
-                <div class="stat-field"><span class="stat-label">Precision <i class="fa-solid fa-circle-info info-tip" title="Positive Predictive Value."></i>:</span><span class="stat-value" id="prec">...</span></div>
-                <div class="stat-field"><span class="stat-label">F1 <i class="fa-solid fa-circle-info info-tip" title="Harmonic mean of Precision and Recall."></i>:</span><span class="stat-value" id="f1">...</span></div>
+                <div class="stat-field"><span class="stat-label">Sensitivity <i class="fa-solid fa-circle-info info-tip" title="What it means: among true events, how many the model catches (misses fewer positives when high)."></i>:</span><span class="stat-value" id="sens">...</span></div>
+                <div class="stat-field"><span class="stat-label">Specificity <i class="fa-solid fa-circle-info info-tip" title="What it means: among true non-events, how many the model correctly rejects (fewer false alarms when high)."></i>:</span><span class="stat-value" id="spec">...</span></div>
+                <div class="stat-field"><span class="stat-label">Precision <i class="fa-solid fa-circle-info info-tip" title="What it means: when the model predicts event, how often it is actually correct."></i>:</span><span class="stat-value" id="prec">...</span></div>
+                <div class="stat-field"><span class="stat-label">F1 <i class="fa-solid fa-circle-info info-tip" title="What it means: single balance score between catching events and avoiding false positives."></i>:</span><span class="stat-value" id="f1">...</span></div>
               </div>
             </div>
             <div class="stat-panel">
@@ -463,18 +505,18 @@
             <div class="stat-panel">
               <div class="stat-panel-heading"><i class="fa-solid fa-wave-square"></i> Residual Diagnostics</div>
               <div class="stat-panel-body">
-                <div class="stat-field"><span class="stat-label">Deviance Residual Mean <i class="fa-solid fa-circle-info info-tip" title="Mean of deviance residuals; ideally near zero."></i>:</span><span class="stat-value" id="devResidMean">...</span></div>
-                <div class="stat-field"><span class="stat-label">Deviance Residual SD <i class="fa-solid fa-circle-info info-tip" title="Spread of deviance residuals."></i>:</span><span class="stat-value" id="devResidSd">...</span></div>
-                <div class="stat-field"><span class="stat-label">Pearson Residual Mean <i class="fa-solid fa-circle-info info-tip" title="Mean of Pearson residuals; ideally near zero."></i>:</span><span class="stat-value" id="pearsonResidMean">...</span></div>
-                <div class="stat-field"><span class="stat-label">Pearson Residual SD <i class="fa-solid fa-circle-info info-tip" title="Spread of Pearson residuals."></i>:</span><span class="stat-value" id="pearsonResidSd">...</span></div>
+                <div class="stat-field"><span class="stat-label">Deviance Residual Mean <i class="fa-solid fa-circle-info info-tip" title="What it means: average prediction error direction; near zero suggests no global bias."></i>:</span><span class="stat-value" id="devResidMean">...</span></div>
+                <div class="stat-field"><span class="stat-label">Deviance Residual SD <i class="fa-solid fa-circle-info info-tip" title="What it means: spread of errors; very large spread may indicate unstable fit or outliers."></i>:</span><span class="stat-value" id="devResidSd">...</span></div>
+                <div class="stat-field"><span class="stat-label">Pearson Residual Mean <i class="fa-solid fa-circle-info info-tip" title="What it means: another average error check; near zero is desirable."></i>:</span><span class="stat-value" id="pearsonResidMean">...</span></div>
+                <div class="stat-field"><span class="stat-label">Pearson Residual SD <i class="fa-solid fa-circle-info info-tip" title="What it means: error variability on Pearson scale; high values suggest poor local fit."></i>:</span><span class="stat-value" id="pearsonResidSd">...</span></div>
               </div>
             </div>
             <div class="stat-panel">
               <div class="stat-panel-heading"><i class="fa-solid fa-bullseye"></i> Influence</div>
               <div class="stat-panel-body">
-                <div class="stat-field"><span class="stat-label">Max Leverage (Hat) <i class="fa-solid fa-circle-info info-tip" title="Largest leverage value; high points can strongly influence fit."></i>:</span><span class="stat-value" id="maxLeverage">...</span></div>
-                <div class="stat-field"><span class="stat-label">Max Cook's D <i class="fa-solid fa-circle-info info-tip" title="Influence measure combining residual and leverage."></i>:</span><span class="stat-value" id="maxCook">...</span></div>
-                <div class="stat-field"><span class="stat-label">Max |DFBETA| <i class="fa-solid fa-circle-info info-tip" title="Largest coefficient-level influence across observations."></i>:</span><span class="stat-value" id="maxDfbeta">...</span></div>
+                <div class="stat-field"><span class="stat-label">Max Leverage (Hat) <i class="fa-solid fa-circle-info info-tip" title="What it means: highest potential influence point; high leverage rows can dominate estimates."></i>:</span><span class="stat-value" id="maxLeverage">...</span></div>
+                <div class="stat-field"><span class="stat-label">Max Cook's D <i class="fa-solid fa-circle-info info-tip" title="What it means: strongest single-row impact on fitted model; higher values deserve review."></i>:</span><span class="stat-value" id="maxCook">...</span></div>
+                <div class="stat-field"><span class="stat-label">Max |DFBETA| <i class="fa-solid fa-circle-info info-tip" title="What it means: largest single-row shift on a coefficient; high values indicate unstable effects."></i>:</span><span class="stat-value" id="maxDfbeta">...</span></div>
                 <div class="stat-field"><span class="stat-label">Potential Outliers:</span><span class="stat-value" id="outlierCount">...</span></div>
               </div>
             </div>
@@ -487,17 +529,17 @@
             <div class="stat-panel">
               <div class="stat-panel-heading"><i class="fa-solid fa-chart-area"></i> Discrimination Metrics</div>
               <div class="stat-panel-body">
-                <div class="stat-field"><span class="stat-label">AUC <i class="fa-solid fa-circle-info info-tip" title="Area Under ROC Curve; discrimination quality from 0.5 to 1.0."></i>:</span><span class="stat-value" id="auc">...</span></div>
-                <div class="stat-field"><span class="stat-label">Gini <i class="fa-solid fa-circle-info info-tip" title="Gini = 2*AUC - 1."></i>:</span><span class="stat-value" id="gini">...</span></div>
-                <div class="stat-field"><span class="stat-label">KS Statistic <i class="fa-solid fa-circle-info info-tip" title="Maximum separation between cumulative event and non-event distributions."></i>:</span><span class="stat-value" id="ks">...</span></div>
+                <div class="stat-field"><span class="stat-label">AUC <i class="fa-solid fa-circle-info info-tip" title="What it means: ranking quality of event risk; 0.5 is random, closer to 1.0 is stronger discrimination."></i>:</span><span class="stat-value" id="auc">...</span></div>
+                <div class="stat-field"><span class="stat-label">Gini <i class="fa-solid fa-circle-info info-tip" title="What it means: alternate discrimination score derived from AUC; higher is better."></i>:</span><span class="stat-value" id="gini">...</span></div>
+                <div class="stat-field"><span class="stat-label">KS Statistic <i class="fa-solid fa-circle-info info-tip" title="What it means: best separation point between events and non-events; higher means cleaner separation."></i>:</span><span class="stat-value" id="ks">...</span></div>
               </div>
             </div>
             <div class="stat-panel">
               <div class="stat-panel-heading"><i class="fa-solid fa-arrows-up-to-line"></i> Lift / Gain</div>
               <div class="stat-panel-body">
-                <div class="stat-field"><span class="stat-label">Top Decile Lift <i class="fa-solid fa-circle-info info-tip" title="Event concentration in top 10% scored cases versus baseline."></i>:</span><span class="stat-value" id="topDecileLift">...</span></div>
-                <div class="stat-field"><span class="stat-label">Gain @ 20% <i class="fa-solid fa-circle-info info-tip" title="Share of events captured in top 20% scored cases."></i>:</span><span class="stat-value" id="gain20">...</span></div>
-                <div class="stat-field"><span class="stat-label">Gain @ 40% <i class="fa-solid fa-circle-info info-tip" title="Share of events captured in top 40% scored cases."></i>:</span><span class="stat-value" id="gain40">...</span></div>
+                <div class="stat-field"><span class="stat-label">Top Decile Lift <i class="fa-solid fa-circle-info info-tip" title="What it means: how much better your top 10% ranked cases are versus random selection."></i>:</span><span class="stat-value" id="topDecileLift">...</span></div>
+                <div class="stat-field"><span class="stat-label">Gain @ 20% <i class="fa-solid fa-circle-info info-tip" title="What it means: percent of all events captured if you act on top 20% highest-risk cases."></i>:</span><span class="stat-value" id="gain20">...</span></div>
+                <div class="stat-field"><span class="stat-label">Gain @ 40% <i class="fa-solid fa-circle-info info-tip" title="What it means: percent of all events captured if you act on top 40% highest-risk cases."></i>:</span><span class="stat-value" id="gain40">...</span></div>
               </div>
             </div>
           </div>
@@ -508,8 +550,8 @@
           <div class="stat-panel">
             <div class="stat-panel-heading"><i class="fa-solid fa-table-list"></i> Descriptive & Bivariate Checks</div>
             <div class="stat-panel-body">
-              <div class="stat-field"><span class="stat-label">Separation Risk <i class="fa-solid fa-circle-info info-tip" title="Risk that a predictor perfectly predicts class labels, causing unstable estimates."></i>:</span><span class="stat-value" id="separationRisk">...</span></div>
-              <div class="stat-field"><span class="stat-label">Sparse Cells <i class="fa-solid fa-circle-info info-tip" title="Very low-frequency categories can destabilize logistic estimates."></i>:</span><span class="stat-value" id="sparseCells">...</span></div>
+              <div class="stat-field"><span class="stat-label">Separation Risk <i class="fa-solid fa-circle-info info-tip" title="What it means: model may overfit because some predictor levels perfectly split outcomes. Results can look too certain."></i>:</span><span class="stat-value" id="separationRisk">...</span></div>
+              <div class="stat-field"><span class="stat-label">Sparse Cells <i class="fa-solid fa-circle-info info-tip" title="What it means: some categories have too few rows, so coefficient estimates may be noisy or unstable."></i>:</span><span class="stat-value" id="sparseCells">...</span></div>
               <div class="stat-field"><span class="stat-label">Missing Pattern:</span><span class="stat-value" id="missingPattern">...</span></div>
             </div>
           </div>
