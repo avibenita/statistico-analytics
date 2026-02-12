@@ -78,7 +78,7 @@
       border-radius: var(--panel-radius) var(--panel-radius) 0 0;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 -1px 0 rgba(120, 200, 255, 0.2);
       position: relative;
-      overflow: hidden;
+      overflow: visible;
       transition: all 0.3s ease;
     }
     
@@ -1188,12 +1188,12 @@
       display: flex;
       align-items: flex-end;
       gap: 8px;
-      background: var(--surface-2);
-      padding: 12px 16px 0 16px;
-      border-bottom: 2px solid var(--border);
+      background: transparent;
+      padding: 12px 0 0 0;
+      border-bottom: 0;
       overflow-x: auto;
       scrollbar-width: thin;
-      margin-top: 12px; /* Space from hero */
+      margin-top: 12px;
     }
     .tab-controls-right {
       margin-left: auto;
@@ -1262,12 +1262,12 @@
     }
     
     .tab-button.active {
-      background: var(--surface-1);
+      background: rgba(12, 22, 36, 0.95);
       color: var(--accent-1);
       font-weight: 600;
       border-color: var(--accent-1);
       box-shadow: 0 -4px 16px rgba(255, 165, 120, 0.3);
-      transform: translateY(-4px);
+      transform: translateY(0);
     }
     
     .tab-button.active::before {
@@ -2209,51 +2209,50 @@
             </button>
           </div>
         </div>
+        <!-- Tab Navigation (integrated into hero) -->
+        <div class="tab-navigation">
+          <button class="tab-button active" onclick="switchTab('results')" data-tab="results">
+            <i class="fa-solid fa-table"></i> Results
+          </button>
+          <button class="tab-button" onclick="switchTab('predictions')" data-tab="predictions">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Predictions
+          </button>
+          <button class="tab-button" onclick="switchTab('residuals')" data-tab="residuals">
+            <i class="fa-solid fa-chart-line"></i> Residual Diagnostics
+          </button>
+          <button class="tab-button" id="ancovaTabButton" onclick="switchTab('ancova')" data-tab="ancova" style="display: none;">
+            <i class="fa-solid fa-layer-group"></i> ANCOVA
+          </button>
+          <button class="tab-button" onclick="switchTab('correlations')" data-tab="correlations">
+            <i class="fa-solid fa-project-diagram"></i> Correlations
+          </button>
+          <button class="tab-button" onclick="switchTab('descriptive')" data-tab="descriptive">
+            <i class="fa-solid fa-chart-bar"></i> Descriptive Stats
+          </button>
+          <button class="tab-button" onclick="switchTab('ai-assessment')" data-tab="ai-assessment">
+            <i class="fa-solid fa-brain"></i> AI Assessment
+          </button>
+          <div class="tab-controls-right">
+            <label class="tab-decimal-label" for="decimalSelect">
+              <i class="fa-solid fa-hashtag"></i> Decimals:
+            </label>
+            <select id="decimalSelect" class="tab-decimal-select" onchange="updateDecimalPrecision()">
+              <option value="auto">Auto</option>
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <!-- View Container: wraps both tabbed and single-page views -->
       <div class="view-container">
         <!-- Tabbed View -->
         <div class="tabbed-view-container">
-          <!-- Tab Navigation -->
-          <div class="tab-navigation">
-        <button class="tab-button active" onclick="switchTab('results')" data-tab="results">
-          <i class="fa-solid fa-table"></i> Results
-        </button>
-        <button class="tab-button" onclick="switchTab('predictions')" data-tab="predictions">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Predictions
-        </button>
-        <button class="tab-button" onclick="switchTab('residuals')" data-tab="residuals">
-          <i class="fa-solid fa-chart-line"></i> Residual Diagnostics
-        </button>
-        <button class="tab-button" id="ancovaTabButton" onclick="switchTab('ancova')" data-tab="ancova" style="display: none;">
-          <i class="fa-solid fa-layer-group"></i> ANCOVA
-        </button>
-        <button class="tab-button" onclick="switchTab('correlations')" data-tab="correlations">
-          <i class="fa-solid fa-project-diagram"></i> Correlations
-        </button>
-        <button class="tab-button" onclick="switchTab('descriptive')" data-tab="descriptive">
-          <i class="fa-solid fa-chart-bar"></i> Descriptive Stats
-        </button>
-        <button class="tab-button" onclick="switchTab('ai-assessment')" data-tab="ai-assessment">
-          <i class="fa-solid fa-brain"></i> AI Assessment
-        </button>
-        <div class="tab-controls-right">
-          <label class="tab-decimal-label" for="decimalSelect">
-            <i class="fa-solid fa-hashtag"></i> Decimals:
-          </label>
-          <select id="decimalSelect" class="tab-decimal-select" onchange="updateDecimalPrecision()">
-            <option value="auto">Auto</option>
-            <option value="0">0</option>
-            <option value="1">1</option>
-            <option value="2" selected>2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </div>
-      </div>
-
       <div class="card-body">
         <!-- Tab: Results -->
         <div id="tab-results" class="tab-content active">
