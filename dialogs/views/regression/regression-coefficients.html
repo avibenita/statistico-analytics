@@ -2179,6 +2179,11 @@
             <button class="save-analysis-btn" id="saveAnalysisBtn" onclick="saveCurrentRegressionAnalysis()" title="Save this model configuration to the workbook">
               <i class="fa-solid fa-floppy-disk"></i> Save Model
             </button>
+
+            <!-- Export HTML Snapshot -->
+            <button class="save-analysis-btn" id="saveHtmlBtn" onclick="exportResultsAsHtml()" title="Download a static HTML snapshot of the current results view">
+              <i class="fa-solid fa-file-code"></i> Save HTML
+            </button>
             
             <!-- AI Interpret Button -->
             <button class="dropdown-btn ai-interpret-btn" id="aiInterpretBtn" onclick="requestRegressionAI()" style="display: none;" title="Get AI-powered interpretation of regression results">
@@ -3412,6 +3417,84 @@
       } catch (error) {
         console.error('❌ Error saving analysis:', error);
         await customAlert(`Failed to save model: ${error.message}`, 'error');
+      }
+    }
+
+    /**
+     * Export current dialog state as a static HTML snapshot.
+     * Captures current values, active tab, and rendered visuals.
+     */
+    async function exportResultsAsHtml() {
+      try {
+        const clone = document.documentElement.cloneNode(true);
+
+        // Preserve form control state (select/input/textarea).
+        const sourceControls = document.querySelectorAll('input, textarea, select');
+        const cloneControls = clone.querySelectorAll('input, textarea, select');
+        sourceControls.forEach((sourceEl, idx) => {
+          const cloneEl = cloneControls[idx];
+          if (!cloneEl) return;
+          if (sourceEl.tagName === 'SELECT') {
+            cloneEl.value = sourceEl.value;
+            Array.from(cloneEl.options || []).forEach(opt => {
+              opt.selected = opt.value === sourceEl.value;
+            });
+          } else if (sourceEl.type === 'checkbox' || sourceEl.type === 'radio') {
+            cloneEl.checked = sourceEl.checked;
+            if (sourceEl.checked) cloneEl.setAttribute('checked', 'checked');
+            else cloneEl.removeAttribute('checked');
+          } else {
+            cloneEl.value = sourceEl.value;
+            cloneEl.setAttribute('value', sourceEl.value);
+          }
+        });
+
+        // Replace canvas elements with static images so charts persist in exported file.
+        const sourceCanvases = document.querySelectorAll('canvas');
+        const cloneCanvases = clone.querySelectorAll('canvas');
+        sourceCanvases.forEach((canvas, idx) => {
+          const cloneCanvas = cloneCanvases[idx];
+          if (!cloneCanvas) return;
+          try {
+            const dataUrl = canvas.toDataURL('image/png');
+            const img = clone.ownerDocument.createElement('img');
+            img.src = dataUrl;
+            img.style.width = `${canvas.width || canvas.clientWidth || 400}px`;
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            img.alt = 'Chart snapshot';
+            cloneCanvas.replaceWith(img);
+          } catch (e) {
+            // If toDataURL fails, keep original canvas markup.
+          }
+        });
+
+        // Static export: remove scripts to avoid re-running app logic on open.
+        clone.querySelectorAll('script').forEach(script => script.remove());
+
+        // Hide any loading overlay remnants in export.
+        const loadingOverlay = clone.querySelector('#loadingOverlay');
+        if (loadingOverlay) loadingOverlay.remove();
+
+        const now = new Date();
+        const stamp = now.toISOString().replace(/[:.]/g, '-');
+        const fileName = `regression-results-snapshot-${stamp}.html`;
+        const html = '<!DOCTYPE html>\n' + clone.outerHTML;
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        await customAlert(`HTML snapshot saved as:\n${fileName}`, 'success');
+      } catch (error) {
+        console.error('❌ Failed to export HTML snapshot:', error);
+        await customAlert(`Failed to export HTML snapshot: ${error.message}`, 'error');
       }
     }
     
