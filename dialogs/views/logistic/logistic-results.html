@@ -6,6 +6,7 @@
   <title id="page-title">Logistic Regression Analysis</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
   <style>
     :root{
       --surface-0:#0c1624;
@@ -252,7 +253,7 @@
       border-radius: 8px;
       padding: 8px;
     }
-    .roc-svg{
+    .roc-chart{
       width: 100%;
       height: 280px;
       display: block;
@@ -602,14 +603,7 @@
           <div class="roc-curve-panel">
             <div class="roc-curve-title"><i class="fa-solid fa-chart-line"></i> Logistic ROC Curve</div>
             <div class="roc-svg-wrap">
-              <svg id="rocCurveSvg" class="roc-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <rect x="10" y="10" width="80" height="80" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.14)" stroke-width="0.5"></rect>
-                <line x1="10" y1="90" x2="90" y2="10" stroke="rgba(255,255,255,0.25)" stroke-width="0.6" stroke-dasharray="2 2"></line>
-                <path id="rocPath" d="" fill="none" stroke="rgba(120,200,255,1)" stroke-width="1.2"></path>
-                <circle id="rocPoint" cx="10" cy="90" r="1.2" fill="rgba(255,165,120,0.95)" style="display:none;"></circle>
-                <text x="50" y="98" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="3.2">False Positive Rate</text>
-                <text x="2.5" y="50" transform="rotate(-90 2.5 50)" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="3.2">True Positive Rate</text>
-              </svg>
+              <div id="rocChart" class="roc-chart"></div>
               <div id="rocEmptyMsg" class="roc-empty">ROC curve will render when prediction probabilities are available.</div>
             </div>
           </div>
@@ -739,11 +733,74 @@
       return { y: y, p: p };
     }
 
-    function renderApproxRocFromAuc(aucValue) {
-      var path = document.getElementById("rocPath");
-      var point = document.getElementById("rocPoint");
+    function renderRocHighchart(points, note) {
+      var chartContainer = document.getElementById("rocChart");
       var empty = document.getElementById("rocEmptyMsg");
-      if (!path || !empty || !isFinite(aucValue)) return false;
+      if (!chartContainer || typeof Highcharts === "undefined") return false;
+
+      var data = (points || []).map(function(pt) { return [pt.fpr, pt.tpr]; });
+      Highcharts.chart("rocChart", {
+        chart: {
+          type: "line",
+          backgroundColor: "transparent",
+          animation: false,
+          spacing: [10, 10, 10, 10]
+        },
+        title: { text: null },
+        credits: { enabled: false },
+        legend: { enabled: false },
+        xAxis: {
+          min: 0, max: 1,
+          title: { text: "False Positive Rate", style: { color: "rgba(255,255,255,0.65)" } },
+          labels: { style: { color: "rgba(255,255,255,0.65)" } },
+          gridLineColor: "rgba(255,255,255,0.08)",
+          lineColor: "rgba(255,255,255,0.25)"
+        },
+        yAxis: {
+          min: 0, max: 1,
+          title: { text: "True Positive Rate", style: { color: "rgba(255,255,255,0.65)" } },
+          labels: { style: { color: "rgba(255,255,255,0.65)" } },
+          gridLineColor: "rgba(255,255,255,0.08)",
+          lineColor: "rgba(255,255,255,0.25)"
+        },
+        tooltip: {
+          backgroundColor: "rgba(6,10,18,0.95)",
+          borderColor: "rgba(120,200,255,0.55)",
+          style: { color: "#eaf1ff" },
+          pointFormat: "FPR: <b>{point.x:.3f}</b><br/>TPR: <b>{point.y:.3f}</b>"
+        },
+        plotOptions: {
+          series: { marker: { enabled: false }, animation: false }
+        },
+        series: [
+          {
+            name: "Random Baseline",
+            type: "line",
+            data: [[0, 0], [1, 1]],
+            color: "rgba(255,255,255,0.28)",
+            dashStyle: "Dash",
+            lineWidth: 1,
+            enableMouseTracking: false
+          },
+          {
+            name: "ROC Curve",
+            data: data,
+            color: "rgba(120,200,255,1)",
+            lineWidth: 3
+          }
+        ]
+      });
+
+      if (empty) {
+        empty.style.display = note ? "block" : "none";
+        if (note) empty.innerText = note;
+      }
+      return true;
+    }
+
+    function renderApproxRocFromAuc(aucValue) {
+      var empty = document.getElementById("rocEmptyMsg");
+      if (!empty || !isFinite(aucValue)) return false;
 
       var auc = Math.max(0.5, Math.min(0.999, aucValue));
       // Parametric family tpr=fpr^alpha with AUC≈1/(alpha+1)
@@ -754,28 +811,12 @@
         var tpr = Math.pow(fpr, alpha);
         pts.push({ fpr: fpr, tpr: tpr });
       }
-      var d = pts.map(function(pt, idx) {
-        var x = 10 + (pt.fpr * 80);
-        var y = 90 - (pt.tpr * 80);
-        return (idx === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2);
-      }).join(" ");
-      path.setAttribute("d", d);
-      if (point) {
-        point.style.display = "block";
-        point.setAttribute("cx", "90");
-        point.setAttribute("cy", "10");
-      }
-      empty.style.display = "block";
-      empty.innerText = "ROC approximated from AUC because row-level prediction probabilities were not provided.";
-      return true;
+      return renderRocHighchart(pts, "ROC approximated from AUC because row-level prediction probabilities were not provided.");
     }
 
     function renderRocCurveFromPredictions(rows) {
-      var svg = document.getElementById("rocCurveSvg");
-      var path = document.getElementById("rocPath");
-      var point = document.getElementById("rocPoint");
       var empty = document.getElementById("rocEmptyMsg");
-      if (!svg || !path || !empty) return;
+      if (!empty) return;
 
       var pairs = (rows || []).map(extractPredictionPair).filter(Boolean);
       var positives = pairs.filter(function(d) { return d.y === 1; }).length;
@@ -783,10 +824,7 @@
       if (pairs.length < 2 || positives === 0 || negatives === 0) {
         var aucFromMetric = parseMaybeNumber((document.getElementById("auc") || {}).innerText);
         if (!renderApproxRocFromAuc(aucFromMetric)) {
-          path.setAttribute("d", "");
-          if (point) point.style.display = "none";
-          empty.style.display = "block";
-          empty.innerText = "ROC curve will render when prediction probabilities are available.";
+          renderRocHighchart([{ fpr: 0, tpr: 0 }, { fpr: 1, tpr: 1 }], "ROC curve will render when prediction probabilities are available.");
         }
         return;
       }
@@ -810,19 +848,7 @@
       var last = rocPoints[rocPoints.length - 1];
       if (last.fpr !== 1 || last.tpr !== 1) rocPoints.push({ fpr: 1, tpr: 1 });
 
-      var d = rocPoints.map(function(pt, idx) {
-        var x = 10 + (pt.fpr * 80);
-        var y = 90 - (pt.tpr * 80);
-        return (idx === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2);
-      }).join(" ");
-      path.setAttribute("d", d);
-
-      if (point) {
-        point.style.display = "block";
-        point.setAttribute("cx", "90");
-        point.setAttribute("cy", "10");
-      }
-      empty.style.display = "none";
+      renderRocHighchart(rocPoints, "");
 
       // Update AUC/Gini if not yet provided by host payload.
       var aucEl = document.getElementById("auc");
@@ -1110,11 +1136,8 @@
       document.getElementById("aiInterpretBtn").style.display = "none";
       logisticPayloadForAI = null;
       latestLogisticPredictions = [];
-      var rocPath = document.getElementById("rocPath");
-      var rocPoint = document.getElementById("rocPoint");
       var rocEmpty = document.getElementById("rocEmptyMsg");
-      if (rocPath) rocPath.setAttribute("d", "");
-      if (rocPoint) rocPoint.style.display = "none";
+      renderRocHighchart([{ fpr: 0, tpr: 0 }, { fpr: 1, tpr: 1 }], "ROC curve will render when prediction probabilities are available.");
       if (rocEmpty) rocEmpty.style.display = "block";
       switchTab("results");
     };
@@ -1191,6 +1214,7 @@
     document.addEventListener("DOMContentLoaded", function() {
       wireNavigation();
       switchTab("results");
+      renderRocHighchart([{ fpr: 0, tpr: 0 }, { fpr: 1, tpr: 1 }], "ROC curve will render when prediction probabilities are available.");
       wireOfficeDialogMessaging();
 
       var threshold = document.getElementById("thresholdSlider");
