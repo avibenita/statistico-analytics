@@ -4589,11 +4589,22 @@
     }
 
     function updateExecutiveKpis(stats) {
-      const r2Text = stats.rSquared || stats.R2 || 'N/A';
-      const adjR2Text = stats.adjRSquared || stats.adjR2 || 'N/A';
-      const rmseText = stats.rootMSE || stats.rmse || 'N/A';
-      const fpText = stats.fPValue || stats.pValue || 'N/A';
-      const nText = stats.observations || stats.validObs || stats.n || 'N/A';
+      const r2Raw = parseNumericValue(stats.rSquared || stats.R2);
+      const adjR2Raw = parseNumericValue(stats.adjRSquared || stats.adjR2);
+      const rmseRaw = parseNumericValue(stats.rootMSE || stats.rmse);
+      const fpRaw = parsePValue(stats.fPValue || stats.pValue);
+      const nRaw = parseNumericValue(stats.observations || stats.validObs || stats.n);
+
+      const r2Text = Number.isNaN(r2Raw) ? 'N/A' : `${(r2Raw * 100).toFixed(2)}%`;
+      const adjR2Text = Number.isNaN(adjR2Raw) ? 'N/A' : `${(adjR2Raw * 100).toFixed(2)}%`;
+      const rmseText = Number.isNaN(rmseRaw) ? 'N/A' : rmseRaw.toFixed(2);
+      let fpText = 'N/A';
+      if (!Number.isNaN(fpRaw)) {
+        fpText = fpRaw < 0.0001 ? '< 0.0001' : fpRaw.toFixed(4);
+      } else if (stats.fPValue || stats.pValue) {
+        fpText = String(stats.fPValue || stats.pValue);
+      }
+      const nText = Number.isNaN(nRaw) ? (stats.observations || stats.validObs || stats.n || 'N/A') : String(Math.round(nRaw));
       const r2Elem = document.getElementById('kpiRSquared');
       const adjElem = document.getElementById('kpiAdjRSquared');
       const rmseElem = document.getElementById('kpiRMSE');
@@ -4604,9 +4615,9 @@
       if (rmseElem) rmseElem.innerText = rmseText;
       if (fpElem) fpElem.innerText = fpText;
       if (nElem) nElem.innerText = nText;
-      applyMetricClass(r2Elem, rSquaredClass(parseNumericValue(r2Text)));
-      applyMetricClass(adjElem, rSquaredClass(parseNumericValue(adjR2Text)));
-      applyMetricClass(fpElem, pValueClass(parsePValue(fpText)));
+      applyMetricClass(r2Elem, rSquaredClass(r2Raw));
+      applyMetricClass(adjElem, rSquaredClass(adjR2Raw));
+      applyMetricClass(fpElem, pValueClass(fpRaw));
     }
 
     function updateInterpretationPanel(stats) {
