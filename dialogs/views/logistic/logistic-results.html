@@ -390,6 +390,26 @@
               </div>
             </div>
           </div>
+          <div class="stat-panel" style="margin-top: 12px;">
+            <div class="stat-panel-heading"><i class="fa-solid fa-bolt"></i> Top Effects (Quick View)</div>
+            <div class="stat-panel-body" style="padding:0;">
+              <div class="table-container" style="margin:0; max-height:260px;">
+                <table class="analysis-table">
+                  <thead>
+                    <tr>
+                      <th>Variable</th>
+                      <th>OR</th>
+                      <th>p-value</th>
+                      <th>Direction</th>
+                    </tr>
+                  </thead>
+                  <tbody id="topEffectsBody">
+                    <tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted); font-style:italic;"><i class="fa-solid fa-hourglass-half"></i> Awaiting coefficient effects...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
           <div class="section-note">Executive view: model size, fit quality, and global significance tests for quick credibility checks.</div>
         </section>
 
@@ -640,6 +660,70 @@
       setText("badgeMcFadden", stats.mcfaddenR2 || stats.McFaddenR2 || "...");
     }
 
+    function parseMaybeNumber(value) {
+      if (value === undefined || value === null) return NaN;
+      var v = String(value).trim();
+      if (!v || v === "—" || v === "N/A") return NaN;
+      if (v.indexOf("<") === 0) v = v.slice(1);
+      if (v.indexOf("%") >= 0) v = v.replace("%", "");
+      var n = Number(v);
+      return isFinite(n) ? n : NaN;
+    }
+
+    function renderTopEffects(rows) {
+      var tbody = document.getElementById("topEffectsBody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      if (!rows || rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No effects available</td></tr>';
+        return;
+      }
+
+      var ranked = rows
+        .filter(function(r) {
+          var name = String(r.Variable || r.variable || "").toLowerCase();
+          return name && name !== "intercept";
+        })
+        .map(function(r) {
+          var pNum = parseMaybeNumber(r.PValue || r.pValue || r.p);
+          var orNum = parseMaybeNumber(r.OR || r.or || r.OddsRatio);
+          return {
+            name: r.Variable || r.variable || "—",
+            or: r.OR || r.or || r.OddsRatio || "—",
+            p: r.PValue || r.pValue || r.p || "—",
+            pNum: pNum,
+            orNum: orNum
+          };
+        })
+        .sort(function(a, b) {
+          var ap = isFinite(a.pNum) ? a.pNum : Number.POSITIVE_INFINITY;
+          var bp = isFinite(b.pNum) ? b.pNum : Number.POSITIVE_INFINITY;
+          return ap - bp;
+        })
+        .slice(0, 5);
+
+      if (ranked.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No non-intercept effects found</td></tr>';
+        return;
+      }
+
+      ranked.forEach(function(row) {
+        var direction = "Neutral";
+        if (isFinite(row.orNum)) {
+          direction = row.orNum > 1 ? "Risk (+)" : (row.orNum < 1 ? "Protective (-)" : "Neutral");
+        }
+
+        var tr = document.createElement("tr");
+        [row.name, row.or, row.p, direction].forEach(function(v) {
+          var td = document.createElement("td");
+          td.textContent = v;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
     window.populateLogisticResults = function(data) {
       var stats = typeof data === "string" ? JSON.parse(data) : data;
 
@@ -716,6 +800,8 @@
         });
         tbody.appendChild(tr);
       });
+
+      renderTopEffects(rows);
 
       logisticPayloadForAI = Object.assign({}, logisticPayloadForAI || {}, { coefficients: rows });
       document.getElementById("aiInterpretBtn").style.display = "inline-block";
@@ -829,6 +915,7 @@
       document.getElementById("coefTableBody").innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:var(--text-muted); font-style:italic;"><i class="fa-solid fa-hourglass-half"></i> Awaiting coefficient results...</td></tr>';
       document.getElementById("predictionTableBody").innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px; color:var(--text-muted); font-style:italic;"><i class="fa-solid fa-hourglass-half"></i> Awaiting predictions...</td></tr>';
       document.getElementById("descriptiveTableBody").innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted); font-style:italic;"><i class="fa-solid fa-hourglass-half"></i> Awaiting descriptive output...</td></tr>';
+      document.getElementById("topEffectsBody").innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted); font-style:italic;"><i class="fa-solid fa-hourglass-half"></i> Awaiting coefficient effects...</td></tr>';
 
       document.getElementById("aiReliability").innerText = "Awaiting assessment...";
       document.getElementById("aiDrivers").innerText = "Awaiting assessment...";
