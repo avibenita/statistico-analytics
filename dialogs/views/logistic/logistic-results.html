@@ -57,7 +57,7 @@
 
     .header-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 
-    .card-body{ padding:12px; flex:1; min-height:0; overflow:auto; }
+    .card-body{ padding:12px; flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; }
 
     .tabs{
       display:flex;
@@ -108,20 +108,29 @@
       box-shadow:0 2px 4px rgba(0,0,0,.2);
       overflow:hidden;
     }
+    .results-top-cards{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .results-top-cards .stat-panel{
+      min-width:0;
+    }
     .compact-card .stat-panel-heading{
-      font-size:.82rem;
-      padding:7px 10px;
+      font-size:.78rem;
+      padding:6px 8px;
     }
-    .compact-card .stat-panel-body{ padding:8px 10px; }
+    .compact-card .stat-panel-body{ padding:6px 8px; }
     .compact-card .stat-field{
-      margin:2px 0;
-      padding:2px 0;
+      margin:1px 0;
+      padding:1px 0;
     }
-    .compact-card .stat-label{ font-size:.82rem; }
+    .compact-card .stat-label{ font-size:.78rem; }
     .compact-card .stat-value{
-      min-width:72px;
-      font-size:.84rem;
-      padding:4px 8px;
+      min-width:64px;
+      font-size:.8rem;
+      padding:3px 7px;
     }
     .stat-panel-heading{
       background:linear-gradient(135deg, rgba(0,51,102,.82), rgba(0,102,204,.62));
@@ -224,12 +233,12 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 13px;
-      height: 13px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       color: var(--text-muted);
       border: 1px solid rgba(255,255,255,0.4);
-      font-size: 0.58rem;
+      font-size: 0.5rem;
       margin-left: 6px;
       margin-right: 6px;
       cursor: help;
@@ -245,31 +254,42 @@
     .info-tip::after{
       content: attr(title);
       position: absolute;
-      left: 0;
+      left: 50%;
       top: 145%;
-      min-width: 220px;
-      max-width: 300px;
+      min-width: 190px;
+      max-width: 260px;
       white-space: normal;
       text-transform: none;
       letter-spacing: normal;
       font-weight: 500;
-      font-size: 0.75rem;
-      line-height: 1.35;
+      font-size: 0.72rem;
+      line-height: 1.28;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       color: #eaf1ff;
-      background: rgba(8,14,24,0.96);
-      border: 1px solid rgba(120,200,255,0.55);
+      background: rgba(6,10,18,0.98);
+      border: 1px solid rgba(120,200,255,0.6);
       border-radius: 8px;
-      padding: 7px 9px;
+      padding: 7px 8px;
       box-shadow: 0 10px 24px rgba(0,0,0,0.45);
       opacity: 0;
-      transform: translateY(-2px);
+      transform: translate(-50%, -2px);
       pointer-events: none;
       transition: opacity .15s ease, transform .15s ease;
       z-index: 50;
     }
     .info-tip:hover::after{
       opacity: 1;
-      transform: translateY(0);
+      transform: translate(-50%, 0);
+    }
+    @media (max-width: 1150px){
+      .results-top-cards{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 760px){
+      .results-top-cards{
+        grid-template-columns:1fr;
+      }
     }
 
     .threshold-wrap{
@@ -335,7 +355,7 @@
         </div>
 
         <section id="tab-results" class="tab-panel active">
-          <div class="stats-container">
+          <div class="stats-container results-top-cards">
             <div class="stat-panel compact-card">
               <div class="stat-panel-heading"><i class="fa-solid fa-info-circle"></i> Model Info</div>
               <div class="stat-panel-body">
