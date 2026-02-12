@@ -60,7 +60,7 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: linear-gradient(135deg, var(--surface-0) 0%, #1a2332 100%);
+      background: linear-gradient(180deg, #0a1118 0%, #0c1620 100%);
       color: var(--text-primary);
       line-height: 1.6;
       padding: 0;
@@ -77,13 +77,63 @@
       height: 100vh;
     }
 
+    /* Hero + workspace separation for stronger visual hierarchy */
+    .hero-shell {
+      background: linear-gradient(180deg, #0a1118 0%, #0c1620 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .hero-shell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,.012) 0px,
+        rgba(255,255,255,.012) 1px,
+        transparent 1px,
+        transparent 64px
+      );
+      opacity: .75;
+    }
+    .hero-title-row {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px 6px;
+    }
+    .hero-title-text {
+      font-size: 14px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--accent-2);
+    }
+    .workspace {
+      margin-top: 10px;
+      padding: 10px 12px 14px;
+      background:
+        radial-gradient(900px 380px at 20% 0%, rgba(61,169,255,.08), transparent 60%),
+        radial-gradient(900px 380px at 80% 0%, rgba(86,224,162,.05), transparent 60%),
+        linear-gradient(180deg, #0b121a, #070c12);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
     /* Sub-Tabs Navigation (Smaller, Different Style) */
     .tabs-nav {
+      position: relative;
+      z-index: 1;
       display: flex;
-      gap: 8px;
-      padding: 12px 20px;
-      background: rgba(12, 22, 36, 0.5);
-      border-bottom: 1px solid rgba(45, 55, 72, 0.5);
+      gap: 18px;
+      padding: 0 20px 8px;
+      background: transparent;
+      border-bottom: 1px solid rgba(255,255,255,.08);
       overflow-x: auto;
       scrollbar-width: none;
       -ms-overflow-style: none;
@@ -94,34 +144,56 @@
     }
 
     .tab-btn {
-      padding: 8px 16px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 6px;
-      color: var(--text-muted);
+      height: 36px;
+      padding: 0 4px;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      color: rgba(255,255,255,.56);
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 650;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: color 0.18s ease, transform 0.18s ease;
       white-space: nowrap;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .tab-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-secondary);
-      border-color: rgba(255, 255, 255, 0.15);
+      color: var(--text-primary);
+      transform: translateY(-1px);
     }
 
     .tab-btn.active {
-      background: linear-gradient(135deg, rgba(120, 200, 255, 0.2), rgba(120, 200, 255, 0.3));
-      color: var(--accent-2);
-      border-color: var(--accent-2);
-      box-shadow: 0 0 12px rgba(120, 200, 255, 0.3);
+      color: var(--text-primary);
+      box-shadow: none;
+    }
+    .tab-btn::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -7px;
+      height: 2px;
+      border-radius: 999px;
+      background: transparent;
+      opacity: 0;
+      transition: opacity 0.18s ease, background 0.18s ease;
+    }
+    .tab-btn.active::after {
+      background: linear-gradient(90deg, var(--accent-2), rgba(120,200,255,.25));
+      opacity: 1;
     }
 
     .tab-btn i {
-      margin-right: 6px;
-      font-size: 11px;
+      margin-right: 0;
+      font-size: 12px;
+      opacity: .62;
+    }
+    .tab-btn.active i {
+      opacity: .92;
     }
 
     /* Tab Content */
@@ -764,25 +836,31 @@
     </div>
 
     <div id="contentArea" style="display: none;">
-      <!-- Tabs Navigation -->
-      <div class="tabs-nav">
-        <button class="tab-btn active" onclick="switchTab('overview')">
-          <i class="fa-solid fa-gauge-high"></i> Overview
-        </button>
-        <button class="tab-btn" onclick="switchTab('plots')">
-          <i class="fa-solid fa-chart-line"></i> Diagnostic Plots
-        </button>
-        <button class="tab-btn" onclick="switchTab('distribution')">
-          <i class="fa-solid fa-chart-column"></i> Distribution
-        </button>
-        <button class="tab-btn" onclick="switchTab('influential')">
-          <i class="fa-solid fa-triangle-exclamation"></i> Influential Obs
-        </button>
-        <button class="tab-btn" onclick="switchTab('assessment')">
-          <i class="fa-solid fa-robot"></i> AI Assessment
-        </button>
+      <div class="hero-shell">
+        <div class="hero-title-row">
+          <div class="hero-title-text"><i class="fa-solid fa-chart-line"></i> Residual Diagnostics</div>
+        </div>
+        <!-- Tabs Navigation -->
+        <div class="tabs-nav">
+          <button class="tab-btn active" onclick="switchTab('overview')">
+            <i class="fa-solid fa-gauge-high"></i> Overview
+          </button>
+          <button class="tab-btn" onclick="switchTab('plots')">
+            <i class="fa-solid fa-chart-line"></i> Diagnostic Plots
+          </button>
+          <button class="tab-btn" onclick="switchTab('distribution')">
+            <i class="fa-solid fa-chart-column"></i> Distribution
+          </button>
+          <button class="tab-btn" onclick="switchTab('influential')">
+            <i class="fa-solid fa-triangle-exclamation"></i> Influential Obs
+          </button>
+          <button class="tab-btn" onclick="switchTab('assessment')">
+            <i class="fa-solid fa-robot"></i> AI Assessment
+          </button>
+        </div>
       </div>
 
+      <div class="workspace">
       <!-- Tab: Overview -->
       <div id="tab-overview" class="tab-content active">
         <!-- Diagnostic Verdict Strip -->
@@ -964,6 +1042,7 @@
         <ul class="ai-findings" id="aiFindings">
           <!-- Populated dynamically -->
         </ul>
+      </div>
       </div>
       </div>
     </div>
