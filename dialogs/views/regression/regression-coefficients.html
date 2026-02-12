@@ -26,6 +26,9 @@
       --border:#2d3748;
       --accent-1:rgb(255,165,120);
       --accent-2:rgb(120,200,255);
+      --success:#4ade80;
+      --warning:#fbbf24;
+      --danger:#fb7185;
       --text-primary:#fff;
       --text-secondary:rgba(255,255,255,0.8);
       --text-muted:rgba(255,255,255,0.6);
@@ -60,6 +63,11 @@
       border-radius:var(--panel-radius); box-shadow:var(--panel-shadow);
       border:1px solid var(--border); overflow:visible;
       display:flex; flex-direction:column;
+      animation:panelFadeIn .3s ease-out;
+    }
+    @keyframes panelFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     /* Hero Section - Completely Separate Design */
     .hero-section {
@@ -348,6 +356,32 @@
     }
 
     /* Stats Container */
+    .kpi-strip{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+      gap:8px;
+      margin:0 0 8px 0;
+    }
+    .kpi-card{
+      background:linear-gradient(145deg,rgba(120,200,255,0.12),rgba(120,200,255,0.04));
+      border:1px solid rgba(120,200,255,0.28);
+      border-radius:6px;
+      padding:7px 8px;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .kpi-label{
+      font-size:.58rem;
+      color:var(--text-muted);
+      text-transform:uppercase;
+      letter-spacing:.4px;
+      margin-bottom:2px;
+    }
+    .kpi-value{
+      font-size:.82rem;
+      font-weight:700;
+      color:var(--accent-2);
+      font-variant-numeric: tabular-nums;
+    }
     .stats-container {
       display: flex;
       gap: 8px;
@@ -364,6 +398,11 @@
       border-radius: 4px;
       padding: 0;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .stat-panel:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
     }
 
     .stat-panel-heading {
@@ -377,6 +416,36 @@
       text-transform: uppercase;
       letter-spacing: 0.3px;
       border-bottom: 1px solid var(--accent-1);
+    }
+    .heading-with-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .collapse-toggle {
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.32);
+      color: #ffffff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.62rem;
+      font-weight: 600;
+      transition: background .2s ease;
+    }
+    .collapse-toggle:hover {
+      background: rgba(255,255,255,0.24);
+    }
+    .collapsible-content {
+      max-height: 3000px;
+      overflow: hidden;
+      transition: max-height .24s ease, opacity .2s ease;
+      opacity: 1;
+    }
+    .collapsible-content.is-collapsed {
+      max-height: 0;
+      opacity: 0;
     }
 
     .stat-panel-body {
@@ -401,6 +470,44 @@
       color: var(--text-secondary);
       font-size: 0.7rem;
     }
+    .metric-help {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      margin-left: 5px;
+      color: var(--text-muted);
+      cursor: help;
+      font-size: 0.65rem;
+      vertical-align: middle;
+    }
+    .metric-tip {
+      position: fixed;
+      left: 0;
+      top: 0;
+      transform: none;
+      width: min(280px, calc(100vw - 16px));
+      background: var(--surface-0);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      font-weight: 400;
+      line-height: 1.35;
+      text-transform: none;
+      letter-spacing: 0;
+      padding: 8px 10px;
+      box-shadow: var(--panel-shadow);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .18s ease;
+      z-index: 9999;
+    }
+    .metric-help:hover .metric-tip,
+    .metric-tip.is-visible {
+      opacity: 1;
+      visibility: visible;
+    }
 
     .stat-value {
       background: linear-gradient(135deg, rgba(120, 200, 255, 0.15), rgba(120, 200, 255, 0.05));
@@ -412,6 +519,32 @@
       color: var(--accent-2);
       font-weight: 700;
       font-size: 0.75rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .metric-good { color: var(--success) !important; border-color: rgba(74, 222, 128, 0.55) !important; }
+    .metric-warning { color: var(--warning) !important; border-color: rgba(251, 191, 36, 0.55) !important; }
+    .metric-bad { color: var(--danger) !important; border-color: rgba(251, 113, 133, 0.55) !important; }
+    .insight-panel {
+      margin: 0 0 8px 0;
+      border: 1px solid rgba(255, 165, 120, 0.35);
+      border-left: 4px solid var(--accent-1);
+      border-radius: 6px;
+      background: rgba(255, 165, 120, 0.08);
+      padding: 8px 10px;
+    }
+    .insight-title {
+      margin: 0 0 6px 0;
+      color: var(--accent-1);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .35px;
+    }
+    .insight-text {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      line-height: 1.4;
     }
 
     .stat-note {
@@ -508,10 +641,11 @@
       color: var(--text-primary);
       border: 1px solid rgba(255, 255, 255, 0.15);
       padding: 4px 6px;
-      text-align: center;
+      text-align: right;
       font-size: 0.7rem;
       white-space: nowrap;
       min-width: 60px;
+      font-variant-numeric: tabular-nums;
     }
 
     .regression-table td:first-child {
@@ -550,6 +684,11 @@
     .regression-table tbody tr:hover {
       background-color: rgba(255, 221, 87, 0.15);
     }
+    .regression-table td.coef-cell { color: var(--accent-2); font-weight: 700; }
+    .regression-table td.ci-cell { color: var(--text-muted); }
+    .regression-table td.pvalue-good { color: var(--success); font-weight: 700; }
+    .regression-table td.pvalue-warning { color: var(--warning); font-weight: 700; }
+    .regression-table td.pvalue-bad { color: var(--danger); font-weight: 700; }
 
     .regression-table tbody tr:nth-child(even) {
       background-color: rgba(240, 248, 255, 0.03);
@@ -2081,6 +2220,13 @@
       <div class="card-body">
         <!-- Tab: Results -->
         <div id="tab-results" class="tab-content active">
+        <div class="kpi-strip" id="kpiStrip">
+          <div class="kpi-card"><div class="kpi-label">R²</div><div id="kpiRSquared" class="kpi-value">...</div></div>
+          <div class="kpi-card"><div class="kpi-label">Adj R²</div><div id="kpiAdjRSquared" class="kpi-value">...</div></div>
+          <div class="kpi-card"><div class="kpi-label">RMSE</div><div id="kpiRMSE" class="kpi-value">...</div></div>
+          <div class="kpi-card"><div class="kpi-label">F-test p</div><div id="kpiFPValue" class="kpi-value">...</div></div>
+          <div class="kpi-card"><div class="kpi-label">n</div><div id="kpiN" class="kpi-value">...</div></div>
+        </div>
         <!-- Stats Panels -->
         <div class="stats-container">
           <div class="stat-panel">
@@ -2113,7 +2259,9 @@
             <div class="stat-panel-heading"><i class="fa-solid fa-chart-bar"></i> Model Fit</div>
             <div class="stat-panel-body">
               <div class="stat-field">
-                <span class="stat-label">R²:</span>
+                <span class="stat-label">R²:
+                  <span class="metric-help"><i class="fa-regular fa-circle-question"></i><span class="metric-tip">Proportion of variance explained by the model. Rules of thumb: &lt; .30 weak, .30-.60 moderate, &gt; .60 strong.</span></span>
+                </span>
                 <span id="rSquared" class="stat-value">...</span>
               </div>
               <div class="stat-field">
@@ -2121,11 +2269,15 @@
                 <span id="adjRSquared" class="stat-value">...</span>
               </div>
               <div class="stat-field">
-                <span class="stat-label">Root MSE:</span>
+                <span class="stat-label">Root MSE:
+                  <span class="metric-help"><i class="fa-regular fa-circle-question"></i><span class="metric-tip">Typical prediction error in the original outcome units. Lower values indicate better predictive precision.</span></span>
+                </span>
                 <span id="rootMSE" class="stat-value">...</span>
               </div>
               <div class="stat-field">
-                <span class="stat-label">AIC:</span>
+                <span class="stat-label">AIC:
+                  <span class="metric-help"><i class="fa-regular fa-circle-question"></i><span class="metric-tip">Model selection metric balancing fit and complexity. Use for comparing models on the same dataset; lower is better.</span></span>
+                </span>
                 <span id="aic" class="stat-value">...</span>
               </div>
               <div class="stat-field">
@@ -2158,10 +2310,18 @@
           </div>
         </div>
 
+        <div class="insight-panel" id="interpretationPanel">
+          <h3 class="insight-title"><i class="fa-solid fa-lightbulb"></i> Interpretation</h3>
+          <p class="insight-text" id="interpretationText">Run a regression to generate a concise model interpretation.</p>
+        </div>
+
         <!-- ANOVA Table Panel -->
         <div class="stat-panel" style="min-width: 100%; margin-top: 8px;">
-          <div class="stat-panel-heading"><i class="fa-solid fa-chart-pie"></i> ANOVA</div>
-          <div class="stat-panel-body" style="padding: 0;">
+          <div class="stat-panel-heading heading-with-actions">
+            <span><i class="fa-solid fa-chart-pie"></i> ANOVA</span>
+            <button class="collapse-toggle" id="toggleAnovaBtn" onclick="toggleSection('anovaPanelBody','toggleAnovaBtn')"><i class="fa-solid fa-chevron-up"></i> Collapse</button>
+          </div>
+          <div class="stat-panel-body collapsible-content" id="anovaPanelBody" style="padding: 0;">
             <div class="table-container" style="margin: 0; border: none; border-radius: 0;">
               <table class="regression-table">
                 <thead>
@@ -2188,8 +2348,11 @@
 
         <!-- Coefficients Table Panel -->
         <div class="stat-panel" style="min-width: 100%; margin-top: 8px;">
-          <div class="stat-panel-heading"><i class="fa-solid fa-table"></i> Coefficients</div>
-          <div class="stat-panel-body" style="padding: 0;">
+          <div class="stat-panel-heading heading-with-actions">
+            <span><i class="fa-solid fa-table"></i> Coefficients</span>
+            <button class="collapse-toggle" id="toggleCoefficientsBtn" onclick="toggleSection('coefficientsBody','toggleCoefficientsBtn')"><i class="fa-solid fa-chevron-up"></i> Collapse</button>
+          </div>
+          <div class="stat-panel-body collapsible-content" id="coefficientsBody" style="padding: 0;">
             <div class="table-container" style="margin: 0; border: none; border-radius: 0;">
               <table class="regression-table">
                 <thead>
@@ -2201,7 +2364,7 @@
                     <th>P-value</th>
                     <th>95% CI Lower</th>
                     <th>95% CI Upper</th>
-                    <th>VIF</th>
+                    <th>VIF <span class="metric-help"><i class="fa-regular fa-circle-question"></i><span class="metric-tip">Variance Inflation Factor. Values &gt; 5 suggest moderate multicollinearity; &gt; 10 suggests high multicollinearity.</span></span></th>
                   </tr>
                 </thead>
                 <tbody id="dataTableBody">
@@ -3653,6 +3816,23 @@
       document.getElementById('fPValue').textContent = results.F_pvalue < 0.0001 ? '< 0.0001' : results.F_pvalue.toFixed(4); // Always 4 decimals for p-value
       document.getElementById('ssModel').textContent = formatNumber(results.SSE);
       document.getElementById('ssResidual').textContent = formatNumber(results.SSR);
+
+      applyMetricClass(document.getElementById('rSquared'), rSquaredClass(results.R2));
+      applyMetricClass(document.getElementById('adjRSquared'), rSquaredClass(results.R2_adj));
+      applyMetricClass(document.getElementById('fPValue'), pValueClass(results.F_pvalue));
+      updateExecutiveKpis({
+        R2: results.R2,
+        adjR2: results.R2_adj,
+        rmse: results.RMSE,
+        pValue: results.F_pvalue < 0.0001 ? '< 0.0001' : results.F_pvalue.toFixed(4),
+        n: results.n
+      });
+      updateInterpretationPanel({
+        R2: results.R2,
+        RMSE: results.RMSE,
+        F_pvalue: results.F_pvalue,
+        n: results.n
+      });
       
       // Populate ANOVA table
       const anovaBody = document.getElementById('anovaTableBody');
@@ -3738,12 +3918,12 @@
           
           row.innerHTML = `
             <td><strong class="${varClass}">${varName}</strong></td>
-            <td>${formatCoef(coef)}${sigIndicator}</td>
+            <td class="coef-cell">${formatCoef(coef)}${sigIndicator}</td>
             <td>${formatSE(results.std_errors[i])}</td>
             <td>${results.t_values[i].toFixed(2)}</td>
-            <td>${results.p_values[i] < 0.0001 ? '< 0.0001' : results.p_values[i].toFixed(4)}</td>
-            <td>${formatCoef(results.CI_lower[i])}</td>
-            <td>${formatCoef(results.CI_upper[i])}</td>
+            <td class="${results.p_values[i] < 0.05 ? 'pvalue-good' : (results.p_values[i] < 0.1 ? 'pvalue-warning' : 'pvalue-bad')}">${results.p_values[i] < 0.0001 ? '< 0.0001' : results.p_values[i].toFixed(4)}</td>
+            <td class="ci-cell">${formatCoef(results.CI_lower[i])}</td>
+            <td class="ci-cell">${formatCoef(results.CI_upper[i])}</td>
             <td>${i === 0 && results.includeIntercept ? '—' : (results.VIF[i - (results.includeIntercept ? 1 : 0)]?.toFixed(2) || '—')}</td>
           `;
           
@@ -4151,6 +4331,139 @@
       });
     })();
 
+    window.toggleSection = function(contentId, buttonId) {
+      const section = document.getElementById(contentId);
+      const button = document.getElementById(buttonId);
+      if (!section || !button) return;
+      const isCollapsed = section.classList.toggle('is-collapsed');
+      button.innerHTML = isCollapsed
+        ? '<i class="fa-solid fa-chevron-down"></i> Expand'
+        : '<i class="fa-solid fa-chevron-up"></i> Collapse';
+    };
+
+    function positionMetricTooltip(helpEl, tipEl) {
+      if (!helpEl || !tipEl) return;
+      const rect = helpEl.getBoundingClientRect();
+      const margin = 8;
+      const tipRect = tipEl.getBoundingClientRect();
+      const tipWidth = tipRect.width || 260;
+      const tipHeight = tipRect.height || 60;
+      let left = rect.left + (rect.width / 2) - (tipWidth / 2);
+      left = Math.max(margin, Math.min(left, window.innerWidth - tipWidth - margin));
+      let top = rect.top - tipHeight - 10;
+      if (top < margin) top = rect.bottom + 10;
+      top = Math.max(margin, Math.min(top, window.innerHeight - tipHeight - margin));
+      tipEl.style.left = `${left}px`;
+      tipEl.style.top = `${top}px`;
+    }
+
+    function initMetricTooltips() {
+      const helps = document.querySelectorAll('.metric-help');
+      helps.forEach(helpEl => {
+        const tipEl = helpEl.querySelector('.metric-tip');
+        if (!tipEl) return;
+        helpEl.removeAttribute('title');
+        const icon = helpEl.querySelector('i');
+        if (icon) icon.removeAttribute('title');
+        const show = () => {
+          tipEl.classList.add('is-visible');
+          positionMetricTooltip(helpEl, tipEl);
+        };
+        const hide = () => tipEl.classList.remove('is-visible');
+        helpEl.addEventListener('mouseenter', show);
+        helpEl.addEventListener('mouseleave', hide);
+      });
+
+      window.addEventListener('scroll', () => {
+        document.querySelectorAll('.metric-help .metric-tip.is-visible').forEach(tipEl => {
+          const helpEl = tipEl.closest('.metric-help');
+          positionMetricTooltip(helpEl, tipEl);
+        });
+      }, true);
+      window.addEventListener('resize', () => {
+        document.querySelectorAll('.metric-help .metric-tip.is-visible').forEach(tipEl => {
+          const helpEl = tipEl.closest('.metric-help');
+          positionMetricTooltip(helpEl, tipEl);
+        });
+      });
+    }
+
+    function parseNumericValue(value) {
+      if (value === null || value === undefined) return NaN;
+      if (typeof value === 'number') return value;
+      const clean = String(value).replace(/,/g, '').trim();
+      const match = clean.match(/-?\d*\.?\d+(?:e[+-]?\d+)?/i);
+      return match ? parseFloat(match[0]) : NaN;
+    }
+
+    function parsePValue(value) {
+      if (value === null || value === undefined) return NaN;
+      const text = String(value).trim();
+      if (!text) return NaN;
+      return parseNumericValue(text);
+    }
+
+    function applyMetricClass(element, metricClass) {
+      if (!element) return;
+      element.classList.remove('metric-good', 'metric-warning', 'metric-bad');
+      if (metricClass) element.classList.add(metricClass);
+    }
+
+    function rSquaredClass(value) {
+      if (Number.isNaN(value)) return '';
+      if (value < 0.3) return 'metric-bad';
+      if (value < 0.6) return 'metric-warning';
+      return 'metric-good';
+    }
+
+    function pValueClass(value) {
+      if (Number.isNaN(value)) return '';
+      return value < 0.05 ? 'metric-good' : 'metric-warning';
+    }
+
+    function updateExecutiveKpis(stats) {
+      const r2Text = stats.rSquared || stats.R2 || 'N/A';
+      const adjR2Text = stats.adjRSquared || stats.adjR2 || 'N/A';
+      const rmseText = stats.rootMSE || stats.rmse || 'N/A';
+      const fpText = stats.fPValue || stats.pValue || 'N/A';
+      const nText = stats.observations || stats.validObs || stats.n || 'N/A';
+      const r2Elem = document.getElementById('kpiRSquared');
+      const adjElem = document.getElementById('kpiAdjRSquared');
+      const rmseElem = document.getElementById('kpiRMSE');
+      const fpElem = document.getElementById('kpiFPValue');
+      const nElem = document.getElementById('kpiN');
+      if (r2Elem) r2Elem.innerText = r2Text;
+      if (adjElem) adjElem.innerText = adjR2Text;
+      if (rmseElem) rmseElem.innerText = rmseText;
+      if (fpElem) fpElem.innerText = fpText;
+      if (nElem) nElem.innerText = nText;
+      applyMetricClass(r2Elem, rSquaredClass(parseNumericValue(r2Text)));
+      applyMetricClass(adjElem, rSquaredClass(parseNumericValue(adjR2Text)));
+      applyMetricClass(fpElem, pValueClass(parsePValue(fpText)));
+    }
+
+    function updateInterpretationPanel(stats) {
+      const el = document.getElementById('interpretationText');
+      if (!el) return;
+      const r2 = parseNumericValue(stats.rSquared || stats.R2);
+      const rmse = stats.rootMSE || stats.rmse || stats.RMSE || 'N/A';
+      const fP = parsePValue(stats.fPValue || stats.pValue || stats.F_pvalue);
+      const n = stats.observations || stats.validObs || stats.n || 'N/A';
+      let fitStatement = 'Model fit could not be evaluated from current outputs.';
+      if (!Number.isNaN(r2)) {
+        if (r2 < 0.3) fitStatement = `The model explains ${(r2 * 100).toFixed(1)}% of variance, indicating weak explanatory power.`;
+        else if (r2 < 0.6) fitStatement = `The model explains ${(r2 * 100).toFixed(1)}% of variance, showing moderate explanatory power.`;
+        else fitStatement = `The model explains ${(r2 * 100).toFixed(1)}% of variance, indicating strong explanatory power.`;
+      }
+      let sigStatement = 'Overall significance is not available.';
+      if (!Number.isNaN(fP)) {
+        sigStatement = fP < 0.05
+          ? 'The F-test is statistically significant, so at least one predictor contributes to the model.'
+          : 'The F-test is not statistically significant, so predictor effects should be interpreted cautiously.';
+      }
+      el.innerText = `${fitStatement} RMSE = ${rmse}. Sample size n = ${n}. ${sigStatement}`;
+    }
+
     // Function to populate the panels dynamically
     function populatePanels(data) {
       const stats = JSON.parse(data);
@@ -4177,6 +4490,12 @@
       document.getElementById('fPValue').innerText = stats.fPValue || stats.pValue || 'N/A';
       document.getElementById('ssModel').innerText = stats.ssModel || stats.SSR || 'N/A';
       document.getElementById('ssResidual').innerText = stats.ssResidual || stats.SSE || 'N/A';
+
+      applyMetricClass(document.getElementById('rSquared'), rSquaredClass(parseNumericValue(stats.rSquared || stats.R2)));
+      applyMetricClass(document.getElementById('adjRSquared'), rSquaredClass(parseNumericValue(stats.adjRSquared || stats.adjR2)));
+      applyMetricClass(document.getElementById('fPValue'), pValueClass(parsePValue(stats.fPValue || stats.pValue)));
+      updateExecutiveKpis(stats);
+      updateInterpretationPanel(stats);
       
       // Store stats for AI interpretation
       window.regressionStatsData = stats;
@@ -4263,12 +4582,43 @@
         return tr;
       }
       
+      function valueByKeys(row, keys) {
+        for (const key of keys) {
+          if (row[key] !== undefined && row[key] !== null) return row[key];
+        }
+        return '—';
+      }
+
+      function classifyPValueCell(td, value) {
+        const p = parsePValue(value);
+        if (Number.isNaN(p)) return;
+        td.classList.remove('pvalue-good', 'pvalue-warning', 'pvalue-bad');
+        if (p < 0.05) td.classList.add('pvalue-good');
+        else if (p < 0.1) td.classList.add('pvalue-warning');
+        else td.classList.add('pvalue-bad');
+      }
+
       // Helper function to create a data row
       function createDataRow(row) {
         const tr = document.createElement('tr');
-        Object.values(row).forEach(value => {
+        const columns = [
+          { keys: ['Variable', 'variable'], type: 'var' },
+          { keys: ['Coefficient', 'coef', 'Estimate', 'estimate'], type: 'coef' },
+          { keys: ['Std. Error', 'StdError', 'SE', 'stdError', 'std_error'], type: 'num' },
+          { keys: ['t-value', 'tValue', 't', 'T'], type: 'num' },
+          { keys: ['P-value', 'p-value', 'pValue', 'p', 'P'], type: 'p' },
+          { keys: ['95% CI Lower', 'CI_Lower', 'ciLower', 'lowerCI', 'lower'], type: 'ci' },
+          { keys: ['95% CI Upper', 'CI_Upper', 'ciUpper', 'upperCI', 'upper'], type: 'ci' },
+          { keys: ['VIF', 'vif'], type: 'num' }
+        ];
+
+        columns.forEach(col => {
+          const value = valueByKeys(row, col.keys);
           const td = document.createElement('td');
           td.textContent = value;
+          if (col.type === 'coef') td.classList.add('coef-cell');
+          if (col.type === 'ci') td.classList.add('ci-cell');
+          if (col.type === 'p') classifyPValueCell(td, value);
           tr.appendChild(td);
         });
         return tr;
@@ -4399,7 +4749,33 @@
         ['validObs', 'includeIntercept', 'numNumericVars', 'numCategoricalVars', 'degreesOfFreedom', 
          'rSquared', 'adjRSquared', 'rootMSE', 'aic', 'bic', 'fStatistic', 'fPValue', 'ssModel', 'ssResidual'].forEach(id => {
           const elem = document.getElementById(id);
-          if (elem) elem.innerText = '...';
+          if (elem) {
+            elem.innerText = '...';
+            elem.classList.remove('metric-good', 'metric-warning', 'metric-bad');
+          }
+        });
+
+        ['kpiRSquared', 'kpiAdjRSquared', 'kpiRMSE', 'kpiFPValue', 'kpiN'].forEach(id => {
+          const elem = document.getElementById(id);
+          if (elem) {
+            elem.innerText = '...';
+            elem.classList.remove('metric-good', 'metric-warning', 'metric-bad');
+          }
+        });
+
+        const interpretationText = document.getElementById('interpretationText');
+        if (interpretationText) {
+          interpretationText.innerText = 'Run a regression to generate a concise model interpretation.';
+        }
+
+        [
+          { bodyId: 'anovaPanelBody', btnId: 'toggleAnovaBtn' },
+          { bodyId: 'coefficientsBody', btnId: 'toggleCoefficientsBtn' }
+        ].forEach(item => {
+          const body = document.getElementById(item.bodyId);
+          const btn = document.getElementById(item.btnId);
+          if (body) body.classList.remove('is-collapsed');
+          if (btn) btn.innerHTML = '<i class="fa-solid fa-chevron-up"></i> Collapse';
         });
         
         // Hide equation section and toggle button
@@ -4437,8 +4813,26 @@
         const elem = document.getElementById(id);
         if (elem && (elem.innerText === '' || elem.innerText === 'undefined')) {
           elem.innerText = '...';
+          elem.classList.remove('metric-good', 'metric-warning', 'metric-bad');
         }
       });
+
+      ['kpiRSquared', 'kpiAdjRSquared', 'kpiRMSE', 'kpiFPValue', 'kpiN'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem && (elem.innerText === '' || elem.innerText === 'undefined')) {
+          elem.innerText = '...';
+        }
+        if (elem) {
+          elem.classList.remove('metric-good', 'metric-warning', 'metric-bad');
+        }
+      });
+
+      const interpretationText = document.getElementById('interpretationText');
+      if (interpretationText && !interpretationText.innerText.trim()) {
+        interpretationText.innerText = 'Run a regression to generate a concise model interpretation.';
+      }
+
+      initMetricTooltips();
       
       // Notify VB6 that the regression dashboard is ready for AI responses
       console.log('📡 Regression dashboard DOM loaded');
