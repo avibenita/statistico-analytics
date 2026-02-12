@@ -277,7 +277,7 @@
     }
     
     :root[data-theme="light"] .save-analysis-btn {
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 3px 8px rgba(15, 23, 42, 0.12);
     }
     
     :root[data-theme="light"] .dropdown-btn {
@@ -813,15 +813,15 @@
       transition: all .3s ease;
       cursor: pointer;
       border-radius: 8px;
-      background: linear-gradient(145deg, #10b981, #059669) !important;
-      border: 2px solid #10b981 !important;
+      background: linear-gradient(145deg, rgba(148, 163, 184, 0.18), rgba(100, 116, 139, 0.16)) !important;
+      border: 1px solid rgba(148, 163, 184, 0.45) !important;
       color: #ffffff !important;
       padding: 10px 20px;
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 650;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, .15);
+      box-shadow: 0 3px 8px rgba(2, 6, 23, 0.35), inset 0 1px 0 rgba(255, 255, 255, .12);
       display: flex;
       align-items: center;
       gap: 10px;
@@ -829,9 +829,25 @@
     
     .save-analysis-btn:hover {
       transform: translateY(-2px);
-      background: linear-gradient(145deg, #059669, #047857) !important;
-      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.6), 0 0 20px rgba(16, 185, 129, 0.3);
-      border-color: #059669 !important;
+      box-shadow: 0 5px 12px rgba(2, 6, 23, 0.45);
+    }
+    .save-model-btn {
+      background: linear-gradient(145deg, rgba(16, 185, 129, 0.24), rgba(5, 150, 105, 0.2)) !important;
+      border-color: rgba(16, 185, 129, 0.75) !important;
+      color: #d1fae5 !important;
+    }
+    .save-model-btn:hover {
+      background: linear-gradient(145deg, rgba(16, 185, 129, 0.32), rgba(5, 150, 105, 0.28)) !important;
+      border-color: rgba(16, 185, 129, 0.95) !important;
+    }
+    .save-html-btn {
+      background: linear-gradient(145deg, rgba(59, 130, 246, 0.16), rgba(37, 99, 235, 0.14)) !important;
+      border-color: rgba(96, 165, 250, 0.7) !important;
+      color: #dbeafe !important;
+    }
+    .save-html-btn:hover {
+      background: linear-gradient(145deg, rgba(59, 130, 246, 0.24), rgba(37, 99, 235, 0.2)) !important;
+      border-color: rgba(147, 197, 253, 0.95) !important;
     }
     
     .save-analysis-btn:active {
@@ -1170,6 +1186,7 @@
     /* Tab Navigation - Visually Separated from Hero */
     .tab-navigation {
       display: flex;
+      align-items: flex-end;
       gap: 8px;
       background: var(--surface-2);
       padding: 12px 16px 0 16px;
@@ -1177,6 +1194,33 @@
       overflow-x: auto;
       scrollbar-width: thin;
       margin-top: 12px; /* Space from hero */
+    }
+    .tab-controls-right {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 8px;
+      white-space: nowrap;
+    }
+    .tab-decimal-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-decimal-select {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
     }
     
     .tab-button {
@@ -2148,40 +2192,14 @@
               <i class="fa-solid fa-moon" id="themeIcon"></i>
             </button>
             
-            <!-- View Mode Toggle -->
-            <div class="hero-control-group">
-              <label>
-                <i class="fa-solid fa-eye"></i> View:
-              </label>
-              <select id="viewModeSelect" onchange="switchViewMode()">
-                <option value="tabbed" selected>Tabbed</option>
-                <option value="single">Single Page</option>
-              </select>
-            </div>
-
             <!-- Decimal Precision Control -->
-            <div class="hero-control-group">
-              <label for="decimalSelect">
-                <i class="fa-solid fa-hashtag"></i> Decimals:
-              </label>
-              <select id="decimalSelect" onchange="updateDecimalPrecision()">
-                <option value="auto">Auto</option>
-                <option value="0">0</option>
-                <option value="1">1</option>
-                <option value="2" selected>2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-              </select>
-            </div>
-            
             <!-- Save Analysis Button -->
-            <button class="save-analysis-btn" id="saveAnalysisBtn" onclick="saveCurrentRegressionAnalysis()" title="Save this model configuration to the workbook">
+            <button class="save-analysis-btn save-model-btn" id="saveAnalysisBtn" onclick="saveCurrentRegressionAnalysis()" title="Save this model configuration to the workbook">
               <i class="fa-solid fa-floppy-disk"></i> Save Model
             </button>
 
             <!-- Export HTML Snapshot -->
-            <button class="save-analysis-btn" id="saveHtmlBtn" onclick="exportResultsAsHtml()" title="Download a static HTML snapshot of the current results view">
+            <button class="save-analysis-btn save-html-btn" id="saveHtmlBtn" onclick="exportResultsAsHtml()" title="Download a static HTML snapshot of the current results view">
               <i class="fa-solid fa-file-code"></i> Save HTML
             </button>
             
@@ -2220,6 +2238,20 @@
         <button class="tab-button" onclick="switchTab('ai-assessment')" data-tab="ai-assessment">
           <i class="fa-solid fa-brain"></i> AI Assessment
         </button>
+        <div class="tab-controls-right">
+          <label class="tab-decimal-label" for="decimalSelect">
+            <i class="fa-solid fa-hashtag"></i> Decimals:
+          </label>
+          <select id="decimalSelect" class="tab-decimal-select" onchange="updateDecimalPrecision()">
+            <option value="auto">Auto</option>
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
       </div>
 
       <div class="card-body">
@@ -2965,6 +2997,7 @@
     // Function to switch between tabbed and single-page views
     function switchViewMode() {
       const select = document.getElementById('viewModeSelect');
+      if (!select) return;
       const viewMode = select.value;
       const tabbedView = document.querySelector('.tabbed-view-container');
       const singlePageView = document.getElementById('singlePageView');
@@ -3426,6 +3459,26 @@
      */
     async function exportResultsAsHtml() {
       try {
+        // Ensure lazy tabs are populated before snapshot.
+        if (!window.residualsLoaded) {
+          try { loadResidualsTab(); window.residualsLoaded = true; } catch (e) {}
+        }
+        if (!window.correlationsLoaded) {
+          try { loadCorrelationsTab(); window.correlationsLoaded = true; } catch (e) {}
+        }
+        if (!window.descriptiveLoaded) {
+          try { loadDescriptiveTab(); window.descriptiveLoaded = true; } catch (e) {}
+        }
+        if (!window.predictionsLoaded) {
+          try { initializePredictions(); window.predictionsLoaded = true; } catch (e) {}
+        }
+        if (!window.ancovaLoaded && typeof initializeANCOVA === 'function') {
+          try { initializeANCOVA(); window.ancovaLoaded = true; } catch (e) {}
+        }
+
+        // Let dynamic tab content render before cloning.
+        await new Promise(resolve => setTimeout(resolve, 250));
+
         const clone = document.documentElement.cloneNode(true);
 
         // Preserve form control state (select/input/textarea).
@@ -3468,6 +3521,38 @@
             // If toDataURL fails, keep original canvas markup.
           }
         });
+
+        // Inline iframe content when same-origin so exported file contains tab details.
+        const sourceIframes = document.querySelectorAll('iframe');
+        const cloneIframes = clone.querySelectorAll('iframe');
+        sourceIframes.forEach((frame, idx) => {
+          const cloneFrame = cloneIframes[idx];
+          if (!cloneFrame) return;
+          try {
+            const doc = frame.contentDocument;
+            if (doc && doc.documentElement) {
+              cloneFrame.setAttribute('srcdoc', '<!DOCTYPE html>\n' + doc.documentElement.outerHTML);
+              cloneFrame.removeAttribute('src');
+            }
+          } catch (e) {
+            // Cross-origin or inaccessible iframe; keep original src.
+          }
+        });
+
+        // Export all tab sections as a single complete report.
+        const tabbedView = clone.querySelector('.tabbed-view-container');
+        if (tabbedView) tabbedView.classList.remove('hidden');
+        const singlePageView = clone.querySelector('#singlePageView');
+        if (singlePageView) {
+          singlePageView.classList.remove('active');
+          singlePageView.style.display = 'none';
+        }
+        clone.querySelectorAll('.tab-content').forEach(section => {
+          section.classList.add('active');
+          section.style.display = 'block';
+        });
+        const tabNav = clone.querySelector('.tab-navigation');
+        if (tabNav) tabNav.style.display = 'none';
 
         // Static export: remove scripts to avoid re-running app logic on open.
         clone.querySelectorAll('script').forEach(script => script.remove());
