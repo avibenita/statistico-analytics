@@ -721,19 +721,53 @@
       if (!v || v === "—" || v === "N/A") return NaN;
       if (v.indexOf("<") === 0) v = v.slice(1);
       if (v.indexOf("%") >= 0) v = v.replace("%", "");
+      // Handle locale decimal comma (e.g., "0,523")
+      if (v.indexOf(",") >= 0 && v.indexOf(".") < 0) v = v.replace(",", ".");
       var n = Number(v);
       return isFinite(n) ? n : NaN;
     }
 
     function extractPredictionPair(row) {
-      var observedRaw = row.Observed || row.observed || row.Actual || row.actual || row.Y || row.y;
-      var probRaw = row["Predicted Probability"] || row.Probability || row.predictedProbability || row.probability || row.prob || row.Pred || row.pred;
+      var observedRaw = row.Observed || row.observed || row.Actual || row.actual || row.Y || row.y || row.True || row.trueLabel;
+      var probRaw = row["Predicted Probability"] || row.Probability || row.predictedProbability || row.probability || row.prob || row.Pred || row.pred || row.Score || row.score || row.Phat || row.pHat;
       var y = parseMaybeNumber(observedRaw);
       var p = parseMaybeNumber(probRaw);
       if (!isFinite(y) || !isFinite(p)) return null;
       y = y >= 0.5 ? 1 : 0;
+      if (p > 1 && p <= 100) p = p / 100;
       p = Math.max(0, Math.min(1, p));
       return { y: y, p: p };
+    }
+
+    function renderApproxRocFromAuc(aucValue) {
+      var path = document.getElementById("rocPath");
+      var point = document.getElementById("rocPoint");
+      var empty = document.getElementById("rocEmptyMsg");
+      if (!path || !empty || !isFinite(aucValue)) return false;
+
+      var auc = Math.max(0.5, Math.min(0.999, aucValue));
+      // Parametric family tpr=fpr^alpha with AUC≈1/(alpha+1)
+      var alpha = (1 / auc) - 1;
+      var pts = [];
+      for (var i = 0; i <= 40; i++) {
+        var fpr = i / 40;
+        var tpr = Math.pow(fpr, alpha);
+        pts.push({ fpr: fpr, tpr: tpr });
+      }
+      var d = pts.map(function(pt, idx) {
+        var x = 10 + (pt.fpr * 80);
+        var y = 90 - (pt.tpr * 80);
+        return (idx === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2);
+      }).join(" ");
+      path.setAttribute("d", d);
+      if (point) {
+        point.style.display = "block";
+        point.setAttribute("cx", "90");
+        point.setAttribute("cy", "10");
+      }
+      empty.style.display = "block";
+      empty.innerText = "ROC approximated from AUC because row-level prediction probabilities were not provided.";
+      return true;
     }
 
     function renderRocCurveFromPredictions(rows) {
@@ -747,9 +781,13 @@
       var positives = pairs.filter(function(d) { return d.y === 1; }).length;
       var negatives = pairs.length - positives;
       if (pairs.length < 2 || positives === 0 || negatives === 0) {
-        path.setAttribute("d", "");
-        if (point) point.style.display = "none";
-        empty.style.display = "block";
+        var aucFromMetric = parseMaybeNumber((document.getElementById("auc") || {}).innerText);
+        if (!renderApproxRocFromAuc(aucFromMetric)) {
+          path.setAttribute("d", "");
+          if (point) point.style.display = "none";
+          empty.style.display = "block";
+          empty.innerText = "ROC curve will render when prediction probabilities are available.";
+        }
         return;
       }
 
@@ -886,6 +924,9 @@
       setText("topDecileLift", stats.topDecileLift, "...");
       setText("gain20", stats.gain20, "...");
       setText("gain40", stats.gain40, "...");
+      if ((!latestLogisticPredictions || latestLogisticPredictions.length === 0) && (stats.auc || stats.AUC)) {
+        renderApproxRocFromAuc(parseMaybeNumber(stats.auc || stats.AUC));
+      }
 
       setText("acc", stats.accuracy || stats.Accuracy, "...");
       setText("sens", stats.sensitivity || stats.Sensitivity, "...");
