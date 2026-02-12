@@ -1153,8 +1153,46 @@
           showEmptyState();
         }
       } else {
-        showEmptyState();
+        // Standalone browser preview: show demo diagnostics instead of empty screen.
+        if (typeof Office === 'undefined' && !isInIframe) {
+          console.log('🧪 No payload found; loading standalone demo residual data');
+          loadDemoResidualData();
+        } else {
+          showEmptyState();
+        }
       }
+    }
+
+    function loadDemoResidualData() {
+      const n = 36;
+      const residuals = [];
+      const fitted = [];
+      const yVector = [];
+      const xMatrix = [];
+      for (let i = 0; i < n; i++) {
+        const x = i + 1;
+        const fit = 20 + (x * 1.4);
+        const noise = (Math.sin(i * 0.65) * 5.2) + (Math.cos(i * 0.33) * 2.1);
+        fitted.push(fit);
+        residuals.push(noise);
+        yVector.push(fit + noise);
+        xMatrix.push([x, x * 0.3 + 2]);
+      }
+
+      residualData = {
+        fittedValues: fitted,
+        yVector,
+        xMatrix,
+        intercept: true,
+        results: {
+          residuals,
+          fitted,
+          k: 3,
+          n
+        }
+      };
+      regressionResults = residualData.results;
+      displayDiagnostics();
     }
 
     function showEmptyState() {

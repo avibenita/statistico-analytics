@@ -1224,63 +1224,65 @@
     }
     
     .tab-button {
-      padding: 12px 24px;
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-bottom: none;
-      color: var(--text-muted);
-      font-size: 14px;
-      font-weight: 500;
+      height: 38px;
+      padding: 0 8px;
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.58);
+      font-size: 13px;
+      font-weight: 650;
       cursor: pointer;
-      border-radius: 12px 12px 0 0;
-      transition: all 0.3s ease;
+      border-radius: 0;
+      transition: color .18s ease, transform .18s ease;
       position: relative;
       white-space: nowrap;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       position: relative;
-      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: none;
     }
     
     .tab-button::before {
       content: '';
       position: absolute;
-      bottom: 0;
+      bottom: -9px;
       left: 0;
       right: 0;
-      height: 3px;
+      height: 2px;
+      border-radius: 999px;
       background: transparent;
-      transition: all 0.3s ease;
+      opacity: 0;
+      transition: opacity .18s ease, background .18s ease;
     }
     
     .tab-button:hover {
-      background: rgba(255, 165, 120, 0.15);
       color: var(--text-primary);
-      transform: translateY(-2px);
-      border-color: rgba(255, 165, 120, 0.3);
+      transform: translateY(-1px);
     }
     
     .tab-button.active {
-      background: rgba(12, 22, 36, 0.95);
-      color: var(--accent-1);
-      font-weight: 600;
-      border-color: var(--accent-1);
-      box-shadow: 0 -4px 16px rgba(255, 165, 120, 0.3);
+      background: transparent;
+      color: var(--text-primary);
+      font-weight: 700;
+      border-color: transparent;
+      box-shadow: none;
       transform: translateY(0);
     }
     
     .tab-button.active::before {
       background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+      opacity: 1;
     }
     
     .tab-button i {
-      font-size: 18px;
-      transition: transform 0.3s ease;
+      font-size: 14px;
+      opacity: .62;
+      transition: opacity .18s ease;
     }
     
     .tab-button.active i {
-      transform: scale(1.1);
+      opacity: .9;
     }
     
     .tab-content {
@@ -4263,7 +4265,7 @@
       console.log('📊 Loading residuals tab...');
       const panel = document.getElementById('residualsPanel');
       const baseUrl = window.location.href.split('/regression/')[0];
-      const iframeUrl = `${baseUrl}/regression/regression-residuals.html`;
+      const iframeUrl = `${baseUrl}/regression/regression-residuals.html?v=${Date.now()}`;
       console.log('Loading iframe:', iframeUrl);
       
       const iframe = document.createElement('iframe');
