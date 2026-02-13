@@ -647,13 +647,13 @@
 
     function sendToHost(cmd, data) {
       try {
+        if (typeof Office !== "undefined" && Office.context && Office.context.ui && typeof Office.context.ui.messageParent === "function") {
+          Office.context.ui.messageParent(JSON.stringify({ action: "HOST_EVENT", cmd: cmd, data: data || {} }));
+          return;
+        }
         if (typeof vbHost !== "undefined" && vbHost && typeof vbHost.RaiseMessageEvent === "function") {
           var dataStr = typeof data === "string" ? data : JSON.stringify(data || {});
           vbHost.RaiseMessageEvent(cmd, dataStr);
-          return;
-        }
-        if (typeof Office !== "undefined" && Office.context && Office.context.ui && typeof Office.context.ui.messageParent === "function") {
-          Office.context.ui.messageParent(JSON.stringify({ action: "HOST_EVENT", cmd: cmd, data: data || {} }));
         }
       } catch (e) {
         console.error("Error sending to host:", e);
@@ -1080,6 +1080,8 @@
       setDecimalPrecision();
       var applyRotationBtn = document.getElementById("applyRotationBtn");
       if (applyRotationBtn) applyRotationBtn.addEventListener("click", applyRotationFromResults);
+      var rotationSelect = document.getElementById("rotationApplySelect");
+      if (rotationSelect) rotationSelect.addEventListener("change", applyRotationFromResults);
       if (typeof Office !== "undefined" && typeof Office.onReady === "function") {
         Office.onReady(function() {
           initOfficeBridge();
