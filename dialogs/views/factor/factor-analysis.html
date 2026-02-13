@@ -631,6 +631,7 @@
   <script>
     let factorPayloadForAI = null;
     let globalDecimalPrecision = "auto";
+    let officeBridgeReady = false;
 
     function sendToHost(cmd, data) {
       try {
@@ -1042,13 +1043,29 @@
       }
     }
 
+    function initOfficeBridge() {
+      if (officeBridgeReady) return;
+      officeBridgeReady = true;
+      wireOfficeDialogMessaging();
+      // Initial ready ping + retry helps when host message channels warm up slowly.
+      sendToHost("factorDashboardReady", {});
+      setTimeout(function() { sendToHost("factorDashboardReady", {}); }, 400);
+      setTimeout(function() { sendToHost("factorDashboardReady", {}); }, 1200);
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
       wireNavigation();
       loadSavedTheme();
       switchTab("suitability");
       setDecimalPrecision();
-      wireOfficeDialogMessaging();
-      sendToHost("factorDashboardReady", {});
+      if (typeof Office !== "undefined" && typeof Office.onReady === "function") {
+        Office.onReady(function() {
+          initOfficeBridge();
+        });
+      } else {
+        // Standalone/browser preview fallback.
+        setTimeout(initOfficeBridge, 0);
+      }
     });
   </script>
 </body>
