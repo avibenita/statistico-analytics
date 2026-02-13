@@ -539,6 +539,18 @@
               <div class="stat-panel">
                 <div class="stat-panel-heading"><i class="fa-solid fa-compass-drafting"></i> Rotation Overview</div>
                 <div class="stat-panel-body">
+                  <div class="stat-field">
+                    <span class="stat-label">Apply Rotation:</span>
+                    <span class="stat-value" style="display:flex; align-items:center; gap:8px; justify-content:flex-end;">
+                      <select id="rotationApplySelect" style="min-width:180px; background:rgba(15,23,42,0.95); color:#cde6ff; border:1px solid rgba(120,200,255,0.35); border-radius:8px; padding:6px 8px;">
+                        <option value="Varimax">Varimax</option>
+                        <option value="Promax">Promax (Oblique)</option>
+                        <option value="Oblimin">Oblimin (Oblique)</option>
+                        <option value="None">None</option>
+                      </select>
+                      <button id="applyRotationBtn" class="hero-action-btn" style="padding:6px 10px; font-size:12px;">Apply</button>
+                    </span>
+                  </div>
                   <div class="stat-field"><span class="stat-label">Rotation Method:</span><span class="stat-value" id="rotationMethod">...</span></div>
                   <div class="stat-field"><span class="stat-label">Loading Cutoff:</span><span class="stat-value" id="loadingCutoff">...</span></div>
                   <div class="stat-field"><span class="stat-label">Cross-loading Count:</span><span class="stat-value" id="crossLoadingCount">...</span></div>
@@ -847,11 +859,19 @@
       setText("loadingCutoff", formatNumber(d.loadingCutoff), "...");
       setText("crossLoadingCount", d.crossLoadingCount, "...");
       setText("phiMax", formatNumber(d.phiMax), "...");
+      var rotationSelect = document.getElementById("rotationApplySelect");
+      if (rotationSelect && d.rotationMethod) rotationSelect.value = d.rotationMethod;
       var cols = d.columns || ["Variable", "Factor 1"];
       renderSimpleTableHead("loadingsHead", cols);
       renderSimpleTableBody("loadingsBody", d.rows || [], cols);
       factorPayloadForAI = Object.assign({}, factorPayloadForAI || {}, { rotation: d });
     };
+
+    function applyRotationFromResults() {
+      var rotationSelect = document.getElementById("rotationApplySelect");
+      if (!rotationSelect) return;
+      sendToHost("factorRotationChanged", { rotationMethod: rotationSelect.value });
+    }
 
     window.populateFactorDiagnostics = function(data) {
       var d = typeof data === "string" ? JSON.parse(data) : data || {};
@@ -1058,6 +1078,8 @@
       loadSavedTheme();
       switchTab("suitability");
       setDecimalPrecision();
+      var applyRotationBtn = document.getElementById("applyRotationBtn");
+      if (applyRotationBtn) applyRotationBtn.addEventListener("click", applyRotationFromResults);
       if (typeof Office !== "undefined" && typeof Office.onReady === "function") {
         Office.onReady(function() {
           initOfficeBridge();

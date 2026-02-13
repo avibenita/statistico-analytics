@@ -522,7 +522,17 @@ function openFactorResultsDialog() {
         factorDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
           try {
             const message = JSON.parse(arg.message);
-            if (message.action === "ready" || message.action === "HOST_EVENT") {
+            if (message.action === "ready") {
+              sendFactorBundle();
+            } else if (message.action === "HOST_EVENT") {
+              const cmd = message.cmd || "";
+              if (cmd === "factorRotationChanged") {
+                const modelSpec = JSON.parse(sessionStorage.getItem("factorModelSpec") || "{}");
+                if (message.data && message.data.rotationMethod) {
+                  modelSpec.rotationMethod = String(message.data.rotationMethod);
+                  sessionStorage.setItem("factorModelSpec", JSON.stringify(modelSpec));
+                }
+              }
               sendFactorBundle();
             } else if (message.action === "close") {
               factorDialog.close();
