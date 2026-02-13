@@ -235,6 +235,94 @@ function correlationMatrix(X) {
   return R;
 }
 
+function invertMatrix(A) {
+  const n = A.length;
+  if (!n) return [];
+  const M = A.map((row, i) => row.concat(identity(n)[i]));
+  for (let i = 0; i < n; i++) {
+    let pivot = i;
+    for (let r = i + 1; r < n; r++) {
+      if (Math.abs(M[r][i]) > Math.abs(M[pivot][i])) pivot = r;
+    }
+    if (Math.abs(M[pivot][i]) < 1e-12) return identity(n);
+    if (pivot !== i) [M[pivot], M[i]] = [M[i], M[pivot]];
+    const div = M[i][i];
+    for (let c = 0; c < 2 * n; c++) M[i][c] /= div;
+    for (let r = 0; r < n; r++) {
+      if (r === i) continue;
+      const f = M[r][i];
+      for (let c = 0; c < 2 * n; c++) M[r][c] -= f * M[i][c];
+    }
+  }
+  return M.map(row => row.slice(n));
+}
+
+function varimaxRotate(loadings, maxIter = 30, tol = 1e-6) {
+  const p = loadings.length;
+  const m = p ? loadings[0].length : 0;
+  const L = loadings.map(r => r.slice());
+  const R = identity(m);
+  if (m < 2) return { loadings: L, rot: R };
+
+  let improved = true;
+  let iter = 0;
+  while (improved && iter < maxIter) {
+    improved = false;
+    iter++;
+    for (let a = 0; a < m - 1; a++) {
+      for (let b = a + 1; b < m; b++) {
+        let u = 0;
+        let v = 0;
+        for (let i = 0; i < p; i++) {
+          const x = L[i][a];
+          const y = L[i][b];
+          u += 2 * x * y * (x * x - y * y);
+          v += (x * x - y * y) * (x * x - y * y) - 4 * x * x * y * y;
+        }
+        const angle = 0.25 * Math.atan2(u, v);
+        if (Math.abs(angle) > tol) {
+          improved = true;
+          const c = Math.cos(angle);
+          const s = Math.sin(angle);
+          for (let i = 0; i < p; i++) {
+            const xa = L[i][a];
+            const xb = L[i][b];
+            L[i][a] = c * xa + s * xb;
+            L[i][b] = -s * xa + c * xb;
+          }
+          for (let i = 0; i < m; i++) {
+            const ra = R[i][a];
+            const rb = R[i][b];
+            R[i][a] = c * ra + s * rb;
+            R[i][b] = -s * ra + c * rb;
+          }
+        }
+      }
+    }
+  }
+  return { loadings: L, rot: R };
+}
+
+function promaxRotate(loadings, power) {
+  const orth = varimaxRotate(loadings);
+  const L = orth.loadings;
+  const Lt = transpose(L);
+  const target = L.map(row => row.map(v => Math.sign(v || 0) * Math.pow(Math.abs(v || 0), power)));
+  const P = matMul(matMul(invertMatrix(matMul(Lt, L)), Lt), target);
+  const pattern = matMul(L, P);
+  const phi = invertMatrix(matMul(transpose(P), P));
+  return { loadings: pattern, phi };
+}
+
+function computeCommunality(row, phi) {
+  const k = row.length;
+  let h2 = 0;
+  for (let i = 0; i < k; i++) {
+    for (let j = 0; j < k; j++) h2 += row[i] * (phi[i] ? (phi[i][j] || 0) : 0) * row[j];
+  }
+  return h2;
+}
+
 function buildFactorBundle(headers, rows, modelSpec) {
   const allVars = headers.slice();
   const selected = [];
@@ -303,27 +391,47 @@ function buildFactorBundle(headers, rows, modelSpec) {
   });
 
   // Approximate loadings from PCA eigenvectors.
-  const loadings = numericNames.map((name, r) => {
-    const row = { Variable: name };
+  const rawLoadings = numericNames.map((_, r) => {
+    const row = [];
     for (let f = 0; f < retained; f++) {
       const lam = Math.sqrt(Math.max(0, eigVals[f]));
-      row[`Factor ${f + 1}`] = eig.eigenvectors[r][f] * lam;
+      row.push(eig.eigenvectors[r][f] * lam);
     }
     return row;
   });
 
-  const communalities = loadings.map(row => {
-    let h2 = 0;
-    for (let f = 1; f <= retained; f++) {
-      const l = Number(row[`Factor ${f}`] || 0);
-      h2 += l * l;
-    }
-    return {
-      variable: row.Variable,
-      initial: 1,
-      extracted: h2,
-      uniqueness: Math.max(0, 1 - h2)
-    };
+  const rotationMethod = ((modelSpec && modelSpec.rotationMethod) || "Varimax").toLowerCase();
+  let rotated = rawLoadings.map(r => r.slice());
+  let phi = identity(retained);
+  if (rotationMethod === "varimax") {
+    rotated = varimaxRotate(rawLoadings).loadings;
+  } else if (rotationMethod === "promax") {
+    const pro = promaxRotate(rawLoadings, 4);
+    rotated = pro.loadings;
+    phi = pro.phi;
+  } else if (rotationMethod === "oblimin") {
+    // Lightweight quartimin-like path using lower-power promax to allow correlated factors.
+    const obl = promaxRotate(rawLoadings, 2);
+    rotated = obl.loadings;
+    phi = obl.phi;
+  } else if (rotationMethod === "none") {
+    rotated = rawLoadings.map(r => r.slice());
+  } else {
+    rotated = varimaxRotate(rawLoadings).loadings;
+  }
+
+  const loadings = numericNames.map((name, r) => {
+    const row = { Variable: name };
+    for (let f = 0; f < retained; f++) row[`Factor ${f + 1}`] = rotated[r][f];
+    return row;
+  });
+
+  const communalities = numericNames.map((name, r) => {
+    const row = rotated[r];
+    const h2 = (rotationMethod === "promax" || rotationMethod === "oblimin")
+      ? computeCommunality(row, phi)
+      : row.reduce((a, b) => a + b * b, 0);
+    return { variable: name, initial: 1, extracted: h2, uniqueness: Math.max(0, 1 - h2) };
   });
 
   const scoreCols = ["Case"];
@@ -369,7 +477,10 @@ function buildFactorBundle(headers, rows, modelSpec) {
         for (let f = 1; f <= retained; f++) if (Math.abs(Number(r[`Factor ${f}`] || 0)) >= 0.4) c++;
         return c > 1;
       }).length,
-      phiMax: retained > 1 ? 0.28 : 0,
+      phiMax: retained > 1
+        ? Math.max(0, ...phi.flatMap((row, i) => row.map((v, j) => (i === j ? 0 : Math.abs(v || 0)))))
+        : 0,
+      phiMatrix: phi,
       columns: ["Variable"].concat(Array.from({ length: retained }, (_, i) => `Factor ${i + 1}`)),
       rows: loadings
     },
