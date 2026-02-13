@@ -37,6 +37,9 @@
     .analysis-table th{position:sticky;top:0;background:#164e8d;color:#fff;padding:8px;border:1px solid rgba(255,255,255,.2);}
     .analysis-table td{padding:8px;border:1px solid rgba(255,255,255,.14);color:var(--text-secondary);}
     .section-note{margin-top:10px;padding:9px;border-left:3px solid var(--accent-1);background:rgba(255,165,120,.1);color:var(--text-muted);}
+    .framework-select{height:34px;padding:0 10px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;}
+    .agreement-good{color:#4ade80;font-weight:700;}
+    .agreement-warn{color:#fbbf24;font-weight:700;}
   </style>
 </head>
 <body>
@@ -96,13 +99,30 @@
           </div></div></div>
         </section>
         <section id="tab-results" class="tab-panel">
-          <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Primary Results</div><div class="stat-panel-body">
-            <div class="stat-field"><span class="stat-label">Primary Test</span><span class="stat-value" id="resPrimary">...</span></div>
-            <div class="stat-field"><span class="stat-label">Welch t (df)</span><span class="stat-value" id="resWelch">...</span></div>
-            <div class="stat-field"><span class="stat-label">Welch p</span><span class="stat-value" id="resWelchP">...</span></div>
-            <div class="stat-field"><span class="stat-label">Mean Diff CI</span><span class="stat-value" id="resCi">...</span></div>
-            <div class="stat-field"><span class="stat-label">Mann-Whitney U / p</span><span class="stat-value" id="resMw">...</span></div>
-          </div></div></div>
+          <div class="stats-container">
+            <div class="stat-panel"><div class="stat-panel-heading">Primary Results</div><div class="stat-panel-body">
+              <div class="stat-field">
+                <span class="stat-label">Primary Framework</span>
+                <span class="stat-value" style="background:transparent;border:none;padding:0;">
+                  <select id="primaryFrameworkSelect" class="framework-select">
+                    <option value="parametric">Parametric (means)</option>
+                    <option value="nonparametric">Nonparametric (ranks)</option>
+                  </select>
+                </span>
+              </div>
+              <div class="stat-field"><span class="stat-label">Primary Test</span><span class="stat-value" id="resPrimaryTest">...</span></div>
+              <div class="stat-field"><span class="stat-label">Statistic</span><span class="stat-value" id="resPrimaryStat">...</span></div>
+              <div class="stat-field"><span class="stat-label">p-value</span><span class="stat-value" id="resPrimaryP">...</span></div>
+              <div class="stat-field"><span class="stat-label">Primary Estimate + CI</span><span class="stat-value" id="resPrimaryEstimate">...</span></div>
+            </div></div>
+            <div class="stat-panel"><div class="stat-panel-heading">Robustness Check (Secondary)</div><div class="stat-panel-body">
+              <div class="stat-field"><span class="stat-label">Secondary Test</span><span class="stat-value" id="resSecondaryTest">...</span></div>
+              <div class="stat-field"><span class="stat-label">Statistic</span><span class="stat-value" id="resSecondaryStat">...</span></div>
+              <div class="stat-field"><span class="stat-label">p-value</span><span class="stat-value" id="resSecondaryP">...</span></div>
+              <div class="stat-field"><span class="stat-label">Agreement</span><span class="stat-value" id="resAgreement">...</span></div>
+              <div class="stat-field"><span class="stat-label">Diagnostic Hint</span><span class="stat-value" id="resHint">...</span></div>
+            </div></div>
+          </div>
         </section>
         <section id="tab-effects" class="tab-panel">
           <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Effect Sizes</div><div class="stat-panel-body">
@@ -131,22 +151,61 @@
   <script>
     let globalDecimalPrecision = "auto";
     let lastBundle = null;
+    let primaryFramework = "parametric";
     function parseMaybeNumber(v){ if(v===undefined||v===null) return NaN; const n=Number(String(v).replace(",",".")); return isFinite(n)?n:NaN; }
     function fmt(v){ const n=parseMaybeNumber(v); if(!isFinite(n)) return v==null?"...":String(v); if(globalDecimalPrecision==="auto"){ if(Math.abs(n)<1&&n!==0) return n.toFixed(4); return n.toFixed(2);} return n.toFixed(parseInt(globalDecimalPrecision,10)); }
+    function fmtP(v){ const n=parseMaybeNumber(v); if(!isFinite(n)) return v==null?"...":String(v); if(n < 0.001) return "< 0.001"; return globalDecimalPrecision === "auto" ? n.toFixed(4) : n.toFixed(Math.max(3, parseInt(globalDecimalPrecision,10))); }
     function setDecimalPrecision(){ globalDecimalPrecision=(document.getElementById("decimalSelect")||{value:"auto"}).value; if(lastBundle) populateBundle(lastBundle); }
     function setText(id,val){ const el=document.getElementById(id); if(el) el.textContent = (val!==undefined&&val!==null&&val!=="")?val:"..."; }
     function switchTab(tab){ document.querySelectorAll(".tab-button").forEach(b=>b.classList.toggle("active",b.getAttribute("data-tab")===tab)); document.querySelectorAll(".tab-panel").forEach(p=>p.classList.toggle("active",p.id==="tab-"+tab)); }
     function sendToHost(cmd,data){ if(Office&&Office.context&&Office.context.ui&&Office.context.ui.messageParent) Office.context.ui.messageParent(JSON.stringify({action:"HOST_EVENT",cmd:cmd,data:data||{}})); }
+    function updateResultsPanels(r, fx, s, a){
+      const alpha = isFinite(parseMaybeNumber(a)) ? parseMaybeNumber(a) : (1 - (parseMaybeNumber(s && s.confidence) || 0.95));
+      const welchSig = parseMaybeNumber(r.welchP) < alpha;
+      const mwSig = parseMaybeNumber(r.mwP) < alpha;
+      const primaryParametric = primaryFramework !== "nonparametric";
+
+      if (primaryParametric) {
+        setText("resPrimaryTest", "Welch t-test");
+        setText("resPrimaryStat", "t(" + fmt(r.welchDf) + ") = " + fmt(r.welchT));
+        setText("resPrimaryP", fmtP(r.welchP));
+        setText("resPrimaryEstimate", "Mean diff " + fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "]");
+        setText("resSecondaryTest", "Mann-Whitney U");
+        setText("resSecondaryStat", "U = " + fmt(r.u));
+        setText("resSecondaryP", fmtP(r.mwP));
+      } else {
+        setText("resPrimaryTest", "Mann-Whitney U");
+        setText("resPrimaryStat", "U = " + fmt(r.u));
+        setText("resPrimaryP", fmtP(r.mwP));
+        setText("resPrimaryEstimate", "Rank-biserial " + fmt(fx.rankBiserial) + " | P(X>Y) " + fmt(fx.probabilitySuperiority));
+        setText("resSecondaryTest", "Welch t-test");
+        setText("resSecondaryStat", "t(" + fmt(r.welchDf) + ") = " + fmt(r.welchT));
+        setText("resSecondaryP", fmtP(r.welchP));
+      }
+
+      const agreeEl = document.getElementById("resAgreement");
+      if (welchSig === mwSig) {
+        setText("resAgreement", "Agree at alpha");
+        if (agreeEl) agreeEl.className = "stat-value agreement-good";
+        setText("resHint", "Both frameworks lead to the same significance decision.");
+      } else {
+        setText("resAgreement", "Disagree at alpha");
+        if (agreeEl) agreeEl.className = "stat-value agreement-warn";
+        setText("resHint", "Inspect skew, outliers, and unequal variance/shape differences.");
+      }
+    }
     function populateBundle(b){
       lastBundle = b || {};
       const s=b.setup||{}, e=b.explore||{}, a=b.assumptions||{}, r=b.results||{}, fx=b.effects||{}, p=b.power||{}, rep=b.report||{};
       setText("setupMode", s.mode); setText("setupHypothesis", s.hypothesis); setText("setupConfidence", (s.confidence?fmt(100*s.confidence):"...")+"%");
       setText("expN", `${e.n1||0} / ${e.n2||0}`); setText("expMean", `${fmt(e.mean1)} / ${fmt(e.mean2)}`); setText("expMed", `${fmt(e.med1)} / ${fmt(e.med2)}`); setText("expSd", `${fmt(e.sd1)} / ${fmt(e.sd2)}`); setText("expIqr", `${fmt(e.iqr1)} / ${fmt(e.iqr2)}`);
       setText("asNormA", a.normalityA); setText("asNormB", a.normalityB); setText("asEqVar", a.equalVariance); setText("asReco", a.recommendation);
-      setText("resPrimary", r.primary); setText("resWelch", `${fmt(r.welchT)} (${fmt(r.welchDf)})`); setText("resWelchP", fmt(r.welchP)); setText("resCi", `${fmt(r.meanDiff)} [${fmt(r.ciLow)}, ${fmt(r.ciHigh)}]`); setText("resMw", `${fmt(r.u)} / ${fmt(r.mwP)}`);
+      updateResultsPanels(r, fx, s, 1 - (parseMaybeNumber(s.confidence) || 0.95));
       setText("efG", fmt(fx.hedgesG)); setText("efDelta", fmt(fx.cliffsDelta)); setText("efRrb", fmt(fx.rankBiserial)); setText("efPs", fmt(fx.probabilitySuperiority));
       setText("powNote", p.note); setText("powEndpoint", p.suggestedEndpoint); setText("powVal", fmt(p.placeholderPower));
-      setText("repWelch", rep.apaWelch); setText("repMw", rep.apaMW); setText("repCons", rep.consistency);
+      setText("repWelch", "Welch: t(" + fmt(r.welchDf) + ")=" + fmt(r.welchT) + ", p " + fmtP(r.welchP) + ", mean diff " + fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "].");
+      setText("repMw", "Mann-Whitney: U=" + fmt(r.u) + ", p " + fmtP(r.mwP) + ", rank-biserial " + fmt(fx.rankBiserial) + ".");
+      setText("repCons", rep.consistency);
     }
     function saveCurrentModel(){ sendToHost("saveIndependentModel", lastBundle||{}); }
     function exportHtml(){
@@ -155,6 +214,16 @@
     }
     document.addEventListener("DOMContentLoaded", function(){
       document.querySelectorAll(".tab-button").forEach(btn=>btn.addEventListener("click",()=>switchTab(btn.getAttribute("data-tab"))));
+      const primarySelect = document.getElementById("primaryFrameworkSelect");
+      if (primarySelect) {
+        primarySelect.addEventListener("change", function(){
+          primaryFramework = this.value || "parametric";
+          if (lastBundle) {
+            const s=lastBundle.setup||{}, r=lastBundle.results||{}, fx=lastBundle.effects||{};
+            updateResultsPanels(r, fx, s, 1 - (parseMaybeNumber(s.confidence) || 0.95));
+          }
+        });
+      }
       Office.onReady(function(){
         Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function(arg){
           const msg = JSON.parse(arg.message||"{}");
