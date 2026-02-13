@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Independent Means Builder</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <style>
+    body{margin:0;background:#0b1220;color:#e5e7eb;font-family:Segoe UI,Arial,sans-serif;}
+    .wrap{padding:14px;}
+    .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+    .title{font-weight:800;font-size:14px;display:flex;gap:8px;align-items:center;}
+    .panel{border:1px solid #22304b;background:#111c33;border-radius:10px;padding:10px;margin-bottom:10px;}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    label{font-size:12px;color:#9fb0cc;display:block;margin-bottom:4px;}
+    select,input{width:100%;padding:8px;border-radius:8px;border:1px solid #2a3d5f;background:#0b1428;color:#e5e7eb;}
+    .row{display:flex;gap:8px;}
+    .btn{padding:8px 12px;border-radius:8px;border:1px solid #2e4268;background:#162948;color:#e5e7eb;cursor:pointer;}
+    .btn.primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);border-color:#2f5fca;font-weight:700;}
+    .meta{font-size:12px;color:#9fb0cc;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div class="title"><i class="fa-solid fa-not-equal"></i> Independent Means Builder</div>
+      <button class="btn" id="btnRefresh"><i class="fa-solid fa-rotate"></i> Refresh</button>
+    </div>
+
+    <div class="panel">
+      <div class="meta">Range: <strong id="rangeAddr">-</strong></div>
+      <div class="meta">Rows: <strong id="rowCount">0</strong> | Columns: <strong id="colCount">0</strong></div>
+    </div>
+
+    <div class="panel">
+      <div class="grid">
+        <div>
+          <label>Data Mode</label>
+          <select id="dataMode">
+            <option value="two-column">Two columns (A/B)</option>
+            <option value="long-format">Long format (value + group)</option>
+          </select>
+        </div>
+        <div>
+          <label>Hypothesis</label>
+          <select id="hypothesis">
+            <option value="two-sided">Two-sided</option>
+            <option value="greater">A > B</option>
+            <option value="less">A < B</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="twoColPanel">
+      <div class="grid">
+        <div><label>Group A Column</label><select id="groupACol"></select></div>
+        <div><label>Group B Column</label><select id="groupBCol"></select></div>
+      </div>
+    </div>
+
+    <div class="panel" id="longPanel" style="display:none;">
+      <div class="grid">
+        <div><label>Value Column</label><select id="valueCol"></select></div>
+        <div><label>Group Label Column</label><select id="groupCol"></select></div>
+      </div>
+      <div class="grid" style="margin-top:8px;">
+        <div><label>Level A</label><input id="levelA" placeholder="e.g. Control"/></div>
+        <div><label>Level B</label><input id="levelB" placeholder="e.g. Treatment"/></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="btn" id="btnCancel">Cancel</button>
+      <button class="btn primary" id="btnRun">Open Independent Means Dashboard</button>
+    </div>
+  </div>
+
+  <script>
+    var STATE = { headers: [], rows: [], address: "", saved: null };
+    function qs(id){ return document.getElementById(id); }
+    function send(action, data){
+      if (Office && Office.context && Office.context.ui && typeof Office.context.ui.messageParent === "function") {
+        Office.context.ui.messageParent(JSON.stringify({ action: action, data: data || null }));
+      }
+    }
+    function fillSelect(id, headers){
+      var sel = qs(id); if (!sel) return;
+      sel.innerHTML = headers.map(function(h){ return '<option value="' + h + '">' + h + '</option>'; }).join("");
+    }
+    function applyPayload(p){
+      STATE.headers = p.headers || []; STATE.rows = p.rows || []; STATE.address = p.address || ""; STATE.saved = p.savedModelSpec || {};
+      qs("rangeAddr").textContent = STATE.address || "Selection";
+      qs("rowCount").textContent = String(STATE.rows.length);
+      qs("colCount").textContent = String(STATE.headers.length);
+      ["groupACol","groupBCol","valueCol","groupCol"].forEach(function(id){ fillSelect(id, STATE.headers); });
+      if (STATE.saved) {
+        if (STATE.saved.mode) qs("dataMode").value = STATE.saved.mode;
+        if (STATE.saved.groupA) qs("groupACol").value = STATE.saved.groupA;
+        if (STATE.saved.groupB) qs("groupBCol").value = STATE.saved.groupB;
+        if (STATE.saved.valueColumn) qs("valueCol").value = STATE.saved.valueColumn;
+        if (STATE.saved.groupColumn) qs("groupCol").value = STATE.saved.groupColumn;
+        if (STATE.saved.levelA) qs("levelA").value = STATE.saved.levelA;
+        if (STATE.saved.levelB) qs("levelB").value = STATE.saved.levelB;
+        if (STATE.saved.hypothesis) qs("hypothesis").value = STATE.saved.hypothesis;
+      }
+      onModeChange();
+    }
+    function onModeChange(){
+      var mode = qs("dataMode").value;
+      qs("twoColPanel").style.display = mode === "two-column" ? "block" : "none";
+      qs("longPanel").style.display = mode === "long-format" ? "block" : "none";
+    }
+    function run(){
+      var mode = qs("dataMode").value;
+      var spec = {
+        analysisMode: "independent",
+        mode: mode,
+        hypothesis: qs("hypothesis").value,
+        confidence: 0.95,
+        groupALabel: "A",
+        groupBLabel: "B"
+      };
+      if (mode === "two-column") {
+        spec.groupA = qs("groupACol").value;
+        spec.groupB = qs("groupBCol").value;
+      } else {
+        spec.valueColumn = qs("valueCol").value;
+        spec.groupColumn = qs("groupCol").value;
+        spec.levelA = qs("levelA").value || "A";
+        spec.levelB = qs("levelB").value || "B";
+      }
+      send("independentModel", spec);
+    }
+    document.addEventListener("DOMContentLoaded", function(){
+      qs("dataMode").addEventListener("change", onModeChange);
+      qs("btnRefresh").addEventListener("click", function(){ send("requestData", null); });
+      qs("btnCancel").addEventListener("click", function(){ send("close", null); });
+      qs("btnRun").addEventListener("click", run);
+      Office.onReady(function(){
+        Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function(arg){
+          var msg = JSON.parse(arg.message || "{}");
+          if (msg.type === "INDEPENDENT_DATA" && msg.payload) applyPayload(msg.payload);
+        });
+        send("requestData", null);
+        send("ready", null);
+      });
+    });
+  </script>
+</body>
+</html>

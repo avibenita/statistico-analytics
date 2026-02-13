@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Independent Means Results</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
+  <style>
+    :root{--surface-0:#0c1624;--surface-1:#1a1f2e;--surface-2:#242938;--border:#2d3748;--accent-1:rgb(255,165,120);--accent-2:rgb(120,200,255);--text-primary:#fff;--text-secondary:rgba(255,255,255,.82);--text-muted:rgba(255,255,255,.62);--panel-radius:10px;--panel-shadow:0 4px 20px rgba(0,0,0,.4);}
+    html,body{height:100%;margin:0;background:var(--surface-0);color:var(--text-primary);font-family:Segoe UI,Tahoma,sans-serif;}
+    .wrap{display:flex;justify-content:center;padding:8px 12px 20px;}
+    .card{width:min(1600px,99%);background:var(--surface-1);min-height:760px;border-radius:var(--panel-radius);box-shadow:var(--panel-shadow);border:1px solid var(--border);display:flex;flex-direction:column;}
+    .hero-section{background:linear-gradient(180deg,#0a1118,#0c1620);border-bottom:1px solid rgba(255,255,255,.06);padding:16px 20px;border-radius:var(--panel-radius) var(--panel-radius) 0 0;}
+    .hero-content{display:flex;justify-content:space-between;align-items:center;gap:12px;}
+    .hero-title{display:flex;align-items:center;gap:12px;font-size:1.28rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;}
+    .hero-controls{display:flex;align-items:center;gap:10px;}
+    .hero-action-btn{border-radius:8px;border:1px solid rgba(148,163,184,.45);background:linear-gradient(145deg,rgba(148,163,184,.18),rgba(100,116,139,.16));color:#fff;padding:10px 16px;font-size:12px;font-weight:650;cursor:pointer;display:flex;align-items:center;gap:8px;}
+    .tab-navigation{display:flex;align-items:flex-end;gap:16px;background:transparent;padding:12px 0 0;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;scrollbar-width:none;margin-top:10px;}
+    .tab-button{height:36px;padding:0 4px;background:transparent;border:none;color:rgba(255,255,255,.55);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;position:relative;}
+    .tab-button.active{color:#fff;font-weight:700;}
+    .tab-button.active::before{content:'';position:absolute;left:0;right:0;bottom:-9px;height:2px;background:linear-gradient(90deg,var(--accent-1),var(--accent-2));}
+    .tab-controls-right{margin-left:auto;display:inline-flex;align-items:center;gap:8px;padding-bottom:8px;}
+    .tab-decimal-select{height:36px;padding:0 10px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;}
+    .view-container{padding:14px 16px;}
+    .tab-panel{display:none;} .tab-panel.active{display:block;}
+    .stats-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;}
+    .stat-panel{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+    .stat-panel-heading{padding:9px 12px;background:#164e8d;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid rgba(255,165,120,.7);}
+    .stat-panel-body{padding:8px 12px;}
+    .stat-field{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+    .stat-field:last-child{border-bottom:none;}
+    .stat-label{color:var(--text-secondary);font-weight:600;}
+    .stat-value{font-variant-numeric:tabular-nums;color:var(--accent-2);font-weight:700;background:rgba(120,200,255,.12);border:1px solid rgba(120,200,255,.32);padding:6px 10px;border-radius:8px;min-width:110px;text-align:center;}
+    .table-container{margin-top:10px;overflow:auto;max-height:420px;}
+    .analysis-table{width:100%;border-collapse:collapse;}
+    .analysis-table th{position:sticky;top:0;background:#164e8d;color:#fff;padding:8px;border:1px solid rgba(255,255,255,.2);}
+    .analysis-table td{padding:8px;border:1px solid rgba(255,255,255,.14);color:var(--text-secondary);}
+    .section-note{margin-top:10px;padding:9px;border-left:3px solid var(--accent-1);background:rgba(255,165,120,.1);color:var(--text-muted);}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card">
+      <div class="hero-section">
+        <div class="hero-content">
+          <div class="hero-title"><i class="fa-solid fa-not-equal"></i><span>Independent Means Module</span></div>
+          <div class="hero-controls">
+            <button class="hero-action-btn" onclick="saveCurrentModel()"><i class="fa-solid fa-floppy-disk"></i> Save Model</button>
+            <button class="hero-action-btn" onclick="exportHtml()"><i class="fa-solid fa-file-code"></i> Save HTML</button>
+          </div>
+        </div>
+        <div class="tab-navigation">
+          <button class="tab-button active" data-tab="setup"><i class="fa-solid fa-sliders"></i> Setup</button>
+          <button class="tab-button" data-tab="explore"><i class="fa-solid fa-chart-column"></i> Explore</button>
+          <button class="tab-button" data-tab="assumptions"><i class="fa-solid fa-shield-halved"></i> Assumptions</button>
+          <button class="tab-button" data-tab="results"><i class="fa-solid fa-square-poll-vertical"></i> Results</button>
+          <button class="tab-button" data-tab="effects"><i class="fa-solid fa-wave-square"></i> Effects</button>
+          <button class="tab-button" data-tab="power"><i class="fa-solid fa-bolt"></i> Power</button>
+          <button class="tab-button" data-tab="report"><i class="fa-solid fa-file-lines"></i> Report</button>
+          <div class="tab-controls-right">
+            <label for="decimalSelect">Decimals:</label>
+            <select id="decimalSelect" class="tab-decimal-select" onchange="setDecimalPrecision()">
+              <option value="auto">Auto</option><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="view-container">
+        <section id="tab-setup" class="tab-panel active">
+          <div class="stats-container">
+            <div class="stat-panel"><div class="stat-panel-heading">Model Setup</div><div class="stat-panel-body">
+              <div class="stat-field"><span class="stat-label">Mode</span><span class="stat-value" id="setupMode">...</span></div>
+              <div class="stat-field"><span class="stat-label">Hypothesis</span><span class="stat-value" id="setupHypothesis">...</span></div>
+              <div class="stat-field"><span class="stat-label">Confidence</span><span class="stat-value" id="setupConfidence">...</span></div>
+            </div></div>
+          </div>
+        </section>
+        <section id="tab-explore" class="tab-panel">
+          <div class="stats-container">
+            <div class="stat-panel"><div class="stat-panel-heading">Group Summaries</div><div class="stat-panel-body">
+              <div class="stat-field"><span class="stat-label">n1 / n2</span><span class="stat-value" id="expN">...</span></div>
+              <div class="stat-field"><span class="stat-label">Mean A / Mean B</span><span class="stat-value" id="expMean">...</span></div>
+              <div class="stat-field"><span class="stat-label">Median A / Median B</span><span class="stat-value" id="expMed">...</span></div>
+              <div class="stat-field"><span class="stat-label">SD A / SD B</span><span class="stat-value" id="expSd">...</span></div>
+              <div class="stat-field"><span class="stat-label">IQR A / IQR B</span><span class="stat-value" id="expIqr">...</span></div>
+            </div></div>
+          </div>
+        </section>
+        <section id="tab-assumptions" class="tab-panel">
+          <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Diagnostics</div><div class="stat-panel-body">
+            <div class="stat-field"><span class="stat-label">Normality A</span><span class="stat-value" id="asNormA">...</span></div>
+            <div class="stat-field"><span class="stat-label">Normality B</span><span class="stat-value" id="asNormB">...</span></div>
+            <div class="stat-field"><span class="stat-label">Equal Variance</span><span class="stat-value" id="asEqVar">...</span></div>
+            <div class="stat-field"><span class="stat-label">Recommendation</span><span class="stat-value" id="asReco">...</span></div>
+          </div></div></div>
+        </section>
+        <section id="tab-results" class="tab-panel">
+          <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Primary Results</div><div class="stat-panel-body">
+            <div class="stat-field"><span class="stat-label">Primary Test</span><span class="stat-value" id="resPrimary">...</span></div>
+            <div class="stat-field"><span class="stat-label">Welch t (df)</span><span class="stat-value" id="resWelch">...</span></div>
+            <div class="stat-field"><span class="stat-label">Welch p</span><span class="stat-value" id="resWelchP">...</span></div>
+            <div class="stat-field"><span class="stat-label">Mean Diff CI</span><span class="stat-value" id="resCi">...</span></div>
+            <div class="stat-field"><span class="stat-label">Mann-Whitney U / p</span><span class="stat-value" id="resMw">...</span></div>
+          </div></div></div>
+        </section>
+        <section id="tab-effects" class="tab-panel">
+          <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Effect Sizes</div><div class="stat-panel-body">
+            <div class="stat-field"><span class="stat-label">Hedges g</span><span class="stat-value" id="efG">...</span></div>
+            <div class="stat-field"><span class="stat-label">Cliff's delta</span><span class="stat-value" id="efDelta">...</span></div>
+            <div class="stat-field"><span class="stat-label">Rank-biserial</span><span class="stat-value" id="efRrb">...</span></div>
+            <div class="stat-field"><span class="stat-label">P(X>Y)</span><span class="stat-value" id="efPs">...</span></div>
+          </div></div></div>
+        </section>
+        <section id="tab-power" class="tab-panel">
+          <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Power & Sample Size (Python)</div><div class="stat-panel-body">
+            <div class="stat-field"><span class="stat-label">Status</span><span class="stat-value" id="powNote">...</span></div>
+            <div class="stat-field"><span class="stat-label">Endpoint</span><span class="stat-value" id="powEndpoint">...</span></div>
+            <div class="stat-field"><span class="stat-label">Placeholder Power</span><span class="stat-value" id="powVal">...</span></div>
+          </div></div></div>
+          <div class="section-note">Power is designed to call a Python service endpoint with exact/simulation routines.</div>
+        </section>
+        <section id="tab-report" class="tab-panel">
+          <div class="stat-panel"><div class="stat-panel-heading">APA-ready Report</div><div class="stat-panel-body">
+            <div id="repWelch"></div><br/><div id="repMw"></div><br/><div id="repCons"></div>
+          </div></div>
+        </section>
+      </div>
+    </section>
+  </div>
+  <script>
+    let globalDecimalPrecision = "auto";
+    let lastBundle = null;
+    function parseMaybeNumber(v){ if(v===undefined||v===null) return NaN; const n=Number(String(v).replace(",",".")); return isFinite(n)?n:NaN; }
+    function fmt(v){ const n=parseMaybeNumber(v); if(!isFinite(n)) return v==null?"...":String(v); if(globalDecimalPrecision==="auto"){ if(Math.abs(n)<1&&n!==0) return n.toFixed(4); return n.toFixed(2);} return n.toFixed(parseInt(globalDecimalPrecision,10)); }
+    function setDecimalPrecision(){ globalDecimalPrecision=(document.getElementById("decimalSelect")||{value:"auto"}).value; if(lastBundle) populateBundle(lastBundle); }
+    function setText(id,val){ const el=document.getElementById(id); if(el) el.textContent = (val!==undefined&&val!==null&&val!=="")?val:"..."; }
+    function switchTab(tab){ document.querySelectorAll(".tab-button").forEach(b=>b.classList.toggle("active",b.getAttribute("data-tab")===tab)); document.querySelectorAll(".tab-panel").forEach(p=>p.classList.toggle("active",p.id==="tab-"+tab)); }
+    function sendToHost(cmd,data){ if(Office&&Office.context&&Office.context.ui&&Office.context.ui.messageParent) Office.context.ui.messageParent(JSON.stringify({action:"HOST_EVENT",cmd:cmd,data:data||{}})); }
+    function populateBundle(b){
+      lastBundle = b || {};
+      const s=b.setup||{}, e=b.explore||{}, a=b.assumptions||{}, r=b.results||{}, fx=b.effects||{}, p=b.power||{}, rep=b.report||{};
+      setText("setupMode", s.mode); setText("setupHypothesis", s.hypothesis); setText("setupConfidence", (s.confidence?fmt(100*s.confidence):"...")+"%");
+      setText("expN", `${e.n1||0} / ${e.n2||0}`); setText("expMean", `${fmt(e.mean1)} / ${fmt(e.mean2)}`); setText("expMed", `${fmt(e.med1)} / ${fmt(e.med2)}`); setText("expSd", `${fmt(e.sd1)} / ${fmt(e.sd2)}`); setText("expIqr", `${fmt(e.iqr1)} / ${fmt(e.iqr2)}`);
+      setText("asNormA", a.normalityA); setText("asNormB", a.normalityB); setText("asEqVar", a.equalVariance); setText("asReco", a.recommendation);
+      setText("resPrimary", r.primary); setText("resWelch", `${fmt(r.welchT)} (${fmt(r.welchDf)})`); setText("resWelchP", fmt(r.welchP)); setText("resCi", `${fmt(r.meanDiff)} [${fmt(r.ciLow)}, ${fmt(r.ciHigh)}]`); setText("resMw", `${fmt(r.u)} / ${fmt(r.mwP)}`);
+      setText("efG", fmt(fx.hedgesG)); setText("efDelta", fmt(fx.cliffsDelta)); setText("efRrb", fmt(fx.rankBiserial)); setText("efPs", fmt(fx.probabilitySuperiority));
+      setText("powNote", p.note); setText("powEndpoint", p.suggestedEndpoint); setText("powVal", fmt(p.placeholderPower));
+      setText("repWelch", rep.apaWelch); setText("repMw", rep.apaMW); setText("repCons", rep.consistency);
+    }
+    function saveCurrentModel(){ sendToHost("saveIndependentModel", lastBundle||{}); }
+    function exportHtml(){
+      const blob = new Blob([document.documentElement.outerHTML], {type:"text/html"});
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "independent-means-report.html"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500);
+    }
+    document.addEventListener("DOMContentLoaded", function(){
+      document.querySelectorAll(".tab-button").forEach(btn=>btn.addEventListener("click",()=>switchTab(btn.getAttribute("data-tab"))));
+      Office.onReady(function(){
+        Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function(arg){
+          const msg = JSON.parse(arg.message||"{}");
+          if(msg.type==="INDEPENDENT_BUNDLE") populateBundle(msg.payload||{});
+        });
+        sendToHost("independentDashboardReady",{});
+        setTimeout(()=>sendToHost("independentDashboardReady",{}),500);
+      });
+    });
+  </script>
+</body>
+</html>
