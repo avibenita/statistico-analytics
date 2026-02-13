@@ -5,6 +5,7 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title id="page-title">Factor Analysis Module</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
   <style>
     :root{
@@ -384,6 +385,7 @@
       min-height:270px;
     }
     .scree-svg{ width:100%; height:260px; display:block; }
+    .scree-chart-container{ width:100%; height:260px; }
     .section-note{
       margin-top:10px;
       padding:9px;
@@ -434,6 +436,9 @@
             </button>
             <button class="hero-action-btn save-html-btn" onclick="exportFactorHtml()">
               <i class="fa-solid fa-file-code"></i> Save HTML
+            </button>
+            <button class="hero-action-btn" onclick="goToScreePlot()" title="Jump to scree plot">
+              <i class="fa-solid fa-chart-line"></i> Scree Plot
             </button>
             <button class="hero-action-btn ai-interpret-btn" id="aiInterpretBtn" onclick="requestFactorAI()">
               <i class="fa-solid fa-robot"></i> AI Interpret
@@ -525,11 +530,7 @@
             <div class="viz-card">
               <div class="viz-title">Scree Plot</div>
               <div class="scree-wrap">
-                <svg id="screeSvg" class="scree-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <line x1="10" y1="90" x2="92" y2="90" stroke="rgba(255,255,255,0.32)" stroke-width="0.6"></line>
-                  <line x1="10" y1="12" x2="10" y2="90" stroke="rgba(255,255,255,0.32)" stroke-width="0.6"></line>
-                  <path id="screePath" d="" fill="none" stroke="rgba(120,200,255,1)" stroke-width="1.2"></path>
-                </svg>
+                <div id="screeChart" class="scree-chart-container"></div>
               </div>
             </div>
           </section>
@@ -804,20 +805,65 @@
     }
 
     function renderScree(eigenvalues) {
-      var path = document.getElementById("screePath");
-      if (!path) return;
-      if (!eigenvalues || eigenvalues.length === 0) {
-        path.setAttribute("d", "");
+      var target = document.getElementById("screeChart");
+      if (!target || typeof Highcharts === "undefined") return;
+      var vals = (eigenvalues || []).map(function(v){ return parseMaybeNumber(v); }).filter(function(v){ return isFinite(v); });
+      if (!vals.length) {
+        target.innerHTML = '<div class="hint-empty">Awaiting scree data...</div>';
         return;
       }
-      var maxY = Math.max.apply(null, eigenvalues.map(function(v){ return parseMaybeNumber(v) || 0; })) || 1;
-      var points = eigenvalues.map(function(v, i){
-        var x = 12 + (i * (76 / Math.max(1, eigenvalues.length - 1)));
-        var y = 88 - ((parseMaybeNumber(v) || 0) / maxY) * 72;
-        return { x: x, y: y };
+      var categories = vals.map(function(_, i){ return "F" + (i + 1); });
+      Highcharts.chart("screeChart", {
+        chart: {
+          type: "line",
+          backgroundColor: "transparent",
+          animation: false,
+          spacing: [12, 10, 12, 10]
+        },
+        title: { text: null },
+        credits: { enabled: false },
+        legend: { enabled: false },
+        xAxis: {
+          categories: categories,
+          title: { text: "Component", style: { color: "rgba(255,255,255,0.85)" } },
+          labels: { style: { color: "rgba(255,255,255,0.78)" } },
+          lineColor: "rgba(255,255,255,0.22)",
+          tickColor: "rgba(255,255,255,0.22)"
+        },
+        yAxis: {
+          title: { text: "Eigenvalue", style: { color: "rgba(255,255,255,0.85)" } },
+          labels: { style: { color: "rgba(255,255,255,0.78)" } },
+          gridLineColor: "rgba(255,255,255,0.12)"
+        },
+        tooltip: {
+          shared: true,
+          pointFormat: "<b>{point.y:.3f}</b>"
+        },
+        plotOptions: {
+          series: {
+            marker: { enabled: true, radius: 3 },
+            dataLabels: {
+              enabled: true,
+              formatter: function() { return formatNumber(this.y); },
+              style: { color: "#bde6ff", textOutline: "none", fontSize: "10px" }
+            }
+          }
+        },
+        series: [{
+          name: "Eigenvalue",
+          data: vals,
+          color: "rgba(120,200,255,1)",
+          lineWidth: 3
+        }]
       });
-      var d = points.map(function(pt, idx){ return (idx === 0 ? "M" : "L") + pt.x.toFixed(2) + " " + pt.y.toFixed(2); }).join(" ");
-      path.setAttribute("d", d);
+    }
+
+    function goToScreePlot() {
+      switchTab("extraction");
+      var node = document.getElementById("screeChart");
+      if (node && typeof node.scrollIntoView === "function") {
+        node.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
     }
 
     window.populateFactorSuitability = function(data) {
@@ -1035,7 +1081,8 @@
       setText("aiVariance", "Awaiting assessment...");
       setText("aiQuality", "Awaiting assessment...");
       setText("aiRecommendations", "Awaiting assessment...");
-      document.getElementById("screePath").setAttribute("d", "");
+      var screeNode = document.getElementById("screeChart");
+      if (screeNode) screeNode.innerHTML = '<div class="hint-empty">Awaiting scree data...</div>';
       factorPayloadForAI = null;
       window.lastFactorBundle = null;
       document.getElementById("aiInterpretBtn").style.display = "none";
