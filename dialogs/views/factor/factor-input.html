@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Factor Model Builder</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #0f172a;
+      --panel-2: #111c33;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --line: #24324b;
+      --accent: #3b82f6;
+      --accent-2: #2563eb;
+      --ok: #10b981;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #122030, #0b121a);
+      color: var(--text);
+      font-family: Segoe UI, Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, #0a1118, #0c1620);
+    }
+    .title {
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .content {
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      min-height: 0;
+      flex: 1;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 10px 12px;
+    }
+    .panel h3 {
+      margin: 0 0 8px 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      font-size: 12px;
+    }
+    .kv { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+    .kv .k { color: var(--muted); display:block; margin-bottom: 4px; font-size: 11px; }
+    .kv .v { font-weight: 700; }
+    .vars {
+      max-height: 260px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0a1326;
+      padding: 6px;
+    }
+    .var-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    .var-row:hover { background: rgba(59, 130, 246, 0.1); }
+    .hint { font-size: 11px; color: var(--muted); }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr 120px;
+      gap: 8px;
+    }
+    select, input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #0a1326;
+      color: var(--text);
+      font-size: 12px;
+    }
+    .footer {
+      border-top: 1px solid var(--line);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: #0b1528;
+    }
+    .btn {
+      border: 1px solid var(--line);
+      background: #13213a;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-color: #2859d0;
+      font-weight: 700;
+    }
+    .btn.primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .status { font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title"><i class="fa-solid fa-cubes"></i> Factor Analysis Builder</div>
+    <button class="btn" id="btnRefresh"><i class="fa-solid fa-rotate"></i> Refresh Data</button>
+  </div>
+
+  <div class="content">
+    <section class="panel">
+      <h3>Selection Summary</h3>
+      <div class="summary">
+        <div class="kv"><span class="k">Range</span><span class="v" id="rangeAddr">-</span></div>
+        <div class="kv"><span class="k">Rows</span><span class="v" id="rowCount">0</span></div>
+        <div class="kv"><span class="k">Columns</span><span class="v" id="colCount">0</span></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h3>Numeric Variables</h3>
+      <div class="hint">Select at least 2 variables. Non-numeric columns are excluded automatically.</div>
+      <div style="margin:8px 0;display:flex;gap:8px;">
+        <button class="btn" id="btnSelectAll">Select All</button>
+        <button class="btn" id="btnClearAll">Clear</button>
+      </div>
+      <div id="varsList" class="vars"></div>
+      <div class="hint" id="varsMeta" style="margin-top:6px;">0 selected</div>
+    </section>
+
+    <section class="panel">
+      <h3>Model Options</h3>
+      <div class="controls">
+        <select id="extractionMethod">
+          <option value="PCA">PCA</option>
+          <option value="PAF">Principal Axis Factoring</option>
+        </select>
+        <select id="rotationMethod">
+          <option value="Varimax">Varimax</option>
+          <option value="Promax">Promax</option>
+          <option value="Oblimin">Oblimin</option>
+          <option value="None">None</option>
+        </select>
+        <input id="factorCount" type="number" min="1" step="1" value="2" />
+      </div>
+      <div class="hint" style="margin-top:8px;">Factor count is optional; if blank/invalid, Kaiser criterion is used.</div>
+    </section>
+  </div>
+
+  <div class="footer">
+    <div class="status" id="statusText">Waiting for data...</div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" id="btnCancel">Cancel</button>
+      <button class="btn primary" id="btnRun" disabled><i class="fa-solid fa-play"></i> Open Factor Dashboard</button>
+    </div>
+  </div>
+
+  <script>
+    var STATE = {
+      headers: [],
+      rows: [],
+      address: "",
+      numeric: [],
+      selected: {},
+      saved: null
+    };
+
+    function qs(id) { return document.getElementById(id); }
+
+    function sendToHost(action, data) {
+      try {
+        if (Office && Office.context && Office.context.ui && typeof Office.context.ui.messageParent === "function") {
+          Office.context.ui.messageParent(JSON.stringify({ action: action, data: data || null }));
+        }
+      } catch (e) {
+        console.error("sendToHost failed:", e);
+      }
+    }
+
+    function isLikelyNumeric(index) {
+      var valid = 0;
+      var numeric = 0;
+      for (var i = 0; i < STATE.rows.length; i++) {
+        var raw = STATE.rows[i][index];
+        if (raw === null || raw === undefined || raw === "") continue;
+        valid++;
+        var n = Number(raw);
+        if (isFinite(n)) numeric++;
+      }
+      if (valid === 0) return false;
+      return (numeric / valid) >= 0.8;
+    }
+
+    function hydrateFromPayload(payload) {
+      STATE.headers = Array.isArray(payload.headers) ? payload.headers.slice() : [];
+      STATE.rows = Array.isArray(payload.rows) ? payload.rows.slice() : [];
+      STATE.address = payload.address || "";
+      STATE.saved = payload.savedModelSpec || null;
+      STATE.numeric = [];
+      STATE.selected = {};
+
+      for (var i = 0; i < STATE.headers.length; i++) {
+        if (isLikelyNumeric(i)) STATE.numeric.push(STATE.headers[i]);
+      }
+
+      var preselected = [];
+      if (STATE.saved && Array.isArray(STATE.saved.variables)) preselected = STATE.saved.variables.slice();
+      if (!preselected.length && STATE.saved && Array.isArray(STATE.saved.xn)) preselected = STATE.saved.xn.slice();
+      if (!preselected.length) preselected = STATE.numeric.slice();
+
+      for (var j = 0; j < preselected.length; j++) {
+        STATE.selected[preselected[j]] = true;
+      }
+
+      if (STATE.saved) {
+        if (STATE.saved.extractionMethod) qs("extractionMethod").value = STATE.saved.extractionMethod;
+        if (STATE.saved.rotationMethod) qs("rotationMethod").value = STATE.saved.rotationMethod;
+        if (isFinite(Number(STATE.saved.factors)) && Number(STATE.saved.factors) > 0) {
+          qs("factorCount").value = String(Math.floor(Number(STATE.saved.factors)));
+        }
+      }
+
+      render();
+    }
+
+    function render() {
+      qs("rangeAddr").textContent = STATE.address || "Selection";
+      qs("rowCount").textContent = String(STATE.rows.length);
+      qs("colCount").textContent = String(STATE.headers.length);
+
+      var list = qs("varsList");
+      list.innerHTML = "";
+      for (var i = 0; i < STATE.numeric.length; i++) {
+        var name = STATE.numeric[i];
+        var row = document.createElement("label");
+        row.className = "var-row";
+        row.innerHTML = "<span>" + name + "</span><input type='checkbox' " + (STATE.selected[name] ? "checked" : "") + " />";
+        var cb = row.querySelector("input");
+        cb.addEventListener("change", (function(n) {
+          return function(ev) {
+            STATE.selected[n] = !!ev.target.checked;
+            updateMeta();
+          };
+        })(name));
+        list.appendChild(row);
+      }
+      updateMeta();
+      qs("statusText").textContent = STATE.numeric.length
+        ? "Data loaded. Configure and open dashboard."
+        : "No numeric variables detected.";
+    }
+
+    function selectedVariables() {
+      return STATE.numeric.filter(function(n) { return !!STATE.selected[n]; });
+    }
+
+    function updateMeta() {
+      var sel = selectedVariables();
+      qs("varsMeta").textContent = sel.length + " selected of " + STATE.numeric.length + " numeric variables";
+      qs("btnRun").disabled = sel.length < 2;
+    }
+
+    function runFactorModel() {
+      var vars = selectedVariables();
+      if (vars.length < 2) return;
+
+      var factorsRaw = Number(qs("factorCount").value);
+      var factors = isFinite(factorsRaw) && factorsRaw > 0 ? Math.floor(factorsRaw) : null;
+
+      var spec = {
+        analysisMode: "factor",
+        variables: vars,
+        xn: vars.slice(), // compatibility with host fallback logic
+        extractionMethod: qs("extractionMethod").value,
+        rotationMethod: qs("rotationMethod").value,
+        factors: factors
+      };
+      sendToHost("factorModel", spec);
+    }
+
+    function requestDataFromParent() {
+      sendToHost("requestData", null);
+    }
+
+    function wireOfficeMessaging() {
+      if (!Office || !Office.context || !Office.context.ui || !Office.EventType) return;
+      try {
+        Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function(arg) {
+          try {
+            var message = JSON.parse(arg.message || "{}");
+            if (message.type === "FACTOR_DATA" && message.payload) {
+              hydrateFromPayload(message.payload);
+            } else if (message.type === "REGRESSION_DATA" && message.payload) {
+              // Fallback compatibility
+              hydrateFromPayload(message.payload);
+            }
+          } catch (e) {
+            console.error("Failed to parse parent message:", e);
+          }
+        });
+      } catch (e) {
+        console.error("Failed to wire parent messaging:", e);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      qs("btnRefresh").addEventListener("click", requestDataFromParent);
+      qs("btnSelectAll").addEventListener("click", function() {
+        for (var i = 0; i < STATE.numeric.length; i++) STATE.selected[STATE.numeric[i]] = true;
+        render();
+      });
+      qs("btnClearAll").addEventListener("click", function() {
+        STATE.selected = {};
+        render();
+      });
+      qs("btnCancel").addEventListener("click", function() { sendToHost("close", null); });
+      qs("btnRun").addEventListener("click", runFactorModel);
+
+      Office.onReady(function() {
+        wireOfficeMessaging();
+        requestDataFromParent();
+        sendToHost("ready", null);
+      });
+    });
+  </script>
+</body>
+</html>

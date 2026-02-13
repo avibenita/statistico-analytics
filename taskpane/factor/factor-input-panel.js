@@ -44,7 +44,7 @@ function getDialogsBaseUrl() {
 
 function openFactorModelBuilder() {
   if (!factorRangeData || factorRangeData.length < 2) return;
-  const dialogUrl = `${getDialogsBaseUrl()}regression/regression-input.html`;
+  const dialogUrl = `${getDialogsBaseUrl()}factor/factor-input.html`;
 
   Office.context.ui.displayDialogAsync(
     dialogUrl,
@@ -62,7 +62,7 @@ function openFactorModelBuilder() {
             const message = JSON.parse(arg.message);
             if (message.action === "ready" || message.action === "requestData") {
               sendDialogData();
-            } else if (message.action === "regressionModel") {
+            } else if (message.action === "factorModel" || message.action === "regressionModel") {
               const modelSpec = message.payload || message.data || {};
               modelSpec.analysisMode = "factor";
               sessionStorage.setItem("factorModelSpec", JSON.stringify(modelSpec));
@@ -95,7 +95,7 @@ function sendDialogData() {
   const modelSpec = savedModelSpec ? JSON.parse(savedModelSpec) : null;
 
   factorDialog.messageChild(JSON.stringify({
-    type: "REGRESSION_DATA",
+    type: "FACTOR_DATA",
     payload: {
       headers,
       rows,
@@ -238,6 +238,7 @@ function correlationMatrix(X) {
 function buildFactorBundle(headers, rows, modelSpec) {
   const allVars = headers.slice();
   const selected = [];
+  if (modelSpec && Array.isArray(modelSpec.variables)) selected.push(...modelSpec.variables);
   if (modelSpec && Array.isArray(modelSpec.xn)) selected.push(...modelSpec.xn);
   if (modelSpec && Array.isArray(modelSpec.xc)) selected.push(...modelSpec.xc);
   const requested = selected.length ? selected : allVars;
@@ -289,7 +290,11 @@ function buildFactorBundle(headers, rows, modelSpec) {
   const eig = jacobiEigen(R);
   const eigVals = eig.eigenvalues.map(v => Math.max(0, v));
   const total = eigVals.reduce((a, b) => a + b, 0) || 1;
-  const retained = Math.max(1, eigVals.filter(v => v > 1).length);
+  const requestedFactors = Number(modelSpec && modelSpec.factors);
+  const autoRetained = Math.max(1, eigVals.filter(v => v > 1).length);
+  const retained = isFinite(requestedFactors) && requestedFactors > 0
+    ? Math.min(Math.max(1, Math.floor(requestedFactors)), numericNames.length)
+    : autoRetained;
   let cumulative = 0;
   const eigenTable = eigVals.map((val, i) => {
     const vp = (val / total) * 100;
@@ -350,14 +355,14 @@ function buildFactorBundle(headers, rows, modelSpec) {
       correlationMatrix: R
     },
     extraction: {
-      method: "PCA",
+      method: (modelSpec && modelSpec.extractionMethod) || "PCA",
       retainedFactors: retained,
       kaiser: retained > 0,
       cumulativeVariance: eigenTable[Math.max(0, retained - 1)].cumulativePct,
       eigenTable
     },
     rotation: {
-      rotationMethod: "Varimax",
+      rotationMethod: (modelSpec && modelSpec.rotationMethod) || "Varimax",
       loadingCutoff: 0.4,
       crossLoadingCount: loadings.filter(r => {
         let c = 0;
