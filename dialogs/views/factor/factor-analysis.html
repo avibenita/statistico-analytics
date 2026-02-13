@@ -759,7 +759,17 @@
         var tr = document.createElement("tr");
         columns.forEach(function(col) {
           var td = document.createElement("td");
-          td.textContent = row[col] !== undefined ? row[col] : "—";
+          var raw = row[col];
+          if (raw === undefined || raw === null || raw === "") {
+            td.textContent = "—";
+          } else {
+            var parsed = parseMaybeNumber(raw);
+            if (isFinite(parsed) && (typeof raw === "number" || /^-?\d+([.,]\d+)?([eE]-?\d+)?$/.test(String(raw).trim()))) {
+              td.textContent = formatNumber(parsed);
+            } else {
+              td.textContent = raw;
+            }
+          }
           tr.appendChild(td);
         });
         body.appendChild(tr);
