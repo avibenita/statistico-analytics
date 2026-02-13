@@ -16,10 +16,8 @@ function onRangeDataLoaded(values, address) {
   if (r) r.textContent = independentRangeAddress || "Selection";
   if (n) n.textContent = rows.length;
   if (c) c.textContent = headers.length;
-  populateTaskpaneSelectors(headers);
-  hydrateSpecFromSession();
-  onIndependentSpecChanged();
   showPanel(true);
+  updateButtonState();
 }
 
 function showPanel(show) {
@@ -35,63 +33,44 @@ function getDialogsBaseUrl() {
   return `${window.location.origin}/statistico-analytics/dialogs/views/`;
 }
 
-function populateTaskpaneSelectors(headers) {
-  const ids = ["groupASelect", "groupBSelect", "valueColumnSelect", "groupColumnSelect"];
-  ids.forEach((id) => {
-    const sel = document.getElementById(id);
-    if (!sel) return;
-    sel.innerHTML = (headers || []).map((h) => `<option value="${h}">${h}</option>`).join("");
-  });
+function openIndependentBuilder() {
+  if (!independentRangeData || independentRangeData.length < 2) return;
+  Office.context.ui.displayDialogAsync(
+    `${getDialogsBaseUrl()}independent/independent-input.html?v=${Date.now()}`,
+    { height: 90, width: 30, displayInIframe: false },
+    (asyncResult) => {
+      if (asyncResult.status === Office.AsyncResultStatus.Failed) return;
+      independentDialog = asyncResult.value;
+      setTimeout(sendDialogData, 550);
+      independentDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
+        try {
+          const message = JSON.parse(arg.message || "{}");
+          if (message.action === "ready" || message.action === "requestData") sendDialogData();
+          else if (message.action === "independentModel") {
+            sessionStorage.setItem("independentModelSpec", JSON.stringify(message.data || message.payload || {}));
+            independentDialog.close();
+            independentDialog = null;
+            updateButtonState();
+            setTimeout(openIndependentResultsDialog, 380);
+          } else if (message.action === "close") {
+            independentDialog.close();
+            independentDialog = null;
+          }
+        } catch (_e) {}
+      });
+    }
+  );
 }
 
-function hydrateSpecFromSession() {
-  const spec = JSON.parse(sessionStorage.getItem("independentModelSpec") || "{}");
-  const setIf = (id, val) => {
-    const el = document.getElementById(id);
-    if (el && val !== undefined && val !== null && String(val) !== "") el.value = String(val);
-  };
-  setIf("compareMode", spec.compareMode || spec.mode === "k-plus" ? "k-plus" : "two-vars");
-  setIf("frameworkMode", spec.primaryFramework || "parametric");
-  setIf("groupASelect", spec.groupA);
-  setIf("groupBSelect", spec.groupB);
-  setIf("valueColumnSelect", spec.valueColumn);
-  setIf("groupColumnSelect", spec.groupColumn);
-}
-
-function currentTaskpaneSpec() {
-  const modeEl = document.getElementById("compareMode");
-  const frameworkEl = document.getElementById("frameworkMode");
-  const compareMode = modeEl ? modeEl.value : "two-vars";
-  const primaryFramework = frameworkEl ? frameworkEl.value : "parametric";
-  const groupA = (document.getElementById("groupASelect") || {}).value;
-  const groupB = (document.getElementById("groupBSelect") || {}).value;
-  const valueColumn = (document.getElementById("valueColumnSelect") || {}).value;
-  const groupColumn = (document.getElementById("groupColumnSelect") || {}).value;
-  return {
-    analysisMode: "independent",
-    compareMode,
-    primaryFramework,
-    mode: compareMode === "k-plus" ? "k-plus" : "two-column",
-    groupA, groupB, valueColumn, groupColumn,
-    confidence: 0.95,
-    hypothesis: "two-sided",
-    groupALabel: "A",
-    groupBLabel: "B"
-  };
-}
-
-function onIndependentSpecChanged() {
-  const mode = (document.getElementById("compareMode") || {}).value || "two-vars";
-  const twA = document.getElementById("twoVarAWrap");
-  const twB = document.getElementById("twoVarBWrap");
-  const kv = document.getElementById("kValueWrap");
-  const kg = document.getElementById("kGroupWrap");
-  if (twA) twA.style.display = mode === "two-vars" ? "" : "none";
-  if (twB) twB.style.display = mode === "two-vars" ? "" : "none";
-  if (kv) kv.style.display = mode === "k-plus" ? "" : "none";
-  if (kg) kg.style.display = mode === "k-plus" ? "" : "none";
-  sessionStorage.setItem("independentModelSpec", JSON.stringify(currentTaskpaneSpec()));
-  updateButtonState();
+function sendDialogData() {
+  if (!independentDialog || !independentRangeData) return;
+  const headers = independentRangeData[0] || [];
+  const rows = independentRangeData.slice(1);
+  const savedModelSpec = JSON.parse(sessionStorage.getItem("independentModelSpec") || "null");
+  independentDialog.messageChild(JSON.stringify({
+    type: "INDEPENDENT_DATA",
+    payload: { headers, rows, address: independentRangeAddress, savedModelSpec }
+  }));
 }
 
 function parseNum(v) {
@@ -267,11 +246,14 @@ function buildIndependentBundle(headers, rows, spec) {
   const primaryFramework = spec.primaryFramework || "parametric";
   const posthocMethod = spec.posthocMethod || (primaryFramework === "nonparametric" ? "dunn" : "games-howell");
   const posthocCorrection = spec.posthocCorrection || "holm";
+  const selectedColumns = Array.isArray(spec.selectedColumns) && spec.selectedColumns.length
+    ? spec.selectedColumns.filter(name => headers.indexOf(name) >= 0)
+    : headers.slice();
   let g1 = [], g2 = [];
   let grouped = {};
   if (compareMode === "two-vars") {
-    const aIdx = headers.indexOf(spec.groupA || headers[0]);
-    const bIdx = headers.indexOf(spec.groupB || headers[1] || headers[0]);
+    const aIdx = headers.indexOf(spec.groupA || selectedColumns[0] || headers[0]);
+    const bIdx = headers.indexOf(spec.groupB || selectedColumns[1] || selectedColumns[0] || headers[1] || headers[0]);
     rows.forEach(r => {
       const a = parseNum(r[aIdx]);
       const b = parseNum(r[bIdx]);
@@ -279,8 +261,8 @@ function buildIndependentBundle(headers, rows, spec) {
       if (isFinite(b)) g2.push(b);
     });
   } else {
-    const vIdx = headers.indexOf(spec.valueColumn || headers[0]);
-    const grpIdx = headers.indexOf(spec.groupColumn || headers[1] || headers[0]);
+    const vIdx = headers.indexOf(spec.valueColumn || selectedColumns[0] || headers[0]);
+    const grpIdx = headers.indexOf(spec.groupColumn || selectedColumns[1] || selectedColumns[0] || headers[1] || headers[0]);
     rows.forEach(r => {
       const grp = String(r[grpIdx] == null ? "" : r[grpIdx]);
       const v = parseNum(r[vIdx]);
@@ -362,13 +344,14 @@ function buildIndependentBundle(headers, rows, spec) {
       confidence: Number(spec.confidence || 0.95),
       posthocMethod,
       posthocCorrection,
+      selectedColumns: selectedColumns.slice(),
       groupA: spec.groupA || "",
       groupB: spec.groupB || "",
       valueColumn: spec.valueColumn || "",
       groupColumn: spec.groupColumn || "",
       groupALabel: spec.groupALabel || "Group A",
       groupBLabel: spec.groupBLabel || "Group B",
-      headers: headers.slice(),
+      headers: selectedColumns.slice(),
       groupLevels: Object.keys(grouped || {})
     },
     explore: {
@@ -448,20 +431,18 @@ function resetIndependentModel() {
 
 function updateButtonState() {
   const has = !!sessionStorage.getItem("independentModelSpec");
-  const spec = JSON.parse(sessionStorage.getItem("independentModelSpec") || "{}");
-  const valid = spec.compareMode === "k-plus"
-    ? !!(spec.valueColumn && spec.groupColumn && spec.valueColumn !== spec.groupColumn)
-    : !!(spec.groupA && spec.groupB && spec.groupA !== spec.groupB);
   const openBtn = document.getElementById("openIndependentBuilder");
   const resetBtn = document.getElementById("resetIndependentModelBtn");
   if (openBtn) {
-    openBtn.innerHTML = '<i class="fa-solid fa-chart-column"></i> Open Results Dashboard';
-    openBtn.onclick = openIndependentResultsDialog;
-    openBtn.disabled = !valid;
+    openBtn.innerHTML = has
+      ? '<i class="fa-solid fa-sliders"></i> Open Configuration'
+      : '<i class="fa-solid fa-up-right-from-square"></i> Open Configuration';
+    openBtn.onclick = openIndependentBuilder;
+    openBtn.disabled = !independentRangeData || independentRangeData.length < 2;
   }
   if (resetBtn) resetBtn.style.display = has ? "inline-block" : "none";
 }
 
-window.onIndependentSpecChanged = onIndependentSpecChanged;
+window.openIndependentBuilder = openIndependentBuilder;
 window.openIndependentResultsDialog = openIndependentResultsDialog;
 window.resetIndependentModel = resetIndependentModel;

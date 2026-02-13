@@ -44,6 +44,9 @@
     .settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;}
     .settings-grid label{font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px;font-weight:700;text-transform:uppercase;}
     .settings-grid select,.settings-grid input{width:100%;height:34px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;padding:0 10px;}
+    .fw-group{display:flex;gap:8px;}
+    .fw-btn{flex:1;height:38px;border-radius:12px;border:2px solid rgba(120,200,255,.35);background:rgba(22,78,141,.45);color:#dff3ff;font-size:14px;font-weight:700;cursor:pointer;}
+    .fw-btn.active{background:#1f678a;border-color:#87d6ff;color:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.3);}
   </style>
 </head>
 <body>
@@ -74,7 +77,13 @@
         <div class="settings-bar">
           <div class="settings-grid">
             <div><label for="setCompareMode">Compare</label><select id="setCompareMode"><option value="two-vars">2 variables</option><option value="k-plus">More than 2 groups</option></select></div>
-            <div><label for="setFramework">Primary framework</label><select id="setFramework"><option value="parametric">Parametric (means)</option><option value="nonparametric">Nonparametric (ranks)</option></select></div>
+            <div style="grid-column: span 2;">
+              <label>Primary framework</label>
+              <div class="fw-group">
+                <button id="setFrameworkParam" type="button" class="fw-btn active">Parametric (means)</button>
+                <button id="setFrameworkNon" type="button" class="fw-btn">Non-parametric (Ranks)</button>
+              </div>
+            </div>
             <div><label for="setHypothesis">Hypothesis</label><select id="setHypothesis"><option value="two-sided">Two-sided</option><option value="greater">A > B</option><option value="less">A < B</option></select></div>
             <div><label for="setConfidence">Confidence</label><input id="setConfidence" type="number" min="0.8" max="0.999" step="0.01" value="0.95"/></div>
             <div id="setAWrap"><label for="setGroupA">Variable A</label><select id="setGroupA"></select></div>
@@ -191,7 +200,7 @@
     function currentSettingsSpec(){
       return {
         compareMode: (document.getElementById("setCompareMode") || {}).value || "two-vars",
-        primaryFramework: (document.getElementById("setFramework") || {}).value || "parametric",
+        primaryFramework: primaryFramework,
         hypothesis: (document.getElementById("setHypothesis") || {}).value || "two-sided",
         confidence: Number((document.getElementById("setConfidence") || { value: "0.95" }).value || 0.95),
         groupA: (document.getElementById("setGroupA") || {}).value || "",
@@ -210,9 +219,15 @@
       setDisplay("setVWrap", !two); setDisplay("setGWrap", !two);
       setDisplay("setPosthocWrap", !two); setDisplay("setCorrectionWrap", !two);
     }
+    function setFrameworkButtons(mode){
+      primaryFramework = mode === "nonparametric" ? "nonparametric" : "parametric";
+      var p = document.getElementById("setFrameworkParam");
+      var n = document.getElementById("setFrameworkNon");
+      if (p) p.classList.toggle("active", primaryFramework === "parametric");
+      if (n) n.classList.toggle("active", primaryFramework === "nonparametric");
+    }
     function notifySettingsChanged(){
       const spec = currentSettingsSpec();
-      primaryFramework = spec.primaryFramework;
       refreshSettingsVisibility();
       sendToHost("independentSettingsChanged", spec);
     }
@@ -322,12 +337,11 @@
       fillSelect("setValueColumn", availableHeaders, s.valueColumn);
       fillSelect("setGroupColumn", availableHeaders, s.groupColumn);
       const cMode = document.getElementById("setCompareMode"); if (cMode) cMode.value = s.compareMode || "two-vars";
-      const fw = document.getElementById("setFramework"); if (fw) fw.value = s.primaryFramework || primaryFramework;
+      setFrameworkButtons(s.primaryFramework || primaryFramework);
       const hy = document.getElementById("setHypothesis"); if (hy) hy.value = s.hypothesis || "two-sided";
       const cf = document.getElementById("setConfidence"); if (cf && s.confidence) cf.value = s.confidence;
       const phm = document.getElementById("setPosthocMethod"); if (phm) phm.value = s.posthocMethod || "games-howell";
       const phc = document.getElementById("setPosthocCorrection"); if (phc) phc.value = s.posthocCorrection || "holm";
-      primaryFramework = (fw && fw.value) || primaryFramework;
       refreshSettingsVisibility();
       setText("setupMode", s.mode); setText("setupHypothesis", s.hypothesis); setText("setupConfidence", (s.confidence?fmt(100*s.confidence):"...")+"%");
       setText("expN", `${e.n1||0} / ${e.n2||0}`); setText("expMean", `${fmt(e.mean1)} / ${fmt(e.mean2)}`); setText("expMed", `${fmt(e.med1)} / ${fmt(e.med2)}`); setText("expSd", `${fmt(e.sd1)} / ${fmt(e.sd2)}`); setText("expIqr", `${fmt(e.iqr1)} / ${fmt(e.iqr2)}`);
@@ -347,10 +361,15 @@
     }
     document.addEventListener("DOMContentLoaded", function(){
       document.querySelectorAll(".tab-button").forEach(btn=>btn.addEventListener("click",()=>switchTab(btn.getAttribute("data-tab"))));
-      ["setCompareMode","setFramework","setHypothesis","setConfidence","setGroupA","setGroupB","setValueColumn","setGroupColumn","setPosthocMethod","setPosthocCorrection"].forEach(function(id){
+      ["setCompareMode","setHypothesis","setConfidence","setGroupA","setGroupB","setValueColumn","setGroupColumn","setPosthocMethod","setPosthocCorrection"].forEach(function(id){
         const el = document.getElementById(id);
         if (el) el.addEventListener("change", notifySettingsChanged);
       });
+      var pBtn = document.getElementById("setFrameworkParam");
+      var nBtn = document.getElementById("setFrameworkNon");
+      if (pBtn) pBtn.addEventListener("click", function(){ setFrameworkButtons("parametric"); notifySettingsChanged(); });
+      if (nBtn) nBtn.addEventListener("click", function(){ setFrameworkButtons("nonparametric"); notifySettingsChanged(); });
+      setFrameworkButtons(primaryFramework);
       refreshSettingsVisibility();
       Office.onReady(function(){
         Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function(arg){

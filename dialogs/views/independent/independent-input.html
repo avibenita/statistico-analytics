@@ -19,6 +19,9 @@
     .btn{padding:8px 12px;border-radius:8px;border:1px solid #2e4268;background:#162948;color:#e5e7eb;cursor:pointer;}
     .btn.primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);border-color:#2f5fca;font-weight:700;}
     .meta{font-size:12px;color:#9fb0cc;}
+    .checks{max-height:200px;overflow:auto;border:1px solid #2a3d5f;border-radius:8px;padding:6px;background:#0b1428;}
+    .check-row{display:flex;align-items:center;justify-content:space-between;padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;}
+    .check-row:last-child{border-bottom:none;}
   </style>
 </head>
 <body>
@@ -34,14 +37,31 @@
     </div>
 
     <div class="panel">
+      <label>Columns of interest (for this analysis)</label>
+      <div id="interestChecks" class="checks"></div>
+    </div>
+
+    <div class="panel">
       <div class="grid">
         <div>
-          <label>Data Mode</label>
+          <label>Compare</label>
           <select id="dataMode">
-            <option value="two-column">Two columns (A/B)</option>
-            <option value="long-format">Long format (value + group)</option>
+            <option value="two-vars">2 variables</option>
+            <option value="k-plus">More than 2 groups</option>
           </select>
         </div>
+        <div>
+          <label>Primary framework</label>
+          <select id="frameworkMode">
+            <option value="parametric">Parametric (means)</option>
+            <option value="nonparametric">Nonparametric (ranks)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="grid">
         <div>
           <label>Hypothesis</label>
           <select id="hypothesis">
@@ -50,13 +70,17 @@
             <option value="less">A < B</option>
           </select>
         </div>
+        <div>
+          <label>Confidence</label>
+          <input id="confidenceInput" type="number" min="0.8" max="0.999" step="0.01" value="0.95"/>
+        </div>
       </div>
     </div>
 
     <div class="panel" id="twoColPanel">
       <div class="grid">
-        <div><label>Group A Column</label><select id="groupACol"></select></div>
-        <div><label>Group B Column</label><select id="groupBCol"></select></div>
+        <div><label>Compare A</label><select id="groupACol"></select></div>
+        <div><label>Compare B</label><select id="groupBCol"></select></div>
       </div>
     </div>
 
@@ -78,7 +102,7 @@
   </div>
 
   <script>
-    var STATE = { headers: [], rows: [], address: "", saved: null };
+    var STATE = { headers: [], rows: [], address: "", saved: null, selectedColumns: [] };
     function qs(id){ return document.getElementById(id); }
     function send(action, data){
       if (Office && Office.context && Office.context.ui && typeof Office.context.ui.messageParent === "function") {
@@ -89,47 +113,79 @@
       var sel = qs(id); if (!sel) return;
       sel.innerHTML = headers.map(function(h){ return '<option value="' + h + '">' + h + '</option>'; }).join("");
     }
+    function renderInterestChecks(headers){
+      var host = qs("interestChecks");
+      if (!host) return;
+      host.innerHTML = "";
+      var selected = STATE.selectedColumns && STATE.selectedColumns.length ? STATE.selectedColumns.slice() : headers.slice();
+      headers.forEach(function(h){
+        var checked = selected.indexOf(h) >= 0;
+        var row = document.createElement("label");
+        row.className = "check-row";
+        row.innerHTML = '<span>' + h + '</span><input type="checkbox" ' + (checked ? "checked" : "") + ' data-col="' + h + '"/>';
+        host.appendChild(row);
+      });
+      host.querySelectorAll("input[type=checkbox]").forEach(function(cb){
+        cb.addEventListener("change", onInterestChanged);
+      });
+    }
+    function onInterestChanged(){
+      var checks = Array.from(document.querySelectorAll("#interestChecks input[type=checkbox]:checked"));
+      STATE.selectedColumns = checks.map(function(c){ return c.getAttribute("data-col"); });
+      if (!STATE.selectedColumns.length) return;
+      ["groupACol","groupBCol","valueCol","groupCol"].forEach(function(id){ fillSelect(id, STATE.selectedColumns); });
+    }
     function applyPayload(p){
       STATE.headers = p.headers || []; STATE.rows = p.rows || []; STATE.address = p.address || ""; STATE.saved = p.savedModelSpec || {};
       qs("rangeAddr").textContent = STATE.address || "Selection";
       qs("rowCount").textContent = String(STATE.rows.length);
       qs("colCount").textContent = String(STATE.headers.length);
-      ["groupACol","groupBCol","valueCol","groupCol"].forEach(function(id){ fillSelect(id, STATE.headers); });
+      STATE.selectedColumns = (STATE.saved && Array.isArray(STATE.saved.selectedColumns) && STATE.saved.selectedColumns.length)
+        ? STATE.saved.selectedColumns.slice()
+        : STATE.headers.slice();
+      renderInterestChecks(STATE.headers);
+      ["groupACol","groupBCol","valueCol","groupCol"].forEach(function(id){ fillSelect(id, STATE.selectedColumns); });
       if (STATE.saved) {
-        if (STATE.saved.mode) qs("dataMode").value = STATE.saved.mode;
+        if (STATE.saved.compareMode) qs("dataMode").value = STATE.saved.compareMode;
+        else if (STATE.saved.mode === "k-plus") qs("dataMode").value = "k-plus";
+        if (STATE.saved.primaryFramework) qs("frameworkMode").value = STATE.saved.primaryFramework;
         if (STATE.saved.groupA) qs("groupACol").value = STATE.saved.groupA;
         if (STATE.saved.groupB) qs("groupBCol").value = STATE.saved.groupB;
         if (STATE.saved.valueColumn) qs("valueCol").value = STATE.saved.valueColumn;
         if (STATE.saved.groupColumn) qs("groupCol").value = STATE.saved.groupColumn;
-        if (STATE.saved.levelA) qs("levelA").value = STATE.saved.levelA;
-        if (STATE.saved.levelB) qs("levelB").value = STATE.saved.levelB;
         if (STATE.saved.hypothesis) qs("hypothesis").value = STATE.saved.hypothesis;
+        if (STATE.saved.confidence) qs("confidenceInput").value = STATE.saved.confidence;
       }
       onModeChange();
     }
     function onModeChange(){
       var mode = qs("dataMode").value;
-      qs("twoColPanel").style.display = mode === "two-column" ? "block" : "none";
-      qs("longPanel").style.display = mode === "long-format" ? "block" : "none";
+      qs("twoColPanel").style.display = mode === "two-vars" ? "block" : "none";
+      qs("longPanel").style.display = mode === "k-plus" ? "block" : "none";
     }
     function run(){
       var mode = qs("dataMode").value;
+      var selected = STATE.selectedColumns && STATE.selectedColumns.length ? STATE.selectedColumns.slice() : [];
+      if (selected.length < 2) return;
       var spec = {
         analysisMode: "independent",
-        mode: mode,
+        compareMode: mode,
+        mode: mode === "k-plus" ? "k-plus" : "two-column",
+        primaryFramework: qs("frameworkMode").value,
+        selectedColumns: selected,
         hypothesis: qs("hypothesis").value,
-        confidence: 0.95,
+        confidence: Number(qs("confidenceInput").value || 0.95),
         groupALabel: "A",
         groupBLabel: "B"
       };
-      if (mode === "two-column") {
+      if (mode === "two-vars") {
         spec.groupA = qs("groupACol").value;
         spec.groupB = qs("groupBCol").value;
       } else {
         spec.valueColumn = qs("valueCol").value;
         spec.groupColumn = qs("groupCol").value;
-        spec.levelA = qs("levelA").value || "A";
-        spec.levelB = qs("levelB").value || "B";
+        spec.posthocMethod = spec.primaryFramework === "nonparametric" ? "dunn" : "games-howell";
+        spec.posthocCorrection = "holm";
       }
       send("independentModel", spec);
     }
