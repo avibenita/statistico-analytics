@@ -16,8 +16,10 @@ function onRangeDataLoaded(values, address) {
   if (r) r.textContent = independentRangeAddress || "Selection";
   if (n) n.textContent = rows.length;
   if (c) c.textContent = headers.length;
+  populateTaskpaneSelectors(headers);
+  hydrateSpecFromSession();
+  onIndependentSpecChanged();
   showPanel(true);
-  updateButtonState();
 }
 
 function showPanel(show) {
@@ -33,44 +35,63 @@ function getDialogsBaseUrl() {
   return `${window.location.origin}/statistico-analytics/dialogs/views/`;
 }
 
-function openIndependentBuilder() {
-  if (!independentRangeData || independentRangeData.length < 2) return;
-  Office.context.ui.displayDialogAsync(
-    `${getDialogsBaseUrl()}independent/independent-input.html?v=${Date.now()}`,
-    { height: 90, width: 30, displayInIframe: false },
-    (asyncResult) => {
-      if (asyncResult.status === Office.AsyncResultStatus.Failed) return;
-      independentDialog = asyncResult.value;
-      setTimeout(sendDialogData, 550);
-      independentDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
-        try {
-          const message = JSON.parse(arg.message || "{}");
-          if (message.action === "ready" || message.action === "requestData") sendDialogData();
-          else if (message.action === "independentModel") {
-            sessionStorage.setItem("independentModelSpec", JSON.stringify(message.data || message.payload || {}));
-            independentDialog.close();
-            independentDialog = null;
-            updateButtonState();
-            setTimeout(openIndependentResultsDialog, 380);
-          } else if (message.action === "close") {
-            independentDialog.close();
-            independentDialog = null;
-          }
-        } catch (_e) {}
-      });
-    }
-  );
+function populateTaskpaneSelectors(headers) {
+  const ids = ["groupASelect", "groupBSelect", "valueColumnSelect", "groupColumnSelect"];
+  ids.forEach((id) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = (headers || []).map((h) => `<option value="${h}">${h}</option>`).join("");
+  });
 }
 
-function sendDialogData() {
-  if (!independentDialog || !independentRangeData) return;
-  const headers = independentRangeData[0] || [];
-  const rows = independentRangeData.slice(1);
-  const savedModelSpec = JSON.parse(sessionStorage.getItem("independentModelSpec") || "null");
-  independentDialog.messageChild(JSON.stringify({
-    type: "INDEPENDENT_DATA",
-    payload: { headers, rows, address: independentRangeAddress, savedModelSpec }
-  }));
+function hydrateSpecFromSession() {
+  const spec = JSON.parse(sessionStorage.getItem("independentModelSpec") || "{}");
+  const setIf = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && val !== undefined && val !== null && String(val) !== "") el.value = String(val);
+  };
+  setIf("compareMode", spec.compareMode || spec.mode === "k-plus" ? "k-plus" : "two-vars");
+  setIf("frameworkMode", spec.primaryFramework || "parametric");
+  setIf("groupASelect", spec.groupA);
+  setIf("groupBSelect", spec.groupB);
+  setIf("valueColumnSelect", spec.valueColumn);
+  setIf("groupColumnSelect", spec.groupColumn);
+}
+
+function currentTaskpaneSpec() {
+  const modeEl = document.getElementById("compareMode");
+  const frameworkEl = document.getElementById("frameworkMode");
+  const compareMode = modeEl ? modeEl.value : "two-vars";
+  const primaryFramework = frameworkEl ? frameworkEl.value : "parametric";
+  const groupA = (document.getElementById("groupASelect") || {}).value;
+  const groupB = (document.getElementById("groupBSelect") || {}).value;
+  const valueColumn = (document.getElementById("valueColumnSelect") || {}).value;
+  const groupColumn = (document.getElementById("groupColumnSelect") || {}).value;
+  return {
+    analysisMode: "independent",
+    compareMode,
+    primaryFramework,
+    mode: compareMode === "k-plus" ? "k-plus" : "two-column",
+    groupA, groupB, valueColumn, groupColumn,
+    confidence: 0.95,
+    hypothesis: "two-sided",
+    groupALabel: "A",
+    groupBLabel: "B"
+  };
+}
+
+function onIndependentSpecChanged() {
+  const mode = (document.getElementById("compareMode") || {}).value || "two-vars";
+  const twA = document.getElementById("twoVarAWrap");
+  const twB = document.getElementById("twoVarBWrap");
+  const kv = document.getElementById("kValueWrap");
+  const kg = document.getElementById("kGroupWrap");
+  if (twA) twA.style.display = mode === "two-vars" ? "" : "none";
+  if (twB) twB.style.display = mode === "two-vars" ? "" : "none";
+  if (kv) kv.style.display = mode === "k-plus" ? "" : "none";
+  if (kg) kg.style.display = mode === "k-plus" ? "" : "none";
+  sessionStorage.setItem("independentModelSpec", JSON.stringify(currentTaskpaneSpec()));
+  updateButtonState();
 }
 
 function parseNum(v) {
@@ -112,6 +133,12 @@ function erf(x) {
   return sign * y;
 }
 function normalCdf(z) { return 0.5 * (1 + erf(z / Math.sqrt(2))); }
+
+function chiSquareUpperTailApprox(x, df) {
+  if (!isFinite(x) || !isFinite(df) || df <= 0) return NaN;
+  const z = (Math.pow(x / df, 1 / 3) - (1 - 2 / (9 * df))) / Math.sqrt(2 / (9 * df));
+  return Math.max(0, Math.min(1, 1 - normalCdf(z)));
+}
 
 function computeWelch(x, y, alt) {
   const n1 = x.length, n2 = y.length;
@@ -167,9 +194,12 @@ function cliffsDelta(x, y) {
 }
 
 function buildIndependentBundle(headers, rows, spec) {
-  const mode = spec.mode || "two-column";
+  const compareMode = spec.compareMode || (spec.mode === "k-plus" ? "k-plus" : "two-vars");
+  const mode = compareMode === "k-plus" ? "k-plus" : "two-column";
+  const primaryFramework = spec.primaryFramework || "parametric";
   let g1 = [], g2 = [];
-  if (mode === "two-column") {
+  let grouped = {};
+  if (compareMode === "two-vars") {
     const aIdx = headers.indexOf(spec.groupA || headers[0]);
     const bIdx = headers.indexOf(spec.groupB || headers[1] || headers[0]);
     rows.forEach(r => {
@@ -181,15 +211,18 @@ function buildIndependentBundle(headers, rows, spec) {
   } else {
     const vIdx = headers.indexOf(spec.valueColumn || headers[0]);
     const grpIdx = headers.indexOf(spec.groupColumn || headers[1] || headers[0]);
-    const lvlA = spec.levelA;
-    const lvlB = spec.levelB;
     rows.forEach(r => {
       const grp = String(r[grpIdx] == null ? "" : r[grpIdx]);
       const v = parseNum(r[vIdx]);
       if (!isFinite(v)) return;
-      if (grp === String(lvlA)) g1.push(v);
-      else if (grp === String(lvlB)) g2.push(v);
+      if (!grouped[grp]) grouped[grp] = [];
+      grouped[grp].push(v);
     });
+    const levels = Object.keys(grouped).filter(k => grouped[k].length > 0);
+    if (levels.length >= 2) {
+      g1 = grouped[levels[0]].slice();
+      g2 = grouped[levels[1]].slice();
+    }
   }
   const alt = spec.hypothesis || "two-sided";
   const welch = computeWelch(g1, g2, alt);
@@ -201,13 +234,63 @@ function buildIndependentBundle(headers, rows, spec) {
   const delta = cliffsDelta(g1, g2);
   const rrb = 2 * (mw.u / Math.max(1, n1 * n2)) - 1;
   const ps = (delta + 1) / 2;
+  let omnibus = null;
+  if (compareMode === "k-plus") {
+    const levels = Object.keys(grouped).filter(k => grouped[k].length > 0);
+    const arrays = levels.map(k => grouped[k]);
+    const N = arrays.reduce((s, a) => s + a.length, 0);
+    const grand = arrays.reduce((acc, arr) => acc.concat(arr), []);
+    const grandMean = mean(grand);
+    let ssBetween = 0;
+    let ssWithin = 0;
+    arrays.forEach(arr => {
+      const m = mean(arr);
+      ssBetween += arr.length * Math.pow(m - grandMean, 2);
+      arr.forEach(v => { ssWithin += Math.pow(v - m, 2); });
+    });
+    const df1 = Math.max(1, levels.length - 1);
+    const df2 = Math.max(1, N - levels.length);
+    const f = (ssBetween / df1) / Math.max(1e-12, (ssWithin / df2));
+    const pAnova = chiSquareUpperTailApprox(f * df1, df1);
+
+    // Kruskal-Wallis
+    const pooled = [];
+    levels.forEach((lv, gi) => grouped[lv].forEach(v => pooled.push({ v, gi })));
+    pooled.sort((a, b) => a.v - b.v);
+    let i = 0;
+    while (i < pooled.length) {
+      let j = i + 1;
+      while (j < pooled.length && pooled[j].v === pooled[i].v) j++;
+      const r = (i + 1 + j) / 2;
+      for (let k = i; k < j; k++) pooled[k].rank = r;
+      i = j;
+    }
+    const rankSums = Array(levels.length).fill(0);
+    pooled.forEach(p => { rankSums[p.gi] += p.rank; });
+    let H = 0;
+    for (let g = 0; g < levels.length; g++) {
+      const ng = grouped[levels[g]].length;
+      H += (rankSums[g] * rankSums[g]) / Math.max(1, ng);
+    }
+    H = (12 / (N * (N + 1))) * H - 3 * (N + 1);
+    const pKw = chiSquareUpperTailApprox(H, df1);
+    omnibus = { levels, N, anovaF: f, anovaDf1: df1, anovaDf2: df2, anovaP: pAnova, kwH: H, kwDf: df1, kwP: pKw };
+  }
   return {
     setup: {
       mode,
+      compareMode,
+      primaryFramework,
       hypothesis: alt,
       confidence: Number(spec.confidence || 0.95),
+      groupA: spec.groupA || "",
+      groupB: spec.groupB || "",
+      valueColumn: spec.valueColumn || "",
+      groupColumn: spec.groupColumn || "",
       groupALabel: spec.groupALabel || "Group A",
-      groupBLabel: spec.groupBLabel || "Group B"
+      groupBLabel: spec.groupBLabel || "Group B",
+      headers: headers.slice(),
+      groupLevels: Object.keys(grouped || {})
     },
     explore: {
       n1, n2, mean1: mean(g1), mean2: mean(g2), med1: median(g1), med2: median(g2),
@@ -223,7 +306,8 @@ function buildIndependentBundle(headers, rows, spec) {
       primary: "Welch t-test",
       welchT: welch.t, welchDf: welch.df, welchP: welch.p,
       meanDiff: welch.diff, ciLow: welch.ciLow, ciHigh: welch.ciHigh,
-      u: mw.u, mwP: mw.p
+      u: mw.u, mwP: mw.p,
+      omnibus
     },
     effects: {
       hedgesG: g, cliffsDelta: delta, rankBiserial: rrb, probabilitySuperiority: ps
@@ -251,7 +335,15 @@ function openIndependentResultsDialog() {
       independentDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
         try {
           const message = JSON.parse(arg.message || "{}");
-          if (message.action === "ready" || message.action === "HOST_EVENT") sendIndependentBundle();
+          if (message.action === "ready") sendIndependentBundle();
+          else if (message.action === "HOST_EVENT") {
+            if (message.cmd === "independentSettingsChanged" && message.data) {
+              const current = JSON.parse(sessionStorage.getItem("independentModelSpec") || "{}");
+              const next = Object.assign({}, current, message.data);
+              sessionStorage.setItem("independentModelSpec", JSON.stringify(next));
+            }
+            sendIndependentBundle();
+          }
           else if (message.action === "close") { independentDialog.close(); independentDialog = null; }
         } catch (_e) {}
       });
@@ -276,15 +368,20 @@ function resetIndependentModel() {
 
 function updateButtonState() {
   const has = !!sessionStorage.getItem("independentModelSpec");
+  const spec = JSON.parse(sessionStorage.getItem("independentModelSpec") || "{}");
+  const valid = spec.compareMode === "k-plus"
+    ? !!(spec.valueColumn && spec.groupColumn && spec.valueColumn !== spec.groupColumn)
+    : !!(spec.groupA && spec.groupB && spec.groupA !== spec.groupB);
   const openBtn = document.getElementById("openIndependentBuilder");
   const resetBtn = document.getElementById("resetIndependentModelBtn");
   if (openBtn) {
-    openBtn.innerHTML = has ? '<i class="fa-solid fa-chart-column"></i> Open Results Dashboard' : '<i class="fa-solid fa-up-right-from-square"></i> Open Model Builder';
-    openBtn.onclick = has ? openIndependentResultsDialog : openIndependentBuilder;
+    openBtn.innerHTML = '<i class="fa-solid fa-chart-column"></i> Open Results Dashboard';
+    openBtn.onclick = openIndependentResultsDialog;
+    openBtn.disabled = !valid;
   }
   if (resetBtn) resetBtn.style.display = has ? "inline-block" : "none";
 }
 
-window.openIndependentBuilder = openIndependentBuilder;
+window.onIndependentSpecChanged = onIndependentSpecChanged;
 window.openIndependentResultsDialog = openIndependentResultsDialog;
 window.resetIndependentModel = resetIndependentModel;

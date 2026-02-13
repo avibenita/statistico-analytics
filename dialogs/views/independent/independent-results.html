@@ -40,6 +40,10 @@
     .framework-select{height:34px;padding:0 10px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;}
     .agreement-good{color:#4ade80;font-weight:700;}
     .agreement-warn{color:#fbbf24;font-weight:700;}
+    .settings-bar{margin-top:12px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px 12px;}
+    .settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;}
+    .settings-grid label{font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px;font-weight:700;text-transform:uppercase;}
+    .settings-grid select,.settings-grid input{width:100%;height:34px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;padding:0 10px;}
   </style>
 </head>
 <body>
@@ -54,8 +58,7 @@
           </div>
         </div>
         <div class="tab-navigation">
-          <button class="tab-button active" data-tab="setup"><i class="fa-solid fa-sliders"></i> Setup</button>
-          <button class="tab-button" data-tab="explore"><i class="fa-solid fa-chart-column"></i> Explore</button>
+          <button class="tab-button active" data-tab="explore"><i class="fa-solid fa-chart-column"></i> Explore</button>
           <button class="tab-button" data-tab="assumptions"><i class="fa-solid fa-shield-halved"></i> Assumptions</button>
           <button class="tab-button" data-tab="results"><i class="fa-solid fa-square-poll-vertical"></i> Results</button>
           <button class="tab-button" data-tab="effects"><i class="fa-solid fa-wave-square"></i> Effects</button>
@@ -68,9 +71,21 @@
             </select>
           </div>
         </div>
+        <div class="settings-bar">
+          <div class="settings-grid">
+            <div><label for="setCompareMode">Compare</label><select id="setCompareMode"><option value="two-vars">2 variables</option><option value="k-plus">More than 2 groups</option></select></div>
+            <div><label for="setFramework">Primary framework</label><select id="setFramework"><option value="parametric">Parametric (means)</option><option value="nonparametric">Nonparametric (ranks)</option></select></div>
+            <div><label for="setHypothesis">Hypothesis</label><select id="setHypothesis"><option value="two-sided">Two-sided</option><option value="greater">A > B</option><option value="less">A < B</option></select></div>
+            <div><label for="setConfidence">Confidence</label><input id="setConfidence" type="number" min="0.8" max="0.999" step="0.01" value="0.95"/></div>
+            <div id="setAWrap"><label for="setGroupA">Variable A</label><select id="setGroupA"></select></div>
+            <div id="setBWrap"><label for="setGroupB">Variable B</label><select id="setGroupB"></select></div>
+            <div id="setVWrap" style="display:none;"><label for="setValueColumn">Value column</label><select id="setValueColumn"></select></div>
+            <div id="setGWrap" style="display:none;"><label for="setGroupColumn">Group column</label><select id="setGroupColumn"></select></div>
+          </div>
+        </div>
       </div>
       <div class="view-container">
-        <section id="tab-setup" class="tab-panel active">
+        <section id="tab-setup" class="tab-panel">
           <div class="stats-container">
             <div class="stat-panel"><div class="stat-panel-heading">Model Setup</div><div class="stat-panel-body">
               <div class="stat-field"><span class="stat-label">Mode</span><span class="stat-value" id="setupMode">...</span></div>
@@ -79,7 +94,7 @@
             </div></div>
           </div>
         </section>
-        <section id="tab-explore" class="tab-panel">
+        <section id="tab-explore" class="tab-panel active">
           <div class="stats-container">
             <div class="stat-panel"><div class="stat-panel-heading">Group Summaries</div><div class="stat-panel-body">
               <div class="stat-field"><span class="stat-label">n1 / n2</span><span class="stat-value" id="expN">...</span></div>
@@ -102,13 +117,7 @@
           <div class="stats-container">
             <div class="stat-panel"><div class="stat-panel-heading">Primary Results</div><div class="stat-panel-body">
               <div class="stat-field">
-                <span class="stat-label">Primary Framework</span>
-                <span class="stat-value" style="background:transparent;border:none;padding:0;">
-                  <select id="primaryFrameworkSelect" class="framework-select">
-                    <option value="parametric">Parametric (means)</option>
-                    <option value="nonparametric">Nonparametric (ranks)</option>
-                  </select>
-                </span>
+                <span class="stat-label">Primary Framework</span><span class="stat-value" id="resPrimaryFramework">...</span>
               </div>
               <div class="stat-field"><span class="stat-label">Primary Test</span><span class="stat-value" id="resPrimaryTest">...</span></div>
               <div class="stat-field"><span class="stat-label">Statistic</span><span class="stat-value" id="resPrimaryStat">...</span></div>
@@ -152,6 +161,7 @@
     let globalDecimalPrecision = "auto";
     let lastBundle = null;
     let primaryFramework = "parametric";
+    let availableHeaders = [];
     function parseMaybeNumber(v){ if(v===undefined||v===null) return NaN; const n=Number(String(v).replace(",",".")); return isFinite(n)?n:NaN; }
     function fmt(v){ const n=parseMaybeNumber(v); if(!isFinite(n)) return v==null?"...":String(v); if(globalDecimalPrecision==="auto"){ if(Math.abs(n)<1&&n!==0) return n.toFixed(4); return n.toFixed(2);} return n.toFixed(parseInt(globalDecimalPrecision,10)); }
     function fmtP(v){ const n=parseMaybeNumber(v); if(!isFinite(n)) return v==null?"...":String(v); if(n < 0.001) return "< 0.001"; return globalDecimalPrecision === "auto" ? n.toFixed(4) : n.toFixed(Math.max(3, parseInt(globalDecimalPrecision,10))); }
@@ -159,8 +169,74 @@
     function setText(id,val){ const el=document.getElementById(id); if(el) el.textContent = (val!==undefined&&val!==null&&val!=="")?val:"..."; }
     function switchTab(tab){ document.querySelectorAll(".tab-button").forEach(b=>b.classList.toggle("active",b.getAttribute("data-tab")===tab)); document.querySelectorAll(".tab-panel").forEach(p=>p.classList.toggle("active",p.id==="tab-"+tab)); }
     function sendToHost(cmd,data){ if(Office&&Office.context&&Office.context.ui&&Office.context.ui.messageParent) Office.context.ui.messageParent(JSON.stringify({action:"HOST_EVENT",cmd:cmd,data:data||{}})); }
+    function fillSelect(id, options, selected){
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = (options || []).map(function(v){ return '<option value="' + v + '">' + v + '</option>'; }).join("");
+      if (selected !== undefined && selected !== null && String(selected) !== "") el.value = String(selected);
+    }
+    function currentSettingsSpec(){
+      return {
+        compareMode: (document.getElementById("setCompareMode") || {}).value || "two-vars",
+        primaryFramework: (document.getElementById("setFramework") || {}).value || "parametric",
+        hypothesis: (document.getElementById("setHypothesis") || {}).value || "two-sided",
+        confidence: Number((document.getElementById("setConfidence") || { value: "0.95" }).value || 0.95),
+        groupA: (document.getElementById("setGroupA") || {}).value || "",
+        groupB: (document.getElementById("setGroupB") || {}).value || "",
+        valueColumn: (document.getElementById("setValueColumn") || {}).value || "",
+        groupColumn: (document.getElementById("setGroupColumn") || {}).value || ""
+      };
+    }
+    function refreshSettingsVisibility(){
+      const mode = (document.getElementById("setCompareMode") || {}).value || "two-vars";
+      const two = mode === "two-vars";
+      const setDisplay = (id, show) => { const el = document.getElementById(id); if (el) el.style.display = show ? "" : "none"; };
+      setDisplay("setAWrap", two); setDisplay("setBWrap", two);
+      setDisplay("setVWrap", !two); setDisplay("setGWrap", !two);
+    }
+    function notifySettingsChanged(){
+      const spec = currentSettingsSpec();
+      primaryFramework = spec.primaryFramework;
+      refreshSettingsVisibility();
+      sendToHost("independentSettingsChanged", spec);
+    }
     function updateResultsPanels(r, fx, s, a){
+      setText("resPrimaryFramework", primaryFramework === "nonparametric" ? "Nonparametric (ranks)" : "Parametric (means)");
       const alpha = isFinite(parseMaybeNumber(a)) ? parseMaybeNumber(a) : (1 - (parseMaybeNumber(s && s.confidence) || 0.95));
+      if (s && s.compareMode === "k-plus" && r && r.omnibus) {
+        const ob = r.omnibus;
+        const paramPrimary = primaryFramework !== "nonparametric";
+        if (paramPrimary) {
+          setText("resPrimaryTest", "One-way ANOVA");
+          setText("resPrimaryStat", "F(" + fmt(ob.anovaDf1) + ", " + fmt(ob.anovaDf2) + ") = " + fmt(ob.anovaF));
+          setText("resPrimaryP", fmtP(ob.anovaP));
+          setText("resPrimaryEstimate", "Omnibus effect across " + fmt(ob.levels ? ob.levels.length : 0) + " groups");
+          setText("resSecondaryTest", "Kruskal-Wallis");
+          setText("resSecondaryStat", "H(" + fmt(ob.kwDf) + ") = " + fmt(ob.kwH));
+          setText("resSecondaryP", fmtP(ob.kwP));
+        } else {
+          setText("resPrimaryTest", "Kruskal-Wallis");
+          setText("resPrimaryStat", "H(" + fmt(ob.kwDf) + ") = " + fmt(ob.kwH));
+          setText("resPrimaryP", fmtP(ob.kwP));
+          setText("resPrimaryEstimate", "Distribution shift across " + fmt(ob.levels ? ob.levels.length : 0) + " groups");
+          setText("resSecondaryTest", "One-way ANOVA");
+          setText("resSecondaryStat", "F(" + fmt(ob.anovaDf1) + ", " + fmt(ob.anovaDf2) + ") = " + fmt(ob.anovaF));
+          setText("resSecondaryP", fmtP(ob.anovaP));
+        }
+        const agreeElK = document.getElementById("resAgreement");
+        const aSig = parseMaybeNumber(ob.anovaP) < alpha;
+        const kSig = parseMaybeNumber(ob.kwP) < alpha;
+        if (aSig === kSig) {
+          setText("resAgreement", "Agree at alpha");
+          if (agreeElK) agreeElK.className = "stat-value agreement-good";
+          setText("resHint", "Omnibus conclusions are consistent across frameworks.");
+        } else {
+          setText("resAgreement", "Disagree at alpha");
+          if (agreeElK) agreeElK.className = "stat-value agreement-warn";
+          setText("resHint", "Consider non-normality/heteroscedasticity and run post-hoc with correction.");
+        }
+        return;
+      }
       const welchSig = parseMaybeNumber(r.welchP) < alpha;
       const mwSig = parseMaybeNumber(r.mwP) < alpha;
       const primaryParametric = primaryFramework !== "nonparametric";
@@ -197,6 +273,17 @@
     function populateBundle(b){
       lastBundle = b || {};
       const s=b.setup||{}, e=b.explore||{}, a=b.assumptions||{}, r=b.results||{}, fx=b.effects||{}, p=b.power||{}, rep=b.report||{};
+      availableHeaders = Array.isArray(s.headers) ? s.headers.slice() : availableHeaders;
+      fillSelect("setGroupA", availableHeaders, s.groupA);
+      fillSelect("setGroupB", availableHeaders, s.groupB);
+      fillSelect("setValueColumn", availableHeaders, s.valueColumn);
+      fillSelect("setGroupColumn", availableHeaders, s.groupColumn);
+      const cMode = document.getElementById("setCompareMode"); if (cMode) cMode.value = s.compareMode || "two-vars";
+      const fw = document.getElementById("setFramework"); if (fw) fw.value = s.primaryFramework || primaryFramework;
+      const hy = document.getElementById("setHypothesis"); if (hy) hy.value = s.hypothesis || "two-sided";
+      const cf = document.getElementById("setConfidence"); if (cf && s.confidence) cf.value = s.confidence;
+      primaryFramework = (fw && fw.value) || primaryFramework;
+      refreshSettingsVisibility();
       setText("setupMode", s.mode); setText("setupHypothesis", s.hypothesis); setText("setupConfidence", (s.confidence?fmt(100*s.confidence):"...")+"%");
       setText("expN", `${e.n1||0} / ${e.n2||0}`); setText("expMean", `${fmt(e.mean1)} / ${fmt(e.mean2)}`); setText("expMed", `${fmt(e.med1)} / ${fmt(e.med2)}`); setText("expSd", `${fmt(e.sd1)} / ${fmt(e.sd2)}`); setText("expIqr", `${fmt(e.iqr1)} / ${fmt(e.iqr2)}`);
       setText("asNormA", a.normalityA); setText("asNormB", a.normalityB); setText("asEqVar", a.equalVariance); setText("asReco", a.recommendation);
@@ -214,16 +301,11 @@
     }
     document.addEventListener("DOMContentLoaded", function(){
       document.querySelectorAll(".tab-button").forEach(btn=>btn.addEventListener("click",()=>switchTab(btn.getAttribute("data-tab"))));
-      const primarySelect = document.getElementById("primaryFrameworkSelect");
-      if (primarySelect) {
-        primarySelect.addEventListener("change", function(){
-          primaryFramework = this.value || "parametric";
-          if (lastBundle) {
-            const s=lastBundle.setup||{}, r=lastBundle.results||{}, fx=lastBundle.effects||{};
-            updateResultsPanels(r, fx, s, 1 - (parseMaybeNumber(s.confidence) || 0.95));
-          }
-        });
-      }
+      ["setCompareMode","setFramework","setHypothesis","setConfidence","setGroupA","setGroupB","setValueColumn","setGroupColumn"].forEach(function(id){
+        const el = document.getElementById(id);
+        if (el) el.addEventListener("change", notifySettingsChanged);
+      });
+      refreshSettingsVisibility();
       Office.onReady(function(){
         Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function(arg){
           const msg = JSON.parse(arg.message||"{}");
