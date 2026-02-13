@@ -825,6 +825,22 @@
               Intercept
             </label>
           </div>
+          <div id="factorOptionsControl" style="display:none; align-items:center; gap:6px; background: var(--surface-0); border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px;">
+            <label for="factorExtraction" style="font-size:11px; color:var(--text-muted); margin:0;">Extract</label>
+            <select id="factorExtraction" style="height:24px; border:1px solid var(--border); border-radius:4px; background:var(--surface-2); color:var(--text-primary); font-size:11px;">
+              <option value="PCA">PCA</option>
+              <option value="PAF">PAF</option>
+            </select>
+            <label for="factorRotation" style="font-size:11px; color:var(--text-muted); margin:0;">Rotate</label>
+            <select id="factorRotation" style="height:24px; border:1px solid var(--border); border-radius:4px; background:var(--surface-2); color:var(--text-primary); font-size:11px;">
+              <option value="Varimax">Varimax</option>
+              <option value="Promax">Promax (Oblique)</option>
+              <option value="Oblimin">Oblimin (Oblique)</option>
+              <option value="None">None</option>
+            </select>
+            <label for="factorCount" style="font-size:11px; color:var(--text-muted); margin:0;">k</label>
+            <input id="factorCount" type="number" min="1" step="1" placeholder="auto" style="width:58px; height:24px; border:1px solid var(--border); border-radius:4px; background:var(--surface-2); color:var(--text-primary); font-size:11px; padding:0 6px;" />
+          </div>
           <button id="btnValidate" class="btn alt" style="
             width: auto;
             height: 32px;
@@ -1085,6 +1101,7 @@
       var runBtn = qs('btnRunAnalysis');
       var yBadge = qs('badgeY');
       var interceptCtl = qs('interceptControl');
+      var factorOptsCtl = qs('factorOptionsControl');
       var yTab = document.querySelector('[data-tab="y"]');
       var xcTab = document.querySelector('[data-tab="xc"]');
       var panelY = qs('panelY');
@@ -1113,6 +1130,9 @@
       if (interceptCtl) {
         interceptCtl.style.display = isFactorMode() ? 'none' : 'flex';
       }
+      if (factorOptsCtl) {
+        factorOptsCtl.style.display = isFactorMode() ? 'flex' : 'none';
+      }
       if (yTab) yTab.style.display = isFactorMode() ? 'none' : '';
       if (xcTab) xcTab.style.display = isFactorMode() ? 'none' : '';
       if (panelY) panelY.style.display = isFactorMode() ? 'none' : '';
@@ -1121,6 +1141,23 @@
       if (isFactorMode()) {
         // Factor builder uses only numeric variable assignment.
         switchTab('xn');
+      }
+    }
+
+    function applyFactorOptionsFromSpec(spec) {
+      if (!spec) return;
+      var extraction = qs('factorExtraction');
+      var rotation = qs('factorRotation');
+      var factors = qs('factorCount');
+      if (extraction && spec.extractionMethod) extraction.value = spec.extractionMethod;
+      if (rotation && spec.rotationMethod) rotation.value = spec.rotationMethod;
+      if (factors) {
+        if (spec.factors === null || spec.factors === undefined || spec.factors === "") {
+          factors.value = "";
+        } else {
+          var k = parseInt(spec.factors, 10);
+          factors.value = isFinite(k) && k > 0 ? String(k) : "";
+        }
       }
     }
     
@@ -1287,6 +1324,7 @@
       var rows = data.rows;
       var address = data.address || '';
       var savedModelSpec = data.savedModelSpec || null;  // Get saved model spec if provided
+      if (isFactorMode()) applyFactorOptionsFromSpec(savedModelSpec || {});
 
       if (qs('tbRange')) {
         qs('tbRange').textContent = address || 'Selection';
@@ -2483,15 +2521,19 @@
 
       if (isFactorMode()) {
         var factorVars = STATE.assignments.xn.slice();
+        var factorExtraction = qs('factorExtraction') ? qs('factorExtraction').value : 'PCA';
+        var factorRotation = qs('factorRotation') ? qs('factorRotation').value : 'Varimax';
+        var factorCountRaw = qs('factorCount') ? qs('factorCount').value : '';
+        var factorCountParsed = parseInt(factorCountRaw, 10);
         modelSpec = {
           analysisMode: 'factor',
           variables: factorVars,
           xn: factorVars,
           xc: [],
           intercept: 0,
-          extractionMethod: 'PCA',
-          rotationMethod: 'Varimax',
-          factors: null,
+          extractionMethod: factorExtraction,
+          rotationMethod: factorRotation,
+          factors: (isFinite(factorCountParsed) && factorCountParsed > 0) ? factorCountParsed : null,
           ranges: {}
         };
       }
