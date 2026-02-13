@@ -81,6 +81,8 @@
             <div id="setBWrap"><label for="setGroupB">Variable B</label><select id="setGroupB"></select></div>
             <div id="setVWrap" style="display:none;"><label for="setValueColumn">Value column</label><select id="setValueColumn"></select></div>
             <div id="setGWrap" style="display:none;"><label for="setGroupColumn">Group column</label><select id="setGroupColumn"></select></div>
+            <div id="setPosthocWrap" style="display:none;"><label for="setPosthocMethod">Post-hoc method</label><select id="setPosthocMethod"><option value="games-howell">Games-Howell</option><option value="tukey">Tukey HSD</option><option value="dunn">Dunn</option><option value="conover">Conover</option></select></div>
+            <div id="setCorrectionWrap" style="display:none;"><label for="setPosthocCorrection">p correction</label><select id="setPosthocCorrection"><option value="holm">Holm</option><option value="bh">Benjamini-Hochberg</option><option value="bonferroni">Bonferroni</option><option value="none">None</option></select></div>
           </div>
         </div>
       </div>
@@ -131,6 +133,17 @@
               <div class="stat-field"><span class="stat-label">Agreement</span><span class="stat-value" id="resAgreement">...</span></div>
               <div class="stat-field"><span class="stat-label">Diagnostic Hint</span><span class="stat-value" id="resHint">...</span></div>
             </div></div>
+          </div>
+          <div class="stat-panel" id="posthocPanel" style="margin-top:12px; display:none;">
+            <div class="stat-panel-heading">Post-hoc Pairwise</div>
+            <div class="stat-panel-body" style="padding:0;">
+              <div class="table-container" style="margin:0;">
+                <table class="analysis-table">
+                  <thead><tr><th>Comparison</th><th>Statistic</th><th>Raw p</th><th>Adj p</th><th>Estimate</th></tr></thead>
+                  <tbody id="posthocBody"><tr><td colspan="5">No post-hoc rows</td></tr></tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </section>
         <section id="tab-effects" class="tab-panel">
@@ -184,7 +197,9 @@
         groupA: (document.getElementById("setGroupA") || {}).value || "",
         groupB: (document.getElementById("setGroupB") || {}).value || "",
         valueColumn: (document.getElementById("setValueColumn") || {}).value || "",
-        groupColumn: (document.getElementById("setGroupColumn") || {}).value || ""
+        groupColumn: (document.getElementById("setGroupColumn") || {}).value || "",
+        posthocMethod: (document.getElementById("setPosthocMethod") || {}).value || "games-howell",
+        posthocCorrection: (document.getElementById("setPosthocCorrection") || {}).value || "holm"
       };
     }
     function refreshSettingsVisibility(){
@@ -193,6 +208,7 @@
       const setDisplay = (id, show) => { const el = document.getElementById(id); if (el) el.style.display = show ? "" : "none"; };
       setDisplay("setAWrap", two); setDisplay("setBWrap", two);
       setDisplay("setVWrap", !two); setDisplay("setGWrap", !two);
+      setDisplay("setPosthocWrap", !two); setDisplay("setCorrectionWrap", !two);
     }
     function notifySettingsChanged(){
       const spec = currentSettingsSpec();
@@ -270,6 +286,33 @@
         setText("resHint", "Inspect skew, outliers, and unequal variance/shape differences.");
       }
     }
+    function renderPosthoc(posthoc, compareMode){
+      const panel = document.getElementById("posthocPanel");
+      const body = document.getElementById("posthocBody");
+      if (!panel || !body) return;
+      if (compareMode !== "k-plus" || !posthoc || !posthoc.enabled) {
+        panel.style.display = "none";
+        body.innerHTML = '<tr><td colspan="5">No post-hoc rows</td></tr>';
+        return;
+      }
+      panel.style.display = "block";
+      const rows = posthoc.rows || [];
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="5">No post-hoc rows</td></tr>';
+        return;
+      }
+      body.innerHTML = "";
+      rows.forEach(function(r){
+        const tr = document.createElement("tr");
+        [r.comparison, r.statistic, fmtP(r.rawP), fmtP(r.adjP), fmt(r.estimate)].forEach(function(v){
+          const td = document.createElement("td");
+          td.textContent = v;
+          tr.appendChild(td);
+        });
+        body.appendChild(tr);
+      });
+    }
+
     function populateBundle(b){
       lastBundle = b || {};
       const s=b.setup||{}, e=b.explore||{}, a=b.assumptions||{}, r=b.results||{}, fx=b.effects||{}, p=b.power||{}, rep=b.report||{};
@@ -282,12 +325,15 @@
       const fw = document.getElementById("setFramework"); if (fw) fw.value = s.primaryFramework || primaryFramework;
       const hy = document.getElementById("setHypothesis"); if (hy) hy.value = s.hypothesis || "two-sided";
       const cf = document.getElementById("setConfidence"); if (cf && s.confidence) cf.value = s.confidence;
+      const phm = document.getElementById("setPosthocMethod"); if (phm) phm.value = s.posthocMethod || "games-howell";
+      const phc = document.getElementById("setPosthocCorrection"); if (phc) phc.value = s.posthocCorrection || "holm";
       primaryFramework = (fw && fw.value) || primaryFramework;
       refreshSettingsVisibility();
       setText("setupMode", s.mode); setText("setupHypothesis", s.hypothesis); setText("setupConfidence", (s.confidence?fmt(100*s.confidence):"...")+"%");
       setText("expN", `${e.n1||0} / ${e.n2||0}`); setText("expMean", `${fmt(e.mean1)} / ${fmt(e.mean2)}`); setText("expMed", `${fmt(e.med1)} / ${fmt(e.med2)}`); setText("expSd", `${fmt(e.sd1)} / ${fmt(e.sd2)}`); setText("expIqr", `${fmt(e.iqr1)} / ${fmt(e.iqr2)}`);
       setText("asNormA", a.normalityA); setText("asNormB", a.normalityB); setText("asEqVar", a.equalVariance); setText("asReco", a.recommendation);
       updateResultsPanels(r, fx, s, 1 - (parseMaybeNumber(s.confidence) || 0.95));
+      renderPosthoc(r.posthoc || {}, s.compareMode || "two-vars");
       setText("efG", fmt(fx.hedgesG)); setText("efDelta", fmt(fx.cliffsDelta)); setText("efRrb", fmt(fx.rankBiserial)); setText("efPs", fmt(fx.probabilitySuperiority));
       setText("powNote", p.note); setText("powEndpoint", p.suggestedEndpoint); setText("powVal", fmt(p.placeholderPower));
       setText("repWelch", "Welch: t(" + fmt(r.welchDf) + ")=" + fmt(r.welchT) + ", p " + fmtP(r.welchP) + ", mean diff " + fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "].");
@@ -301,7 +347,7 @@
     }
     document.addEventListener("DOMContentLoaded", function(){
       document.querySelectorAll(".tab-button").forEach(btn=>btn.addEventListener("click",()=>switchTab(btn.getAttribute("data-tab"))));
-      ["setCompareMode","setFramework","setHypothesis","setConfidence","setGroupA","setGroupB","setValueColumn","setGroupColumn"].forEach(function(id){
+      ["setCompareMode","setFramework","setHypothesis","setConfidence","setGroupA","setGroupB","setValueColumn","setGroupColumn","setPosthocMethod","setPosthocCorrection"].forEach(function(id){
         const el = document.getElementById(id);
         if (el) el.addEventListener("change", notifySettingsChanged);
       });

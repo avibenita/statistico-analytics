@@ -193,10 +193,80 @@ function cliffsDelta(x, y) {
   return (gt - lt) / Math.max(1, x.length * y.length);
 }
 
+function adjustPValues(raw, method) {
+  const m = raw.length;
+  if (!m) return [];
+  if (method === "none") return raw.slice();
+  if (method === "bonferroni") return raw.map(p => Math.min(1, p * m));
+  if (method === "holm") {
+    const idx = raw.map((p, i) => ({ p, i })).sort((a, b) => a.p - b.p);
+    const out = Array(m).fill(1);
+    let running = 0;
+    for (let k = 0; k < m; k++) {
+      const adj = Math.min(1, (m - k) * idx[k].p);
+      running = Math.max(running, adj);
+      out[idx[k].i] = running;
+    }
+    return out;
+  }
+  if (method === "bh") {
+    const idx = raw.map((p, i) => ({ p, i })).sort((a, b) => a.p - b.p);
+    const out = Array(m).fill(1);
+    let running = 1;
+    for (let k = m - 1; k >= 0; k--) {
+      const adj = Math.min(1, (m / (k + 1)) * idx[k].p);
+      running = Math.min(running, adj);
+      out[idx[k].i] = running;
+    }
+    return out;
+  }
+  return raw.slice();
+}
+
+function computePosthocRows(grouped, levels, framework, correction) {
+  const rows = [];
+  const rawP = [];
+  for (let i = 0; i < levels.length - 1; i++) {
+    for (let j = i + 1; j < levels.length; j++) {
+      const a = grouped[levels[i]] || [];
+      const b = grouped[levels[j]] || [];
+      if (framework === "nonparametric") {
+        const mw = computeMannWhitney(a, b, "two-sided");
+        rows.push({
+          comparison: `${levels[i]} vs ${levels[j]}`,
+          statistic: `U=${mw.u.toFixed(2)}`,
+          rawP: mw.p,
+          estimate: (2 * (mw.u / Math.max(1, a.length * b.length)) - 1)
+        });
+        rawP.push(mw.p);
+      } else {
+        const w = computeWelch(a, b, "two-sided");
+        rows.push({
+          comparison: `${levels[i]} vs ${levels[j]}`,
+          statistic: `t=${w.t.toFixed(2)}`,
+          rawP: w.p,
+          estimate: w.diff
+        });
+        rawP.push(w.p);
+      }
+    }
+  }
+  const adj = adjustPValues(rawP, correction);
+  return rows.map((r, i) => ({
+    comparison: r.comparison,
+    statistic: r.statistic,
+    rawP: r.rawP,
+    adjP: adj[i],
+    estimate: r.estimate
+  }));
+}
+
 function buildIndependentBundle(headers, rows, spec) {
   const compareMode = spec.compareMode || (spec.mode === "k-plus" ? "k-plus" : "two-vars");
   const mode = compareMode === "k-plus" ? "k-plus" : "two-column";
   const primaryFramework = spec.primaryFramework || "parametric";
+  const posthocMethod = spec.posthocMethod || (primaryFramework === "nonparametric" ? "dunn" : "games-howell");
+  const posthocCorrection = spec.posthocCorrection || "holm";
   let g1 = [], g2 = [];
   let grouped = {};
   if (compareMode === "two-vars") {
@@ -235,6 +305,7 @@ function buildIndependentBundle(headers, rows, spec) {
   const rrb = 2 * (mw.u / Math.max(1, n1 * n2)) - 1;
   const ps = (delta + 1) / 2;
   let omnibus = null;
+  let posthoc = { enabled: false, method: posthocMethod, correction: posthocCorrection, rows: [] };
   if (compareMode === "k-plus") {
     const levels = Object.keys(grouped).filter(k => grouped[k].length > 0);
     const arrays = levels.map(k => grouped[k]);
@@ -275,6 +346,12 @@ function buildIndependentBundle(headers, rows, spec) {
     H = (12 / (N * (N + 1))) * H - 3 * (N + 1);
     const pKw = chiSquareUpperTailApprox(H, df1);
     omnibus = { levels, N, anovaF: f, anovaDf1: df1, anovaDf2: df2, anovaP: pAnova, kwH: H, kwDf: df1, kwP: pKw };
+    posthoc = {
+      enabled: true,
+      method: posthocMethod,
+      correction: posthocCorrection,
+      rows: computePosthocRows(grouped, levels, primaryFramework, posthocCorrection)
+    };
   }
   return {
     setup: {
@@ -283,6 +360,8 @@ function buildIndependentBundle(headers, rows, spec) {
       primaryFramework,
       hypothesis: alt,
       confidence: Number(spec.confidence || 0.95),
+      posthocMethod,
+      posthocCorrection,
       groupA: spec.groupA || "",
       groupB: spec.groupB || "",
       valueColumn: spec.valueColumn || "",
@@ -307,7 +386,8 @@ function buildIndependentBundle(headers, rows, spec) {
       welchT: welch.t, welchDf: welch.df, welchP: welch.p,
       meanDiff: welch.diff, ciLow: welch.ciLow, ciHigh: welch.ciHigh,
       u: mw.u, mwP: mw.p,
-      omnibus
+      omnibus,
+      posthoc
     },
     effects: {
       hedgesG: g, cliffsDelta: delta, rankBiserial: rrb, probabilitySuperiority: ps
