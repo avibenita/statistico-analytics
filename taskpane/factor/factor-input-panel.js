@@ -44,7 +44,7 @@ function getDialogsBaseUrl() {
 
 function openFactorModelBuilder() {
   if (!factorRangeData || factorRangeData.length < 2) return;
-  const dialogUrl = `${getDialogsBaseUrl()}factor/factor-input.html`;
+  const dialogUrl = `${getDialogsBaseUrl()}factor/factor-input.html?v=${Date.now()}`;
 
   Office.context.ui.displayDialogAsync(
     dialogUrl,
