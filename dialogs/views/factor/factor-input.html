@@ -914,6 +914,26 @@
               </h3>
               <div class="model-equation-header" id="modelEquation">Model: Y = β0 + …</div>
             </div>
+
+            <div id="factorOptionsInline" style="display:none; padding:8px 12px; border-bottom:1px solid var(--border); background:var(--surface-1);">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span style="font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.4px;">Factor Options</span>
+                <label for="factorExtractionInline" style="font-size:11px; color:var(--text-muted);">Extract</label>
+                <select id="factorExtractionInline" style="height:24px; border:1px solid var(--border); border-radius:4px; background:var(--surface-2); color:var(--text-primary); font-size:11px; width:auto; min-height:24px; padding:0 6px;">
+                  <option value="PCA">PCA</option>
+                  <option value="PAF">PAF</option>
+                </select>
+                <label for="factorRotationInline" style="font-size:11px; color:var(--text-muted);">Rotate</label>
+                <select id="factorRotationInline" style="height:24px; border:1px solid var(--border); border-radius:4px; background:var(--surface-2); color:var(--text-primary); font-size:11px; width:auto; min-height:24px; padding:0 6px;">
+                  <option value="Varimax">Varimax</option>
+                  <option value="Promax">Promax (Oblique)</option>
+                  <option value="Oblimin">Oblimin (Oblique)</option>
+                  <option value="None">None</option>
+                </select>
+                <label for="factorCountInline" style="font-size:11px; color:var(--text-muted);">k</label>
+                <input id="factorCountInline" type="number" min="1" step="1" placeholder="auto" style="width:64px; height:24px; border:1px solid var(--border); border-radius:4px; background:var(--surface-2); color:var(--text-primary); font-size:11px; padding:0 6px;" />
+              </div>
+            </div>
               
               <!-- Tabs -->
               <div class="tabs">
@@ -1102,6 +1122,7 @@
       var yBadge = qs('badgeY');
       var interceptCtl = qs('interceptControl');
       var factorOptsCtl = qs('factorOptionsControl');
+      var factorOptsInline = qs('factorOptionsInline');
       var yTab = document.querySelector('[data-tab="y"]');
       var xcTab = document.querySelector('[data-tab="xc"]');
       var panelY = qs('panelY');
@@ -1133,6 +1154,9 @@
       if (factorOptsCtl) {
         factorOptsCtl.style.display = isFactorMode() ? 'flex' : 'none';
       }
+      if (factorOptsInline) {
+        factorOptsInline.style.display = isFactorMode() ? 'block' : 'none';
+      }
       if (yTab) yTab.style.display = isFactorMode() ? 'none' : '';
       if (xcTab) xcTab.style.display = isFactorMode() ? 'none' : '';
       if (panelY) panelY.style.display = isFactorMode() ? 'none' : '';
@@ -1149,8 +1173,13 @@
       var extraction = qs('factorExtraction');
       var rotation = qs('factorRotation');
       var factors = qs('factorCount');
+      var extractionInline = qs('factorExtractionInline');
+      var rotationInline = qs('factorRotationInline');
+      var factorsInline = qs('factorCountInline');
       if (extraction && spec.extractionMethod) extraction.value = spec.extractionMethod;
+      if (extractionInline && spec.extractionMethod) extractionInline.value = spec.extractionMethod;
       if (rotation && spec.rotationMethod) rotation.value = spec.rotationMethod;
+      if (rotationInline && spec.rotationMethod) rotationInline.value = spec.rotationMethod;
       if (factors) {
         if (spec.factors === null || spec.factors === undefined || spec.factors === "") {
           factors.value = "";
@@ -1159,6 +1188,22 @@
           factors.value = isFinite(k) && k > 0 ? String(k) : "";
         }
       }
+      if (factorsInline) {
+        if (spec.factors === null || spec.factors === undefined || spec.factors === "") {
+          factorsInline.value = "";
+        } else {
+          var ki = parseInt(spec.factors, 10);
+          factorsInline.value = isFinite(ki) && ki > 0 ? String(ki) : "";
+        }
+      }
+    }
+
+    function getFactorOptionValue(primaryId, secondaryId, fallback) {
+      var primary = qs(primaryId);
+      var secondary = qs(secondaryId);
+      if (primary && primary.value !== undefined && primary.value !== null && primary.value !== "") return primary.value;
+      if (secondary && secondary.value !== undefined && secondary.value !== null && secondary.value !== "") return secondary.value;
+      return fallback;
     }
     
     // ============================================================================
@@ -2521,9 +2566,9 @@
 
       if (isFactorMode()) {
         var factorVars = STATE.assignments.xn.slice();
-        var factorExtraction = qs('factorExtraction') ? qs('factorExtraction').value : 'PCA';
-        var factorRotation = qs('factorRotation') ? qs('factorRotation').value : 'Varimax';
-        var factorCountRaw = qs('factorCount') ? qs('factorCount').value : '';
+        var factorExtraction = getFactorOptionValue('factorExtractionInline', 'factorExtraction', 'PCA');
+        var factorRotation = getFactorOptionValue('factorRotationInline', 'factorRotation', 'Varimax');
+        var factorCountRaw = getFactorOptionValue('factorCountInline', 'factorCount', '');
         var factorCountParsed = parseInt(factorCountRaw, 10);
         modelSpec = {
           analysisMode: 'factor',
