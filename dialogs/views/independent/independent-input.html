@@ -19,9 +19,12 @@
     .btn{padding:8px 12px;border-radius:8px;border:1px solid #2e4268;background:#162948;color:#e5e7eb;cursor:pointer;}
     .btn.primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);border-color:#2f5fca;font-weight:700;}
     .meta{font-size:12px;color:#9fb0cc;}
-    .checks{max-height:200px;overflow:auto;border:1px solid #2a3d5f;border-radius:8px;padding:6px;background:#0b1428;}
-    .check-row{display:flex;align-items:center;justify-content:space-between;padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;}
-    .check-row:last-child{border-bottom:none;}
+    .checks{max-height:260px;overflow:auto;border:1px solid #2a3d5f;border-radius:8px;background:#0b1428;}
+    .checks table{width:100%;border-collapse:collapse;font-size:12px;}
+    .checks thead th{position:sticky;top:0;background:#15345f;color:#d8ecff;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.2);text-align:left;text-transform:uppercase;letter-spacing:.3px;}
+    .checks tbody td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .checks tbody tr:last-child td{border-bottom:none;}
+    .checks tbody td:last-child{text-align:center;}
   </style>
 </head>
 <body>
@@ -60,41 +63,6 @@
       </div>
     </div>
 
-    <div class="panel">
-      <div class="grid">
-        <div>
-          <label>Hypothesis</label>
-          <select id="hypothesis">
-            <option value="two-sided">Two-sided</option>
-            <option value="greater">A > B</option>
-            <option value="less">A < B</option>
-          </select>
-        </div>
-        <div>
-          <label>Confidence</label>
-          <input id="confidenceInput" type="number" min="0.8" max="0.999" step="0.01" value="0.95"/>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="twoColPanel">
-      <div class="grid">
-        <div><label>Compare A</label><select id="groupACol"></select></div>
-        <div><label>Compare B</label><select id="groupBCol"></select></div>
-      </div>
-    </div>
-
-    <div class="panel" id="longPanel" style="display:none;">
-      <div class="grid">
-        <div><label>Value Column</label><select id="valueCol"></select></div>
-        <div><label>Group Label Column</label><select id="groupCol"></select></div>
-      </div>
-      <div class="grid" style="margin-top:8px;">
-        <div><label>Level A</label><input id="levelA" placeholder="e.g. Control"/></div>
-        <div><label>Level B</label><input id="levelB" placeholder="e.g. Treatment"/></div>
-      </div>
-    </div>
-
     <div class="row">
       <button class="btn" id="btnCancel">Cancel</button>
       <button class="btn primary" id="btnRun">Open Independent Means Dashboard</button>
@@ -118,13 +86,13 @@
       if (!host) return;
       host.innerHTML = "";
       var selected = STATE.selectedColumns && STATE.selectedColumns.length ? STATE.selectedColumns.slice() : headers.slice();
+      var html = '<table><thead><tr><th>Column</th><th>Use</th></tr></thead><tbody>';
       headers.forEach(function(h){
         var checked = selected.indexOf(h) >= 0;
-        var row = document.createElement("label");
-        row.className = "check-row";
-        row.innerHTML = '<span>' + h + '</span><input type="checkbox" ' + (checked ? "checked" : "") + ' data-col="' + h + '"/>';
-        host.appendChild(row);
+        html += '<tr><td>' + h + '</td><td><input type="checkbox" ' + (checked ? "checked" : "") + ' data-col="' + h + '"/></td></tr>';
       });
+      html += '</tbody></table>';
+      host.innerHTML = html;
       host.querySelectorAll("input[type=checkbox]").forEach(function(cb){
         cb.addEventListener("change", onInterestChanged);
       });
@@ -133,7 +101,6 @@
       var checks = Array.from(document.querySelectorAll("#interestChecks input[type=checkbox]:checked"));
       STATE.selectedColumns = checks.map(function(c){ return c.getAttribute("data-col"); });
       if (!STATE.selectedColumns.length) return;
-      ["groupACol","groupBCol","valueCol","groupCol"].forEach(function(id){ fillSelect(id, STATE.selectedColumns); });
     }
     function applyPayload(p){
       STATE.headers = p.headers || []; STATE.rows = p.rows || []; STATE.address = p.address || ""; STATE.saved = p.savedModelSpec || {};
@@ -144,24 +111,11 @@
         ? STATE.saved.selectedColumns.slice()
         : STATE.headers.slice();
       renderInterestChecks(STATE.headers);
-      ["groupACol","groupBCol","valueCol","groupCol"].forEach(function(id){ fillSelect(id, STATE.selectedColumns); });
       if (STATE.saved) {
         if (STATE.saved.compareMode) qs("dataMode").value = STATE.saved.compareMode;
         else if (STATE.saved.mode === "k-plus") qs("dataMode").value = "k-plus";
         if (STATE.saved.primaryFramework) qs("frameworkMode").value = STATE.saved.primaryFramework;
-        if (STATE.saved.groupA) qs("groupACol").value = STATE.saved.groupA;
-        if (STATE.saved.groupB) qs("groupBCol").value = STATE.saved.groupB;
-        if (STATE.saved.valueColumn) qs("valueCol").value = STATE.saved.valueColumn;
-        if (STATE.saved.groupColumn) qs("groupCol").value = STATE.saved.groupColumn;
-        if (STATE.saved.hypothesis) qs("hypothesis").value = STATE.saved.hypothesis;
-        if (STATE.saved.confidence) qs("confidenceInput").value = STATE.saved.confidence;
       }
-      onModeChange();
-    }
-    function onModeChange(){
-      var mode = qs("dataMode").value;
-      qs("twoColPanel").style.display = mode === "two-vars" ? "block" : "none";
-      qs("longPanel").style.display = mode === "k-plus" ? "block" : "none";
     }
     function run(){
       var mode = qs("dataMode").value;
@@ -173,24 +127,23 @@
         mode: mode === "k-plus" ? "k-plus" : "two-column",
         primaryFramework: qs("frameworkMode").value,
         selectedColumns: selected,
-        hypothesis: qs("hypothesis").value,
-        confidence: Number(qs("confidenceInput").value || 0.95),
+        hypothesis: "two-sided",
+        confidence: 0.95,
         groupALabel: "A",
         groupBLabel: "B"
       };
       if (mode === "two-vars") {
-        spec.groupA = qs("groupACol").value;
-        spec.groupB = qs("groupBCol").value;
+        spec.groupA = selected[0];
+        spec.groupB = selected[1] || selected[0];
       } else {
-        spec.valueColumn = qs("valueCol").value;
-        spec.groupColumn = qs("groupCol").value;
+        spec.valueColumn = selected[0];
+        spec.groupColumn = selected[1] || selected[0];
         spec.posthocMethod = spec.primaryFramework === "nonparametric" ? "dunn" : "games-howell";
         spec.posthocCorrection = "holm";
       }
       send("independentModel", spec);
     }
     document.addEventListener("DOMContentLoaded", function(){
-      qs("dataMode").addEventListener("change", onModeChange);
       qs("btnRefresh").addEventListener("click", function(){ send("requestData", null); });
       qs("btnCancel").addEventListener("click", function(){ send("close", null); });
       qs("btnRun").addEventListener("click", run);

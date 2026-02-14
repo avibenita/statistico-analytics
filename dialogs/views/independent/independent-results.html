@@ -47,6 +47,10 @@
     .fw-group{display:flex;gap:8px;}
     .fw-btn{flex:1;height:38px;border-radius:12px;border:2px solid rgba(120,200,255,.35);background:rgba(22,78,141,.45);color:#dff3ff;font-size:14px;font-weight:700;cursor:pointer;}
     .fw-btn.active{background:#1f678a;border-color:#87d6ff;color:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.3);}
+    .hbox{border:1px solid rgba(148,163,184,.38);border-radius:10px;padding:8px;background:rgba(6,16,30,.55);}
+    .hbox-title{font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700;margin-bottom:6px;}
+    .hbox-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#e5eefc;}
+    .h-radio{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#d6e7ff;}
   </style>
 </head>
 <body>
@@ -84,14 +88,26 @@
                 <button id="setFrameworkNon" type="button" class="fw-btn">Non-parametric (Ranks)</button>
               </div>
             </div>
-            <div><label for="setHypothesis">Hypothesis</label><select id="setHypothesis"><option value="two-sided">Two-sided</option><option value="greater">A > B</option><option value="less">A < B</option></select></div>
-            <div><label for="setConfidence">Confidence</label><input id="setConfidence" type="number" min="0.8" max="0.999" step="0.01" value="0.95"/></div>
-            <div id="setAWrap"><label for="setGroupA">Variable A</label><select id="setGroupA"></select></div>
-            <div id="setBWrap"><label for="setGroupB">Variable B</label><select id="setGroupB"></select></div>
+            <div id="setAWrap"><label for="setGroupA">u1 (Before)</label><select id="setGroupA"></select></div>
+            <div id="setBWrap"><label for="setGroupB">u2</label><select id="setGroupB"></select></div>
             <div id="setVWrap" style="display:none;"><label for="setValueColumn">Value column</label><select id="setValueColumn"></select></div>
             <div id="setGWrap" style="display:none;"><label for="setGroupColumn">Group column</label><select id="setGroupColumn"></select></div>
             <div id="setPosthocWrap" style="display:none;"><label for="setPosthocMethod">Post-hoc method</label><select id="setPosthocMethod"><option value="games-howell">Games-Howell</option><option value="tukey">Tukey HSD</option><option value="dunn">Dunn</option><option value="conover">Conover</option></select></div>
             <div id="setCorrectionWrap" style="display:none;"><label for="setPosthocCorrection">p correction</label><select id="setPosthocCorrection"><option value="holm">Holm</option><option value="bh">Benjamini-Hochberg</option><option value="bonferroni">Bonferroni</option><option value="none">None</option></select></div>
+            <div id="setAlphaWrap"><label for="setAlpha">Alpha</label><input id="setAlpha" type="number" min="0.001" max="0.2" step="0.001" value="0.05"/></div>
+            <div id="setHypWrap" style="grid-column: span 2;">
+              <div class="hbox">
+                <div class="hbox-title">H0 / H1 orientation</div>
+                <div class="hbox-row">
+                  <span><strong>H0:</strong> u2-u1 = 0</span>
+                  <span style="opacity:.75;">Versus</span>
+                  <span><strong>H1:</strong></span>
+                  <label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> u2-u1 &lt;= 0</label>
+                  <label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> u2-u1 != 0</label>
+                  <label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> u2-u1 &gt;= 0</label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -198,11 +214,15 @@
       if (selected !== undefined && selected !== null && String(selected) !== "") el.value = String(selected);
     }
     function currentSettingsSpec(){
+      var hChecked = document.querySelector('input[name="h1Orientation"]:checked');
+      var h = hChecked ? hChecked.value : "two-sided";
+      var alpha = Number((document.getElementById("setAlpha") || { value: "0.05" }).value || 0.05);
+      if (!isFinite(alpha) || alpha <= 0 || alpha >= 1) alpha = 0.05;
       return {
         compareMode: (document.getElementById("setCompareMode") || {}).value || "two-vars",
         primaryFramework: primaryFramework,
-        hypothesis: (document.getElementById("setHypothesis") || {}).value || "two-sided",
-        confidence: Number((document.getElementById("setConfidence") || { value: "0.95" }).value || 0.95),
+        hypothesis: h,
+        confidence: 1 - alpha,
         groupA: (document.getElementById("setGroupA") || {}).value || "",
         groupB: (document.getElementById("setGroupB") || {}).value || "",
         valueColumn: (document.getElementById("setValueColumn") || {}).value || "",
@@ -218,6 +238,7 @@
       setDisplay("setAWrap", two); setDisplay("setBWrap", two);
       setDisplay("setVWrap", !two); setDisplay("setGWrap", !two);
       setDisplay("setPosthocWrap", !two); setDisplay("setCorrectionWrap", !two);
+      setDisplay("setAlphaWrap", two); setDisplay("setHypWrap", two);
     }
     function setFrameworkButtons(mode){
       primaryFramework = mode === "nonparametric" ? "nonparametric" : "parametric";
@@ -338,8 +359,11 @@
       fillSelect("setGroupColumn", availableHeaders, s.groupColumn);
       const cMode = document.getElementById("setCompareMode"); if (cMode) cMode.value = s.compareMode || "two-vars";
       setFrameworkButtons(s.primaryFramework || primaryFramework);
-      const hy = document.getElementById("setHypothesis"); if (hy) hy.value = s.hypothesis || "two-sided";
-      const cf = document.getElementById("setConfidence"); if (cf && s.confidence) cf.value = s.confidence;
+      var alphaEl = document.getElementById("setAlpha");
+      if (alphaEl) alphaEl.value = String(1 - (parseMaybeNumber(s.confidence) || 0.95));
+      var orientation = s.hypothesis || "two-sided";
+      var radio = document.querySelector('input[name="h1Orientation"][value="' + orientation + '"]');
+      if (radio) radio.checked = true;
       const phm = document.getElementById("setPosthocMethod"); if (phm) phm.value = s.posthocMethod || "games-howell";
       const phc = document.getElementById("setPosthocCorrection"); if (phc) phc.value = s.posthocCorrection || "holm";
       refreshSettingsVisibility();
@@ -361,10 +385,11 @@
     }
     document.addEventListener("DOMContentLoaded", function(){
       document.querySelectorAll(".tab-button").forEach(btn=>btn.addEventListener("click",()=>switchTab(btn.getAttribute("data-tab"))));
-      ["setCompareMode","setHypothesis","setConfidence","setGroupA","setGroupB","setValueColumn","setGroupColumn","setPosthocMethod","setPosthocCorrection"].forEach(function(id){
+      ["setCompareMode","setAlpha","setGroupA","setGroupB","setValueColumn","setGroupColumn","setPosthocMethod","setPosthocCorrection"].forEach(function(id){
         const el = document.getElementById(id);
         if (el) el.addEventListener("change", notifySettingsChanged);
       });
+      document.querySelectorAll('input[name="h1Orientation"]').forEach(function(el){ el.addEventListener("change", notifySettingsChanged); });
       var pBtn = document.getElementById("setFrameworkParam");
       var nBtn = document.getElementById("setFrameworkNon");
       if (pBtn) pBtn.addEventListener("click", function(){ setFrameworkButtons("parametric"); notifySettingsChanged(); });
