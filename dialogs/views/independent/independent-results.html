@@ -52,13 +52,13 @@
     .fw-radio{padding:10px 14px;background:rgba(22,78,141,.35);color:#dff3ff;font-size:13px;font-weight:700;cursor:pointer;user-select:none;border-right:1px solid rgba(120,200,255,.25);}
     .fw-radio:last-of-type{border-right:none;}
     .fw-radio.active{background:#1f678a;color:#fff;box-shadow:inset 0 0 0 1px rgba(135,214,255,.65);}
-    .primary-test-wrap{display:flex;align-items:center;gap:8px;min-width:280px;}
+    .primary-test-wrap{display:none !important;align-items:center;gap:8px;min-width:280px;}
     .primary-test-wrap label{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;}
     .primary-test-wrap select{height:36px;min-width:220px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;padding:0 10px;}
     .hbox{border:1px solid rgba(148,163,184,.38);border-radius:10px;padding:8px;background:rgba(6,16,30,.55);}
     .hbox-title{font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700;margin-bottom:6px;}
     .hbox-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#e5eefc;}
-    .h-radio{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#d6e7ff;}
+    .h-radio{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#d6e7ff;text-transform:none !important;}
     .hdr-row{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;}
     .stat-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(30,58,138,.35);border:1px solid rgba(120,200,255,.4);border-radius:999px;padding:6px 10px;font-size:12px;color:#dbeafe;}
     .design-badge{font-weight:800;}
@@ -298,9 +298,9 @@
         h0.textContent = "μ2-μ1 = 0";
         if (deltaToken) deltaToken.textContent = "μ2-μ1";
         h1Row.innerHTML = '' +
-          '<label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> μ2-μ1 &lt; 0</label>' +
-          '<label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> μ2-μ1 != 0</label>' +
-          '<label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> μ2-μ1 &gt; 0</label>';
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> &#956;2-&#956;1 &lt; 0</label>' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> &#956;2-&#956;1 != 0</label>' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> &#956;2-&#956;1 &gt; 0</label>';
         var checkedVal = currentHypothesis || "two-sided";
         var checked = h1Row.querySelector('input[name="h1Orientation"][value="' + checkedVal + '"]');
         if (checked) checked.checked = true;
@@ -326,7 +326,7 @@
       if (rp) rp.checked = primaryFramework === "parametric";
       if (rn) rn.checked = primaryFramework === "nonparametric";
       var primaryTestWrap = document.getElementById("primaryTestWrap");
-      if (primaryTestWrap) primaryTestWrap.style.display = (currentCompareMode === "two-vars" && primaryFramework === "parametric") ? "flex" : "none";
+      if (primaryTestWrap) primaryTestWrap.style.display = "none";
       var testChip = document.getElementById("selectedTestChip");
       var compareMode = currentCompareMode || "two-vars";
       if (testChip) testChip.textContent = "";
