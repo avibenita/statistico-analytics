@@ -67,12 +67,12 @@
     .design-bad{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.55);color:#fecaca;}
     .test-chip{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.55);color:#d1fae5;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;}
     .hyp-card{border:1px solid rgba(120,200,255,.35);border-radius:12px;padding:10px;background:rgba(4,18,38,.6);}
-    .hyp-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+    .hyp-row{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:nowrap;}
     .hyp-title{font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;}
-    .hyp-main{margin-top:6px;font-size:15px;font-weight:700;color:#e5eefc;}
-    .hyp-alt{margin-top:8px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+    .hyp-main{font-size:15px;font-weight:700;color:#e5eefc;white-space:nowrap;}
+    .hyp-alt{display:flex;align-items:center;gap:16px;flex-wrap:nowrap;}
     .hyp-delta{font-weight:800;color:#93c5fd;}
-    .alpha-wrap{min-width:220px;}
+    .alpha-wrap{min-width:300px;}
     .alpha-wrap label{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;}
   </style>
 </head>
@@ -134,21 +134,21 @@
             <div id="setCorrectionWrap" style="display:none;"><label for="setPosthocCorrection">p correction</label><select id="setPosthocCorrection"><option value="holm">Holm</option><option value="bh">Benjamini-Hochberg</option><option value="bonferroni">Bonferroni</option><option value="none">None</option></select></div>
             <div id="setHypWrap" style="grid-column:1/-1;">
               <div class="hyp-card">
-                <div class="hyp-head">
+                <div class="hyp-row">
                   <div class="hyp-title">Hypothesis</div>
+                  <div class="hyp-main"><strong>H0:</strong> <span id="h0Text">&#956;2-&#956;1 = 0</span></div>
+                  <div class="hyp-alt">
+                    <span><strong>Alternative:</strong> <span class="hyp-delta" id="deltaToken">&#956;2-&#956;1</span></span>
+                    <div class="hbox-row" id="h1Row">
+                      <label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> &#956;2-&#956;1 &lt; 0</label>
+                      <label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> &#956;2-&#956;1 != 0</label>
+                      <label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> &#956;2-&#956;1 &gt; 0</label>
+                    </div>
+                  </div>
                   <div class="alpha-wrap">
                     <label for="setAlpha">Significance level</label>
                     <input id="setAlpha" type="range" min="0.001" max="0.2" step="0.001" value="0.05"/>
                     <div style="text-align:center;font-size:11px;color:var(--text-muted);">alpha = <span id="alphaVal">0.050</span></div>
-                  </div>
-                </div>
-                <div class="hyp-main"><strong>H0:</strong> <span id="h0Text">&#916; = 0</span></div>
-                <div class="hyp-alt">
-                  <span><strong>Alternative:</strong> <span class="hyp-delta" id="deltaToken">&#956;2-&#956;1</span></span>
-                  <div class="hbox-row" id="h1Row">
-                    <label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> &#916; &lt; 0</label>
-                    <label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> &#916; != 0</label>
-                    <label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> &#916; &gt; 0</label>
                   </div>
                 </div>
               </div>
@@ -292,12 +292,12 @@
         if (deltaToken) deltaToken.textContent = "Omnibus";
         h1Row.innerHTML = '<span style="color:#e5eefc;font-weight:700;">At least one group differs.</span>';
       } else {
-        h0.textContent = "Δ = 0";
-        if (deltaToken) deltaToken.textContent = primaryFramework === "nonparametric" ? "PS-0.5" : "μ2-μ1";
+        h0.textContent = "μ2-μ1 = 0";
+        if (deltaToken) deltaToken.textContent = "μ2-μ1";
         h1Row.innerHTML = '' +
-          '<label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> Δ &lt; 0</label>' +
-          '<label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> Δ != 0</label>' +
-          '<label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> Δ &gt; 0</label>';
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> μ2-μ1 &lt; 0</label>' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> μ2-μ1 != 0</label>' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> μ2-μ1 &gt; 0</label>';
         var checkedVal = currentHypothesis || "two-sided";
         var checked = h1Row.querySelector('input[name="h1Orientation"][value="' + checkedVal + '"]');
         if (checked) checked.checked = true;
