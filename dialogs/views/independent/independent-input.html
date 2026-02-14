@@ -91,7 +91,7 @@
   </div>
 
   <script>
-    var STATE = { headers: [], rows: [], address: "", saved: null, selectedColumns: [] };
+    var STATE = { headers: [], rows: [], address: "", saved: null, selectedColumns: [], draggingCol: null };
     function qs(id){ return document.getElementById(id); }
     function send(action, data){
       if (Office && Office.context && Office.context.ui && typeof Office.context.ui.messageParent === "function") {
@@ -127,9 +127,22 @@
       html += '</tbody></table>';
       host.innerHTML = html;
       host.querySelectorAll("tbody tr").forEach(function(tr){
-        tr.addEventListener("dragstart", function(){ tr.classList.add("dragging"); });
-        tr.addEventListener("dragend", function(){ tr.classList.remove("dragging"); });
+        tr.addEventListener("dragstart", function(e){
+          tr.classList.add("dragging");
+          var col = tr.getAttribute("data-col");
+          STATE.draggingCol = col;
+          if (e && e.dataTransfer) {
+            e.dataTransfer.effectAllowed = "copy";
+            e.dataTransfer.setData("text/plain", col || "");
+          }
+        });
+        tr.addEventListener("dragend", function(){ tr.classList.remove("dragging"); STATE.draggingCol = null; });
         tr.addEventListener("dblclick", function(){ addToBucket(tr.getAttribute("data-col")); });
+        tr.addEventListener("click", function(e){
+          if (e && e.target && e.target.closest && e.target.closest(".drag-h")) {
+            addToBucket(tr.getAttribute("data-col"));
+          }
+        });
       });
     }
     function renderBucket(){
@@ -213,13 +226,29 @@
     }
     document.addEventListener("DOMContentLoaded", function(){
       var bucket = qs("compareBucket");
-      if (bucket) {
-        bucket.addEventListener("dragover", function(e){ e.preventDefault(); });
-        bucket.addEventListener("drop", function(e){
-          e.preventDefault();
+      var bucketPanel = document.querySelector(".bucket");
+      function allowDrop(e){
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+      }
+      function handleDrop(e){
+        e.preventDefault();
+        var col = "";
+        if (e.dataTransfer) col = e.dataTransfer.getData("text/plain") || "";
+        if (!col) col = STATE.draggingCol || "";
+        if (!col) {
           var drag = document.querySelector("#interestChecks tr.dragging");
-          if (drag) addToBucket(drag.getAttribute("data-col"));
-        });
+          if (drag) col = drag.getAttribute("data-col") || "";
+        }
+        if (col) addToBucket(col);
+      }
+      if (bucket) {
+        bucket.addEventListener("dragover", allowDrop);
+        bucket.addEventListener("drop", handleDrop);
+      }
+      if (bucketPanel) {
+        bucketPanel.addEventListener("dragover", allowDrop);
+        bucketPanel.addEventListener("drop", handleDrop);
       }
       qs("dataMode").addEventListener("change", validateBucket);
       qs("btnRefresh").addEventListener("click", function(){ send("requestData", null); });
