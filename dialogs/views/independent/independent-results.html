@@ -54,6 +54,12 @@
     .hdr-row{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;}
     .stat-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(30,58,138,.35);border:1px solid rgba(120,200,255,.4);border-radius:999px;padding:6px 10px;font-size:12px;color:#dbeafe;}
     .test-chip{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.55);color:#d1fae5;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;}
+    .hypothesis-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .hyp-frame{border:1px solid rgba(120,200,255,.35);border-radius:10px;padding:10px;background:rgba(4,18,38,.6);min-height:74px;}
+    .hyp-frame.h0{border-color:rgba(255,165,120,.45);}
+    .hyp-frame-title{font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;}
+    .hyp-frame-main{font-size:16px;font-weight:700;color:#e5eefc;line-height:1.35;}
+    @media (max-width: 980px){ .hypothesis-row{grid-template-columns:1fr;} }
   </style>
 </head>
 <body>
@@ -100,23 +106,21 @@
                 </div>
               </div>
             </div>
-            <div id="setAWrap"><label for="setGroupA">u1 (Before)</label><select id="setGroupA"></select></div>
-            <div id="setBWrap"><label for="setGroupB">u2</label><select id="setGroupB"></select></div>
-            <div id="setVWrap" style="display:none;"><label for="setValueColumn">Value column</label><select id="setValueColumn"></select></div>
-            <div id="setGWrap" style="display:none;"><label for="setGroupColumn">Group column</label><select id="setGroupColumn"></select></div>
-            <div><label for="setCompareMode">Compare</label><select id="setCompareMode"><option value="two-vars">2 variables</option><option value="k-plus">More than 2 groups</option></select></div>
             <div id="setPosthocWrap" style="display:none;"><label for="setPosthocMethod">Post-hoc method</label><select id="setPosthocMethod"><option value="games-howell">Games-Howell</option><option value="tukey">Tukey HSD</option><option value="dunn">Dunn</option><option value="conover">Conover</option></select></div>
             <div id="setCorrectionWrap" style="display:none;"><label for="setPosthocCorrection">p correction</label><select id="setPosthocCorrection"><option value="holm">Holm</option><option value="bh">Benjamini-Hochberg</option><option value="bonferroni">Bonferroni</option><option value="none">None</option></select></div>
-            <div id="setHypWrap" style="grid-column: span 2;">
-              <div class="hbox">
-                <div class="hbox-title">H0 / H1 orientation</div>
-                <div class="hbox-row">
-                  <span><strong>H0:</strong> u2-u1 = 0</span>
-                  <span style="opacity:.75;">Versus</span>
-                  <span><strong>H1:</strong></span>
-                  <label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> u2-u1 &lt;= 0</label>
-                  <label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> u2-u1 != 0</label>
-                  <label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> u2-u1 &gt;= 0</label>
+            <div id="setHypWrap" style="grid-column:1/-1;">
+              <div class="hypothesis-row">
+                <div class="hyp-frame h0">
+                  <div class="hyp-frame-title">H0</div>
+                  <div class="hyp-frame-main" id="h0Text">u2-u1 = 0</div>
+                </div>
+                <div class="hyp-frame h1">
+                  <div class="hyp-frame-title">H1</div>
+                  <div class="hbox-row" id="h1Row">
+                    <label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> u2-u1 &lt;= 0</label>
+                    <label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> u2-u1 != 0</label>
+                    <label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> u2-u1 &gt;= 0</label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -212,6 +216,9 @@
     let lastBundle = null;
     let primaryFramework = "parametric";
     let availableHeaders = [];
+    let currentCompareMode = "two-vars";
+    let currentHypothesis = "two-sided";
+    let persistedColumns = { groupA: "", groupB: "", valueColumn: "", groupColumn: "" };
     function parseMaybeNumber(v){ if(v===undefined||v===null) return NaN; const n=Number(String(v).replace(",",".")); return isFinite(n)?n:NaN; }
     function fmt(v){ const n=parseMaybeNumber(v); if(!isFinite(n)) return v==null?"...":String(v); if(globalDecimalPrecision==="auto"){ if(Math.abs(n)<1&&n!==0) return n.toFixed(4); return n.toFixed(2);} return n.toFixed(parseInt(globalDecimalPrecision,10)); }
     function fmtP(v){ const n=parseMaybeNumber(v); if(!isFinite(n)) return v==null?"...":String(v); if(n < 0.001) return "< 0.001"; return globalDecimalPrecision === "auto" ? n.toFixed(4) : n.toFixed(Math.max(3, parseInt(globalDecimalPrecision,10))); }
@@ -228,29 +235,48 @@
     function currentSettingsSpec(){
       var hChecked = document.querySelector('input[name="h1Orientation"]:checked');
       var h = hChecked ? hChecked.value : "two-sided";
+      currentHypothesis = h;
       var alpha = Number((document.getElementById("setAlpha") || { value: "0.05" }).value || 0.05);
       if (!isFinite(alpha) || alpha <= 0 || alpha >= 1) alpha = 0.05;
       return {
-        compareMode: (document.getElementById("setCompareMode") || {}).value || "two-vars",
+        compareMode: currentCompareMode,
         primaryFramework: primaryFramework,
         hypothesis: h,
         confidence: 1 - alpha,
-        groupA: (document.getElementById("setGroupA") || {}).value || "",
-        groupB: (document.getElementById("setGroupB") || {}).value || "",
-        valueColumn: (document.getElementById("setValueColumn") || {}).value || "",
-        groupColumn: (document.getElementById("setGroupColumn") || {}).value || "",
+        groupA: persistedColumns.groupA || "",
+        groupB: persistedColumns.groupB || "",
+        valueColumn: persistedColumns.valueColumn || "",
+        groupColumn: persistedColumns.groupColumn || "",
         posthocMethod: (document.getElementById("setPosthocMethod") || {}).value || "games-howell",
         posthocCorrection: (document.getElementById("setPosthocCorrection") || {}).value || "holm"
       };
     }
+    function refreshHypothesisFrames(){
+      var h0 = document.getElementById("h0Text");
+      var h1Row = document.getElementById("h1Row");
+      if (!h0 || !h1Row) return;
+      if (currentCompareMode === "k-plus") {
+        h0.textContent = "All groups have the same distribution/mean";
+        h1Row.innerHTML = '<span style="color:#e5eefc;font-weight:700;">At least one group differs.</span>';
+      } else {
+        h0.textContent = "u2-u1 = 0";
+        h1Row.innerHTML = '' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> u2-u1 &lt;= 0</label>' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> u2-u1 != 0</label>' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> u2-u1 &gt;= 0</label>';
+        var checkedVal = currentHypothesis || "two-sided";
+        var checked = h1Row.querySelector('input[name="h1Orientation"][value="' + checkedVal + '"]');
+        if (checked) checked.checked = true;
+        h1Row.querySelectorAll('input[name="h1Orientation"]').forEach(function(el){ el.addEventListener("change", notifySettingsChanged); });
+      }
+    }
     function refreshSettingsVisibility(){
-      const mode = (document.getElementById("setCompareMode") || {}).value || "two-vars";
+      const mode = currentCompareMode || "two-vars";
       const two = mode === "two-vars";
       const setDisplay = (id, show) => { const el = document.getElementById(id); if (el) el.style.display = show ? "" : "none"; };
-      setDisplay("setAWrap", two); setDisplay("setBWrap", two);
-      setDisplay("setVWrap", !two); setDisplay("setGWrap", !two);
       setDisplay("setPosthocWrap", !two); setDisplay("setCorrectionWrap", !two);
-      setDisplay("setAlphaWrap", two); setDisplay("setHypWrap", two);
+      setDisplay("setHypWrap", true);
+      refreshHypothesisFrames();
     }
     function setFrameworkButtons(mode){
       primaryFramework = mode === "nonparametric" ? "nonparametric" : "parametric";
@@ -259,7 +285,7 @@
       if (p) p.classList.toggle("active", primaryFramework === "parametric");
       if (n) n.classList.toggle("active", primaryFramework === "nonparametric");
       var testChip = document.getElementById("selectedTestChip");
-      var compareMode = (document.getElementById("setCompareMode") || {}).value || "two-vars";
+      var compareMode = currentCompareMode || "two-vars";
       if (testChip) {
         if (compareMode === "k-plus") {
           testChip.textContent = "Test: " + (primaryFramework === "nonparametric" ? "Kruskal-Wallis" : "One-way ANOVA");
@@ -404,15 +430,16 @@
       lastBundle = b || {};
       const s=b.setup||{}, e=b.explore||{}, a=b.assumptions||{}, r=b.results||{}, fx=b.effects||{}, p=b.power||{}, rep=b.report||{};
       availableHeaders = Array.isArray(s.headers) ? s.headers.slice() : availableHeaders;
-      fillSelect("setGroupA", availableHeaders, s.groupA);
-      fillSelect("setGroupB", availableHeaders, s.groupB);
-      fillSelect("setValueColumn", availableHeaders, s.valueColumn);
-      fillSelect("setGroupColumn", availableHeaders, s.groupColumn);
-      const cMode = document.getElementById("setCompareMode"); if (cMode) cMode.value = s.compareMode || "two-vars";
+      persistedColumns.groupA = s.groupA || persistedColumns.groupA;
+      persistedColumns.groupB = s.groupB || persistedColumns.groupB;
+      persistedColumns.valueColumn = s.valueColumn || persistedColumns.valueColumn;
+      persistedColumns.groupColumn = s.groupColumn || persistedColumns.groupColumn;
+      currentCompareMode = s.compareMode || currentCompareMode || "two-vars";
       setFrameworkButtons(s.primaryFramework || primaryFramework);
       var alphaEl = document.getElementById("setAlpha");
       if (alphaEl) alphaEl.value = String(1 - (parseMaybeNumber(s.confidence) || 0.95));
       var orientation = s.hypothesis || "two-sided";
+      currentHypothesis = orientation;
       var radio = document.querySelector('input[name="h1Orientation"][value="' + orientation + '"]');
       if (radio) radio.checked = true;
       const phm = document.getElementById("setPosthocMethod"); if (phm) phm.value = s.posthocMethod || "games-howell";
@@ -437,9 +464,9 @@
     }
     document.addEventListener("DOMContentLoaded", function(){
       document.querySelectorAll(".tab-button").forEach(btn=>btn.addEventListener("click",()=>switchTab(btn.getAttribute("data-tab"))));
-      ["setCompareMode","setAlpha","setGroupA","setGroupB","setValueColumn","setGroupColumn","setPosthocMethod","setPosthocCorrection"].forEach(function(id){
+      ["setAlpha","setPosthocMethod","setPosthocCorrection"].forEach(function(id){
         const el = document.getElementById(id);
-        if (el) el.addEventListener("change", function(){ if(id==="setCompareMode") setFrameworkButtons(primaryFramework); notifySettingsChanged(); });
+        if (el) el.addEventListener("change", function(){ notifySettingsChanged(); });
       });
       document.querySelectorAll('input[name="h1Orientation"]').forEach(function(el){ el.addEventListener("change", notifySettingsChanged); });
       var pBtn = document.getElementById("setFrameworkParam");
