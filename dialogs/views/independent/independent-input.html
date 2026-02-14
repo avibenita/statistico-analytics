@@ -19,12 +19,24 @@
     .btn{padding:8px 12px;border-radius:8px;border:1px solid #2e4268;background:#162948;color:#e5e7eb;cursor:pointer;}
     .btn.primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);border-color:#2f5fca;font-weight:700;}
     .meta{font-size:12px;color:#9fb0cc;}
-    .checks{max-height:260px;overflow:auto;border:1px solid #2a3d5f;border-radius:8px;background:#0b1428;}
-    .checks table{width:100%;border-collapse:collapse;font-size:12px;}
-    .checks thead th{position:sticky;top:0;background:#15345f;color:#d8ecff;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.2);text-align:left;text-transform:uppercase;letter-spacing:.3px;}
-    .checks tbody td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .checks{max-height:280px;overflow:auto;border:2px solid #2b5fd9;border-radius:12px;background:#f7f9fd;}
+    .checks table{width:100%;border-collapse:collapse;font-size:12px;color:#0f172a;}
+    .checks thead th{position:sticky;top:0;background:#e5e7eb;color:#4b5563;padding:7px 8px;border-bottom:1px solid #cbd5e1;text-align:left;text-transform:uppercase;letter-spacing:.3px;font-weight:800;}
+    .checks tbody td{padding:7px 8px;border-bottom:1px solid #dbe2ea;}
     .checks tbody tr:last-child td{border-bottom:none;}
-    .checks tbody td:last-child{text-align:center;}
+    .checks tbody td.center{text-align:center;}
+    .checks tbody tr{cursor:grab;}
+    .checks tbody tr.dragging{opacity:.45;}
+    .n-num{color:#1d4ed8;font-weight:700;}
+    .n-str{color:#16a34a;font-weight:700;}
+    .n-miss{color:#64748b;font-weight:700;}
+    .drag-h{color:#64748b;}
+    .bucket{border:2px dashed #2a3d5f;border-radius:10px;padding:10px;background:#0b1428;min-height:68px;}
+    .bucket-title{font-size:12px;color:#9fb0cc;font-weight:700;margin-bottom:6px;}
+    .bucket-items{display:flex;gap:6px;flex-wrap:wrap;}
+    .bucket-pill{display:inline-flex;align-items:center;gap:6px;background:#1e3a8a;color:#dbeafe;padding:5px 8px;border-radius:999px;font-size:12px;}
+    .bucket-pill button{border:none;background:transparent;color:#fff;cursor:pointer;font-size:12px;}
+    .hint{font-size:11px;color:#9fb0cc;margin-top:6px;}
   </style>
 </head>
 <body>
@@ -40,8 +52,9 @@
     </div>
 
     <div class="panel">
-      <label>Columns of interest (for this analysis)</label>
+      <label>Available variables</label>
       <div id="interestChecks" class="checks"></div>
+      <div class="hint">Drag variables into the comparison bucket below.</div>
     </div>
 
     <div class="panel">
@@ -63,6 +76,14 @@
       </div>
     </div>
 
+    <div class="panel">
+      <div class="bucket">
+        <div class="bucket-title">Comparison bucket</div>
+        <div id="compareBucket" class="bucket-items"></div>
+      </div>
+      <div class="hint" id="bucketHint">For 2 variables: exactly 2. For more groups: at least 3.</div>
+    </div>
+
     <div class="row">
       <button class="btn" id="btnCancel">Cancel</button>
       <button class="btn primary" id="btnRun">Open Independent Means Dashboard</button>
@@ -77,30 +98,76 @@
         Office.context.ui.messageParent(JSON.stringify({ action: action, data: data || null }));
       }
     }
-    function fillSelect(id, headers){
-      var sel = qs(id); if (!sel) return;
-      sel.innerHTML = headers.map(function(h){ return '<option value="' + h + '">' + h + '</option>'; }).join("");
+    function countKinds(headers, rows){
+      return headers.map(function(name, idx){
+        var numeric=0,string=0,missing=0;
+        rows.forEach(function(r){
+          var v=r[idx];
+          if(v===null||v===undefined||v===""){ missing++; return; }
+          var n=Number(String(v).replace(",","."));
+          if(isFinite(n)) numeric++; else string++;
+        });
+        return { name:name, numeric:numeric, string:string, missing:missing };
+      });
     }
     function renderInterestChecks(headers){
       var host = qs("interestChecks");
       if (!host) return;
-      host.innerHTML = "";
-      var selected = STATE.selectedColumns && STATE.selectedColumns.length ? STATE.selectedColumns.slice() : headers.slice();
-      var html = '<table><thead><tr><th>Column</th><th>Use</th></tr></thead><tbody>';
-      headers.forEach(function(h){
-        var checked = selected.indexOf(h) >= 0;
-        html += '<tr><td>' + h + '</td><td><input type="checkbox" ' + (checked ? "checked" : "") + ' data-col="' + h + '"/></td></tr>';
+      var stats = countKinds(headers, STATE.rows || []);
+      var html = '<table><thead><tr><th>Variable</th><th class="center">N Numeric</th><th class="center">N String</th><th class="center">N Missing</th><th class="center"></th></tr></thead><tbody>';
+      stats.forEach(function(s){
+        html += '<tr draggable="true" data-col="' + s.name + '">' +
+          '<td>' + s.name + '</td>' +
+          '<td class="center n-num">' + s.numeric + '</td>' +
+          '<td class="center n-str">' + s.string + '</td>' +
+          '<td class="center n-miss">' + s.missing + '</td>' +
+          '<td class="center drag-h"><i class="fa-solid fa-grip"></i></td>' +
+        '</tr>';
       });
       html += '</tbody></table>';
       host.innerHTML = html;
-      host.querySelectorAll("input[type=checkbox]").forEach(function(cb){
-        cb.addEventListener("change", onInterestChanged);
+      host.querySelectorAll("tbody tr").forEach(function(tr){
+        tr.addEventListener("dragstart", function(){ tr.classList.add("dragging"); });
+        tr.addEventListener("dragend", function(){ tr.classList.remove("dragging"); });
+        tr.addEventListener("dblclick", function(){ addToBucket(tr.getAttribute("data-col")); });
       });
     }
-    function onInterestChanged(){
-      var checks = Array.from(document.querySelectorAll("#interestChecks input[type=checkbox]:checked"));
-      STATE.selectedColumns = checks.map(function(c){ return c.getAttribute("data-col"); });
-      if (!STATE.selectedColumns.length) return;
+    function renderBucket(){
+      var bucket = qs("compareBucket");
+      if(!bucket) return;
+      bucket.innerHTML = "";
+      STATE.selectedColumns.forEach(function(col){
+        var pill = document.createElement("span");
+        pill.className = "bucket-pill";
+        pill.innerHTML = '<span>' + col + '</span><button data-col="' + col + '"><i class="fa-solid fa-xmark"></i></button>';
+        bucket.appendChild(pill);
+      });
+      bucket.querySelectorAll("button").forEach(function(btn){
+        btn.addEventListener("click", function(){ removeFromBucket(btn.getAttribute("data-col")); });
+      });
+      validateBucket();
+    }
+    function addToBucket(col){
+      if (!col) return;
+      var mode = qs("dataMode").value;
+      if (STATE.selectedColumns.indexOf(col) >= 0) return;
+      if (mode === "two-vars" && STATE.selectedColumns.length >= 2) return;
+      STATE.selectedColumns.push(col);
+      renderBucket();
+    }
+    function removeFromBucket(col){
+      STATE.selectedColumns = STATE.selectedColumns.filter(function(x){ return x !== col; });
+      renderBucket();
+    }
+    function validateBucket(){
+      var mode = qs("dataMode").value;
+      var ok = mode === "two-vars" ? STATE.selectedColumns.length === 2 : STATE.selectedColumns.length >= 3;
+      var hint = qs("bucketHint");
+      if (hint) hint.textContent = mode === "two-vars"
+        ? "For 2 variables: exactly 2 selected."
+        : "For more groups: select at least 3 numeric columns.";
+      var runBtn = qs("btnRun");
+      if (runBtn) runBtn.disabled = !ok;
     }
     function applyPayload(p){
       STATE.headers = p.headers || []; STATE.rows = p.rows || []; STATE.address = p.address || ""; STATE.saved = p.savedModelSpec || {};
@@ -109,13 +176,15 @@
       qs("colCount").textContent = String(STATE.headers.length);
       STATE.selectedColumns = (STATE.saved && Array.isArray(STATE.saved.selectedColumns) && STATE.saved.selectedColumns.length)
         ? STATE.saved.selectedColumns.slice()
-        : STATE.headers.slice();
+        : [];
       renderInterestChecks(STATE.headers);
+      renderBucket();
       if (STATE.saved) {
         if (STATE.saved.compareMode) qs("dataMode").value = STATE.saved.compareMode;
         else if (STATE.saved.mode === "k-plus") qs("dataMode").value = "k-plus";
         if (STATE.saved.primaryFramework) qs("frameworkMode").value = STATE.saved.primaryFramework;
       }
+      validateBucket();
     }
     function run(){
       var mode = qs("dataMode").value;
@@ -144,6 +213,16 @@
       send("independentModel", spec);
     }
     document.addEventListener("DOMContentLoaded", function(){
+      var bucket = qs("compareBucket");
+      if (bucket) {
+        bucket.addEventListener("dragover", function(e){ e.preventDefault(); });
+        bucket.addEventListener("drop", function(e){
+          e.preventDefault();
+          var drag = document.querySelector("#interestChecks tr.dragging");
+          if (drag) addToBucket(drag.getAttribute("data-col"));
+        });
+      }
+      qs("dataMode").addEventListener("change", validateBucket);
       qs("btnRefresh").addEventListener("click", function(){ send("requestData", null); });
       qs("btnCancel").addEventListener("click", function(){ send("close", null); });
       qs("btnRun").addEventListener("click", run);
