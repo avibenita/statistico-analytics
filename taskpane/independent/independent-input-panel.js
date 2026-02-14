@@ -175,7 +175,7 @@ function detectTwoVarsDesign(rows, aIdx, bIdx, n1, n2) {
       pairedCount,
       overlap,
       corr,
-      message: "Values appear aligned by row for both variables. If these are matched measurements, use Paired Samples or Correlation/Regression."
+      message: "Warning: this test is intended for independent variables. These columns appear case-aligned from the same dataset; consider switching to the Dependent/Paired module instead."
     };
   }
 
@@ -464,7 +464,7 @@ function buildIndependentBundle(headers, rows, spec) {
     };
   }
   const recommendation = designValidation.status === "paired-warning"
-    ? "Potential matched-pairs structure detected. Consider Paired Samples or Correlation/Regression before independent tests."
+    ? "Potential matched-pairs structure detected. Independent Means is for independent variables; consider using the Dependent/Paired module."
     : (designValidation.status === "invalid"
       ? "Invalid design selection. Reconfigure variables before interpreting results."
       : "Welch t-test primary; Mann-Whitney as robustness check.");
