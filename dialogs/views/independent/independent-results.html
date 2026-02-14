@@ -58,25 +58,24 @@
     .primary-test-wrap select{height:36px;min-width:220px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;padding:0 10px;}
     .hbox{border:1px solid rgba(148,163,184,.38);border-radius:10px;padding:8px;background:rgba(6,16,30,.55);}
     .hbox-title{font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700;margin-bottom:6px;}
-    .hbox-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#e5eefc;}
-    .h-radio{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#d6e7ff;text-transform:none !important;}
+    .hbox-row{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;color:#e5eefc;}
+    .h-radio{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#d6e7ff;text-transform:none !important;white-space:nowrap;}
     .hdr-row{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;}
     .stat-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(30,58,138,.35);border:1px solid rgba(120,200,255,.4);border-radius:999px;padding:6px 10px;font-size:12px;color:#dbeafe;}
     .design-badge{font-weight:800;}
     .design-ok{background:rgba(16,185,129,.16);border-color:rgba(16,185,129,.55);color:#d1fae5;}
     .design-warn{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.55);color:#fde68a;}
     .design-bad{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.55);color:#fecaca;}
-    .design-warning{display:none;margin-top:8px;padding:10px 12px;border-radius:10px;border:1px solid rgba(245,158,11,.6);background:rgba(245,158,11,.12);color:#fde68a;font-size:13px;font-weight:700;text-align:left;}
-    .design-warning strong{color:#fff3bf;}
     .test-chip{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.55);color:#d1fae5;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;}
     .hyp-card{border:1px solid rgba(120,200,255,.35);border-radius:12px;padding:10px;background:rgba(4,18,38,.6);}
-    .hyp-row{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:nowrap;}
+    .hyp-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:nowrap;}
     .hyp-title{font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;}
     .hyp-main{font-size:15px;font-weight:700;color:#e5eefc;white-space:nowrap;}
-    .hyp-alt{display:flex;align-items:center;gap:16px;flex-wrap:nowrap;}
+    .hyp-alt{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;white-space:nowrap;}
     .hyp-delta{font-weight:800;color:#93c5fd;}
-    .alpha-wrap{min-width:300px;}
+    .alpha-wrap{min-width:280px;max-width:340px;}
     .alpha-wrap label{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;}
+    #setAlpha{height:4px;opacity:.78;accent-color:#3ea8ff;}
   </style>
 </head>
 <body>
@@ -109,7 +108,6 @@
             <div style="grid-column:1/-1;">
               <div class="hdr-row" id="compareStatsRow"></div>
               <div id="designMessageRow" style="margin-top:6px;text-align:center;color:var(--text-muted);font-size:12px;"></div>
-              <div id="designWarningRow" class="design-warning"></div>
             </div>
             <div style="grid-column:1/-1;">
               <div class="hdr-row">
@@ -356,11 +354,9 @@
     function renderCompareStatsRow(s, e){
       var host = document.getElementById("compareStatsRow");
       var msgHost = document.getElementById("designMessageRow");
-      var warnHost = document.getElementById("designWarningRow");
       if (!host) return;
       host.innerHTML = "";
       if (msgHost) msgHost.textContent = "";
-      if (warnHost) { warnHost.style.display = "none"; warnHost.textContent = ""; }
       var mode = s.compareMode || "two-vars";
       if (mode === "two-vars") {
         var aName = s.groupA || "u1";
@@ -392,10 +388,6 @@
       badge.textContent = "Design validation: " + statusText;
       host.appendChild(badge);
       if (msgHost && design.message) msgHost.textContent = design.message;
-      if (warnHost && (design.status === "paired-warning" || design.status === "invalid")) {
-        warnHost.style.display = "block";
-        warnHost.innerHTML = '<strong>Warning:</strong> This module is for independent variables. These selections look case-aligned; consider using the Dependent/Paired module instead.';
-      }
     }
     function updateResultsPanels(r, fx, s, a){
       setText("resPrimaryFramework", primaryFramework === "nonparametric" ? "Nonparametric (ranks)" : "Parametric (means)");
