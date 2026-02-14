@@ -42,10 +42,10 @@
     .agreement-warn{color:#fbbf24;font-weight:700;}
     .settings-bar{margin-top:12px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px 12px;}
     .settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;}
-    .settings-grid label{font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px;font-weight:700;text-transform:uppercase;}
-    .settings-grid select,.settings-grid input{width:100%;height:34px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;padding:0 10px;}
+    .settings-grid label{font-size:13px;color:var(--text-muted);margin-bottom:3px;font-weight:700;text-transform:uppercase;}
+    .settings-grid select,.settings-grid input{width:100%;height:34px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;padding:0 0px;}
     .inference-row{display:flex;align-items:flex-end;justify-content:center;gap:42px;flex-wrap:wrap;}
-    .inference-card{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;justify-content:center;padding:8px 10px;border:1px solid rgba(120,200,255,.22);border-radius:12px;background:rgba(7,25,45,.52);}
+    .inference-card{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;justify-content:center;padding:8px 10px;border:0px solid rgba(120,200,255,.22);border-radius:12px;background:rgba(7,25,45,.52);}
     .inference-title{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;letter-spacing:.3px;min-width:130px;padding-bottom:8px;}
     .fw-radio-group{display:flex;border:1px solid rgba(120,200,255,.35);border-radius:10px;overflow:hidden;min-width:360px;}
     .fw-radio-group input{display:none;}
@@ -65,7 +65,8 @@
     .stat-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(30,58,138,.35);border:1px solid rgba(120,200,255,.4);border-radius:999px;padding:6px 10px;font-size:12px;color:#dbeafe;}
     .test-chip{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.55);color:#d1fae5;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;}
     .hyp-card{border:1px solid rgba(120,200,255,.35);border-radius:12px;padding:10px;background:rgba(4,18,38,.6);}
-    .hyp-row{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:nowrap;}
+    .hyp-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+
     .hyp-main{font-size:15px;font-weight:700;color:#e5eefc;white-space:nowrap;min-width:240px;}
     .hyp-block{display:flex;align-items:center;gap:10px;white-space:nowrap;}
     .hyp-h1-label{font-size:12px;color:var(--text-muted);font-weight:800;text-transform:uppercase;letter-spacing:.2px;}
@@ -74,6 +75,15 @@
     .alpha-wrap{min-width:280px;max-width:340px;}
     .alpha-wrap label{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;}
     #setAlpha{height:4px;opacity:.78;accent-color:#3ea8ff;}
+    .hyp-h1-label{
+  font-size:11px;
+  color:var(--text-muted);
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.3px;
+  margin-bottom:4px;
+}
+
   </style>
 </head>
 <body>
@@ -101,60 +111,118 @@
             </select>
           </div>
         </div>
+
         <div class="settings-bar">
-          <div class="settings-grid">
-            <div style="grid-column:1/-1;">
-              <div class="hdr-row" id="compareStatsRow"></div>
-              <div id="designMessageRow" style="margin-top:6px;text-align:center;color:var(--text-muted);font-size:12px;font-weight:700;"></div>
+  <div class="settings-grid">
+
+    <!-- Comparison chips + design message -->
+    <div style="grid-column:1/-1;">
+      <div class="hdr-row" id="compareStatsRow"></div>
+      <div id="designMessageRow"
+           style="margin-top:6px;text-align:center;color:var(--text-muted);font-size:12px;font-weight:700;"></div>
+    </div>
+
+    <!-- Inference + Test method (single dropdown) -->
+    <div style="grid-column:1/-1;">
+      <div class="hdr-row">
+        <div class="inference-row">
+
+          <div class="inference-card">
+            <div class="inference-title">Inference type</div>
+
+            <div class="fw-radio-group" role="radiogroup" aria-label="Inference type">
+              <input id="fwParametric" type="radio" name="frameworkMode" value="parametric" checked/>
+              <label for="fwParametric" id="setFrameworkParam" class="fw-radio active">Parametric (means)</label>
+
+              <input id="fwNonparametric" type="radio" name="frameworkMode" value="nonparametric"/>
+              <label for="fwNonparametric" id="setFrameworkNon" class="fw-radio">Compare ranks</label>
             </div>
-            <div style="grid-column:1/-1;">
-              <div class="hdr-row">
-                <div class="inference-row">
-                  <div class="inference-card">
-                    <div class="inference-title">Inference Framework</div>
-                    <div class="fw-radio-group" role="radiogroup" aria-label="Inference framework">
-                      <input id="fwParametric" type="radio" name="frameworkMode" value="parametric" checked/>
-                      <label for="fwParametric" id="setFrameworkParam" class="fw-radio active">Parametric (means)</label>
-                      <input id="fwNonparametric" type="radio" name="frameworkMode" value="nonparametric"/>
-                      <label for="fwNonparametric" id="setFrameworkNon" class="fw-radio">Non-parametric (ranks)</label>
-                    </div>
-                    <div class="test-now" id="currentTestBadge">Test: Welch t-test</div>
-                  </div>
-                  <div class="primary-test-wrap" id="primaryTestWrap">
-                    <label for="setPrimaryTest">Primary test</label>
-                    <select id="setPrimaryTest">
-                      <option value="welch">Welch t-test</option>
-                      <option value="student">Student t-test (equal var)</option>
-                      <option value="permutation">Permutation t-test</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div id="setPosthocWrap" style="display:none;"><label for="setPosthocMethod">Post-hoc method</label><select id="setPosthocMethod"><option value="games-howell">Games-Howell</option><option value="tukey">Tukey HSD</option><option value="dunn">Dunn</option><option value="conover">Conover</option></select></div>
-            <div id="setCorrectionWrap" style="display:none;"><label for="setPosthocCorrection">p correction</label><select id="setPosthocCorrection"><option value="holm">Holm</option><option value="bh">Benjamini-Hochberg</option><option value="bonferroni">Bonferroni</option><option value="none">None</option></select></div>
-            <div id="setHypWrap" style="grid-column:1/-1;">
-              <div class="hyp-card">
-                <div class="hyp-row">
-                  <div class="hyp-block hyp-main"><strong>H0:</strong> <span id="h0Text">&#956;2-&#956;1 = 0</span></div>
-                  <div class="hyp-block">
-                    <div class="hbox-row hyp-options" id="h1Row">
-                      <label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> &lt; 0</label>
-                      <label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> != 0</label>
-                      <label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> &gt; 0</label>
-                    </div>
-                  </div>
-                  <div class="alpha-wrap">
-                    <label for="setAlpha" style="font-size:10px;opacity:0.6;">Alpha</label>
-                    <input id="setAlpha" type="range" min="0.001" max="0.2" step="0.001" value="0.05" style="height:3px;"/>
-                    <div style="text-align:center;font-size:10px;opacity:0.7;">&#945; = <span id="alphaVal">0.050</span></div>
-                  </div>
-                </div>
-              </div>
+
+            <div class="primary-test-wrap" id="primaryTestWrap" style="margin-left:10px;">
+              <label for="setPrimaryTest">Test method</label>
+              <select id="setPrimaryTest">
+                <option value="welch">Welch t-test (recommended)</option>
+                <option value="student">Student t-test (equal variance)</option>
+                <option value="permutation">Permutation test (mean difference)</option>
+              </select>
             </div>
           </div>
+
         </div>
       </div>
+    </div>
+
+    <!-- (Hidden for k+ groups; keep as-is) -->
+    <div id="setPosthocWrap" style="display:none;">
+      <label for="setPosthocMethod">Post-hoc method</label>
+      <select id="setPosthocMethod">
+        <option value="games-howell">Games-Howell</option>
+        <option value="tukey">Tukey HSD</option>
+        <option value="dunn">Dunn</option>
+        <option value="conover">Conover</option>
+      </select>
+    </div>
+
+    <div id="setCorrectionWrap" style="display:none;">
+      <label for="setPosthocCorrection">p correction</label>
+      <select id="setPosthocCorrection">
+        <option value="holm">Holm</option>
+        <option value="bh">Benjamini-Hochberg</option>
+        <option value="bonferroni">Bonferroni</option>
+        <option value="none">None</option>
+      </select>
+    </div>
+
+    <!-- Hypothesis + alpha (compact, less clutter) -->
+    <div id="setHypWrap" style="grid-column:1/-1;">
+      <div class="hyp-card">
+        <div class="hyp-row">
+
+          <div class="hyp-block hyp-main">
+            <strong>H0:</strong> <span id="h0Text">Difference = 0</span>
+          </div>
+
+          <div class="hyp-block">
+
+  <div class="hyp-h1-label">Alternative (H1)</div>
+
+  <div class="hbox-row hyp-options" id="h1Row">
+    <label class="h-radio">
+      <input type="radio" name="h1Orientation" value="less"/>
+      Difference &lt; 0
+    </label>
+
+    <label class="h-radio">
+      <input type="radio" name="h1Orientation" value="two-sided" checked/>
+      Difference ≠ 0
+    </label>
+
+    <label class="h-radio">
+      <input type="radio" name="h1Orientation" value="greater"/>
+      Difference &gt; 0
+    </label>
+  </div>
+
+</div>
+
+
+
+          <div class="alpha-wrap">
+            <label for="setAlpha" style="font-size:10px;opacity:0.75;">
+              Significance: <span id="alphaVal">0.050</span>
+            </label>
+            <input id="setAlpha" type="range" min="0.001" max="0.2" step="0.001" value="0.05" style="height:3px;"/>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+        
       <div class="view-container">
         <section id="tab-setup" class="tab-panel">
           <div class="stats-container">
@@ -291,7 +359,7 @@
         if (deltaToken) deltaToken.textContent = "Omnibus";
         h1Row.innerHTML = '<span style="color:#e5eefc;font-weight:700;">At least one group differs.</span>';
       } else {
-        h0.textContent = "μ2-μ1 = 0";
+        h0.textContent = "Difference = 0";
         if (deltaToken) deltaToken.textContent = "μ2-μ1";
         h1Row.innerHTML = '' +
           '<label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> &lt; 0</label>' +
