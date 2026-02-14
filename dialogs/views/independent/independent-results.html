@@ -60,18 +60,17 @@
     .hbox-title{font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700;margin-bottom:6px;}
     .hbox-row{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;color:#e5eefc;}
     .h-radio{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#d6e7ff;text-transform:none !important;white-space:nowrap;}
+    .h-radio input{transform:scale(0.9);}
     .hdr-row{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;}
     .stat-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(30,58,138,.35);border:1px solid rgba(120,200,255,.4);border-radius:999px;padding:6px 10px;font-size:12px;color:#dbeafe;}
-    .design-badge{font-weight:800;}
-    .design-ok{background:rgba(16,185,129,.16);border-color:rgba(16,185,129,.55);color:#d1fae5;}
-    .design-warn{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.55);color:#fde68a;}
-    .design-bad{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.55);color:#fecaca;}
     .test-chip{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.55);color:#d1fae5;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;}
     .hyp-card{border:1px solid rgba(120,200,255,.35);border-radius:12px;padding:10px;background:rgba(4,18,38,.6);}
     .hyp-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:nowrap;}
     .hyp-title{font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;}
     .hyp-main{font-size:15px;font-weight:700;color:#e5eefc;white-space:nowrap;}
-    .hyp-alt{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;white-space:nowrap;}
+    .hyp-alt{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;white-space:nowrap;}
+    .hyp-block{display:flex;align-items:center;gap:8px;white-space:nowrap;}
+    .hyp-options{display:flex;align-items:center;gap:14px;white-space:nowrap;}
     .hyp-delta{font-weight:800;color:#93c5fd;}
     .alpha-wrap{min-width:280px;max-width:340px;}
     .alpha-wrap label{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;}
@@ -107,7 +106,7 @@
           <div class="settings-grid">
             <div style="grid-column:1/-1;">
               <div class="hdr-row" id="compareStatsRow"></div>
-              <div id="designMessageRow" style="margin-top:6px;text-align:center;color:var(--text-muted);font-size:12px;"></div>
+              <div id="designMessageRow" style="margin-top:6px;text-align:center;color:var(--text-muted);font-size:12px;font-weight:700;"></div>
             </div>
             <div style="grid-column:1/-1;">
               <div class="hdr-row">
@@ -139,13 +138,13 @@
               <div class="hyp-card">
                 <div class="hyp-row">
                   <div class="hyp-title">Hypothesis</div>
-                  <div class="hyp-main"><strong>H0:</strong> <span id="h0Text">&#956;2-&#956;1 = 0</span></div>
-                  <div class="hyp-alt">
-                    <span><strong>Alternative:</strong> <span class="hyp-delta" id="deltaToken">&#956;2-&#956;1</span></span>
-                    <div class="hbox-row" id="h1Row">
-                      <label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> &#956;2-&#956;1 &lt; 0</label>
-                      <label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> &#956;2-&#956;1 != 0</label>
-                      <label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> &#956;2-&#956;1 &gt; 0</label>
+                  <div class="hyp-block hyp-main"><strong>H0:</strong> <span id="h0Text">&#956;2-&#956;1 = 0</span></div>
+                  <div class="hyp-block hyp-alt">
+                    <strong>Alternative:</strong> <span class="hyp-delta" id="deltaToken">&#956;2-&#956;1</span>
+                    <div class="hbox-row hyp-options" id="h1Row">
+                      <label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> &lt; 0</label>
+                      <label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> != 0</label>
+                      <label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> &gt; 0</label>
                     </div>
                   </div>
                   <div class="alpha-wrap">
@@ -298,9 +297,9 @@
         h0.textContent = "μ2-μ1 = 0";
         if (deltaToken) deltaToken.textContent = "μ2-μ1";
         h1Row.innerHTML = '' +
-          '<label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> &#956;2-&#956;1 &lt; 0</label>' +
-          '<label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> &#956;2-&#956;1 != 0</label>' +
-          '<label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> &#956;2-&#956;1 &gt; 0</label>';
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> &lt; 0</label>' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> != 0</label>' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> &gt; 0</label>';
         var checkedVal = currentHypothesis || "two-sided";
         var checked = h1Row.querySelector('input[name="h1Orientation"][value="' + checkedVal + '"]');
         if (checked) checked.checked = true;
@@ -356,7 +355,7 @@
       var msgHost = document.getElementById("designMessageRow");
       if (!host) return;
       host.innerHTML = "";
-      if (msgHost) msgHost.textContent = "";
+      if (msgHost) { msgHost.textContent = ""; msgHost.style.color = "var(--text-muted)"; }
       var mode = s.compareMode || "two-vars";
       if (mode === "two-vars") {
         var aName = s.groupA || "u1";
@@ -382,12 +381,10 @@
         });
       }
       var design = s.designValidation || {};
-      var badge = document.createElement("span");
-      badge.className = "stat-chip design-badge " + (design.status === "independent" ? "design-ok" : (design.status === "invalid" ? "design-bad" : "design-warn"));
-      var statusText = design.status === "independent" ? "🟢 Independent" : (design.status === "invalid" ? "🔴 Invalid" : "🟡 Paired");
-      badge.textContent = "Design validation: " + statusText;
-      host.appendChild(badge);
-      if (msgHost && design.message) msgHost.textContent = design.message;
+      if (msgHost && design.message) {
+        msgHost.textContent = design.message;
+        if (design.status === "paired-warning" || design.status === "invalid") msgHost.style.color = "#fbbf24";
+      }
     }
     function updateResultsPanels(r, fx, s, a){
       setText("resPrimaryFramework", primaryFramework === "nonparametric" ? "Nonparametric (ranks)" : "Parametric (means)");
