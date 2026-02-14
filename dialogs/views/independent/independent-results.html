@@ -65,12 +65,11 @@
     .stat-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(30,58,138,.35);border:1px solid rgba(120,200,255,.4);border-radius:999px;padding:6px 10px;font-size:12px;color:#dbeafe;}
     .test-chip{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.55);color:#d1fae5;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;}
     .hyp-card{border:1px solid rgba(120,200,255,.35);border-radius:12px;padding:10px;background:rgba(4,18,38,.6);}
-    .hyp-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:nowrap;}
-    .hyp-title{font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;}
-    .hyp-main{font-size:15px;font-weight:700;color:#e5eefc;white-space:nowrap;}
-    .hyp-alt{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;white-space:nowrap;}
-    .hyp-block{display:flex;align-items:center;gap:8px;white-space:nowrap;}
-    .hyp-options{display:flex;align-items:center;gap:14px;white-space:nowrap;}
+    .hyp-row{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:nowrap;}
+    .hyp-main{font-size:15px;font-weight:700;color:#e5eefc;white-space:nowrap;min-width:240px;}
+    .hyp-block{display:flex;align-items:center;gap:10px;white-space:nowrap;}
+    .hyp-h1-label{font-size:12px;color:var(--text-muted);font-weight:800;text-transform:uppercase;letter-spacing:.2px;}
+    .hyp-options{display:flex;align-items:center;gap:12px;white-space:nowrap;}
     .hyp-delta{font-weight:800;color:#93c5fd;}
     .alpha-wrap{min-width:280px;max-width:340px;}
     .alpha-wrap label{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;}
@@ -137,10 +136,10 @@
             <div id="setHypWrap" style="grid-column:1/-1;">
               <div class="hyp-card">
                 <div class="hyp-row">
-                  <div class="hyp-title">Hypothesis</div>
                   <div class="hyp-block hyp-main"><strong>H0:</strong> <span id="h0Text">&#956;2-&#956;1 = 0</span></div>
-                  <div class="hyp-block hyp-alt">
-                    <strong>Alternative:</strong> <span class="hyp-delta" id="deltaToken">&#956;2-&#956;1</span>
+                  <div class="hyp-block">
+                    <span class="hyp-h1-label">H1:</span>
+                    <span class="hyp-delta" id="deltaToken">&#956;2-&#956;1</span>
                     <div class="hbox-row hyp-options" id="h1Row">
                       <label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> &lt; 0</label>
                       <label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> != 0</label>
