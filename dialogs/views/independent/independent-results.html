@@ -44,9 +44,16 @@
     .settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;}
     .settings-grid label{font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px;font-weight:700;text-transform:uppercase;}
     .settings-grid select,.settings-grid input{width:100%;height:34px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;padding:0 10px;}
-    .fw-group{display:flex;gap:8px;}
-    .fw-btn{flex:1;height:38px;border-radius:12px;border:2px solid rgba(120,200,255,.35);background:rgba(22,78,141,.45);color:#dff3ff;font-size:14px;font-weight:700;cursor:pointer;}
-    .fw-btn.active{background:#1f678a;border-color:#87d6ff;color:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.3);}
+    .inference-card{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;justify-content:center;padding:8px 10px;border:1px solid rgba(120,200,255,.22);border-radius:12px;background:rgba(7,25,45,.52);}
+    .inference-title{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;letter-spacing:.3px;min-width:130px;padding-bottom:8px;}
+    .fw-radio-group{display:flex;border:1px solid rgba(120,200,255,.35);border-radius:10px;overflow:hidden;min-width:360px;}
+    .fw-radio-group input{display:none;}
+    .fw-radio{padding:10px 14px;background:rgba(22,78,141,.35);color:#dff3ff;font-size:13px;font-weight:700;cursor:pointer;user-select:none;border-right:1px solid rgba(120,200,255,.25);}
+    .fw-radio:last-of-type{border-right:none;}
+    .fw-radio.active{background:#1f678a;color:#fff;box-shadow:inset 0 0 0 1px rgba(135,214,255,.65);}
+    .primary-test-wrap{display:flex;align-items:center;gap:8px;}
+    .primary-test-wrap label{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;}
+    .primary-test-wrap select{height:36px;min-width:220px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;padding:0 10px;}
     .hbox{border:1px solid rgba(148,163,184,.38);border-radius:10px;padding:8px;background:rgba(6,16,30,.55);}
     .hbox-title{font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700;margin-bottom:6px;}
     .hbox-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#e5eefc;}
@@ -58,12 +65,14 @@
     .design-warn{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.55);color:#fde68a;}
     .design-bad{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.55);color:#fecaca;}
     .test-chip{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.55);color:#d1fae5;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;}
-    .hypothesis-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-    .hyp-frame{border:1px solid rgba(120,200,255,.35);border-radius:10px;padding:10px;background:rgba(4,18,38,.6);min-height:74px;}
-    .hyp-frame.h0{border-color:rgba(255,165,120,.45);}
-    .hyp-frame-title{font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;}
-    .hyp-frame-main{font-size:16px;font-weight:700;color:#e5eefc;line-height:1.35;}
-    @media (max-width: 980px){ .hypothesis-row{grid-template-columns:1fr;} }
+    .hyp-card{border:1px solid rgba(120,200,255,.35);border-radius:12px;padding:10px;background:rgba(4,18,38,.6);}
+    .hyp-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+    .hyp-title{font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;}
+    .hyp-main{margin-top:6px;font-size:15px;font-weight:700;color:#e5eefc;}
+    .hyp-alt{margin-top:8px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+    .hyp-delta{font-weight:800;color:#93c5fd;}
+    .alpha-wrap{min-width:220px;}
+    .alpha-wrap label{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;}
   </style>
 </head>
 <body>
@@ -99,32 +108,44 @@
             </div>
             <div style="grid-column:1/-1;">
               <div class="hdr-row">
-                <div class="fw-group" style="min-width:420px;max-width:780px;">
-                  <button id="setFrameworkParam" type="button" class="fw-btn active">Parametric (means)</button>
-                  <button id="setFrameworkNon" type="button" class="fw-btn">Non-parametric (Ranks)</button>
-                </div>
-                <div class="test-chip" id="selectedTestChip">Test: Welch t-test</div>
-                <div style="min-width:220px;">
-                  <label for="setAlpha">Alpha</label>
-                  <input id="setAlpha" type="range" min="0.001" max="0.2" step="0.001" value="0.05"/>
-                  <div style="text-align:center;font-size:11px;color:var(--text-muted);">alpha = <span id="alphaVal">0.050</span></div>
+                <div class="inference-card">
+                  <div class="inference-title">Inference Framework</div>
+                  <div class="fw-radio-group" role="radiogroup" aria-label="Inference framework">
+                    <input id="fwParametric" type="radio" name="frameworkMode" value="parametric" checked/>
+                    <label for="fwParametric" id="setFrameworkParam" class="fw-radio active">Parametric (means)</label>
+                    <input id="fwNonparametric" type="radio" name="frameworkMode" value="nonparametric"/>
+                    <label for="fwNonparametric" id="setFrameworkNon" class="fw-radio">Non-parametric (ranks)</label>
+                  </div>
+                  <div class="primary-test-wrap" id="primaryTestWrap">
+                    <label for="setPrimaryTest">Primary test</label>
+                    <select id="setPrimaryTest">
+                      <option value="welch">Welch t-test</option>
+                      <option value="student">Student t-test (equal var)</option>
+                      <option value="permutation">Permutation t-test</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
             <div id="setPosthocWrap" style="display:none;"><label for="setPosthocMethod">Post-hoc method</label><select id="setPosthocMethod"><option value="games-howell">Games-Howell</option><option value="tukey">Tukey HSD</option><option value="dunn">Dunn</option><option value="conover">Conover</option></select></div>
             <div id="setCorrectionWrap" style="display:none;"><label for="setPosthocCorrection">p correction</label><select id="setPosthocCorrection"><option value="holm">Holm</option><option value="bh">Benjamini-Hochberg</option><option value="bonferroni">Bonferroni</option><option value="none">None</option></select></div>
             <div id="setHypWrap" style="grid-column:1/-1;">
-              <div class="hypothesis-row">
-                <div class="hyp-frame h0">
-                  <div class="hyp-frame-title">H0</div>
-                  <div class="hyp-frame-main" id="h0Text">u2-u1 = 0</div>
+              <div class="hyp-card">
+                <div class="hyp-head">
+                  <div class="hyp-title">Hypothesis</div>
+                  <div class="alpha-wrap">
+                    <label for="setAlpha">Significance level</label>
+                    <input id="setAlpha" type="range" min="0.001" max="0.2" step="0.001" value="0.05"/>
+                    <div style="text-align:center;font-size:11px;color:var(--text-muted);">alpha = <span id="alphaVal">0.050</span></div>
+                  </div>
                 </div>
-                <div class="hyp-frame h1">
-                  <div class="hyp-frame-title">H1</div>
+                <div class="hyp-main"><strong>H0:</strong> <span id="h0Text">&#916; = 0</span></div>
+                <div class="hyp-alt">
+                  <span><strong>Alternative:</strong> <span class="hyp-delta" id="deltaToken">&#956;2-&#956;1</span></span>
                   <div class="hbox-row" id="h1Row">
-                    <label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> u2-u1 &lt;= 0</label>
-                    <label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> u2-u1 != 0</label>
-                    <label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> u2-u1 &gt;= 0</label>
+                    <label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> &#916; &lt; 0</label>
+                    <label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> &#916; != 0</label>
+                    <label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> &#916; &gt; 0</label>
                   </div>
                 </div>
               </div>
@@ -223,6 +244,7 @@
     let availableHeaders = [];
     let currentCompareMode = "two-vars";
     let currentHypothesis = "two-sided";
+    let currentPrimaryTest = "welch";
     let persistedColumns = { groupA: "", groupB: "", valueColumn: "", groupColumn: "" };
     function parseMaybeNumber(v){ if(v===undefined||v===null) return NaN; const n=Number(String(v).replace(",",".")); return isFinite(n)?n:NaN; }
     function fmt(v){ const n=parseMaybeNumber(v); if(!isFinite(n)) return v==null?"...":String(v); if(globalDecimalPrecision==="auto"){ if(Math.abs(n)<1&&n!==0) return n.toFixed(4); return n.toFixed(2);} return n.toFixed(parseInt(globalDecimalPrecision,10)); }
@@ -252,6 +274,7 @@
         groupB: persistedColumns.groupB || "",
         valueColumn: persistedColumns.valueColumn || "",
         groupColumn: persistedColumns.groupColumn || "",
+        primaryTest: (document.getElementById("setPrimaryTest") || {}).value || currentPrimaryTest || "welch",
         posthocMethod: (document.getElementById("setPosthocMethod") || {}).value || "games-howell",
         posthocCorrection: (document.getElementById("setPosthocCorrection") || {}).value || "holm"
       };
@@ -259,16 +282,19 @@
     function refreshHypothesisFrames(){
       var h0 = document.getElementById("h0Text");
       var h1Row = document.getElementById("h1Row");
+      var deltaToken = document.getElementById("deltaToken");
       if (!h0 || !h1Row) return;
       if (currentCompareMode === "k-plus") {
-        h0.textContent = "All groups have the same distribution/mean";
+        h0.textContent = "All groups are equal";
+        if (deltaToken) deltaToken.textContent = "Omnibus";
         h1Row.innerHTML = '<span style="color:#e5eefc;font-weight:700;">At least one group differs.</span>';
       } else {
-        h0.textContent = "u2-u1 = 0";
+        h0.textContent = "Δ = 0";
+        if (deltaToken) deltaToken.textContent = primaryFramework === "nonparametric" ? "PS-0.5" : "μ2-μ1";
         h1Row.innerHTML = '' +
-          '<label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> u2-u1 &lt;= 0</label>' +
-          '<label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> u2-u1 != 0</label>' +
-          '<label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> u2-u1 &gt;= 0</label>';
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> Δ &lt; 0</label>' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> Δ != 0</label>' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> Δ &gt; 0</label>';
         var checkedVal = currentHypothesis || "two-sided";
         var checked = h1Row.querySelector('input[name="h1Orientation"][value="' + checkedVal + '"]');
         if (checked) checked.checked = true;
@@ -289,15 +315,16 @@
       var n = document.getElementById("setFrameworkNon");
       if (p) p.classList.toggle("active", primaryFramework === "parametric");
       if (n) n.classList.toggle("active", primaryFramework === "nonparametric");
+      var rp = document.getElementById("fwParametric");
+      var rn = document.getElementById("fwNonparametric");
+      if (rp) rp.checked = primaryFramework === "parametric";
+      if (rn) rn.checked = primaryFramework === "nonparametric";
+      var primaryTestWrap = document.getElementById("primaryTestWrap");
+      if (primaryTestWrap) primaryTestWrap.style.display = (currentCompareMode === "two-vars" && primaryFramework === "parametric") ? "flex" : "none";
       var testChip = document.getElementById("selectedTestChip");
       var compareMode = currentCompareMode || "two-vars";
-      if (testChip) {
-        if (compareMode === "k-plus") {
-          testChip.textContent = "Test: " + (primaryFramework === "nonparametric" ? "Kruskal-Wallis" : "One-way ANOVA");
-        } else {
-          testChip.textContent = "Test: " + (primaryFramework === "nonparametric" ? "Mann-Whitney U" : "Welch t-test");
-        }
-      }
+      if (testChip) testChip.textContent = "";
+      refreshHypothesisFrames();
     }
     function notifySettingsChanged(){
       const spec = currentSettingsSpec();
@@ -317,8 +344,9 @@
         var aName = s.groupA || "u1";
         var bName = s.groupB || "u2";
         var chips = [
-          aName + " (n=" + (e.n1 || 0) + ", mean=" + fmt(e.mean1) + ", sd=" + fmt(e.sd1) + ")",
-          bName + " (n=" + (e.n2 || 0) + ", mean=" + fmt(e.mean2) + ", sd=" + fmt(e.sd2) + ")"
+          "Comparison",
+          "Group A: " + aName + " (n=" + (e.n1 || 0) + ", μ=" + fmt(e.mean1) + ")",
+          "Group B: " + bName + " (n=" + (e.n2 || 0) + ", μ=" + fmt(e.mean2) + ")"
         ];
         chips.forEach(function(txt){
           var sp = document.createElement("span");
@@ -338,7 +366,8 @@
       var design = s.designValidation || {};
       var badge = document.createElement("span");
       badge.className = "stat-chip design-badge " + (design.status === "independent" ? "design-ok" : (design.status === "invalid" ? "design-bad" : "design-warn"));
-      badge.textContent = design.badge || (design.status === "independent" ? "Independent" : "Review design");
+      var statusText = design.status === "independent" ? "🟢 Independent" : (design.status === "invalid" ? "🔴 Invalid" : "🟡 Paired");
+      badge.textContent = "Design validation: " + statusText;
       host.appendChild(badge);
       if (msgHost && design.message) msgHost.textContent = design.message;
     }
@@ -384,10 +413,23 @@
       const primaryParametric = primaryFramework !== "nonparametric";
 
       if (primaryParametric) {
-        setText("resPrimaryTest", "Welch t-test");
-        setText("resPrimaryStat", "t(" + fmt(r.welchDf) + ") = " + fmt(r.welchT));
-        setText("resPrimaryP", fmtP(r.welchP));
-        setText("resPrimaryEstimate", "Mean diff " + fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "]");
+        const chosen = currentPrimaryTest || "welch";
+        if (chosen === "student") {
+          setText("resPrimaryTest", "Student t-test (equal var)");
+          setText("resPrimaryStat", "t(" + fmt(r.studentDf) + ") = " + fmt(r.studentT));
+          setText("resPrimaryP", fmtP(r.studentP));
+          setText("resPrimaryEstimate", "Mean diff " + fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "]");
+        } else if (chosen === "permutation") {
+          setText("resPrimaryTest", "Permutation t-test");
+          setText("resPrimaryStat", "Permutation B=" + fmt(r.permutationIterations || 1200));
+          setText("resPrimaryP", fmtP(r.permutationP));
+          setText("resPrimaryEstimate", "Mean diff " + fmt(r.meanDiff));
+        } else {
+          setText("resPrimaryTest", "Welch t-test");
+          setText("resPrimaryStat", "t(" + fmt(r.welchDf) + ") = " + fmt(r.welchT));
+          setText("resPrimaryP", fmtP(r.welchP));
+          setText("resPrimaryEstimate", "Mean diff " + fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "]");
+        }
         setText("resSecondaryTest", "Mann-Whitney U");
         setText("resSecondaryStat", "U = " + fmt(r.u));
         setText("resSecondaryP", fmtP(r.mwP));
@@ -448,6 +490,9 @@
       persistedColumns.valueColumn = s.valueColumn || persistedColumns.valueColumn;
       persistedColumns.groupColumn = s.groupColumn || persistedColumns.groupColumn;
       currentCompareMode = s.compareMode || currentCompareMode || "two-vars";
+      currentPrimaryTest = s.primaryTest || currentPrimaryTest || "welch";
+      var testSel = document.getElementById("setPrimaryTest");
+      if (testSel) testSel.value = currentPrimaryTest;
       setFrameworkButtons(s.primaryFramework || primaryFramework);
       var alphaEl = document.getElementById("setAlpha");
       if (alphaEl) alphaEl.value = String(1 - (parseMaybeNumber(s.confidence) || 0.95));
@@ -477,15 +522,15 @@
     }
     document.addEventListener("DOMContentLoaded", function(){
       document.querySelectorAll(".tab-button").forEach(btn=>btn.addEventListener("click",()=>switchTab(btn.getAttribute("data-tab"))));
-      ["setAlpha","setPosthocMethod","setPosthocCorrection"].forEach(function(id){
+      ["setAlpha","setPosthocMethod","setPosthocCorrection","setPrimaryTest"].forEach(function(id){
         const el = document.getElementById(id);
-        if (el) el.addEventListener("change", function(){ notifySettingsChanged(); });
+        if (el) el.addEventListener("change", function(){ if (id === "setPrimaryTest") currentPrimaryTest = el.value || "welch"; notifySettingsChanged(); });
       });
       document.querySelectorAll('input[name="h1Orientation"]').forEach(function(el){ el.addEventListener("change", notifySettingsChanged); });
-      var pBtn = document.getElementById("setFrameworkParam");
-      var nBtn = document.getElementById("setFrameworkNon");
-      if (pBtn) pBtn.addEventListener("click", function(){ setFrameworkButtons("parametric"); notifySettingsChanged(); });
-      if (nBtn) nBtn.addEventListener("click", function(){ setFrameworkButtons("nonparametric"); notifySettingsChanged(); });
+      var rp = document.getElementById("fwParametric");
+      var rn = document.getElementById("fwNonparametric");
+      if (rp) rp.addEventListener("change", function(){ if (rp.checked) { setFrameworkButtons("parametric"); notifySettingsChanged(); } });
+      if (rn) rn.addEventListener("change", function(){ if (rn.checked) { setFrameworkButtons("nonparametric"); notifySettingsChanged(); } });
       setFrameworkButtons(primaryFramework);
       refreshSettingsVisibility();
       Office.onReady(function(){

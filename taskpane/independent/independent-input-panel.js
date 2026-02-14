@@ -206,6 +206,55 @@ function computeWelch(x, y, alt) {
   return { t, df, p: Math.max(0, Math.min(1, p)), diff: m1 - m2, ciLow: (m1 - m2) - zcrit * se, ciHigh: (m1 - m2) + zcrit * se };
 }
 
+function computeStudent(x, y, alt) {
+  const n1 = x.length, n2 = y.length;
+  const m1 = mean(x), m2 = mean(y);
+  const v1 = variance(x), v2 = variance(y);
+  const sp2 = ((((n1 - 1) * v1) + ((n2 - 1) * v2)) / Math.max(1, (n1 + n2 - 2)));
+  const se = Math.sqrt(Math.max(0, sp2) * ((1 / Math.max(1, n1)) + (1 / Math.max(1, n2))));
+  const t = se > 0 ? (m1 - m2) / se : 0;
+  const df = Math.max(1, n1 + n2 - 2);
+  let p = 2 * (1 - normalCdf(Math.abs(t)));
+  if (alt === "greater") p = 1 - normalCdf(t);
+  if (alt === "less") p = normalCdf(t);
+  const zcrit = 1.959964;
+  return { t, df, p: Math.max(0, Math.min(1, p)), diff: m1 - m2, ciLow: (m1 - m2) - zcrit * se, ciHigh: (m1 - m2) + zcrit * se };
+}
+
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+  }
+}
+
+function computePermutationT(x, y, alt, iterations) {
+  const n1 = x.length;
+  const pooled = x.concat(y);
+  const obs = mean(x) - mean(y);
+  const absObs = Math.abs(obs);
+  const B = Math.max(200, Math.min(4000, Number(iterations) || 1200));
+  let extreme = 0;
+  for (let b = 0; b < B; b++) {
+    const sample = pooled.slice();
+    shuffleInPlace(sample);
+    const xa = sample.slice(0, n1);
+    const xb = sample.slice(n1);
+    const d = mean(xa) - mean(xb);
+    if (alt === "greater") {
+      if (d >= obs) extreme++;
+    } else if (alt === "less") {
+      if (d <= obs) extreme++;
+    } else if (Math.abs(d) >= absObs) {
+      extreme++;
+    }
+  }
+  const p = (extreme + 1) / (B + 1);
+  return { diff: obs, p: Math.max(0, Math.min(1, p)), iterations: B };
+}
+
 function computeMannWhitney(x, y, alt) {
   const all = [];
   x.forEach(v => all.push({ v, g: 1 }));
@@ -316,6 +365,7 @@ function buildIndependentBundle(headers, rows, spec) {
   const primaryFramework = spec.primaryFramework || "parametric";
   const posthocMethod = spec.posthocMethod || (primaryFramework === "nonparametric" ? "dunn" : "games-howell");
   const posthocCorrection = spec.posthocCorrection || "holm";
+  const primaryTest = spec.primaryTest || "welch";
   const selectedColumns = Array.isArray(spec.selectedColumns) && spec.selectedColumns.length
     ? spec.selectedColumns.filter(name => headers.indexOf(name) >= 0)
     : headers.slice();
@@ -354,6 +404,8 @@ function buildIndependentBundle(headers, rows, spec) {
   }
   const alt = spec.hypothesis || "two-sided";
   const welch = computeWelch(g1, g2, alt);
+  const student = computeStudent(g1, g2, alt);
+  const permutation = computePermutationT(g1, g2, alt, spec.permutationIterations || 1200);
   const mw = computeMannWhitney(g1, g2, alt);
   const n1 = g1.length, n2 = g2.length;
   const sp = Math.sqrt((((Math.max(0, n1 - 1)) * variance(g1)) + ((Math.max(0, n2 - 1)) * variance(g2))) / Math.max(1, n1 + n2 - 2));
@@ -426,6 +478,7 @@ function buildIndependentBundle(headers, rows, spec) {
       confidence: Number(spec.confidence || 0.95),
       posthocMethod,
       posthocCorrection,
+      primaryTest,
       selectedColumns: selectedColumns.slice(),
       groupA: spec.groupA || "",
       groupB: spec.groupB || "",
@@ -450,6 +503,8 @@ function buildIndependentBundle(headers, rows, spec) {
     results: {
       primary: "Welch t-test",
       welchT: welch.t, welchDf: welch.df, welchP: welch.p,
+      studentT: student.t, studentDf: student.df, studentP: student.p,
+      permutationP: permutation.p, permutationIterations: permutation.iterations,
       meanDiff: welch.diff, ciLow: welch.ciLow, ciHigh: welch.ciHigh,
       u: mw.u, mwP: mw.p,
       omnibus,
