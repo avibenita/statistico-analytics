@@ -122,30 +122,30 @@
            style="margin-top:6px;text-align:center;color:var(--text-muted);font-size:12px;font-weight:700;"></div>
     </div>
 
-    <!-- Inference + Test method (single dropdown) -->
+    <!-- Inference + Test method (side by side, clearly separated) -->
     <div style="grid-column:1/-1;">
       <div class="hdr-row">
-        <div class="inference-row">
+        <div class="inference-row" style="gap:28px;">
 
-          <div class="inference-card">
+          <!-- Inference Type (left) -->
+          <div class="inference-card" style="flex:0 0 auto;">
             <div class="inference-title">Inference type</div>
-
             <div class="fw-radio-group" role="radiogroup" aria-label="Inference type">
               <input id="fwParametric" type="radio" name="frameworkMode" value="parametric" checked/>
               <label for="fwParametric" id="setFrameworkParam" class="fw-radio active">Parametric (means)</label>
-
               <input id="fwNonparametric" type="radio" name="frameworkMode" value="nonparametric"/>
-              <label for="fwNonparametric" id="setFrameworkNon" class="fw-radio">Compare ranks</label>
+              <label for="fwNonparametric" id="setFrameworkNon" class="fw-radio">Non-parametric (ranks)</label>
             </div>
+          </div>
 
-            <div class="primary-test-wrap" id="primaryTestWrap" style="margin-left:10px;">
-              <label for="setPrimaryTest">Test method</label>
-              <select id="setPrimaryTest">
-                <option value="welch">Welch t-test (recommended)</option>
-                <option value="student">Student t-test (equal variance)</option>
-                <option value="permutation">Permutation test (mean difference)</option>
-              </select>
-            </div>
+          <!-- Test Method (right) -->
+          <div class="inference-card" id="primaryTestWrap" style="flex:1 1 auto;min-width:280px;">
+            <div class="inference-title">Test method</div>
+            <select id="setPrimaryTest" style="width:100%;height:42px;font-size:14px;padding:0 12px;border-radius:10px;border:1px solid rgba(120,200,255,.45);background:rgba(15,23,42,.95);color:#fff;font-weight:600;">
+              <option value="welch">Welch t-test (recommended)</option>
+              <option value="student">Student t-test (equal variance)</option>
+              <option value="permutation">Permutation test (mean difference)</option>
+            </select>
           </div>
 
         </div>
