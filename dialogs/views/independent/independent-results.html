@@ -53,6 +53,7 @@
     .fw-radio:last-of-type{border-right:none;}
     .fw-radio.active{background:#1f678a;color:#fff;box-shadow:inset 0 0 0 1px rgba(135,214,255,.65);}
     .primary-test-wrap{display:none !important;align-items:center;gap:8px;min-width:280px;}
+    .test-now{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;border:1px solid rgba(16,185,129,.45);background:rgba(16,185,129,.14);color:#d1fae5;font-size:12px;font-weight:800;}
     .primary-test-wrap label{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;}
     .primary-test-wrap select{height:36px;min-width:220px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;padding:0 10px;}
     .hbox{border:1px solid rgba(148,163,184,.38);border-radius:10px;padding:8px;background:rgba(6,16,30,.55);}
@@ -121,6 +122,7 @@
                       <input id="fwNonparametric" type="radio" name="frameworkMode" value="nonparametric"/>
                       <label for="fwNonparametric" id="setFrameworkNon" class="fw-radio">Non-parametric (ranks)</label>
                     </div>
+                    <div class="test-now" id="currentTestBadge">Test: Welch t-test</div>
                   </div>
                   <div class="primary-test-wrap" id="primaryTestWrap">
                     <label for="setPrimaryTest">Primary test</label>
@@ -327,9 +329,21 @@
       if (rn) rn.checked = primaryFramework === "nonparametric";
       var primaryTestWrap = document.getElementById("primaryTestWrap");
       if (primaryTestWrap) primaryTestWrap.style.display = "none";
-      var testChip = document.getElementById("selectedTestChip");
+      var testBadge = document.getElementById("currentTestBadge");
       var compareMode = currentCompareMode || "two-vars";
-      if (testChip) testChip.textContent = "";
+      if (testBadge) {
+        var text = "Welch t-test";
+        if (compareMode === "k-plus") {
+          text = primaryFramework === "nonparametric" ? "Kruskal-Wallis" : "One-way ANOVA";
+        } else if (primaryFramework === "nonparametric") {
+          text = "Mann-Whitney U";
+        } else if (currentPrimaryTest === "student") {
+          text = "Student t-test (equal var)";
+        } else if (currentPrimaryTest === "permutation") {
+          text = "Permutation t-test";
+        }
+        testBadge.textContent = "Test: " + text;
+      }
       refreshHypothesisFrames();
     }
     function notifySettingsChanged(){
