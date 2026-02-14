@@ -53,6 +53,10 @@
     .h-radio{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#d6e7ff;}
     .hdr-row{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;}
     .stat-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(30,58,138,.35);border:1px solid rgba(120,200,255,.4);border-radius:999px;padding:6px 10px;font-size:12px;color:#dbeafe;}
+    .design-badge{font-weight:800;}
+    .design-ok{background:rgba(16,185,129,.16);border-color:rgba(16,185,129,.55);color:#d1fae5;}
+    .design-warn{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.55);color:#fde68a;}
+    .design-bad{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.55);color:#fecaca;}
     .test-chip{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.55);color:#d1fae5;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;}
     .hypothesis-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
     .hyp-frame{border:1px solid rgba(120,200,255,.35);border-radius:10px;padding:10px;background:rgba(4,18,38,.6);min-height:74px;}
@@ -91,6 +95,7 @@
           <div class="settings-grid">
             <div style="grid-column:1/-1;">
               <div class="hdr-row" id="compareStatsRow"></div>
+              <div id="designMessageRow" style="margin-top:6px;text-align:center;color:var(--text-muted);font-size:12px;"></div>
             </div>
             <div style="grid-column:1/-1;">
               <div class="hdr-row">
@@ -303,8 +308,10 @@
     }
     function renderCompareStatsRow(s, e){
       var host = document.getElementById("compareStatsRow");
+      var msgHost = document.getElementById("designMessageRow");
       if (!host) return;
       host.innerHTML = "";
+      if (msgHost) msgHost.textContent = "";
       var mode = s.compareMode || "two-vars";
       if (mode === "two-vars") {
         var aName = s.groupA || "u1";
@@ -328,6 +335,12 @@
           host.appendChild(sp);
         });
       }
+      var design = s.designValidation || {};
+      var badge = document.createElement("span");
+      badge.className = "stat-chip design-badge " + (design.status === "independent" ? "design-ok" : (design.status === "invalid" ? "design-bad" : "design-warn"));
+      badge.textContent = design.badge || (design.status === "independent" ? "Independent" : "Review design");
+      host.appendChild(badge);
+      if (msgHost && design.message) msgHost.textContent = design.message;
     }
     function updateResultsPanels(r, fx, s, a){
       setText("resPrimaryFramework", primaryFramework === "nonparametric" ? "Nonparametric (ranks)" : "Parametric (means)");

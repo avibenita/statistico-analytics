@@ -119,6 +119,76 @@ function chiSquareUpperTailApprox(x, df) {
   return Math.max(0, Math.min(1, 1 - normalCdf(z)));
 }
 
+function pearsonCorrelation(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length || a.length < 3) return NaN;
+  const ma = mean(a), mb = mean(b);
+  let num = 0, da = 0, db = 0;
+  for (let i = 0; i < a.length; i++) {
+    const xa = a[i] - ma;
+    const xb = b[i] - mb;
+    num += xa * xb;
+    da += xa * xa;
+    db += xb * xb;
+  }
+  const den = Math.sqrt(da * db);
+  return den > 0 ? (num / den) : NaN;
+}
+
+function detectTwoVarsDesign(rows, aIdx, bIdx, n1, n2) {
+  if (aIdx < 0 || bIdx < 0) {
+    return {
+      status: "invalid",
+      badge: "Invalid design",
+      message: "Selected columns are missing. Reopen configuration and pick valid variables."
+    };
+  }
+  if (aIdx === bIdx) {
+    return {
+      status: "invalid",
+      badge: "Invalid design",
+      message: "The same variable was selected twice. Choose two different variables."
+    };
+  }
+
+  const a = [];
+  const b = [];
+  let pairedCount = 0;
+  rows.forEach((r) => {
+    const va = parseNum(r[aIdx]);
+    const vb = parseNum(r[bIdx]);
+    if (isFinite(va) && isFinite(vb)) {
+      pairedCount++;
+      a.push(va);
+      b.push(vb);
+    }
+  });
+
+  const minN = Math.max(1, Math.min(n1, n2));
+  const overlap = pairedCount / minN;
+  const corr = pearsonCorrelation(a, b);
+  const highPairing = pairedCount >= 10 && overlap >= 0.85;
+
+  if (highPairing) {
+    return {
+      status: "paired-warning",
+      badge: "Paired-like structure",
+      pairedCount,
+      overlap,
+      corr,
+      message: "Values appear aligned by row for both variables. If these are matched measurements, use Paired Samples or Correlation/Regression."
+    };
+  }
+
+  return {
+    status: "independent",
+    badge: "Independent",
+    pairedCount,
+    overlap,
+    corr,
+    message: "Design is compatible with independent-group comparison."
+  };
+}
+
 function computeWelch(x, y, alt) {
   const n1 = x.length, n2 = y.length;
   const m1 = mean(x), m2 = mean(y);
@@ -251,6 +321,11 @@ function buildIndependentBundle(headers, rows, spec) {
     : headers.slice();
   let g1 = [], g2 = [];
   let grouped = {};
+  let designValidation = {
+    status: "independent",
+    badge: "Independent",
+    message: "Design is compatible with independent-group comparison."
+  };
   if (compareMode === "two-vars") {
     const aIdx = headers.indexOf(spec.groupA || selectedColumns[0] || headers[0]);
     const bIdx = headers.indexOf(spec.groupB || selectedColumns[1] || selectedColumns[0] || headers[1] || headers[0]);
@@ -260,6 +335,7 @@ function buildIndependentBundle(headers, rows, spec) {
       if (isFinite(a)) g1.push(a);
       if (isFinite(b)) g2.push(b);
     });
+    designValidation = detectTwoVarsDesign(rows, aIdx, bIdx, g1.length, g2.length);
   } else {
     const vIdx = headers.indexOf(spec.valueColumn || selectedColumns[0] || headers[0]);
     const grpIdx = headers.indexOf(spec.groupColumn || selectedColumns[1] || selectedColumns[0] || headers[1] || headers[0]);
@@ -335,6 +411,12 @@ function buildIndependentBundle(headers, rows, spec) {
       rows: computePosthocRows(grouped, levels, primaryFramework, posthocCorrection)
     };
   }
+  const recommendation = designValidation.status === "paired-warning"
+    ? "Potential matched-pairs structure detected. Consider Paired Samples or Correlation/Regression before independent tests."
+    : (designValidation.status === "invalid"
+      ? "Invalid design selection. Reconfigure variables before interpreting results."
+      : "Welch t-test primary; Mann-Whitney as robustness check.");
+
   return {
     setup: {
       mode,
@@ -352,7 +434,8 @@ function buildIndependentBundle(headers, rows, spec) {
       groupALabel: spec.groupALabel || "Group A",
       groupBLabel: spec.groupBLabel || "Group B",
       headers: selectedColumns.slice(),
-      groupLevels: Object.keys(grouped || {})
+      groupLevels: Object.keys(grouped || {}),
+      designValidation
     },
     explore: {
       n1, n2, mean1: mean(g1), mean2: mean(g2), med1: median(g1), med2: median(g2),
@@ -362,7 +445,7 @@ function buildIndependentBundle(headers, rows, spec) {
       normalityA: n1 >= 8 ? "Check QQ / Shapiro in Python service" : "Sample too small",
       normalityB: n2 >= 8 ? "Check QQ / Shapiro in Python service" : "Sample too small",
       equalVariance: Math.abs((sd(g1) || 0) - (sd(g2) || 0)) < 0.25 * Math.max(sd(g1) || 1, sd(g2) || 1) ? "Likely similar" : "Likely different",
-      recommendation: "Welch t-test primary; Mann-Whitney as robustness check."
+      recommendation
     },
     results: {
       primary: "Welch t-test",
