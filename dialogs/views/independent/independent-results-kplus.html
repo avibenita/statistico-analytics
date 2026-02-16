@@ -521,32 +521,20 @@
       var ksum = e.kplusSummary || {};
       var ob = (lastBundle && lastBundle.results && lastBundle.results.omnibus) ? lastBundle.results.omnibus : {};
       
-      // Debug: log omnibus to console
-      console.log("[k-plus header] omnibus:", ob);
-      console.log("[k-plus header] groupDescriptives:", ob.groupDescriptives);
-      
       var groupDescriptives = Array.isArray(ob.groupDescriptives) ? ob.groupDescriptives.filter(function(cs){
         return isFinite(parseMaybeNumber(cs && cs.n)) && parseMaybeNumber(cs.n) > 0;
       }).slice(0, 8) : [];
       if (groupDescriptives.length) {
-        var groupsChip = document.createElement("span");
-        groupsChip.className = "stat-chip";
-        groupsChip.textContent = "Groups: " + groupDescriptives.length;
-        host.appendChild(groupsChip);
         groupDescriptives.forEach(function(cs){
           var n = parseMaybeNumber(cs.n);
           var m = parseMaybeNumber(cs.mean);
           var chip = document.createElement("span");
           chip.className = "stat-chip";
-          chip.textContent = (cs.name || "Variable") + " (n=" + (isFinite(n) ? n : "?") + ", μ=" + (isFinite(m) ? fmt(m) : "?") + ")";
+          chip.textContent = (cs.name || "Variable") + " (n=" + (isFinite(n) ? Math.round(n) : "?") + ", x̄=" + (isFinite(m) ? fmt(m) : "?") + ")";
           chip.style.fontSize = "11px";
           host.appendChild(chip);
         });
       } else {
-        var summaryChip = document.createElement("span");
-        summaryChip.className = "stat-chip";
-        summaryChip.textContent = "Groups: " + (isFinite(parseMaybeNumber(ksum.variableCount)) ? parseMaybeNumber(ksum.variableCount) : (Array.isArray(s.selectedColumns) ? s.selectedColumns.length : 0));
-        host.appendChild(summaryChip);
         var names = Array.isArray(s.selectedColumns) ? s.selectedColumns.slice(0, 8) : [];
         names.forEach(function(nm){
           var nChip = document.createElement("span");
@@ -582,19 +570,19 @@
         const paramPrimary = primaryFramework !== "nonparametric";
         if (paramPrimary) {
           setText("resPrimaryTest", "One-way ANOVA");
-          setText("resPrimaryStat", "F(" + fmt(ob.anovaDf1) + ", " + fmt(ob.anovaDf2) + ") = " + fmt(ob.anovaF));
+          setText("resPrimaryStat", "F(" + Math.round(ob.anovaDf1) + ", " + Math.round(ob.anovaDf2) + ") = " + fmt(ob.anovaF));
           setText("resPrimaryP", fmtP(ob.anovaP));
           setText("resPrimaryEstimate", "Omnibus effect across " + fmt(ob.levels ? ob.levels.length : 0) + " groups");
           setText("resSecondaryTest", "Kruskal-Wallis");
-          setText("resSecondaryStat", "H(" + fmt(ob.kwDf) + ") = " + fmt(ob.kwH));
+          setText("resSecondaryStat", "H(" + Math.round(ob.kwDf) + ") = " + fmt(ob.kwH));
           setText("resSecondaryP", fmtP(ob.kwP));
         } else {
           setText("resPrimaryTest", "Kruskal-Wallis");
-          setText("resPrimaryStat", "H(" + fmt(ob.kwDf) + ") = " + fmt(ob.kwH));
+          setText("resPrimaryStat", "H(" + Math.round(ob.kwDf) + ") = " + fmt(ob.kwH));
           setText("resPrimaryP", fmtP(ob.kwP));
           setText("resPrimaryEstimate", "Distribution shift across " + fmt(ob.levels ? ob.levels.length : 0) + " groups");
           setText("resSecondaryTest", "One-way ANOVA");
-          setText("resSecondaryStat", "F(" + fmt(ob.anovaDf1) + ", " + fmt(ob.anovaDf2) + ") = " + fmt(ob.anovaF));
+          setText("resSecondaryStat", "F(" + Math.round(ob.anovaDf1) + ", " + Math.round(ob.anovaDf2) + ") = " + fmt(ob.anovaF));
           setText("resSecondaryP", fmtP(ob.anovaP));
         }
         const agreeElK = document.getElementById("resAgreement");
@@ -615,9 +603,9 @@
         if (anovaBody) {
           const totalDf = Math.max(0, parseMaybeNumber(ob.anovaDf1) + parseMaybeNumber(ob.anovaDf2));
           anovaBody.innerHTML = ''
-            + '<tr><td>Treatments</td><td>' + fmt(ob.anovaSSBetween) + '</td><td>' + fmt(ob.anovaDf1) + '</td><td>' + fmt(ob.anovaMSBetween) + '</td><td>' + fmt(ob.anovaF) + '</td><td>' + fmtP(ob.anovaP) + '</td></tr>'
-            + '<tr><td>Within groups</td><td>' + fmt(ob.anovaSSWithin) + '</td><td>' + fmt(ob.anovaDf2) + '</td><td>' + fmt(ob.anovaMSWithin) + '</td><td>-</td><td>-</td></tr>'
-            + '<tr><td>Total</td><td>' + fmt(ob.anovaSSTotal) + '</td><td>' + fmt(totalDf) + '</td><td>-</td><td>-</td><td>-</td></tr>';
+            + '<tr><td>Treatments</td><td>' + fmt(ob.anovaSSBetween) + '</td><td>' + Math.round(ob.anovaDf1) + '</td><td>' + fmt(ob.anovaMSBetween) + '</td><td>' + fmt(ob.anovaF) + '</td><td>' + fmtP(ob.anovaP) + '</td></tr>'
+            + '<tr><td>Within groups</td><td>' + fmt(ob.anovaSSWithin) + '</td><td>' + Math.round(ob.anovaDf2) + '</td><td>' + fmt(ob.anovaMSWithin) + '</td><td>-</td><td>-</td></tr>'
+            + '<tr><td>Total</td><td>' + fmt(ob.anovaSSTotal) + '</td><td>' + Math.round(totalDf) + '</td><td>-</td><td>-</td><td>-</td></tr>';
         }
         setText("kEtaSquared", fmt(ob.etaSquared));
         setText("kCohenF", fmt(ob.cohenF));
@@ -741,8 +729,8 @@
       renderPosthoc(r.posthoc || {}, "k-plus");
       setText("efEta", fmt(ob.etaSquared)); setText("efCohenF", fmt(ob.cohenF)); setText("efAnovaF", fmt(ob.anovaF)); setText("efKwH", fmt(ob.kwH));
       setText("powNote", p.note); setText("powEndpoint", p.suggestedEndpoint); setText("powVal", fmt(p.placeholderPower));
-      setText("repAnova", "ANOVA: F(" + fmt(ob.anovaDf1) + ", " + fmt(ob.anovaDf2) + ") = " + fmt(ob.anovaF) + ", p " + fmtP(ob.anovaP) + ".");
-      setText("repKw", "Kruskal-Wallis: H(" + fmt(ob.kwDf) + ") = " + fmt(ob.kwH) + ", p " + fmtP(ob.kwP) + ".");
+      setText("repAnova", "ANOVA: F(" + Math.round(ob.anovaDf1) + ", " + Math.round(ob.anovaDf2) + ") = " + fmt(ob.anovaF) + ", p " + fmtP(ob.anovaP) + ".");
+      setText("repKw", "Kruskal-Wallis: H(" + Math.round(ob.kwDf) + ") = " + fmt(ob.kwH) + ", p " + fmtP(ob.kwP) + ".");
       setText("repCons", rep.consistency);
     }
     function saveCurrentModel(){ sendToHost("saveIndependentModel", lastBundle||{}); }
