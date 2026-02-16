@@ -527,6 +527,15 @@ function buildIndependentBundle(headers, rows, spec) {
   if (compareMode === "k-plus") {
     const levels = Object.keys(grouped).filter(k => grouped[k].length > 0);
     const arrays = levels.map(k => grouped[k]);
+    const groupDescriptives = levels.map((lv) => {
+      const arr = grouped[lv] || [];
+      return {
+        name: lv,
+        n: arr.length,
+        mean: arr.length ? mean(arr) : NaN,
+        sd: arr.length > 1 ? sd(arr) : NaN
+      };
+    });
     const anova = computeOneWayAnovaFromArrays(arrays);
     const N = anova ? anova.N : 0;
     const df1 = anova ? anova.df1 : Math.max(1, levels.length - 1);
@@ -590,6 +599,7 @@ function buildIndependentBundle(headers, rows, spec) {
       epsilonSquared,
       etaSquaredH,
       meanRanks,
+      groupDescriptives,
       levene,
       brownForsythe,
       welchAnova

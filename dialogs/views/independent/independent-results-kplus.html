@@ -87,7 +87,7 @@
     .h-radio input{transform:scale(0.9);}
     .hdr-row{display:flex;justify-content:flex-start;align-items:center;gap:10px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;scrollbar-width:thin;}
     #compareStatsRow{flex-wrap:wrap;overflow:visible;scrollbar-width:auto;}
-    .stat-chip{display:inline-flex;align-items:center;gap:4px;background:#e3f2fd;border:2px solid #1976d2;border-radius:0;padding:4px 8px;font-size:11px;color:#0d47a1;font-weight:700;}
+    .stat-chip{display:inline-flex;align-items:center;justify-content:center;gap:4px;background:#e3f2fd;border:2px solid #1976d2;border-radius:0;padding:4px 8px;font-size:11px;color:#0d47a1;font-weight:700;min-width:210px;box-sizing:border-box;}
     .test-chip{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.55);color:#d1fae5;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;}
     .hyp-card{border:2px solid #5c6bc0;border-radius:0;padding:8px 10px;background:#ffffff;}
     .hyp-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
@@ -519,11 +519,16 @@
       host.innerHTML = "";
       if (msgHost) { msgHost.textContent = ""; msgHost.style.display = "none"; }
       var ksum = e.kplusSummary || {};
-      var colStats = Array.isArray(e.selectedColumnStats) ? e.selectedColumnStats.filter(function(cs){
+      var ob = (lastBundle && lastBundle.results && lastBundle.results.omnibus) ? lastBundle.results.omnibus : {};
+      var groupDescriptives = Array.isArray(ob.groupDescriptives) ? ob.groupDescriptives.filter(function(cs){
         return isFinite(parseMaybeNumber(cs && cs.n)) && parseMaybeNumber(cs.n) > 0;
       }).slice(0, 8) : [];
-      if (colStats.length) {
-        colStats.forEach(function(cs){
+      if (groupDescriptives.length) {
+        var groupsChip = document.createElement("span");
+        groupsChip.className = "stat-chip";
+        groupsChip.textContent = "Groups: " + groupDescriptives.length;
+        host.appendChild(groupsChip);
+        groupDescriptives.forEach(function(cs){
           var n = parseMaybeNumber(cs.n);
           var m = parseMaybeNumber(cs.mean);
           var chip = document.createElement("span");
@@ -535,7 +540,7 @@
       } else {
         var summaryChip = document.createElement("span");
         summaryChip.className = "stat-chip";
-        summaryChip.textContent = "Variables: " + (isFinite(parseMaybeNumber(ksum.variableCount)) ? parseMaybeNumber(ksum.variableCount) : ((s.groupLevels || []).length || 0));
+        summaryChip.textContent = "Groups: " + (isFinite(parseMaybeNumber(ksum.levelsCount)) ? parseMaybeNumber(ksum.levelsCount) : ((s.groupLevels || []).length || 0));
         host.appendChild(summaryChip);
         var names = Array.isArray(s.selectedColumns) ? s.selectedColumns.slice(0, 8) : [];
         names.forEach(function(nm){
