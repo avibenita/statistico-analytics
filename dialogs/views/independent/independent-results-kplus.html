@@ -56,8 +56,8 @@
     .settings-grid>div{display:flex;flex-direction:column;}
     .settings-grid label{font-size:11px;color:#37474f;margin-bottom:2px;font-weight:700;text-transform:uppercase;}
     .settings-grid select,.settings-grid input{width:100%;height:32px;border-radius:0;border:2px solid #5c6bc0;background:#ffffff;color:#263238;padding:0 8px;font-weight:600;}
-    #setPosthocWrap,#setCorrectionWrap{min-width:180px;max-width:220px;}
-    #setPosthocWrap label,#setCorrectionWrap label{white-space:nowrap;line-height:1.1;}
+    #setPosthocWrap,#setCorrectionWrap{min-width:180px;max-width:220px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;}
+    #setPosthocWrap label,#setCorrectionWrap label{white-space:nowrap;line-height:1.1;margin-bottom:0;}
     .inference-row{display:flex;align-items:center;justify-content:flex-start;gap:12px;flex-wrap:nowrap;min-width:max-content;}
     .inference-card{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;justify-content:flex-start;padding:0;border:0;border-radius:0;background:transparent;min-width:max-content;}
     .inference-card#primaryTestWrap{flex:0 0 auto;min-width:200px;max-width:220px;}
@@ -75,7 +75,7 @@
     .primary-test-wrap{display:flex;align-items:center;gap:8px;min-width:280px;}
     .test-now{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;border:1px solid rgba(16,185,129,.45);background:rgba(16,185,129,.14);color:#d1fae5;font-size:12px;font-weight:800;}
     .primary-test-wrap label{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;}
-    .primary-test-wrap select{height:38px;width:100%;border-radius:0;border:3px solid transparent;background:#2e5f8a;color:#ffffff;padding:0 12px;font-weight:700;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+    .primary-test-wrap select{height:38px;width:100%;border-radius:0;border:3px solid transparent;background:#2e5f8a;color:#ffffff;padding:0 12px;font-weight:700;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.15);text-align:center;text-align-last:center;}
     .primary-test-wrap select.parametric{background:#2e5f8a;border-color:#4a90e2;color:#ffffff;box-shadow:0 3px 10px rgba(46,95,138,0.4);}
     .primary-test-wrap select.nonparametric{background:#00695c;border-color:#26a69a;color:#ffffff;box-shadow:0 3px 10px rgba(0,105,92,0.4);}
     #setPrimaryTest:disabled{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:none !important;cursor:default;padding-right:8px !important;}
@@ -448,13 +448,31 @@
       var h1Row = document.getElementById("h1Row");
       if (!h0 || !h1Row) return;
       h0.textContent = "All groups are equal";
-      h1Row.innerHTML = '<span style="color:#e5eefc;font-weight:700;">At least one group differs.</span>';
+      h1Row.innerHTML = '<span style="color:#1f2937;font-weight:800;">At least one group differs.</span>';
     }
     function refreshSettingsVisibility(){
       const setDisplay = (id, show) => { const el = document.getElementById(id); if (el) el.style.display = show ? "flex" : "none"; };
       setDisplay("setPosthocWrap", true); setDisplay("setCorrectionWrap", true);
       setDisplay("setHypWrap", true);
       refreshHypothesisFrames();
+    }
+    function updatePosthocOptions(){
+      var sel = document.getElementById("setPosthocMethod");
+      if (!sel) return;
+      var isNonParam = primaryFramework === "nonparametric" || currentPrimaryTest === "kruskal";
+      var options = isNonParam
+        ? [
+            { v: "dunn", t: "Dunn" },
+            { v: "conover", t: "Conover" }
+          ]
+        : [
+            { v: "games-howell", t: "Games-Howell" },
+            { v: "tukey", t: "Tukey HSD" }
+          ];
+      var current = sel.value;
+      sel.innerHTML = options.map(function(o){ return '<option value="' + o.v + '">' + o.t + '</option>'; }).join("");
+      var keep = options.some(function(o){ return o.v === current; });
+      sel.value = keep ? current : options[0].v;
     }
     function setFrameworkButtons(mode){
       primaryFramework = mode === "nonparametric" ? "nonparametric" : "parametric";
@@ -483,6 +501,7 @@
         testSel.value = currentPrimaryTest;
         testSel.disabled = true;
       }
+      updatePosthocOptions();
       refreshHypothesisFrames();
     }
     function notifySettingsChanged(){
@@ -677,6 +696,7 @@
       const phc = document.getElementById("setPosthocCorrection"); if (phc) phc.value = s.posthocCorrection || "holm";
       renderCompareStatsRow(s, e);
       refreshSettingsVisibility();
+      updatePosthocOptions();
       const ksum = e.kplusSummary || {};
       const ob = r.omnibus || {};
       setText("expVarCount", isFinite(parseMaybeNumber(ksum.variableCount)) ? fmt(ksum.variableCount) : ((s.groupLevels || []).length || "..."));
