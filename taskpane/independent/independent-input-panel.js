@@ -359,6 +359,81 @@ function computePosthocRows(grouped, levels, framework, correction) {
   }));
 }
 
+function computeOneWayAnovaFromArrays(arrays) {
+  const clean = (arrays || []).filter(a => Array.isArray(a) && a.length > 0);
+  const k = clean.length;
+  if (k < 2) return null;
+  const N = clean.reduce((s, a) => s + a.length, 0);
+  const grand = clean.reduce((acc, arr) => acc.concat(arr), []);
+  const grandMean = mean(grand);
+  let ssBetween = 0;
+  let ssWithin = 0;
+  clean.forEach(arr => {
+    const m = mean(arr);
+    ssBetween += arr.length * Math.pow(m - grandMean, 2);
+    arr.forEach(v => { ssWithin += Math.pow(v - m, 2); });
+  });
+  const ssTotal = ssBetween + ssWithin;
+  const df1 = Math.max(1, k - 1);
+  const df2 = Math.max(1, N - k);
+  const msBetween = ssBetween / df1;
+  const msWithin = ssWithin / df2;
+  const f = msWithin > 0 ? (msBetween / msWithin) : 0;
+  const p = chiSquareUpperTailApprox(f * df1, df1);
+  return { k, N, ssBetween, ssWithin, ssTotal, df1, df2, msBetween, msWithin, f, p };
+}
+
+function computeLeveneLike(grouped, levels, useMedianCenter) {
+  const devArrays = (levels || []).map((lv) => {
+    const arr = (grouped[lv] || []).filter(v => isFinite(v));
+    if (!arr.length) return [];
+    const c = useMedianCenter ? median(arr) : mean(arr);
+    return arr.map(v => Math.abs(v - c));
+  }).filter(a => a.length > 0);
+  const out = computeOneWayAnovaFromArrays(devArrays);
+  if (!out) return null;
+  return {
+    f: out.f,
+    df1: out.df1,
+    df2: out.df2,
+    p: out.p
+  };
+}
+
+function computeWelchAnova(grouped, levels) {
+  const rows = (levels || []).map((lv) => {
+    const arr = (grouped[lv] || []).filter(v => isFinite(v));
+    if (arr.length < 2) return null;
+    const v = variance(arr);
+    return {
+      n: arr.length,
+      mean: mean(arr),
+      variance: Math.max(v, 1e-12)
+    };
+  }).filter(Boolean);
+  const k = rows.length;
+  if (k < 2) return null;
+  const w = rows.map(r => r.n / r.variance);
+  const wSum = w.reduce((s, x) => s + x, 0);
+  if (!(wSum > 0)) return null;
+  const yBarW = rows.reduce((s, r, i) => s + w[i] * r.mean, 0) / wSum;
+  const df1 = k - 1;
+  let a = 0;
+  for (let i = 0; i < k; i++) a += w[i] * Math.pow(rows[i].mean - yBarW, 2);
+  a = a / Math.max(1e-12, df1);
+  let uSum = 0;
+  for (let i = 0; i < k; i++) {
+    const ni = rows[i].n;
+    const wi = w[i];
+    uSum += (1 / Math.max(1, ni - 1)) * Math.pow(1 - wi / wSum, 2);
+  }
+  const c = 1 + (2 * Math.max(0, k - 2) / Math.max(1e-12, (k * k - 1))) * uSum;
+  const f = c > 0 ? a / c : 0;
+  const df2 = uSum > 0 ? ((k * k - 1) / (3 * uSum)) : 1;
+  const p = chiSquareUpperTailApprox(f * df1, df1);
+  return { f, df1, df2: Math.max(1, df2), p };
+}
+
 function buildIndependentBundle(headers, rows, spec) {
   const compareMode = spec.compareMode || (spec.mode === "k-plus" ? "k-plus" : "two-vars");
   const mode = compareMode === "k-plus" ? "k-plus" : "two-column";
@@ -444,20 +519,12 @@ function buildIndependentBundle(headers, rows, spec) {
   if (compareMode === "k-plus") {
     const levels = Object.keys(grouped).filter(k => grouped[k].length > 0);
     const arrays = levels.map(k => grouped[k]);
-    const N = arrays.reduce((s, a) => s + a.length, 0);
-    const grand = arrays.reduce((acc, arr) => acc.concat(arr), []);
-    const grandMean = mean(grand);
-    let ssBetween = 0;
-    let ssWithin = 0;
-    arrays.forEach(arr => {
-      const m = mean(arr);
-      ssBetween += arr.length * Math.pow(m - grandMean, 2);
-      arr.forEach(v => { ssWithin += Math.pow(v - m, 2); });
-    });
-    const df1 = Math.max(1, levels.length - 1);
-    const df2 = Math.max(1, N - levels.length);
-    const f = (ssBetween / df1) / Math.max(1e-12, (ssWithin / df2));
-    const pAnova = chiSquareUpperTailApprox(f * df1, df1);
+    const anova = computeOneWayAnovaFromArrays(arrays);
+    const N = anova ? anova.N : 0;
+    const df1 = anova ? anova.df1 : Math.max(1, levels.length - 1);
+    const df2 = anova ? anova.df2 : Math.max(1, N - levels.length);
+    const f = anova ? anova.f : 0;
+    const pAnova = anova ? anova.p : NaN;
 
     // Kruskal-Wallis
     const pooled = [];
@@ -480,7 +547,32 @@ function buildIndependentBundle(headers, rows, spec) {
     }
     H = (12 / (N * (N + 1))) * H - 3 * (N + 1);
     const pKw = chiSquareUpperTailApprox(H, df1);
-    omnibus = { levels, N, anovaF: f, anovaDf1: df1, anovaDf2: df2, anovaP: pAnova, kwH: H, kwDf: df1, kwP: pKw };
+    const etaSquared = (anova && (anova.ssBetween + anova.ssWithin) > 0) ? (anova.ssBetween / (anova.ssBetween + anova.ssWithin)) : NaN;
+    const cohenF = (isFinite(etaSquared) && etaSquared >= 0 && etaSquared < 1) ? Math.sqrt(etaSquared / Math.max(1e-12, (1 - etaSquared))) : NaN;
+    const levene = computeLeveneLike(grouped, levels, false);
+    const brownForsythe = computeLeveneLike(grouped, levels, true);
+    const welchAnova = computeWelchAnova(grouped, levels);
+    omnibus = {
+      levels,
+      N,
+      anovaF: f,
+      anovaDf1: df1,
+      anovaDf2: df2,
+      anovaP: pAnova,
+      anovaSSBetween: anova ? anova.ssBetween : NaN,
+      anovaSSWithin: anova ? anova.ssWithin : NaN,
+      anovaSSTotal: anova ? anova.ssTotal : NaN,
+      anovaMSBetween: anova ? anova.msBetween : NaN,
+      anovaMSWithin: anova ? anova.msWithin : NaN,
+      etaSquared,
+      cohenF,
+      kwH: H,
+      kwDf: df1,
+      kwP: pKw,
+      levene,
+      brownForsythe,
+      welchAnova
+    };
     posthoc = {
       enabled: true,
       method: posthocMethod,

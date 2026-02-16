@@ -289,24 +289,60 @@
           </div></div></div>
         </section>
         <section id="tab-results" class="tab-panel">
-          <div class="stats-container">
-            <div class="stat-panel"><div class="stat-panel-heading">Primary Results</div><div class="stat-panel-body">
-              <div class="stat-field">
-                <span class="stat-label">Primary Framework</span><span class="stat-value" id="resPrimaryFramework">...</span>
+          <div class="stat-panel">
+            <div class="stat-panel-heading">Independent Measures ANOVA</div>
+            <div class="stat-panel-body" style="padding:10px;">
+              <div class="table-container" style="margin:0;max-height:none;">
+                <table class="analysis-table">
+                  <thead>
+                    <tr><th>Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p-value</th></tr>
+                  </thead>
+                  <tbody id="anovaSummaryBody">
+                    <tr><td>Treatments</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+                    <tr><td>Within groups</td><td>...</td><td>...</td><td>...</td><td>-</td><td>-</td></tr>
+                    <tr><td>Total</td><td>...</td><td>...</td><td>-</td><td>-</td><td>-</td></tr>
+                  </tbody>
+                </table>
               </div>
-              <div class="stat-field"><span class="stat-label">Primary Test</span><span class="stat-value" id="resPrimaryTest">...</span></div>
-              <div class="stat-field"><span class="stat-label">Statistic</span><span class="stat-value" id="resPrimaryStat">...</span></div>
-              <div class="stat-field"><span class="stat-label">p-value</span><span class="stat-value" id="resPrimaryP">...</span></div>
-              <div class="stat-field"><span class="stat-label">Primary Estimate + CI</span><span class="stat-value" id="resPrimaryEstimate">...</span></div>
-            </div></div>
-            <div class="stat-panel secondary"><div class="stat-panel-heading">Robustness Check (Secondary)</div><div class="stat-panel-body">
-              <div class="stat-field"><span class="stat-label">Secondary Test</span><span class="stat-value" id="resSecondaryTest">...</span></div>
-              <div class="stat-field"><span class="stat-label">Statistic</span><span class="stat-value" id="resSecondaryStat">...</span></div>
-              <div class="stat-field"><span class="stat-label">p-value</span><span class="stat-value" id="resSecondaryP">...</span></div>
-              <div class="stat-field"><span class="stat-label">Agreement</span><span class="stat-value" id="resAgreement">...</span></div>
-              <div class="stat-field"><span class="stat-label">Diagnostic Hint</span><span class="stat-value" id="resHint">...</span></div>
-            </div></div>
+            </div>
           </div>
+
+          <div class="stats-container" style="margin-top:12px;">
+            <div class="stat-panel">
+              <div class="stat-panel-heading">Effect Size</div>
+              <div class="stat-panel-body">
+                <div class="stat-field"><span class="stat-label">Eta squared</span><span class="stat-value" id="kEtaSquared">...</span></div>
+                <div class="stat-field"><span class="stat-label">Cohen's f</span><span class="stat-value" id="kCohenF">...</span></div>
+              </div>
+            </div>
+            <div class="stat-panel secondary">
+              <div class="stat-panel-heading">Robustness Test of Equality of Means</div>
+              <div class="stat-panel-body">
+                <div class="table-container" style="margin:0;max-height:none;">
+                  <table class="analysis-table">
+                    <thead>
+                      <tr><th>Equality of Variance Test</th><th>F Statistic</th><th>df1</th><th>df2</th><th>p-value</th></tr>
+                    </thead>
+                    <tbody id="varianceTestBody">
+                      <tr><td>Levene test</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+                      <tr><td>Brown-Forsythe</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="table-container" style="margin-top:10px;max-height:none;">
+                  <table class="analysis-table">
+                    <thead>
+                      <tr><th>Welch ANOVA</th><th>df1</th><th>df2</th><th>F Statistic</th><th>p-value</th></tr>
+                    </thead>
+                    <tbody id="welchAnovaBody">
+                      <tr><td>Welch</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="stat-panel" id="posthocPanel" style="margin-top:12px; display:none;">
             <div class="stat-panel-heading">Post-hoc Pairwise</div>
             <div class="stat-panel-body" style="padding:0;">
@@ -565,6 +601,33 @@
           setText("resAgreement", "Disagree at alpha");
           if (agreeElK) agreeElK.className = "stat-value agreement-warn";
           setText("resHint", "Consider non-normality/heteroscedasticity and run post-hoc with correction.");
+        }
+
+        // ANOVA summary block
+        const anovaBody = document.getElementById("anovaSummaryBody");
+        if (anovaBody) {
+          const totalDf = Math.max(0, parseMaybeNumber(ob.anovaDf1) + parseMaybeNumber(ob.anovaDf2));
+          anovaBody.innerHTML = ''
+            + '<tr><td>Treatments</td><td>' + fmt(ob.anovaSSBetween) + '</td><td>' + fmt(ob.anovaDf1) + '</td><td>' + fmt(ob.anovaMSBetween) + '</td><td>' + fmt(ob.anovaF) + '</td><td>' + fmtP(ob.anovaP) + '</td></tr>'
+            + '<tr><td>Within groups</td><td>' + fmt(ob.anovaSSWithin) + '</td><td>' + fmt(ob.anovaDf2) + '</td><td>' + fmt(ob.anovaMSWithin) + '</td><td>-</td><td>-</td></tr>'
+            + '<tr><td>Total</td><td>' + fmt(ob.anovaSSTotal) + '</td><td>' + fmt(totalDf) + '</td><td>-</td><td>-</td><td>-</td></tr>';
+        }
+        setText("kEtaSquared", fmt(ob.etaSquared));
+        setText("kCohenF", fmt(ob.cohenF));
+
+        const varBody = document.getElementById("varianceTestBody");
+        if (varBody) {
+          const lv = ob.levene || {};
+          const bf = ob.brownForsythe || {};
+          varBody.innerHTML = ''
+            + '<tr><td>Levene test</td><td>' + fmt(lv.f) + '</td><td>' + fmt(lv.df1) + '</td><td>' + fmt(lv.df2) + '</td><td>' + fmtP(lv.p) + '</td></tr>'
+            + '<tr><td>Brown-Forsythe</td><td>' + fmt(bf.f) + '</td><td>' + fmt(bf.df1) + '</td><td>' + fmt(bf.df2) + '</td><td>' + fmtP(bf.p) + '</td></tr>';
+        }
+
+        const welchBody = document.getElementById("welchAnovaBody");
+        if (welchBody) {
+          const wa = ob.welchAnova || {};
+          welchBody.innerHTML = '<tr><td>Welch</td><td>' + fmt(wa.df1) + '</td><td>' + fmt(wa.df2) + '</td><td>' + fmt(wa.f) + '</td><td>' + fmtP(wa.p) + '</td></tr>';
         }
         return;
       }
