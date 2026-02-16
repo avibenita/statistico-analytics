@@ -541,14 +541,23 @@ function buildIndependentBundle(headers, rows, spec) {
     const rankSums = Array(levels.length).fill(0);
     pooled.forEach(p => { rankSums[p.gi] += p.rank; });
     let H = 0;
+    const meanRanks = {};
     for (let g = 0; g < levels.length; g++) {
       const ng = grouped[levels[g]].length;
       H += (rankSums[g] * rankSums[g]) / Math.max(1, ng);
+      meanRanks[levels[g]] = rankSums[g] / Math.max(1, ng);
     }
     H = (12 / (N * (N + 1))) * H - 3 * (N + 1);
     const pKw = chiSquareUpperTailApprox(H, df1);
     const etaSquared = (anova && (anova.ssBetween + anova.ssWithin) > 0) ? (anova.ssBetween / (anova.ssBetween + anova.ssWithin)) : NaN;
+    const omegaSquared = (anova && (anova.ssTotal + anova.msWithin) > 0)
+      ? Math.max(0, (anova.ssBetween - (anova.df1 * anova.msWithin)) / (anova.ssTotal + anova.msWithin))
+      : NaN;
     const cohenF = (isFinite(etaSquared) && etaSquared >= 0 && etaSquared < 1) ? Math.sqrt(etaSquared / Math.max(1e-12, (1 - etaSquared))) : NaN;
+    const epsilonSquared = (N > levels.length)
+      ? Math.max(0, (H - levels.length + 1) / Math.max(1e-12, (N - levels.length)))
+      : NaN;
+    const etaSquaredH = N > 1 ? Math.max(0, H / Math.max(1, N - 1)) : NaN;
     const levene = computeLeveneLike(grouped, levels, false);
     const brownForsythe = computeLeveneLike(grouped, levels, true);
     const welchAnova = computeWelchAnova(grouped, levels);
@@ -565,10 +574,14 @@ function buildIndependentBundle(headers, rows, spec) {
       anovaMSBetween: anova ? anova.msBetween : NaN,
       anovaMSWithin: anova ? anova.msWithin : NaN,
       etaSquared,
+      omegaSquared,
       cohenF,
       kwH: H,
       kwDf: df1,
       kwP: pKw,
+      epsilonSquared,
+      etaSquaredH,
+      meanRanks,
       levene,
       brownForsythe,
       welchAnova

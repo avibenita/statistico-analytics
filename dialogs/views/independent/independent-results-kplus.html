@@ -334,6 +334,24 @@
             </div>
           </div>
 
+          <div class="stat-panel" style="margin-top:12px;">
+            <div class="stat-panel-heading">Parametric vs Nonparametric</div>
+            <div class="stat-panel-body" style="padding:0;">
+              <div class="table-container" style="margin:0;max-height:none;">
+                <table class="analysis-table">
+                  <thead><tr><th>Parametric</th><th>Nonparametric</th></tr></thead>
+                  <tbody id="methodComparisonBody">
+                    <tr><td>ANOVA F: ...</td><td>Kruskal H: ...</td></tr>
+                    <tr><td>Means: ...</td><td>Mean ranks: ...</td></tr>
+                    <tr><td>η² / ω²: ... / ...</td><td>ε² / η²(H): ... / ...</td></tr>
+                    <tr><td>Post-hoc: Tukey / Games-Howell</td><td>Post-hoc: Dunn / Conover</td></tr>
+                    <tr><td>Levene p: ...</td><td>Tie/normality info: rank-based robust</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
           <div class="stat-panel" id="posthocPanel" style="margin-top:12px; display:none;">
             <div class="stat-panel-heading">Post-hoc Pairwise</div>
             <div class="stat-panel-body" style="padding:0;">
@@ -571,6 +589,28 @@
         if (welchBody) {
           const wa = ob.welchAnova || {};
           welchBody.innerHTML = '<tr><td>Welch</td><td>' + fmt(wa.df1) + '</td><td>' + fmt(wa.df2) + '</td><td>' + fmt(wa.f) + '</td><td>' + fmtP(wa.p) + '</td></tr>';
+        }
+
+        const compareBody = document.getElementById("methodComparisonBody");
+        if (compareBody) {
+          const explore = (lastBundle && lastBundle.explore) ? lastBundle.explore : {};
+          const colStats = Array.isArray(explore.selectedColumnStats) ? explore.selectedColumnStats.filter(function(cs){
+            return isFinite(parseMaybeNumber(cs && cs.n)) && parseMaybeNumber(cs.n) > 0;
+          }) : [];
+          const meansSummary = colStats.slice(0, 3).map(function(cs){
+            return (cs.name || "Var") + "=" + fmt(cs.mean);
+          }).join(" | ") || "...";
+          const meanRanks = ob.meanRanks || {};
+          const rankKeys = Object.keys(meanRanks || {}).slice(0, 3);
+          const meanRankSummary = rankKeys.length
+            ? rankKeys.map(function(k){ return k + "=" + fmt(meanRanks[k]); }).join(" | ")
+            : "...";
+          compareBody.innerHTML = ''
+            + '<tr><td>ANOVA F: ' + fmt(ob.anovaF) + '</td><td>Kruskal H: ' + fmt(ob.kwH) + '</td></tr>'
+            + '<tr><td>Means: ' + meansSummary + '</td><td>Mean ranks: ' + meanRankSummary + '</td></tr>'
+            + '<tr><td>η² / ω²: ' + fmt(ob.etaSquared) + ' / ' + fmt(ob.omegaSquared) + '</td><td>ε² / η²(H): ' + fmt(ob.epsilonSquared) + ' / ' + fmt(ob.etaSquaredH) + '</td></tr>'
+            + '<tr><td>Post-hoc: Tukey / Games-Howell</td><td>Post-hoc: Dunn / Conover</td></tr>'
+            + '<tr><td>Levene p: ' + fmtP((ob.levene || {}).p) + '</td><td>Tie/normality info: rank-based robust</td></tr>';
         }
       }
     }
