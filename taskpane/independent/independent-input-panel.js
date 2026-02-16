@@ -34,7 +34,13 @@ function getDialogsBaseUrl() {
 }
 
 function openIndependentBuilder() {
-  if (!independentRangeData || independentRangeData.length < 2) return;
+  console.log("=== openIndependentBuilder CLICKED ===");
+  console.log("independentRangeData:", independentRangeData);
+  if (!independentRangeData || independentRangeData.length < 2) {
+    console.log("openIndependentBuilder: early exit, no data");
+    return;
+  }
+  console.log("Opening configuration dialog...");
   Office.context.ui.displayDialogAsync(
     `${getDialogsBaseUrl()}independent/independent-input.html?v=${Date.now()}`,
     { height: 90, width: 30, displayInIframe: false },
@@ -47,10 +53,14 @@ function openIndependentBuilder() {
           const message = JSON.parse(arg.message || "{}");
           if (message.action === "ready" || message.action === "requestData") sendDialogData();
           else if (message.action === "independentModel") {
+            console.log("=== Received independentModel from config dialog ===");
+            console.log("message.data:", message.data);
             sessionStorage.setItem("independentModelSpec", JSON.stringify(message.data || message.payload || {}));
+            console.log("Saved to sessionStorage, closing config dialog...");
             independentDialog.close();
             independentDialog = null;
             updateButtonState();
+            console.log("Calling openIndependentResultsDialog in 380ms...");
             setTimeout(openIndependentResultsDialog, 380);
           } else if (message.action === "close") {
             independentDialog.close();
