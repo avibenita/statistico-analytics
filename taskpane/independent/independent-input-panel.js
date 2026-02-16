@@ -369,6 +369,20 @@ function buildIndependentBundle(headers, rows, spec) {
   const selectedColumns = Array.isArray(spec.selectedColumns) && spec.selectedColumns.length
     ? spec.selectedColumns.filter(name => headers.indexOf(name) >= 0)
     : headers.slice();
+  const selectedColumnStats = selectedColumns.map((name) => {
+    const idx = headers.indexOf(name);
+    const values = [];
+    rows.forEach((r) => {
+      const v = parseNum(r[idx]);
+      if (isFinite(v)) values.push(v);
+    });
+    return {
+      name,
+      n: values.length,
+      mean: values.length ? mean(values) : NaN,
+      sd: values.length ? sd(values) : NaN
+    };
+  });
   let g1 = [], g2 = [];
   let grouped = {};
   let designValidation = {
@@ -492,7 +506,8 @@ function buildIndependentBundle(headers, rows, spec) {
     },
     explore: {
       n1, n2, mean1: mean(g1), mean2: mean(g2), med1: median(g1), med2: median(g2),
-      sd1: sd(g1), sd2: sd(g2), iqr1: quantile(g1, 0.75) - quantile(g1, 0.25), iqr2: quantile(g2, 0.75) - quantile(g2, 0.25)
+      sd1: sd(g1), sd2: sd(g2), iqr1: quantile(g1, 0.75) - quantile(g1, 0.25), iqr2: quantile(g2, 0.75) - quantile(g2, 0.25),
+      selectedColumnStats
     },
     assumptions: {
       normalityA: n1 >= 8 ? "Check QQ / Shapiro in Python service" : "Sample too small",

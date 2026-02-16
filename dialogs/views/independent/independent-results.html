@@ -499,28 +499,28 @@
           host.appendChild(sp);
         });
       } else {
-        var groupCol = s.groupColumn || s.valueColumn || "Variable";
-        var levels = (s.groupLevels || []).slice(0, 6);
-        var headerChip = document.createElement("span");
-        headerChip.className = "stat-chip";
-        headerChip.textContent = groupCol;
-        headerChip.style.fontWeight = "800";
-        headerChip.style.background = "#c5cae9";
-        headerChip.style.borderColor = "#5c6bc0";
-        headerChip.style.fontSize = "13px";
-        host.appendChild(headerChip);
-        
-        var groupStats = e.groupStats || {};
-        levels.forEach(function(lv, idx){
-          var stats = groupStats[lv] || {};
-          var n = stats.n || "?";
-          var mean = stats.mean !== undefined ? fmt(stats.mean) : "?";
-          var sp = document.createElement("span");
-          sp.className = "stat-chip";
-          sp.textContent = lv + " (n=" + n + ", μ=" + mean + ")";
-          sp.style.fontSize = "11px";
-          host.appendChild(sp);
-        });
+        var colStats = Array.isArray(e.selectedColumnStats) ? e.selectedColumnStats.slice(0, 6) : [];
+        if (colStats.length) {
+          colStats.forEach(function(cs){
+            var n = isFinite(parseMaybeNumber(cs.n)) ? parseMaybeNumber(cs.n) : "?";
+            var mean = isFinite(parseMaybeNumber(cs.mean)) ? fmt(cs.mean) : "?";
+            var sp = document.createElement("span");
+            sp.className = "stat-chip";
+            sp.textContent = (cs.name || "Variable") + " (n=" + n + ", μ=" + mean + ")";
+            sp.style.fontSize = "11px";
+            host.appendChild(sp);
+          });
+        } else {
+          var groupCol = s.groupColumn || s.valueColumn || "Variable";
+          var headerChip = document.createElement("span");
+          headerChip.className = "stat-chip";
+          headerChip.textContent = groupCol;
+          headerChip.style.fontWeight = "800";
+          headerChip.style.background = "#c5cae9";
+          headerChip.style.borderColor = "#5c6bc0";
+          headerChip.style.fontSize = "13px";
+          host.appendChild(headerChip);
+        }
       }
       var design = s.designValidation || {};
       if (msgHost) {
