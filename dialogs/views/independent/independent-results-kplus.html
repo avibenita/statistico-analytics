@@ -44,7 +44,7 @@
     .stat-value{font-variant-numeric:tabular-nums;color:var(--accent-2);font-weight:700;background:rgba(120,200,255,.12);border:1px solid rgba(120,200,255,.32);padding:6px 10px;border-radius:8px;min-width:110px;text-align:center;}
     .table-container{margin-top:10px;overflow:auto;max-height:420px;}
     .analysis-table{width:100%;border-collapse:collapse;}
-    .analysis-table th{position:sticky;top:0;background:#164e8d;color:#fff;padding:8px;border:1px solid rgba(255,255,255,.2);}
+    .analysis-table th{background:#164e8d;color:#fff;padding:8px;border:1px solid rgba(255,255,255,.2);}
     .analysis-table td{padding:8px;border:1px solid rgba(255,255,255,.14);color:var(--text-secondary);}
     .section-note{margin-top:10px;padding:9px;border-left:3px solid var(--accent-1);background:rgba(255,165,120,.1);color:var(--text-muted);}
     .framework-select{height:34px;padding:0 10px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;}
@@ -384,7 +384,19 @@
     function fmtP(v){ const n=parseMaybeNumber(v); if(!isFinite(n)) return v==null?"...":String(v); if(n < 0.001) return "< 0.001"; return globalDecimalPrecision === "auto" ? n.toFixed(4) : n.toFixed(Math.max(3, parseInt(globalDecimalPrecision,10))); }
     function setDecimalPrecision(){ globalDecimalPrecision=(document.getElementById("decimalSelect")||{value:"auto"}).value; if(lastBundle) populateBundle(lastBundle); }
     function setText(id,val){ const el=document.getElementById(id); if(el) el.textContent = (val!==undefined&&val!==null&&val!=="")?val:"..."; }
-    function switchTab(tab){ document.querySelectorAll(".tab-button").forEach(b=>b.classList.toggle("active",b.getAttribute("data-tab")===tab)); document.querySelectorAll(".tab-panel").forEach(p=>p.classList.toggle("active",p.id==="tab-"+tab)); }
+    let activeTab = "explore";
+    function switchTab(tab){
+      if (!tab || tab === activeTab) return;
+      const prevBtn = document.querySelector('.tab-button[data-tab="' + activeTab + '"]');
+      const nextBtn = document.querySelector('.tab-button[data-tab="' + tab + '"]');
+      const prevPanel = document.getElementById("tab-" + activeTab);
+      const nextPanel = document.getElementById("tab-" + tab);
+      if (prevBtn) prevBtn.classList.remove("active");
+      if (nextBtn) nextBtn.classList.add("active");
+      if (prevPanel) prevPanel.classList.remove("active");
+      if (nextPanel) nextPanel.classList.add("active");
+      activeTab = tab;
+    }
     function sendToHost(cmd,data){ if(Office&&Office.context&&Office.context.ui&&Office.context.ui.messageParent) Office.context.ui.messageParent(JSON.stringify({action:"HOST_EVENT",cmd:cmd,data:data||{}})); }
     function fillSelect(id, options, selected){
       const el = document.getElementById(id);
@@ -578,7 +590,10 @@
         return;
       }
       body.innerHTML = "";
-      rows.forEach(function(r){
+      const MAX_RENDER = 200;
+      const clipped = rows.length > MAX_RENDER;
+      const rowsToRender = clipped ? rows.slice(0, MAX_RENDER) : rows;
+      rowsToRender.forEach(function(r){
         const tr = document.createElement("tr");
         [r.comparison, r.statistic, fmtP(r.rawP), fmtP(r.adjP), fmt(r.estimate)].forEach(function(v){
           const td = document.createElement("td");
@@ -587,6 +602,15 @@
         });
         body.appendChild(tr);
       });
+      if (clipped) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 5;
+        td.textContent = "Showing first " + MAX_RENDER + " of " + rows.length + " post-hoc rows for responsiveness.";
+        td.style.opacity = "0.8";
+        tr.appendChild(td);
+        body.appendChild(tr);
+      }
     }
 
     function populateBundle(b){
