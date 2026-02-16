@@ -86,6 +86,7 @@
     .h-radio{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#263238;text-transform:none !important;white-space:nowrap;font-weight:600;}
     .h-radio input{transform:scale(0.9);}
     .hdr-row{display:flex;justify-content:flex-start;align-items:center;gap:10px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;scrollbar-width:thin;}
+    #compareStatsRow{flex-wrap:wrap;overflow:visible;scrollbar-width:auto;}
     .stat-chip{display:inline-flex;align-items:center;gap:4px;background:#e3f2fd;border:2px solid #1976d2;border-radius:0;padding:4px 8px;font-size:11px;color:#0d47a1;font-weight:700;}
     .test-chip{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.55);color:#d1fae5;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;}
     .hyp-card{border:2px solid #5c6bc0;border-radius:0;padding:8px 10px;background:#ffffff;}
@@ -536,6 +537,21 @@
         summaryChip.className = "stat-chip";
         summaryChip.textContent = "Variables: " + (isFinite(parseMaybeNumber(ksum.variableCount)) ? parseMaybeNumber(ksum.variableCount) : ((s.groupLevels || []).length || 0));
         host.appendChild(summaryChip);
+        var names = Array.isArray(s.selectedColumns) ? s.selectedColumns.slice(0, 8) : [];
+        names.forEach(function(nm){
+          var nChip = document.createElement("span");
+          nChip.className = "stat-chip";
+          nChip.textContent = nm;
+          nChip.style.fontSize = "11px";
+          host.appendChild(nChip);
+        });
+        if (Array.isArray(s.selectedColumns) && s.selectedColumns.length > 8) {
+          var moreChip = document.createElement("span");
+          moreChip.className = "stat-chip";
+          moreChip.textContent = "+" + (s.selectedColumns.length - 8) + " more";
+          moreChip.style.opacity = "0.85";
+          host.appendChild(moreChip);
+        }
       }
       var design = s.designValidation || {};
       if (msgHost) {
