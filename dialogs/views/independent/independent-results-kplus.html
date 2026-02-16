@@ -520,6 +520,11 @@
       if (msgHost) { msgHost.textContent = ""; msgHost.style.display = "none"; }
       var ksum = e.kplusSummary || {};
       var ob = (lastBundle && lastBundle.results && lastBundle.results.omnibus) ? lastBundle.results.omnibus : {};
+      
+      // Debug: log omnibus to console
+      console.log("[k-plus header] omnibus:", ob);
+      console.log("[k-plus header] groupDescriptives:", ob.groupDescriptives);
+      
       var groupDescriptives = Array.isArray(ob.groupDescriptives) ? ob.groupDescriptives.filter(function(cs){
         return isFinite(parseMaybeNumber(cs && cs.n)) && parseMaybeNumber(cs.n) > 0;
       }).slice(0, 8) : [];
@@ -720,8 +725,11 @@
       updatePosthocOptions();
       const ksum = e.kplusSummary || {};
       const ob = r.omnibus || {};
-      setText("expVarCount", isFinite(parseMaybeNumber(ksum.variableCount)) ? fmt(ksum.variableCount) : ((s.groupLevels || []).length || "..."));
-      setText("expTotalN", isFinite(parseMaybeNumber(ksum.totalN)) ? fmt(ksum.totalN) : "...");
+      const groupCount = isFinite(parseMaybeNumber(ksum.variableCount)) 
+        ? parseMaybeNumber(ksum.variableCount) 
+        : (Array.isArray(ob.groupDescriptives) ? ob.groupDescriptives.length : (Array.isArray(s.selectedColumns) ? s.selectedColumns.length : "..."));
+      setText("expVarCount", fmt(groupCount));
+      setText("expTotalN", isFinite(parseMaybeNumber(ksum.totalN)) ? fmt(ksum.totalN) : (isFinite(ob.N) ? fmt(ob.N) : "..."));
       setText("expLevels", isFinite(parseMaybeNumber(ksum.levelsCount)) ? fmt(ksum.levelsCount) : "...");
       setText("expOverallMean", isFinite(parseMaybeNumber(ksum.meanOverall)) ? fmt(ksum.meanOverall) : "...");
       setText("expFramework", primaryFramework === "nonparametric" ? "Nonparametric (ranks)" : "Parametric (means)");
