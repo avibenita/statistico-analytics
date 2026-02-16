@@ -17,10 +17,9 @@
     .hero-controls{display:flex;align-items:center;gap:10px;}
     .hero-action-btn{border-radius:8px;border:1px solid rgba(148,163,184,.45);background:linear-gradient(145deg,rgba(148,163,184,.18),rgba(100,116,139,.16));color:#fff;padding:10px 16px;font-size:12px;font-weight:650;cursor:pointer;display:flex;align-items:center;gap:8px;position:relative;}
     .hero-action-btn .info-icon{font-size:10px;opacity:0.6;cursor:help;}
-    .hero-action-btn:hover .info-icon{opacity:1;}
-    .hero-action-btn[title]:hover::after{content:attr(title);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:8px;padding:8px 12px;background:#283593;color:#fff;font-size:11px;font-weight:600;white-space:nowrap;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000;pointer-events:none;}
-    .hero-action-btn[title]:hover::before{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:2px;border:6px solid transparent;border-top-color:#283593;z-index:1000;pointer-events:none;}
-    .design-warning{margin-top:8px;padding:8px 16px;background:linear-gradient(135deg, #fff3cd 0%, #ffe8a1 100%);border-left:4px solid #ff9800;border-right:4px solid #ff9800;color:#664d03;font-size:12px;font-weight:600;text-align:center;box-shadow:0 2px 6px rgba(255,152,0,0.2);}
+    .hero-action-btn::after{content:attr(title);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:8px;padding:8px 12px;background:#283593;color:#fff;font-size:11px;font-weight:600;white-space:nowrap;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000;pointer-events:none;}
+    .hero-action-btn::before{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:2px;border:6px solid transparent;border-top-color:#283593;z-index:1000;pointer-events:none;}
+    .design-warning{margin-top:8px;padding:8px 16px;background:transparent;border-left:4px solid #ff9800;color:#e65100;font-size:12px;font-weight:600;text-align:center;}
     .tab-navigation{display:flex;align-items:flex-end;gap:16px;background:transparent;padding:12px 0 0;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;scrollbar-width:none;margin-top:10px;}
     .tab-button{height:36px;padding:0 4px;background:transparent;border:none;color:rgba(255,255,255,.55);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;position:relative;}
     .tab-button.active{color:#fff;font-weight:700;}
@@ -37,6 +36,8 @@
     .stat-panel.secondary .stat-label{font-size:13px;opacity:0.85;}
     .stat-panel.secondary .stat-value{font-size:13px;padding:5px 8px;min-width:100px;opacity:0.9;}
     .stat-panel-heading{padding:9px 12px;background:#164e8d;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid rgba(255,165,120,.7);}
+    .stat-panel-heading.parametric{background:#2e5f8a;border-bottom-color:#4a90e2;}
+    .stat-panel-heading.nonparametric{background:#00695c;border-bottom-color:#26a69a;}
     .stat-panel-body{padding:8px 12px;}
     .stat-field{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);}
     .stat-field:last-child{border-bottom:none;}
@@ -58,15 +59,21 @@
     .inference-row{display:flex;align-items:flex-end;justify-content:center;gap:24px;flex-wrap:wrap;}
     .inference-card{align-items:flex-end;gap:8px;flex-wrap:wrap;justify-content:center;padding:0;border:0;border-radius:0;background:transparent;}
     .inference-title{display:none;}
-    .fw-radio-group{display:flex;border:2px solid #3949ab;border-radius:0;overflow:hidden;min-width:360px;}
+    .fw-radio-group{display:flex;border:0;border-radius:0;overflow:hidden;min-width:360px;gap:12px;}
     .fw-radio-group input{display:none;}
-    .fw-radio{padding:8px 12px;background:#e8eaf6;color:#283593;font-size:13px;font-weight:700;cursor:pointer;user-select:none;border-right:2px solid #3949ab;}
-    .fw-radio:last-of-type{border-right:none;}
-    .fw-radio.active{background:#3949ab;color:#fff;box-shadow:inset 0 0 0 2px #7986cb;}
+    .fw-radio{padding:8px 12px;background:#e8eaf6;color:#283593;font-size:13px;font-weight:700;cursor:pointer;user-select:none;border:2px solid #5c6bc0;}
+    .fw-radio:last-of-type{border-right:2px solid #5c6bc0;}
+    .fw-radio.active{box-shadow:inset 0 0 0 2px #7986cb;}
+    .fw-radio#setFrameworkParam{background:#4a90e2;color:#fff;border-color:#2e5f8a;}
+    .fw-radio#setFrameworkParam.active{background:#2e5f8a;box-shadow:inset 0 0 0 2px #4a90e2;}
+    .fw-radio#setFrameworkNon{background:#26a69a;color:#fff;border-color:#00695c;}
+    .fw-radio#setFrameworkNon.active{background:#00695c;box-shadow:inset 0 0 0 2px #26a69a;}
     .primary-test-wrap{display:flex;align-items:center;gap:8px;min-width:280px;}
     .test-now{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;border:1px solid rgba(16,185,129,.45);background:rgba(16,185,129,.14);color:#d1fae5;font-size:12px;font-weight:800;}
     .primary-test-wrap label{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;}
     .primary-test-wrap select{height:34px;min-width:220px;border-radius:0;border:2px solid #5c6bc0;background:#ffffff;color:#263238;padding:0 8px;font-weight:600;}
+    .primary-test-wrap select.parametric{background:#e3f2fd;border-color:#2e5f8a;color:#1565c0;}
+    .primary-test-wrap select.nonparametric{background:#e0f2f1;border-color:#00695c;color:#00695c;}
     #setPrimaryTest:disabled{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:none !important;cursor:default;padding-right:8px !important;}
     select:disabled{appearance:none;-webkit-appearance:none;-moz-appearance:none;}
     .hbox{border:1px solid rgba(148,163,184,.38);border-radius:10px;padding:8px;background:rgba(6,16,30,.55);}
@@ -418,6 +425,11 @@
       var primaryTestWrap = document.getElementById("primaryTestWrap");
       if (primaryTestWrap) primaryTestWrap.style.display = "flex";
       var testSel = document.getElementById("setPrimaryTest");
+      testSel.className = primaryFramework === "nonparametric" ? "nonparametric" : "parametric";
+      document.querySelectorAll(".stat-panel-heading").forEach(function(h){
+        h.classList.remove("parametric", "nonparametric");
+        h.classList.add(primaryFramework);
+      });
       var testBadge = document.getElementById("currentTestBadge");
       var compareMode = currentCompareMode || "two-vars";
       if (testSel) {
