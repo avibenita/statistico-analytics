@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Independent Means Results (More Than 2 Groups)</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
+  <style>
+    :root{--surface-0:#0c1624;--surface-1:#1a1f2e;--surface-2:#242938;--border:#2d3748;--accent-1:rgb(255,165,120);--accent-2:rgb(120,200,255);--text-primary:#fff;--text-secondary:rgba(255,255,255,.82);--text-muted:rgba(255,255,255,.62);--panel-radius:10px;--panel-shadow:0 4px 20px rgba(0,0,0,.4);}
+    html,body{height:100%;margin:0;background:var(--surface-0);color:var(--text-primary);font-family:Segoe UI,Tahoma,sans-serif;}
+    .wrap{display:flex;justify-content:center;padding:8px 12px 20px;}
+    .card{/* width:min(1600px,99%); *//* background:var(--surface-1); */min-height:760px;border-radius:var(--panel-radius);box-shadow:var(--panel-shadow);border:1px solid var(--border);display:flex;flex-direction:column;}
+    .hero-section{background:linear-gradient(180deg,#0a1118,#0c1620);border-bottom:1px solid rgba(255,255,255,.06);padding:16px 20px;border-radius:var(--panel-radius) var(--panel-radius) 0 0;}
+    .hero-content{display:flex;justify-content:space-between;align-items:center;gap:12px;}
+    .hero-title{display:flex;align-items:center;/* gap:12px; */font-size:1.28rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;}
+    .hero-controls{display:flex;align-items:center;gap:10px;}
+    .hero-action-btn{border-radius:8px;border:1px solid rgba(148,163,184,.45);background:linear-gradient(145deg,rgba(148,163,184,.18),rgba(100,116,139,.16));color:#fff;padding:10px 16px;font-size:12px;font-weight:650;cursor:pointer;display:flex;align-items:center;gap:8px;position:relative;}
+    .hero-action-btn:hover::after{content:attr(title);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:8px;padding:8px 12px;background:#283593;color:#fff;font-size:11px;font-weight:600;white-space:nowrap;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000;pointer-events:none;}
+    .hero-action-btn:hover::before{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:2px;border:6px solid transparent;border-top-color:#283593;z-index:1000;pointer-events:none;}
+    .design-warning{margin-top:8px;padding:8px 16px;background:transparent;border-left:4px solid #ff9800;color:#e65100;font-size:12px;font-weight:600;text-align:center;}
+    .tab-navigation{display:flex;align-items:flex-end;gap:16px;background:transparent;padding:12px 0 0;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;scrollbar-width:none;margin-top:10px;}
+    .tab-button{height:36px;padding:0 4px;background:transparent;border:none;color:rgba(255,255,255,.55);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;position:relative;}
+    .tab-button.active{color:#fff;font-weight:700;}
+    .tab-button.active::before{content:'';position:absolute;left:0;right:0;bottom:-9px;height:2px;background:linear-gradient(90deg,var(--accent-1),var(--accent-2));}
+    .tab-controls-right{margin-left:auto;display:inline-flex;align-items:center;gap:8px;padding-bottom:8px;}
+    .tab-decimal-select{height:36px;padding:0 10px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;}
+    .view-container{padding:14px 16px;}
+    .tab-panel{display:none;} .tab-panel.active{display:block;}
+    .stats-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;}
+    .stat-panel{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+    .stat-panel.secondary{opacity:0.7;transform:scale(0.95);border-color:rgba(45,55,72,0.4);}
+    .stat-panel.secondary .stat-panel-heading{background:#37474f;font-size:11px;padding:7px 10px;border-bottom:1px solid rgba(255,165,120,.4);}
+    .stat-panel.secondary .stat-field{padding:6px 0;}
+    .stat-panel.secondary .stat-label{font-size:13px;opacity:0.85;}
+    .stat-panel.secondary .stat-value{font-size:13px;padding:5px 8px;min-width:100px;opacity:0.9;}
+    .stat-panel-heading{padding:9px 12px;background:#164e8d;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid rgba(255,165,120,.7);}
+    .stat-panel-heading.parametric{background:#2e5f8a;border-bottom-color:#4a90e2;}
+    .stat-panel-heading.nonparametric{background:#00695c;border-bottom-color:#26a69a;}
+    .stat-panel-body{padding:8px 12px;}
+    .stat-field{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+    .stat-field:last-child{border-bottom:none;}
+    .stat-label{color:var(--text-secondary);font-weight:600;}
+    .stat-value{font-variant-numeric:tabular-nums;color:var(--accent-2);font-weight:700;background:rgba(120,200,255,.12);border:1px solid rgba(120,200,255,.32);padding:6px 10px;border-radius:8px;min-width:110px;text-align:center;}
+    .table-container{margin-top:10px;overflow:auto;max-height:420px;}
+    .analysis-table{width:100%;border-collapse:collapse;}
+    .analysis-table th{position:sticky;top:0;background:#164e8d;color:#fff;padding:8px;border:1px solid rgba(255,255,255,.2);}
+    .analysis-table td{padding:8px;border:1px solid rgba(255,255,255,.14);color:var(--text-secondary);}
+    .section-note{margin-top:10px;padding:9px;border-left:3px solid var(--accent-1);background:rgba(255,165,120,.1);color:var(--text-muted);}
+    .framework-select{height:34px;padding:0 10px;border-radius:8px;border:1px solid rgba(148,163,184,.45);background:rgba(15,23,42,.82);color:#fff;}
+    .agreement-good{color:#4ade80;font-weight:700;}
+    .agreement-warn{color:#fbbf24;font-weight:700;}
+    .settings-bar{margin-top:8px;background:linear-gradient(135deg, #e8eaf6 0%, #c5cae9 100%);border:2px solid #5c6bc0;border-radius:0;padding:8px 10px;box-shadow:0 2px 8px rgba(92,107,192,0.15);}
+    .settings-panel-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#283593;margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid #5c6bc0;}
+    .settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px;}
+    .settings-grid>div{display:flex;flex-direction:column;}
+    .settings-grid label{font-size:11px;color:#37474f;margin-bottom:2px;font-weight:700;text-transform:uppercase;}
+    .settings-grid select,.settings-grid input{width:100%;height:32px;border-radius:0;border:2px solid #5c6bc0;background:#ffffff;color:#263238;padding:0 8px;font-weight:600;}
+    #setPosthocWrap,#setCorrectionWrap{min-width:160px;max-width:200px;}
+    .inference-row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;}
+    .inference-card{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;justify-content:center;padding:0;border:0;border-radius:0;background:transparent;}
+    .inference-card#primaryTestWrap{flex:0 0 auto;min-width:200px;max-width:220px;}
+    .inference-title{display:none;}
+    .fw-radio-group{display:flex;border:0;border-radius:0;overflow:hidden;min-width:360px;gap:6px;}
+    .fw-radio-group input{display:none;}
+    .fw-radio{padding:10px 16px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;user-select:none;border:3px solid transparent;box-shadow:0 2px 8px rgba(0,0,0,0.1);text-transform:uppercase;letter-spacing:0.5px;opacity:0.6;flex:1;text-align:center;position:relative;}
+    .fw-radio:last-of-type{border-right:3px solid transparent;}
+    .fw-radio.active{opacity:1;box-shadow:0 4px 12px rgba(0,0,0,0.3);transform:translateY(-2px);transition:all 0.2s ease;border-color:currentColor;}
+    .fw-radio.active::before{content:'✓';position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:18px;font-weight:900;}
+    .fw-radio#setFrameworkParam{background:#4a90e2;color:#fff;}
+    .fw-radio#setFrameworkParam.active{background:#2e5f8a;border-color:#4a90e2;}
+    .fw-radio#setFrameworkNon{background:#26a69a;color:#fff;}
+    .fw-radio#setFrameworkNon.active{background:#00695c;border-color:#26a69a;}
+    .primary-test-wrap{display:flex;align-items:center;gap:8px;min-width:280px;}
+    .test-now{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;border:1px solid rgba(16,185,129,.45);background:rgba(16,185,129,.14);color:#d1fae5;font-size:12px;font-weight:800;}
+    .primary-test-wrap label{font-size:11px;color:var(--text-muted);font-weight:800;text-transform:uppercase;}
+    .primary-test-wrap select{height:38px;width:100%;border-radius:0;border:3px solid transparent;background:#2e5f8a;color:#ffffff;padding:0 12px;font-weight:700;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+    .primary-test-wrap select.parametric{background:#2e5f8a;border-color:#4a90e2;color:#ffffff;box-shadow:0 3px 10px rgba(46,95,138,0.4);}
+    .primary-test-wrap select.nonparametric{background:#00695c;border-color:#26a69a;color:#ffffff;box-shadow:0 3px 10px rgba(0,105,92,0.4);}
+    #setPrimaryTest:disabled{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:none !important;cursor:default;padding-right:8px !important;}
+    select:disabled{appearance:none;-webkit-appearance:none;-moz-appearance:none;}
+    .hbox{border:1px solid rgba(148,163,184,.38);border-radius:10px;padding:8px;background:rgba(6,16,30,.55);}
+    .hbox-title{font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700;margin-bottom:6px;}
+    .hbox-row{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;color:#e5eefc;}
+    .h-radio{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#263238;text-transform:none !important;white-space:nowrap;font-weight:600;}
+    .h-radio input{transform:scale(0.9);}
+    .hdr-row{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;}
+    .stat-chip{display:inline-flex;align-items:center;gap:4px;background:#e3f2fd;border:2px solid #1976d2;border-radius:0;padding:4px 8px;font-size:11px;color:#0d47a1;font-weight:700;}
+    .test-chip{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.55);color:#d1fae5;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;}
+    .hyp-card{border:2px solid #5c6bc0;border-radius:0;padding:8px 10px;background:#ffffff;}
+    .hyp-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+
+    .hyp-main{font-size:15px;font-weight:700;color:#283593;white-space:nowrap;min-width:240px;}
+    .hyp-block{display:flex;align-items:center;gap:10px;white-space:nowrap;}
+    .hyp-h1-label{font-size:12px;color:#37474f;font-weight:800;text-transform:uppercase;letter-spacing:.2px;}
+    .hyp-options{display:flex;align-items:center;gap:12px;white-space:nowrap;}
+    .hyp-delta{font-weight:800;color:#93c5fd;}
+    .alpha-wrap{min-width:280px;max-width:340px;}
+    .alpha-wrap label{font-size:11px;color:#37474f;font-weight:800;text-transform:uppercase;}
+    #setAlpha{height:4px;opacity:.78;accent-color:#3949ab;max-width:211px;}
+    .hyp-h1-label{
+  font-size:11px;
+  color:#37474f;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.3px;
+  margin-bottom:4px;
+}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card">
+      <div class="hero-section">
+        <div class="hero-content">
+          <div class="hero-title"><span>Independent Means Module (>2 Groups)</span></div>
+          <div class="hero-controls">
+            <button class="hero-action-btn" onclick="saveCurrentModel()" title="Save model configuration to Excel workbook">
+              <i class="fa-solid fa-floppy-disk"></i> Model
+            </button>
+            <button class="hero-action-btn" onclick="exportHtml()" title="Export complete report as standalone HTML file">
+              <i class="fa-solid fa-floppy-disk"></i> HTML
+            </button>
+          </div>
+        </div>
+        <div class="tab-navigation">
+          <button class="tab-button active" data-tab="explore"><i class="fa-solid fa-chart-column"></i> Explore</button>
+          <button class="tab-button" data-tab="assumptions"><i class="fa-solid fa-shield-halved"></i> Assumptions</button>
+          <button class="tab-button" data-tab="results"><i class="fa-solid fa-square-poll-vertical"></i> Results</button>
+          <button class="tab-button" data-tab="effects"><i class="fa-solid fa-wave-square"></i> Effects</button>
+          <button class="tab-button" data-tab="power"><i class="fa-solid fa-bolt"></i> Power</button>
+          <button class="tab-button" data-tab="report"><i class="fa-solid fa-file-lines"></i> Report</button>
+          <div class="tab-controls-right">
+            <label for="decimalSelect">Decimals:</label>
+            <select id="decimalSelect" class="tab-decimal-select" onchange="setDecimalPrecision()">
+              <option value="auto">Auto</option><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-bar">
+  <div class="settings-panel-title">Test Configuration Panel (>2 Groups)</div>
+  <div class="settings-grid">
+
+
+
+
+
+
+
+
+    <!-- Comparison chips + design message -->
+    <div style="grid-column:1/-1;">
+      <div class="hdr-row" id="compareStatsRow"></div>
+      <div id="designMessageRow" class="design-warning" style="display:none;"></div>
+    </div>
+
+    <!-- Inference + Test method (side by side, clearly separated) -->
+    <div style="grid-column:1/-1;">
+      <div class="hdr-row">
+        <div class="inference-row" style="gap:28px;">
+
+          <!-- Inference Type (left) -->
+          <div class="inference-card" style="flex:0 0 auto;">
+            <div class="inference-title">Inference type</div>
+            <div class="fw-radio-group" role="radiogroup" aria-label="Inference type">
+              <input id="fwParametric" type="radio" name="frameworkMode" value="parametric" checked/>
+              <label for="fwParametric" id="setFrameworkParam" class="fw-radio active">Parametric (means)</label>
+              <input id="fwNonparametric" type="radio" name="frameworkMode" value="nonparametric"/>
+              <label for="fwNonparametric" id="setFrameworkNon" class="fw-radio">Non-parametric (ranks)</label>
+            </div>
+          </div>
+
+          <!-- Test Method (right) -->
+          <div class="inference-card" id="primaryTestWrap" style="flex:1 1 auto;min-width:280px;">
+            <div class="inference-title">Test method</div>
+            <select id="setPrimaryTest" style="width:100%;height:42px;font-size:14px;padding:0 12px;border-radius:10px;border:1px solid rgba(120,200,255,.45);background:rgba(15,23,42,.95);color:#fff;font-weight:600;">
+              <option value="welch">Welch t-test (recommended)</option>
+              <option value="student">Student t-test (equal variance)</option>
+              <option value="permutation">Permutation test (mean difference)</option>
+            </select>
+          </div>
+
+          <!-- Post-hoc controls (visible only for k+ groups) -->
+          <div id="setPosthocWrap" style="display:none;flex:0 0 auto;">
+            <label for="setPosthocMethod">Post-hoc</label>
+            <select id="setPosthocMethod">
+              <option value="games-howell">Games-Howell</option>
+              <option value="tukey">Tukey HSD</option>
+              <option value="dunn">Dunn</option>
+              <option value="conover">Conover</option>
+            </select>
+          </div>
+
+          <div id="setCorrectionWrap" style="display:none;flex:0 0 auto;">
+            <label for="setPosthocCorrection">p Correction</label>
+            <select id="setPosthocCorrection">
+              <option value="holm">Holm</option>
+              <option value="bh">Benjamini-Hochberg</option>
+              <option value="bonferroni">Bonferroni</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- (Removed from original position) -->
+
+    <!-- Hypothesis + alpha (compact, less clutter) -->
+    <div id="setHypWrap" style="grid-column:1/-1;">
+      <div class="hyp-card">
+        <div class="hyp-row">
+
+          <div class="hyp-block hyp-main">
+            <strong>H0:</strong> <span id="h0Text">Difference = 0</span>
+          </div>
+
+          <div class="hyp-block">
+
+  <div class="hyp-h1-label">Alternative (H1)</div>
+
+  <div class="hbox-row hyp-options" id="h1Row">
+    <label class="h-radio">
+      <input type="radio" name="h1Orientation" value="less"/>
+      Difference &lt; 0
+    </label>
+
+    <label class="h-radio">
+      <input type="radio" name="h1Orientation" value="two-sided" checked/>
+      Difference ≠ 0
+    </label>
+
+    <label class="h-radio">
+      <input type="radio" name="h1Orientation" value="greater"/>
+      Difference &gt; 0
+    </label>
+  </div>
+
+</div>
+
+
+
+          <div class="alpha-wrap">
+            <label for="setAlpha" style="font-size:10px;opacity:0.75;">
+              Significance: <span id="alphaVal">0.050</span>
+            </label>
+            <input id="setAlpha" type="range" min="0.001" max="0.2" step="0.001" value="0.05" style="height:3px;"/>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+        
+      <div class="view-container">
+        <section id="tab-setup" class="tab-panel">
+          <div class="stats-container">
+            <div class="stat-panel"><div class="stat-panel-heading">Model Setup</div><div class="stat-panel-body">
+              <div class="stat-field"><span class="stat-label">Mode</span><span class="stat-value" id="setupMode">...</span></div>
+              <div class="stat-field"><span class="stat-label">Hypothesis</span><span class="stat-value" id="setupHypothesis">...</span></div>
+              <div class="stat-field"><span class="stat-label">Confidence</span><span class="stat-value" id="setupConfidence">...</span></div>
+            </div></div>
+          </div>
+        </section>
+        <section id="tab-explore" class="tab-panel active">
+          <div class="stats-container">
+            <div class="stat-panel"><div class="stat-panel-heading">Group Summaries</div><div class="stat-panel-body">
+              <div class="stat-field"><span class="stat-label">n1 / n2</span><span class="stat-value" id="expN">...</span></div>
+              <div class="stat-field"><span class="stat-label">Mean A / Mean B</span><span class="stat-value" id="expMean">...</span></div>
+              <div class="stat-field"><span class="stat-label">Median A / Median B</span><span class="stat-value" id="expMed">...</span></div>
+              <div class="stat-field"><span class="stat-label">SD A / SD B</span><span class="stat-value" id="expSd">...</span></div>
+              <div class="stat-field"><span class="stat-label">IQR A / IQR B</span><span class="stat-value" id="expIqr">...</span></div>
+            </div></div>
+          </div>
+        </section>
+        <section id="tab-assumptions" class="tab-panel">
+          <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Diagnostics</div><div class="stat-panel-body">
+            <div class="stat-field"><span class="stat-label">Normality A</span><span class="stat-value" id="asNormA">...</span></div>
+            <div class="stat-field"><span class="stat-label">Normality B</span><span class="stat-value" id="asNormB">...</span></div>
+            <div class="stat-field"><span class="stat-label">Equal Variance</span><span class="stat-value" id="asEqVar">...</span></div>
+            <div class="stat-field"><span class="stat-label">Recommendation</span><span class="stat-value" id="asReco">...</span></div>
+          </div></div></div>
+        </section>
+        <section id="tab-results" class="tab-panel">
+          <div class="stats-container">
+            <div class="stat-panel"><div class="stat-panel-heading">Primary Results</div><div class="stat-panel-body">
+              <div class="stat-field">
+                <span class="stat-label">Primary Framework</span><span class="stat-value" id="resPrimaryFramework">...</span>
+              </div>
+              <div class="stat-field"><span class="stat-label">Primary Test</span><span class="stat-value" id="resPrimaryTest">...</span></div>
+              <div class="stat-field"><span class="stat-label">Statistic</span><span class="stat-value" id="resPrimaryStat">...</span></div>
+              <div class="stat-field"><span class="stat-label">p-value</span><span class="stat-value" id="resPrimaryP">...</span></div>
+              <div class="stat-field"><span class="stat-label">Primary Estimate + CI</span><span class="stat-value" id="resPrimaryEstimate">...</span></div>
+            </div></div>
+            <div class="stat-panel secondary"><div class="stat-panel-heading">Robustness Check (Secondary)</div><div class="stat-panel-body">
+              <div class="stat-field"><span class="stat-label">Secondary Test</span><span class="stat-value" id="resSecondaryTest">...</span></div>
+              <div class="stat-field"><span class="stat-label">Statistic</span><span class="stat-value" id="resSecondaryStat">...</span></div>
+              <div class="stat-field"><span class="stat-label">p-value</span><span class="stat-value" id="resSecondaryP">...</span></div>
+              <div class="stat-field"><span class="stat-label">Agreement</span><span class="stat-value" id="resAgreement">...</span></div>
+              <div class="stat-field"><span class="stat-label">Diagnostic Hint</span><span class="stat-value" id="resHint">...</span></div>
+            </div></div>
+          </div>
+          <div class="stat-panel" id="posthocPanel" style="margin-top:12px; display:none;">
+            <div class="stat-panel-heading">Post-hoc Pairwise</div>
+            <div class="stat-panel-body" style="padding:0;">
+              <div class="table-container" style="margin:0;">
+                <table class="analysis-table">
+                  <thead><tr><th>Comparison</th><th>Statistic</th><th>Raw p</th><th>Adj p</th><th>Estimate</th></tr></thead>
+                  <tbody id="posthocBody"><tr><td colspan="5">No post-hoc rows</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section id="tab-effects" class="tab-panel">
+          <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Effect Sizes</div><div class="stat-panel-body">
+            <div class="stat-field"><span class="stat-label">Hedges g</span><span class="stat-value" id="efG">...</span></div>
+            <div class="stat-field"><span class="stat-label">Cliff's delta</span><span class="stat-value" id="efDelta">...</span></div>
+            <div class="stat-field"><span class="stat-label">Rank-biserial</span><span class="stat-value" id="efRrb">...</span></div>
+            <div class="stat-field"><span class="stat-label">P(X>Y)</span><span class="stat-value" id="efPs">...</span></div>
+          </div></div></div>
+        </section>
+        <section id="tab-power" class="tab-panel">
+          <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Power & Sample Size (Python)</div><div class="stat-panel-body">
+            <div class="stat-field"><span class="stat-label">Status</span><span class="stat-value" id="powNote">...</span></div>
+            <div class="stat-field"><span class="stat-label">Endpoint</span><span class="stat-value" id="powEndpoint">...</span></div>
+            <div class="stat-field"><span class="stat-label">Placeholder Power</span><span class="stat-value" id="powVal">...</span></div>
+          </div></div></div>
+          <div class="section-note">Power is designed to call a Python service endpoint with exact/simulation routines.</div>
+        </section>
+        <section id="tab-report" class="tab-panel">
+          <div class="stat-panel"><div class="stat-panel-heading">APA-ready Report</div><div class="stat-panel-body">
+            <div id="repWelch"></div><br/><div id="repMw"></div><br/><div id="repCons"></div>
+          </div></div>
+        </section>
+      </div>
+    </section>
+  </div>
+  <script>
+    let globalDecimalPrecision = "auto";
+    let lastBundle = null;
+    let primaryFramework = "parametric";
+    let availableHeaders = [];
+    let currentCompareMode = "k-plus";
+    let currentHypothesis = "two-sided";
+    let currentPrimaryTest = "welch";
+    let persistedColumns = { groupA: "", groupB: "", valueColumn: "", groupColumn: "" };
+    function parseMaybeNumber(v){ if(v===undefined||v===null) return NaN; const n=Number(String(v).replace(",",".")); return isFinite(n)?n:NaN; }
+    function fmt(v){ const n=parseMaybeNumber(v); if(!isFinite(n)) return v==null?"...":String(v); if(globalDecimalPrecision==="auto"){ if(Math.abs(n)<1&&n!==0) return n.toFixed(4); return n.toFixed(2);} return n.toFixed(parseInt(globalDecimalPrecision,10)); }
+    function fmtP(v){ const n=parseMaybeNumber(v); if(!isFinite(n)) return v==null?"...":String(v); if(n < 0.001) return "< 0.001"; return globalDecimalPrecision === "auto" ? n.toFixed(4) : n.toFixed(Math.max(3, parseInt(globalDecimalPrecision,10))); }
+    function setDecimalPrecision(){ globalDecimalPrecision=(document.getElementById("decimalSelect")||{value:"auto"}).value; if(lastBundle) populateBundle(lastBundle); }
+    function setText(id,val){ const el=document.getElementById(id); if(el) el.textContent = (val!==undefined&&val!==null&&val!=="")?val:"..."; }
+    function switchTab(tab){ document.querySelectorAll(".tab-button").forEach(b=>b.classList.toggle("active",b.getAttribute("data-tab")===tab)); document.querySelectorAll(".tab-panel").forEach(p=>p.classList.toggle("active",p.id==="tab-"+tab)); }
+    function sendToHost(cmd,data){ if(Office&&Office.context&&Office.context.ui&&Office.context.ui.messageParent) Office.context.ui.messageParent(JSON.stringify({action:"HOST_EVENT",cmd:cmd,data:data||{}})); }
+    function fillSelect(id, options, selected){
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = (options || []).map(function(v){ return '<option value="' + v + '">' + v + '</option>'; }).join("");
+      if (selected !== undefined && selected !== null && String(selected) !== "") el.value = String(selected);
+    }
+    function currentSettingsSpec(){
+      var hChecked = document.querySelector('input[name="h1Orientation"]:checked');
+      var h = hChecked ? hChecked.value : "two-sided";
+      currentHypothesis = h;
+      var alpha = Number((document.getElementById("setAlpha") || { value: "0.05" }).value || 0.05);
+      if (!isFinite(alpha) || alpha <= 0 || alpha >= 1) alpha = 0.05;
+      return {
+        compareMode: currentCompareMode,
+        primaryFramework: primaryFramework,
+        hypothesis: h,
+        confidence: 1 - alpha,
+        groupA: persistedColumns.groupA || "",
+        groupB: persistedColumns.groupB || "",
+        valueColumn: persistedColumns.valueColumn || "",
+        groupColumn: persistedColumns.groupColumn || "",
+        primaryTest: (document.getElementById("setPrimaryTest") || {}).value || currentPrimaryTest || "welch",
+        posthocMethod: (document.getElementById("setPosthocMethod") || {}).value || "games-howell",
+        posthocCorrection: (document.getElementById("setPosthocCorrection") || {}).value || "holm"
+      };
+    }
+    function refreshHypothesisFrames(){
+      var h0 = document.getElementById("h0Text");
+      var h1Row = document.getElementById("h1Row");
+      var deltaToken = document.getElementById("deltaToken");
+      if (!h0 || !h1Row) return;
+      if (currentCompareMode === "k-plus") {
+        h0.textContent = "All groups are equal";
+        if (deltaToken) deltaToken.textContent = "Omnibus";
+        h1Row.innerHTML = '<span style="color:#e5eefc;font-weight:700;">At least one group differs.</span>';
+      } else {
+        h0.textContent = "Difference = 0";
+        if (deltaToken) deltaToken.textContent = "μ2-μ1";
+        h1Row.innerHTML = '' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="less"/> &lt; 0</label>' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="two-sided" checked/> != 0</label>' +
+          '<label class="h-radio"><input type="radio" name="h1Orientation" value="greater"/> &gt; 0</label>';
+        var checkedVal = currentHypothesis || "two-sided";
+        var checked = h1Row.querySelector('input[name="h1Orientation"][value="' + checkedVal + '"]');
+        if (checked) checked.checked = true;
+        h1Row.querySelectorAll('input[name="h1Orientation"]').forEach(function(el){ el.addEventListener("change", notifySettingsChanged); });
+      }
+    }
+    function refreshSettingsVisibility(){
+      const mode = currentCompareMode || "two-vars";
+      const two = mode === "two-vars";
+      const setDisplay = (id, show) => { const el = document.getElementById(id); if (el) el.style.display = show ? "flex" : "none"; };
+      setDisplay("setPosthocWrap", !two); setDisplay("setCorrectionWrap", !two);
+      setDisplay("setHypWrap", true);
+      refreshHypothesisFrames();
+    }
+    function setFrameworkButtons(mode){
+      primaryFramework = mode === "nonparametric" ? "nonparametric" : "parametric";
+      var p = document.getElementById("setFrameworkParam");
+      var n = document.getElementById("setFrameworkNon");
+      if (p) p.classList.toggle("active", primaryFramework === "parametric");
+      if (n) n.classList.toggle("active", primaryFramework === "nonparametric");
+      var rp = document.getElementById("fwParametric");
+      var rn = document.getElementById("fwNonparametric");
+      if (rp) rp.checked = primaryFramework === "parametric";
+      if (rn) rn.checked = primaryFramework === "nonparametric";
+      var primaryTestWrap = document.getElementById("primaryTestWrap");
+      if (primaryTestWrap) primaryTestWrap.style.display = "flex";
+      var testSel = document.getElementById("setPrimaryTest");
+      testSel.className = primaryFramework === "nonparametric" ? "nonparametric" : "parametric";
+      document.querySelectorAll(".stat-panel-heading").forEach(function(h){
+        h.classList.remove("parametric", "nonparametric");
+        h.classList.add(primaryFramework);
+      });
+      var testBadge = document.getElementById("currentTestBadge");
+      var compareMode = currentCompareMode || "two-vars";
+      if (testSel) {
+        var options = [];
+        if (compareMode === "k-plus") {
+          options = primaryFramework === "nonparametric"
+            ? [{ v: "kruskal", t: "Kruskal-Wallis" }]
+            : [{ v: "anova", t: "One-way ANOVA" }];
+        } else if (primaryFramework === "nonparametric") {
+          options = [{ v: "mann-whitney", t: "Mann-Whitney U" }];
+        } else {
+          options = [
+            { v: "welch", t: "Welch t-test" },
+            { v: "student", t: "Student t-test (equal var)" },
+            { v: "permutation", t: "Permutation t-test" }
+          ];
+        }
+        testSel.innerHTML = options.map(function(o){ return '<option value="' + o.v + '">' + o.t + '</option>'; }).join("");
+        var hasCurrent = options.some(function(o){ return o.v === currentPrimaryTest; });
+        currentPrimaryTest = hasCurrent ? currentPrimaryTest : options[0].v;
+        testSel.value = currentPrimaryTest;
+        testSel.disabled = options.length === 1;
+      }
+      if (testBadge) {
+        var text = "Welch t-test";
+        if (compareMode === "k-plus") {
+          text = primaryFramework === "nonparametric" ? "Kruskal-Wallis" : "One-way ANOVA";
+        } else if (primaryFramework === "nonparametric") {
+          text = "Mann-Whitney U";
+        } else if (currentPrimaryTest === "student") {
+          text = "Student t-test (equal var)";
+        } else if (currentPrimaryTest === "permutation") {
+          text = "Permutation t-test";
+        }
+        testBadge.textContent = "Test: " + text;
+      }
+      refreshHypothesisFrames();
+    }
+    function notifySettingsChanged(){
+      const spec = currentSettingsSpec();
+      refreshSettingsVisibility();
+      var alphaVal = document.getElementById("alphaVal");
+      if (alphaVal) alphaVal.textContent = (1 - (spec.confidence || 0.95)).toFixed(3);
+      sendToHost("independentSettingsChanged", spec);
+    }
+    function renderCompareStatsRow(s, e){
+      var host = document.getElementById("compareStatsRow");
+      var msgHost = document.getElementById("designMessageRow");
+      if (!host) return;
+      host.innerHTML = "";
+      if (msgHost) { msgHost.textContent = ""; msgHost.style.display = "none"; }
+      var mode = s.compareMode || "two-vars";
+      if (mode === "two-vars") {
+        var aName = s.groupA || "u1";
+        var bName = s.groupB || "u2";
+        var chips = [
+          "Group A: " + aName + " (n=" + (e.n1 || 0) + ", μ=" + fmt(e.mean1) + ")",
+          "Group B: " + bName + " (n=" + (e.n2 || 0) + ", μ=" + fmt(e.mean2) + ")"
+        ];
+        chips.forEach(function(txt){
+          var sp = document.createElement("span");
+          sp.className = "stat-chip";
+          sp.textContent = txt;
+          host.appendChild(sp);
+        });
+      } else {
+        var ksum = e.kplusSummary || {};
+        var valueName = ksum.valueColumn || s.valueColumn || "Value";
+        var groupName = ksum.groupColumn || s.groupColumn || "Group";
+        var totalN = isFinite(parseMaybeNumber(ksum.totalN)) ? parseMaybeNumber(ksum.totalN) : "?";
+        var meanOverall = isFinite(parseMaybeNumber(ksum.meanOverall)) ? fmt(ksum.meanOverall) : "?";
+        var levelsCount = isFinite(parseMaybeNumber(ksum.levelsCount)) ? parseMaybeNumber(ksum.levelsCount) : ((s.groupLevels || []).length || "?");
+
+        var valueChip = document.createElement("span");
+        valueChip.className = "stat-chip";
+        valueChip.textContent = valueName + " (n=" + totalN + ", μ=" + meanOverall + ")";
+        valueChip.style.fontSize = "11px";
+        host.appendChild(valueChip);
+
+        var groupChip = document.createElement("span");
+        groupChip.className = "stat-chip";
+        groupChip.textContent = groupName + " (levels=" + levelsCount + ")";
+        groupChip.style.fontSize = "11px";
+        host.appendChild(groupChip);
+      }
+      var design = s.designValidation || {};
+      if (msgHost) {
+        if (design.message) {
+          msgHost.textContent = design.message;
+          msgHost.style.display = "block";
+        } else {
+          msgHost.textContent = "";
+          msgHost.style.display = "none";
+        }
+      }
+    }
+    function updateResultsPanels(r, fx, s, a){
+      setText("resPrimaryFramework", primaryFramework === "nonparametric" ? "Nonparametric (ranks)" : "Parametric (means)");
+      const alpha = isFinite(parseMaybeNumber(a)) ? parseMaybeNumber(a) : (1 - (parseMaybeNumber(s && s.confidence) || 0.95));
+      if (s && s.compareMode === "k-plus" && r && r.omnibus) {
+        const ob = r.omnibus;
+        const paramPrimary = primaryFramework !== "nonparametric";
+        if (paramPrimary) {
+          setText("resPrimaryTest", "One-way ANOVA");
+          setText("resPrimaryStat", "F(" + fmt(ob.anovaDf1) + ", " + fmt(ob.anovaDf2) + ") = " + fmt(ob.anovaF));
+          setText("resPrimaryP", fmtP(ob.anovaP));
+          setText("resPrimaryEstimate", "Omnibus effect across " + fmt(ob.levels ? ob.levels.length : 0) + " groups");
+          setText("resSecondaryTest", "Kruskal-Wallis");
+          setText("resSecondaryStat", "H(" + fmt(ob.kwDf) + ") = " + fmt(ob.kwH));
+          setText("resSecondaryP", fmtP(ob.kwP));
+        } else {
+          setText("resPrimaryTest", "Kruskal-Wallis");
+          setText("resPrimaryStat", "H(" + fmt(ob.kwDf) + ") = " + fmt(ob.kwH));
+          setText("resPrimaryP", fmtP(ob.kwP));
+          setText("resPrimaryEstimate", "Distribution shift across " + fmt(ob.levels ? ob.levels.length : 0) + " groups");
+          setText("resSecondaryTest", "One-way ANOVA");
+          setText("resSecondaryStat", "F(" + fmt(ob.anovaDf1) + ", " + fmt(ob.anovaDf2) + ") = " + fmt(ob.anovaF));
+          setText("resSecondaryP", fmtP(ob.anovaP));
+        }
+        const agreeElK = document.getElementById("resAgreement");
+        const aSig = parseMaybeNumber(ob.anovaP) < alpha;
+        const kSig = parseMaybeNumber(ob.kwP) < alpha;
+        if (aSig === kSig) {
+          setText("resAgreement", "Agree at alpha");
+          if (agreeElK) agreeElK.className = "stat-value agreement-good";
+          setText("resHint", "Omnibus conclusions are consistent across frameworks.");
+        } else {
+          setText("resAgreement", "Disagree at alpha");
+          if (agreeElK) agreeElK.className = "stat-value agreement-warn";
+          setText("resHint", "Consider non-normality/heteroscedasticity and run post-hoc with correction.");
+        }
+        return;
+      }
+      const welchSig = parseMaybeNumber(r.welchP) < alpha;
+      const mwSig = parseMaybeNumber(r.mwP) < alpha;
+      const primaryParametric = primaryFramework !== "nonparametric";
+
+      if (primaryParametric) {
+        const chosen = currentPrimaryTest || "welch";
+        if (chosen === "student") {
+          setText("resPrimaryTest", "Student t-test (equal var)");
+          setText("resPrimaryStat", "t(" + fmt(r.studentDf) + ") = " + fmt(r.studentT));
+          setText("resPrimaryP", fmtP(r.studentP));
+          setText("resPrimaryEstimate", "Mean diff " + fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "]");
+        } else if (chosen === "permutation") {
+          setText("resPrimaryTest", "Permutation t-test");
+          setText("resPrimaryStat", "Permutation B=" + fmt(r.permutationIterations || 1200));
+          setText("resPrimaryP", fmtP(r.permutationP));
+          setText("resPrimaryEstimate", "Mean diff " + fmt(r.meanDiff));
+        } else {
+          setText("resPrimaryTest", "Welch t-test");
+          setText("resPrimaryStat", "t(" + fmt(r.welchDf) + ") = " + fmt(r.welchT));
+          setText("resPrimaryP", fmtP(r.welchP));
+          setText("resPrimaryEstimate", "Mean diff " + fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "]");
+        }
+        setText("resSecondaryTest", "Mann-Whitney U");
+        setText("resSecondaryStat", "U = " + fmt(r.u));
+        setText("resSecondaryP", fmtP(r.mwP));
+      } else {
+        setText("resPrimaryTest", "Mann-Whitney U");
+        setText("resPrimaryStat", "U = " + fmt(r.u));
+        setText("resPrimaryP", fmtP(r.mwP));
+        setText("resPrimaryEstimate", "Rank-biserial " + fmt(fx.rankBiserial) + " | P(X>Y) " + fmt(fx.probabilitySuperiority));
+        setText("resSecondaryTest", "Welch t-test");
+        setText("resSecondaryStat", "t(" + fmt(r.welchDf) + ") = " + fmt(r.welchT));
+        setText("resSecondaryP", fmtP(r.welchP));
+      }
+
+      const agreeEl = document.getElementById("resAgreement");
+      if (welchSig === mwSig) {
+        setText("resAgreement", "Agree at alpha");
+        if (agreeEl) agreeEl.className = "stat-value agreement-good";
+        setText("resHint", "Both frameworks lead to the same significance decision.");
+      } else {
+        setText("resAgreement", "Disagree at alpha");
+        if (agreeEl) agreeEl.className = "stat-value agreement-warn";
+        setText("resHint", "Inspect skew, outliers, and unequal variance/shape differences.");
+      }
+    }
+    function renderPosthoc(posthoc, compareMode){
+      const panel = document.getElementById("posthocPanel");
+      const body = document.getElementById("posthocBody");
+      if (!panel || !body) return;
+      if (compareMode !== "k-plus" || !posthoc || !posthoc.enabled) {
+        panel.style.display = "none";
+        body.innerHTML = '<tr><td colspan="5">No post-hoc rows</td></tr>';
+        return;
+      }
+      panel.style.display = "block";
+      const rows = posthoc.rows || [];
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="5">No post-hoc rows</td></tr>';
+        return;
+      }
+      body.innerHTML = "";
+      rows.forEach(function(r){
+        const tr = document.createElement("tr");
+        [r.comparison, r.statistic, fmtP(r.rawP), fmtP(r.adjP), fmt(r.estimate)].forEach(function(v){
+          const td = document.createElement("td");
+          td.textContent = v;
+          tr.appendChild(td);
+        });
+        body.appendChild(tr);
+      });
+    }
+
+    function populateBundle(b){
+      lastBundle = b || {};
+      const s=b.setup||{}, e=b.explore||{}, a=b.assumptions||{}, r=b.results||{}, fx=b.effects||{}, p=b.power||{}, rep=b.report||{};
+      availableHeaders = Array.isArray(s.headers) ? s.headers.slice() : availableHeaders;
+      persistedColumns.groupA = s.groupA || persistedColumns.groupA;
+      persistedColumns.groupB = s.groupB || persistedColumns.groupB;
+      persistedColumns.valueColumn = s.valueColumn || persistedColumns.valueColumn;
+      persistedColumns.groupColumn = s.groupColumn || persistedColumns.groupColumn;
+      currentCompareMode = s.compareMode || currentCompareMode || "two-vars";
+      currentPrimaryTest = s.primaryTest || currentPrimaryTest || "welch";
+      var testSel = document.getElementById("setPrimaryTest");
+      if (testSel) testSel.value = currentPrimaryTest;
+      setFrameworkButtons(s.primaryFramework || primaryFramework);
+      var alphaEl = document.getElementById("setAlpha");
+      if (alphaEl) alphaEl.value = String(1 - (parseMaybeNumber(s.confidence) || 0.95));
+      var orientation = s.hypothesis || "two-sided";
+      currentHypothesis = orientation;
+      var radio = document.querySelector('input[name="h1Orientation"][value="' + orientation + '"]');
+      if (radio) radio.checked = true;
+      const phm = document.getElementById("setPosthocMethod"); if (phm) phm.value = s.posthocMethod || "games-howell";
+      const phc = document.getElementById("setPosthocCorrection"); if (phc) phc.value = s.posthocCorrection || "holm";
+      renderCompareStatsRow(s, e);
+      refreshSettingsVisibility();
+      setText("setupMode", s.mode); setText("setupHypothesis", s.hypothesis); setText("setupConfidence", (s.confidence?fmt(100*s.confidence):"...")+"%");
+      setText("expN", `${e.n1||0} / ${e.n2||0}`); setText("expMean", `${fmt(e.mean1)} / ${fmt(e.mean2)}`); setText("expMed", `${fmt(e.med1)} / ${fmt(e.med2)}`); setText("expSd", `${fmt(e.sd1)} / ${fmt(e.sd2)}`); setText("expIqr", `${fmt(e.iqr1)} / ${fmt(e.iqr2)}`);
+      setText("asNormA", a.normalityA); setText("asNormB", a.normalityB); setText("asEqVar", a.equalVariance); setText("asReco", a.recommendation);
+      updateResultsPanels(r, fx, s, 1 - (parseMaybeNumber(s.confidence) || 0.95));
+      renderPosthoc(r.posthoc || {}, s.compareMode || "two-vars");
+      setText("efG", fmt(fx.hedgesG)); setText("efDelta", fmt(fx.cliffsDelta)); setText("efRrb", fmt(fx.rankBiserial)); setText("efPs", fmt(fx.probabilitySuperiority));
+      setText("powNote", p.note); setText("powEndpoint", p.suggestedEndpoint); setText("powVal", fmt(p.placeholderPower));
+      setText("repWelch", "Welch: t(" + fmt(r.welchDf) + ")=" + fmt(r.welchT) + ", p " + fmtP(r.welchP) + ", mean diff " + fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "].");
+      setText("repMw", "Mann-Whitney: U=" + fmt(r.u) + ", p " + fmtP(r.mwP) + ", rank-biserial " + fmt(fx.rankBiserial) + ".");
+      setText("repCons", rep.consistency);
+    }
+    function saveCurrentModel(){ sendToHost("saveIndependentModel", lastBundle||{}); }
+    function exportHtml(){
+      const blob = new Blob([document.documentElement.outerHTML], {type:"text/html"});
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "independent-means-report.html"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500);
+    }
+    document.addEventListener("DOMContentLoaded", function(){
+      document.querySelectorAll(".tab-button").forEach(btn=>btn.addEventListener("click",()=>switchTab(btn.getAttribute("data-tab"))));
+      ["setAlpha","setPosthocMethod","setPosthocCorrection","setPrimaryTest"].forEach(function(id){
+        const el = document.getElementById(id);
+        if (el) el.addEventListener("change", function(){
+          if (id === "setPrimaryTest") {
+            currentPrimaryTest = el.value || "welch";
+            setFrameworkButtons(primaryFramework);
+          }
+          notifySettingsChanged();
+        });
+      });
+      document.querySelectorAll('input[name="h1Orientation"]').forEach(function(el){ el.addEventListener("change", notifySettingsChanged); });
+      var rp = document.getElementById("fwParametric");
+      var rn = document.getElementById("fwNonparametric");
+      if (rp) rp.addEventListener("change", function(){ if (rp.checked) { setFrameworkButtons("parametric"); notifySettingsChanged(); } });
+      if (rn) rn.addEventListener("change", function(){ if (rn.checked) { setFrameworkButtons("nonparametric"); notifySettingsChanged(); } });
+      setFrameworkButtons(primaryFramework);
+      refreshSettingsVisibility();
+      Office.onReady(function(){
+        Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function(arg){
+          const msg = JSON.parse(arg.message||"{}");
+          if(msg.type==="INDEPENDENT_BUNDLE") populateBundle(msg.payload||{});
+        });
+        sendToHost("independentDashboardReady",{});
+        setTimeout(()=>sendToHost("independentDashboardReady",{}),500);
+      });
+    });
+  </script>
+</body>
+</html>

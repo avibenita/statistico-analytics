@@ -553,8 +553,11 @@ function buildIndependentBundle(headers, rows, spec) {
 }
 
 function openIndependentResultsDialog() {
+  const modelSpec = JSON.parse(sessionStorage.getItem("independentModelSpec") || "{}");
+  const isKPlus = (modelSpec.compareMode || modelSpec.mode) === "k-plus";
+  const resultsPage = isKPlus ? "independent-results-kplus.html" : "independent-results.html";
   Office.context.ui.displayDialogAsync(
-    `${getDialogsBaseUrl()}independent/independent-results.html?v=${Date.now()}`,
+    `${getDialogsBaseUrl()}independent/${resultsPage}?v=${Date.now()}`,
     { height: 90, width: 70, displayInIframe: false },
     (asyncResult) => {
       if (asyncResult.status === Office.AsyncResultStatus.Failed) return;
