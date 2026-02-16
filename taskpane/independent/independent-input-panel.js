@@ -402,21 +402,22 @@ function buildIndependentBundle(headers, rows, spec) {
     });
     designValidation = detectTwoVarsDesign(rows, aIdx, bIdx, g1.length, g2.length);
   } else {
-    const vIdx = headers.indexOf(spec.valueColumn || selectedColumns[0] || headers[0]);
-    const grpIdx = headers.indexOf(spec.groupColumn || selectedColumns[1] || selectedColumns[0] || headers[1] || headers[0]);
-    rows.forEach(r => {
-      const grp = String(r[grpIdx] == null ? "" : r[grpIdx]);
-      const v = parseNum(r[vIdx]);
-      if (!isFinite(v)) return;
-      if (!grouped[grp]) grouped[grp] = [];
-      grouped[grp].push(v);
+    // In k-plus mode, each selected variable is treated as one independent group.
+    selectedColumns.forEach((colName) => {
+      const colIdx = headers.indexOf(colName);
+      if (colIdx < 0) return;
+      const vals = [];
+      rows.forEach((r) => {
+        const v = parseNum(r[colIdx]);
+        if (isFinite(v)) vals.push(v);
+      });
+      if (vals.length) grouped[colName] = vals;
     });
     const levels = Object.keys(grouped).filter(k => grouped[k].length > 0);
     const allVals = [];
     levels.forEach((lv) => (grouped[lv] || []).forEach((v) => allVals.push(v)));
     kplusSummary = {
-      valueColumn: headers[vIdx] || spec.valueColumn || "",
-      groupColumn: headers[grpIdx] || spec.groupColumn || "",
+      variableCount: levels.length,
       levelsCount: levels.length,
       totalN: allVals.length,
       meanOverall: allVals.length ? mean(allVals) : NaN

@@ -217,8 +217,7 @@
         spec.groupA = selected[0];
         spec.groupB = selected[1] || selected[0];
       } else {
-        spec.valueColumn = selected[0];
-        spec.groupColumn = selected[1] || selected[0];
+        spec.kplusScheme = "selected-columns-as-groups";
         spec.posthocMethod = spec.primaryFramework === "nonparametric" ? "dunn" : "games-howell";
         spec.posthocCorrection = "holm";
       }
