@@ -687,8 +687,12 @@ function buildIndependentBundle(headers, rows, spec) {
 
 function openIndependentResultsDialog() {
   const modelSpec = JSON.parse(sessionStorage.getItem("independentModelSpec") || "{}");
+  console.log("=== openIndependentResultsDialog ===");
+  console.log("modelSpec from sessionStorage:", modelSpec);
   const isKPlus = (modelSpec.compareMode || modelSpec.mode) === "k-plus";
+  console.log("isKPlus:", isKPlus);
   const resultsPage = isKPlus ? "independent-results-kplus.html" : "independent-results.html";
+  console.log("Opening results page:", resultsPage);
   Office.context.ui.displayDialogAsync(
     `${getDialogsBaseUrl()}independent/${resultsPage}?v=${Date.now()}`,
     { height: 90, width: 70, displayInIframe: false },
@@ -698,6 +702,7 @@ function openIndependentResultsDialog() {
       independentDialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
         try {
           const message = JSON.parse(arg.message || "{}");
+          console.log("[Results dialog message]", message.action);
           if (message.action === "ready") sendIndependentBundle();
           else if (message.action === "HOST_EVENT") {
             if (message.cmd === "independentSettingsChanged" && message.data) {
@@ -708,7 +713,7 @@ function openIndependentResultsDialog() {
             sendIndependentBundle();
           }
           else if (message.action === "close") { independentDialog.close(); independentDialog = null; }
-        } catch (_e) {}
+        } catch (_e) { console.error("Results dialog message error:", _e); }
       });
       setTimeout(sendIndependentBundle, 1100);
     }
@@ -716,11 +721,17 @@ function openIndependentResultsDialog() {
 }
 
 function sendIndependentBundle() {
-  if (!independentDialog || !independentRangeData) return;
+  console.log("=== sendIndependentBundle called ===");
+  if (!independentDialog || !independentRangeData) {
+    console.log("sendIndependentBundle: early exit", { independentDialog: !!independentDialog, independentRangeData: !!independentRangeData });
+    return;
+  }
   const headers = independentRangeData[0] || [];
   const rows = independentRangeData.slice(1);
   const modelSpec = JSON.parse(sessionStorage.getItem("independentModelSpec") || "{}");
+  console.log("sendIndependentBundle: calling buildIndependentBundle with modelSpec:", modelSpec);
   const bundle = buildIndependentBundle(headers, rows, modelSpec);
+  console.log("sendIndependentBundle: bundle built, sending to dialog");
   independentDialog.messageChild(JSON.stringify({ type: "INDEPENDENT_BUNDLE", payload: bundle }));
 }
 
