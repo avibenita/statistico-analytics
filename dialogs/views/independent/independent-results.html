@@ -499,28 +499,24 @@
           host.appendChild(sp);
         });
       } else {
-        var colStats = Array.isArray(e.selectedColumnStats) ? e.selectedColumnStats.slice(0, 6) : [];
-        if (colStats.length) {
-          colStats.forEach(function(cs){
-            var n = isFinite(parseMaybeNumber(cs.n)) ? parseMaybeNumber(cs.n) : "?";
-            var mean = isFinite(parseMaybeNumber(cs.mean)) ? fmt(cs.mean) : "?";
-            var sp = document.createElement("span");
-            sp.className = "stat-chip";
-            sp.textContent = (cs.name || "Variable") + " (n=" + n + ", μ=" + mean + ")";
-            sp.style.fontSize = "11px";
-            host.appendChild(sp);
-          });
-        } else {
-          var groupCol = s.groupColumn || s.valueColumn || "Variable";
-          var headerChip = document.createElement("span");
-          headerChip.className = "stat-chip";
-          headerChip.textContent = groupCol;
-          headerChip.style.fontWeight = "800";
-          headerChip.style.background = "#c5cae9";
-          headerChip.style.borderColor = "#5c6bc0";
-          headerChip.style.fontSize = "13px";
-          host.appendChild(headerChip);
-        }
+        var ksum = e.kplusSummary || {};
+        var valueName = ksum.valueColumn || s.valueColumn || "Value";
+        var groupName = ksum.groupColumn || s.groupColumn || "Group";
+        var totalN = isFinite(parseMaybeNumber(ksum.totalN)) ? parseMaybeNumber(ksum.totalN) : "?";
+        var meanOverall = isFinite(parseMaybeNumber(ksum.meanOverall)) ? fmt(ksum.meanOverall) : "?";
+        var levelsCount = isFinite(parseMaybeNumber(ksum.levelsCount)) ? parseMaybeNumber(ksum.levelsCount) : ((s.groupLevels || []).length || "?");
+
+        var valueChip = document.createElement("span");
+        valueChip.className = "stat-chip";
+        valueChip.textContent = valueName + " (n=" + totalN + ", μ=" + meanOverall + ")";
+        valueChip.style.fontSize = "11px";
+        host.appendChild(valueChip);
+
+        var groupChip = document.createElement("span");
+        groupChip.className = "stat-chip";
+        groupChip.textContent = groupName + " (levels=" + levelsCount + ")";
+        groupChip.style.fontSize = "11px";
+        host.appendChild(groupChip);
       }
       var design = s.designValidation || {};
       if (msgHost) {

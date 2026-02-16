@@ -385,6 +385,7 @@ function buildIndependentBundle(headers, rows, spec) {
   });
   let g1 = [], g2 = [];
   let grouped = {};
+  let kplusSummary = null;
   let designValidation = {
     status: "independent",
     badge: "Independent",
@@ -411,6 +412,15 @@ function buildIndependentBundle(headers, rows, spec) {
       grouped[grp].push(v);
     });
     const levels = Object.keys(grouped).filter(k => grouped[k].length > 0);
+    const allVals = [];
+    levels.forEach((lv) => (grouped[lv] || []).forEach((v) => allVals.push(v)));
+    kplusSummary = {
+      valueColumn: headers[vIdx] || spec.valueColumn || "",
+      groupColumn: headers[grpIdx] || spec.groupColumn || "",
+      levelsCount: levels.length,
+      totalN: allVals.length,
+      meanOverall: allVals.length ? mean(allVals) : NaN
+    };
     if (levels.length >= 2) {
       g1 = grouped[levels[0]].slice();
       g2 = grouped[levels[1]].slice();
@@ -507,7 +517,8 @@ function buildIndependentBundle(headers, rows, spec) {
     explore: {
       n1, n2, mean1: mean(g1), mean2: mean(g2), med1: median(g1), med2: median(g2),
       sd1: sd(g1), sd2: sd(g2), iqr1: quantile(g1, 0.75) - quantile(g1, 0.25), iqr2: quantile(g2, 0.75) - quantile(g2, 0.25),
-      selectedColumnStats
+      selectedColumnStats,
+      kplusSummary
     },
     assumptions: {
       normalityA: n1 >= 8 ? "Check QQ / Shapiro in Python service" : "Sample too small",
