@@ -499,19 +499,26 @@
           host.appendChild(sp);
         });
       } else {
-        var groupCol = s.groupColumn || s.valueColumn || "Groups";
+        var groupCol = s.groupColumn || s.valueColumn || "Variable";
         var levels = (s.groupLevels || []).slice(0, 6);
         var headerChip = document.createElement("span");
         headerChip.className = "stat-chip";
-        headerChip.textContent = "Compare: " + groupCol;
+        headerChip.textContent = groupCol;
         headerChip.style.fontWeight = "800";
         headerChip.style.background = "#c5cae9";
         headerChip.style.borderColor = "#5c6bc0";
+        headerChip.style.fontSize = "13px";
         host.appendChild(headerChip);
-        levels.forEach(function(lv){
+        
+        var groupStats = e.groupStats || {};
+        levels.forEach(function(lv, idx){
+          var stats = groupStats[lv] || {};
+          var n = stats.n || "?";
+          var mean = stats.mean !== undefined ? fmt(stats.mean) : "?";
           var sp = document.createElement("span");
           sp.className = "stat-chip";
-          sp.textContent = lv;
+          sp.textContent = lv + " (n=" + n + ", μ=" + mean + ")";
+          sp.style.fontSize = "11px";
           host.appendChild(sp);
         });
       }
