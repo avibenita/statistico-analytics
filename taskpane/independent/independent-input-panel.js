@@ -441,9 +441,17 @@ function buildIndependentBundle(headers, rows, spec) {
   const posthocMethod = spec.posthocMethod || (primaryFramework === "nonparametric" ? "dunn" : "games-howell");
   const posthocCorrection = spec.posthocCorrection || "holm";
   const primaryTest = spec.primaryTest || "welch";
-  const selectedColumns = Array.isArray(spec.selectedColumns) && spec.selectedColumns.length
+  let selectedColumns = Array.isArray(spec.selectedColumns) && spec.selectedColumns.length
     ? spec.selectedColumns.filter(name => headers.indexOf(name) >= 0)
     : headers.slice();
+  if (compareMode === "k-plus" && (!Array.isArray(spec.selectedColumns) || !spec.selectedColumns.length)) {
+    // Do not silently expand to all columns in k-plus mode.
+    const seeded = [spec.valueColumn, spec.groupColumn]
+      .filter(Boolean)
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .filter((name) => headers.indexOf(name) >= 0);
+    selectedColumns = seeded.length >= 3 ? seeded : headers.slice(0, Math.min(3, headers.length));
+  }
   const selectedColumnStats = selectedColumns.map((name) => {
     const idx = headers.indexOf(name);
     const values = [];
