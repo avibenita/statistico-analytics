@@ -540,7 +540,7 @@
       } else {
         var summaryChip = document.createElement("span");
         summaryChip.className = "stat-chip";
-        summaryChip.textContent = "Groups: " + (isFinite(parseMaybeNumber(ksum.levelsCount)) ? parseMaybeNumber(ksum.levelsCount) : ((s.groupLevels || []).length || 0));
+        summaryChip.textContent = "Groups: " + (isFinite(parseMaybeNumber(ksum.variableCount)) ? parseMaybeNumber(ksum.variableCount) : (Array.isArray(s.selectedColumns) ? s.selectedColumns.length : 0));
         host.appendChild(summaryChip);
         var names = Array.isArray(s.selectedColumns) ? s.selectedColumns.slice(0, 8) : [];
         names.forEach(function(nm){
