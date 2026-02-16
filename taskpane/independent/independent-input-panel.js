@@ -435,7 +435,10 @@ function computeWelchAnova(grouped, levels) {
 }
 
 function buildIndependentBundle(headers, rows, spec) {
+  console.log("=== buildIndependentBundle START ===");
+  console.log("spec:", spec);
   const compareMode = spec.compareMode || (spec.mode === "k-plus" ? "k-plus" : "two-vars");
+  console.log("compareMode:", compareMode);
   const mode = compareMode === "k-plus" ? "k-plus" : "two-column";
   const primaryFramework = spec.primaryFramework || "parametric";
   const posthocMethod = spec.posthocMethod || (primaryFramework === "nonparametric" ? "dunn" : "games-howell");
@@ -444,6 +447,7 @@ function buildIndependentBundle(headers, rows, spec) {
   let selectedColumns = Array.isArray(spec.selectedColumns) && spec.selectedColumns.length
     ? spec.selectedColumns.filter(name => headers.indexOf(name) >= 0)
     : headers.slice();
+  console.log("selectedColumns (before k-plus check):", selectedColumns);
   if (compareMode === "k-plus" && (!Array.isArray(spec.selectedColumns) || !spec.selectedColumns.length)) {
     // Do not silently expand to all columns in k-plus mode.
     const seeded = [spec.valueColumn, spec.groupColumn]
@@ -451,7 +455,10 @@ function buildIndependentBundle(headers, rows, spec) {
       .filter((v, i, a) => a.indexOf(v) === i)
       .filter((name) => headers.indexOf(name) >= 0);
     selectedColumns = seeded.length >= 3 ? seeded : headers.slice(0, Math.min(3, headers.length));
+    console.log("selectedColumns (k-plus fallback applied):", selectedColumns);
   }
+  console.log("selectedColumns (final):", selectedColumns);
+  console.log("headers:", headers);
   const selectedColumnStats = selectedColumns.map((name) => {
     const idx = headers.indexOf(name);
     const values = [];
