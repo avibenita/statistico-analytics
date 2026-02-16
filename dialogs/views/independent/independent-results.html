@@ -642,6 +642,11 @@
     function populateBundle(b){
       lastBundle = b || {};
       const s=b.setup||{}, e=b.explore||{}, a=b.assumptions||{}, r=b.results||{}, fx=b.effects||{}, p=b.power||{}, rep=b.report||{};
+      if ((s.compareMode === "k-plus" || s.mode === "k-plus") && window.location.pathname.indexOf("independent-results-kplus.html") === -1) {
+        var next = window.location.href.replace("independent-results.html", "independent-results-kplus.html");
+        window.location.replace(next);
+        return;
+      }
       availableHeaders = Array.isArray(s.headers) ? s.headers.slice() : availableHeaders;
       persistedColumns.groupA = s.groupA || persistedColumns.groupA;
       persistedColumns.groupB = s.groupB || persistedColumns.groupB;
