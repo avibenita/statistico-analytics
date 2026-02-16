@@ -536,6 +536,8 @@ function buildIndependentBundle(headers, rows, spec) {
         sd: arr.length > 1 ? sd(arr) : NaN
       };
     });
+    console.log("[buildIndependentBundle k-plus] levels:", levels);
+    console.log("[buildIndependentBundle k-plus] groupDescriptives:", groupDescriptives);
     const anova = computeOneWayAnovaFromArrays(arrays);
     const N = anova ? anova.N : 0;
     const df1 = anova ? anova.df1 : Math.max(1, levels.length - 1);
