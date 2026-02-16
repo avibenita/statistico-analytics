@@ -18,6 +18,9 @@
     .hero-action-btn{border-radius:8px;border:1px solid rgba(148,163,184,.45);background:linear-gradient(145deg,rgba(148,163,184,.18),rgba(100,116,139,.16));color:#fff;padding:10px 16px;font-size:12px;font-weight:650;cursor:pointer;display:flex;align-items:center;gap:8px;position:relative;}
     .hero-action-btn .info-icon{font-size:10px;opacity:0.6;cursor:help;}
     .hero-action-btn:hover .info-icon{opacity:1;}
+    .hero-action-btn[title]:hover::after{content:attr(title);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:8px;padding:8px 12px;background:#283593;color:#fff;font-size:11px;font-weight:600;white-space:nowrap;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000;pointer-events:none;}
+    .hero-action-btn[title]:hover::before{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:2px;border:6px solid transparent;border-top-color:#283593;z-index:1000;pointer-events:none;}
+    .design-warning{margin-top:8px;padding:8px 16px;background:linear-gradient(135deg, #fff3cd 0%, #ffe8a1 100%);border-left:4px solid #ff9800;border-right:4px solid #ff9800;color:#664d03;font-size:12px;font-weight:600;text-align:center;box-shadow:0 2px 6px rgba(255,152,0,0.2);}
     .tab-navigation{display:flex;align-items:flex-end;gap:16px;background:transparent;padding:12px 0 0;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;scrollbar-width:none;margin-top:10px;}
     .tab-button{height:36px;padding:0 4px;background:transparent;border:none;color:rgba(255,255,255,.55);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;position:relative;}
     .tab-button.active{color:#fff;font-weight:700;}
@@ -142,8 +145,7 @@
     <!-- Comparison chips + design message -->
     <div style="grid-column:1/-1;">
       <div class="hdr-row" id="compareStatsRow"></div>
-      <div id="designMessageRow"
-           style="margin-top:6px;text-align:center;color:var(--text-muted);font-size:12px;font-weight:700;"></div>
+      <div id="designMessageRow" class="design-warning" style="display:none;"></div>
     </div>
 
     <!-- Inference + Test method (side by side, clearly separated) -->
@@ -466,7 +468,7 @@
       var msgHost = document.getElementById("designMessageRow");
       if (!host) return;
       host.innerHTML = "";
-      if (msgHost) { msgHost.textContent = ""; msgHost.style.color = "var(--text-muted)"; }
+      if (msgHost) { msgHost.textContent = ""; msgHost.style.display = "none"; }
       var mode = s.compareMode || "two-vars";
       if (mode === "two-vars") {
         var aName = s.groupA || "u1";
@@ -491,9 +493,14 @@
         });
       }
       var design = s.designValidation || {};
-      if (msgHost && design.message) {
-        msgHost.textContent = design.message;
-        if (design.status === "paired-warning" || design.status === "invalid") msgHost.style.color = "#fbbf24";
+      if (msgHost) {
+        if (design.message) {
+          msgHost.textContent = design.message;
+          msgHost.style.display = "block";
+        } else {
+          msgHost.textContent = "";
+          msgHost.style.display = "none";
+        }
       }
     }
     function updateResultsPanels(r, fx, s, a){
