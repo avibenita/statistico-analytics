@@ -817,65 +817,87 @@
       }
       
       const metricType = document.querySelector('input[name="chartMetric"]:checked')?.value || 'means';
+      console.log("Metric type:", metricType);
+      
       const categories = groupData.map(cs => cs.name || 'Group');
+      console.log("Categories:", categories);
+      
       const data = groupData.map(cs => {
         const val = metricType === 'means' ? parseMaybeNumber(cs.mean) : parseMaybeNumber(cs.variance);
+        console.log("Group:", cs.name, "Value:", val, "Mean:", cs.mean, "Variance:", cs.variance);
         return isFinite(val) ? val : 0;
       });
+      console.log("Chart data:", data);
+      
+      // Check if Highcharts is available
+      if (typeof Highcharts === 'undefined') {
+        console.error("Highcharts is not loaded!");
+        container.innerHTML = '<div style="text-align:center;padding:80px 20px;color:#ff5555;font-size:12px;">Highcharts library not loaded</div>';
+        return;
+      }
+      console.log("Highcharts version:", Highcharts.version);
       
       const chartTitle = metricType === 'means' ? 'Group Means' : 'Group Variances';
       const yAxisTitle = metricType === 'means' ? 'Mean' : 'Variance';
       
-      Highcharts.chart('groupChartContainer', {
-        chart: {
-          type: 'column',
-          backgroundColor: 'transparent',
-          style: { fontFamily: 'Segoe UI, Tahoma, sans-serif' }
-        },
-        title: {
-          text: chartTitle,
-          style: { color: '#fff', fontSize: '13px', fontWeight: '700' }
-        },
-        xAxis: {
-          categories: categories,
-          labels: { style: { color: '#e5eefc', fontSize: '11px' } },
-          lineColor: '#2d3748',
-          tickColor: '#2d3748'
-        },
-        yAxis: {
-          title: {
-            text: yAxisTitle,
-            style: { color: '#e5eefc', fontSize: '11px', fontWeight: '600' }
+      console.log("About to create chart...");
+      try {      console.log("About to create chart...");
+      try {
+        Highcharts.chart('groupChartContainer', {
+          chart: {
+            type: 'column',
+            backgroundColor: 'transparent',
+            style: { fontFamily: 'Segoe UI, Tahoma, sans-serif' }
           },
-          labels: { style: { color: '#e5eefc', fontSize: '10px' } },
-          gridLineColor: '#2d3748'
-        },
-        legend: { enabled: false },
-        plotOptions: {
-          column: {
-            dataLabels: {
-              enabled: true,
-              format: '{y:.2f}',
-              style: { color: '#fff', fontSize: '10px', fontWeight: '600', textOutline: 'none' }
+          title: {
+            text: chartTitle,
+            style: { color: '#fff', fontSize: '13px', fontWeight: '700' }
+          },
+          xAxis: {
+            categories: categories,
+            labels: { style: { color: '#e5eefc', fontSize: '11px' } },
+            lineColor: '#2d3748',
+            tickColor: '#2d3748'
+          },
+          yAxis: {
+            title: {
+              text: yAxisTitle,
+              style: { color: '#e5eefc', fontSize: '11px', fontWeight: '600' }
             },
-            colorByPoint: true,
-            colors: ['#4a90e2', '#26a69a', '#ff9800', '#e91e63', '#9c27b0', '#3f51b5', '#00bcd4', '#4caf50']
-          }
-        },
-        tooltip: {
-          backgroundColor: '#1a1f2e',
-          borderColor: '#2d3748',
-          style: { color: '#fff', fontSize: '11px' },
-          formatter: function() {
-            return '<b>' + this.x + '</b><br/>' + yAxisTitle + ': <b>' + this.y.toFixed(globalDecimalPrecision) + '</b>';
-          }
-        },
-        series: [{
-          name: yAxisTitle,
-          data: data
-        }],
-        credits: { enabled: false }
-      });
+            labels: { style: { color: '#e5eefc', fontSize: '10px' } },
+            gridLineColor: '#2d3748'
+          },
+          legend: { enabled: false },
+          plotOptions: {
+            column: {
+              dataLabels: {
+                enabled: true,
+                format: '{y:.2f}',
+                style: { color: '#fff', fontSize: '10px', fontWeight: '600', textOutline: 'none' }
+              },
+              colorByPoint: true,
+              colors: ['#4a90e2', '#26a69a', '#ff9800', '#e91e63', '#9c27b0', '#3f51b5', '#00bcd4', '#4caf50']
+            }
+          },
+          tooltip: {
+            backgroundColor: '#1a1f2e',
+            borderColor: '#2d3748',
+            style: { color: '#fff', fontSize: '11px' },
+            formatter: function() {
+              return '<b>' + this.x + '</b><br/>' + yAxisTitle + ': <b>' + this.y.toFixed(globalDecimalPrecision) + '</b>';
+            }
+          },
+          series: [{
+            name: yAxisTitle,
+            data: data
+          }],
+          credits: { enabled: false }
+        });
+        console.log("Chart created successfully!");
+      } catch (err) {
+        console.error("Error creating chart:", err);
+        container.innerHTML = '<div style="text-align:center;padding:80px 20px;color:#ff5555;font-size:12px;">Error creating chart: ' + err.message + '</div>';
+      }
     }
     
     function renderPosthoc(posthoc, compareMode){
