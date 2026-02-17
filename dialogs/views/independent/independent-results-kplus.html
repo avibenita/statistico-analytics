@@ -1842,15 +1842,19 @@
       const ob = (b.results && b.results.omnibus) || {};
       console.log('🔍 Full omnibus object:', JSON.stringify(ob, null, 2));
       
-      const anovaF = parseMaybeNumber(ob.anovaF || (ob.anova && ob.anova.F));
-      const anovaDf1 = parseMaybeNumber(ob.anovaDf1 || (ob.anova && ob.anova.df1));
-      const anovaDf2 = parseMaybeNumber(ob.anovaDf2 || (ob.anova && ob.anova.df2));
-      const anovaP = parseMaybeNumber(ob.anovaP || (ob.anova && ob.anova.p));
+      const anovaF = parseMaybeNumber(ob.anovaF !== undefined ? ob.anovaF : (ob.anova && ob.anova.F));
+      const anovaDf1 = parseMaybeNumber(ob.anovaDf1 !== undefined ? ob.anovaDf1 : (ob.anova && ob.anova.df1));
+      const anovaDf2 = parseMaybeNumber(ob.anovaDf2 !== undefined ? ob.anovaDf2 : (ob.anova && ob.anova.df2));
+      const anovaP = parseMaybeNumber(ob.anovaP !== undefined ? ob.anovaP : (ob.anova && ob.anova.p));
       
-      const welchF = parseMaybeNumber(ob.welchF || (ob.welch && ob.welch.F));
-      const welchDf1 = parseMaybeNumber(ob.welchDf1 || (ob.welch && ob.welch.df1));
-      const welchDf2 = parseMaybeNumber(ob.welchDf2 || (ob.welch && ob.welch.df2));
-      const welchP = parseMaybeNumber(ob.welchP || (ob.welch && ob.welch.p));
+      console.log('🔍 Debug p-values - raw anovaP:', ob.anovaP, 'parsed:', anovaP, 'type:', typeof ob.anovaP);
+      
+      // Welch ANOVA - check both 'welchAnova' and 'welch' field names
+      const welchData = ob.welchAnova || ob.welch || {};
+      const welchF = parseMaybeNumber(ob.welchF !== undefined ? ob.welchF : (welchData.f || welchData.F));
+      const welchDf1 = parseMaybeNumber(ob.welchDf1 !== undefined ? ob.welchDf1 : welchData.df1);
+      const welchDf2 = parseMaybeNumber(ob.welchDf2 !== undefined ? ob.welchDf2 : welchData.df2);
+      const welchP = parseMaybeNumber(ob.welchP !== undefined ? ob.welchP : welchData.p);
       
       const kwH = parseMaybeNumber(ob.kwH || (ob.kruskalWallis && ob.kruskalWallis.H));
       const kwDf = parseMaybeNumber(ob.kwDf || (ob.kruskalWallis && ob.kruskalWallis.df));
