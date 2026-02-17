@@ -1053,9 +1053,9 @@
       const groupCount = isFinite(parseMaybeNumber(ksum.variableCount)) 
         ? parseMaybeNumber(ksum.variableCount) 
         : (Array.isArray(ob.groupDescriptives) ? ob.groupDescriptives.length : (Array.isArray(s.selectedColumns) ? s.selectedColumns.length : "..."));
-      setText("expVarCount", fmt(groupCount));
-      setText("expTotalN", isFinite(parseMaybeNumber(ksum.totalN)) ? fmt(ksum.totalN) : (isFinite(ob.N) ? fmt(ob.N) : "..."));
-      setText("expLevels", isFinite(parseMaybeNumber(ksum.levelsCount)) ? fmt(ksum.levelsCount) : "...");
+      setText("expVarCount", Math.round(groupCount));
+      setText("expTotalN", isFinite(parseMaybeNumber(ksum.totalN)) ? Math.round(parseMaybeNumber(ksum.totalN)) : (isFinite(ob.N) ? Math.round(ob.N) : "..."));
+      setText("expLevels", isFinite(parseMaybeNumber(ksum.levelsCount)) ? Math.round(parseMaybeNumber(ksum.levelsCount)) : "...");
       setText("expOverallMean", isFinite(parseMaybeNumber(ksum.meanOverall)) ? fmt(ksum.meanOverall) : "...");
       setText("expFramework", primaryFramework === "nonparametric" ? "Nonparametric (ranks)" : "Parametric (means)");
       setText("asLeveneP", fmtP((ob.levene || {}).p));
