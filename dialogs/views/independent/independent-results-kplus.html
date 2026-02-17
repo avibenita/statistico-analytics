@@ -1080,9 +1080,9 @@
       // Store data globally for sorting/filtering
       posthocData = rows.map(function(r) {
         // Calculate CI if not provided (using standard error approximation)
-        let ciLower = r.ciLower;
-        let ciUpper = r.ciUpper;
-        if (!isFinite(parseMaybeNumber(ciLower)) || !isFinite(parseMaybeNumber(ciUpper))) {
+        let ciLower = parseMaybeNumber(r.ciLower);
+        let ciUpper = parseMaybeNumber(r.ciUpper);
+        if (!isFinite(ciLower) || !isFinite(ciUpper)) {
           // Approximate CI from estimate and t-statistic
           const est = parseMaybeNumber(r.estimate);
           const t = Math.abs(parseMaybeNumber(r.statistic));
