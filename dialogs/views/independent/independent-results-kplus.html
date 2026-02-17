@@ -1781,9 +1781,9 @@
       }
       
       const b = lastBundle;
-      const setup = getSettingsModel();
+      const setup = currentSettingsSpec();
       const primaryFramework = setup.primaryFramework || 'parametric';
-      const alpha = setup.alpha || 0.05;
+      const alpha = 1 - (setup.confidence || 0.95);
       
       // Extract group variables
       const groupVars = [];
