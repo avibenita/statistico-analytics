@@ -1881,7 +1881,7 @@
           createdAt: new Date().toISOString(),
           engine: { name: 'StatisticoJS', version: '0.9.4' },
           locale: 'en-US',
-          decimals: currentDecimalPrecision
+          decimals: globalDecimalPrecision === 'auto' ? 2 : parseInt(globalDecimalPrecision, 10)
         },
         design: {
           compareMode: 'k-plus',
