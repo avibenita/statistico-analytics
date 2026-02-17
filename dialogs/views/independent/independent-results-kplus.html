@@ -450,9 +450,30 @@
           <div class="section-note">Power is designed to call a Python service endpoint with exact/simulation routines.</div>
         </section>
         <section id="tab-report" class="tab-panel">
-          <div class="stat-panel"><div class="stat-panel-heading">APA-ready Report</div><div class="stat-panel-body">
-            <div id="repAnova"></div><br/><div id="repKw"></div><br/><div id="repCons"></div>
-          </div></div>
+          <div class="stat-panel">
+            <div class="stat-panel-heading">Parametric vs Nonparametric Summary</div>
+            <div class="stat-panel-body" style="padding:0;">
+              <div class="table-container" style="margin:0;max-height:none;">
+                <table class="analysis-table">
+                  <thead><tr><th>Parametric</th><th>Nonparametric</th></tr></thead>
+                  <tbody id="methodComparisonBodyReport">
+                    <tr><td>ANOVA F: ...</td><td>Kruskal H: ...</td></tr>
+                    <tr><td>Means: ...</td><td>Mean ranks: ...</td></tr>
+                    <tr><td>η² / ω²: ... / ...</td><td>ε² / η²(H): ... / ...</td></tr>
+                    <tr><td>Post-hoc: Tukey / Games-Howell</td><td>Post-hoc: Dunn / Conover</td></tr>
+                    <tr><td>Levene p: ...</td><td>Tie/normality info: rank-based robust</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-panel" style="margin-top:12px;">
+            <div class="stat-panel-heading">APA-ready Report</div>
+            <div class="stat-panel-body">
+              <div id="repAnova"></div><br/><div id="repKw"></div><br/><div id="repCons"></div>
+            </div>
+          </div>
         </section>
       </div>
     </section>
@@ -717,7 +738,8 @@
         }
 
         const compareBody = document.getElementById("methodComparisonBody");
-        if (compareBody) {
+        const compareBodyReport = document.getElementById("methodComparisonBodyReport");
+        if (compareBody || compareBodyReport) {
           const explore = (lastBundle && lastBundle.explore) ? lastBundle.explore : {};
           const colStats = Array.isArray(explore.selectedColumnStats) ? explore.selectedColumnStats.filter(function(cs){
             return isFinite(parseMaybeNumber(cs && cs.n)) && parseMaybeNumber(cs.n) > 0;
@@ -730,12 +752,14 @@
           const meanRankSummary = rankKeys.length
             ? rankKeys.map(function(k){ return k + "=" + fmt(meanRanks[k]); }).join(" | ")
             : "...";
-          compareBody.innerHTML = ''
+          const html = ''
             + '<tr><td>ANOVA F: ' + fmt(ob.anovaF) + '</td><td>Kruskal H: ' + fmt(ob.kwH) + '</td></tr>'
             + '<tr><td>Means: ' + meansSummary + '</td><td>Mean ranks: ' + meanRankSummary + '</td></tr>'
             + '<tr><td>η² / ω²: ' + fmt(ob.etaSquared) + ' / ' + fmt(ob.omegaSquared) + '</td><td>ε² / η²(H): ' + fmt(ob.epsilonSquared) + ' / ' + fmt(ob.etaSquaredH) + '</td></tr>'
             + '<tr><td>Post-hoc: Tukey / Games-Howell</td><td>Post-hoc: Dunn / Conover</td></tr>'
             + '<tr><td>Levene p: ' + fmtP((ob.levene || {}).p) + '</td><td>Tie/normality info: rank-based robust</td></tr>';
+          if (compareBody) compareBody.innerHTML = html;
+          if (compareBodyReport) compareBodyReport.innerHTML = html;
         }
       }
     }
