@@ -355,8 +355,8 @@
                   </thead>
                   <tbody id="anovaSummaryBody">
                     <tr><td>Treatments</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
-                    <tr><td>Within groups</td><td>...</td><td>...</td><td>...</td><td>-</td><td>-</td></tr>
-                    <tr><td>Total</td><td>...</td><td>...</td><td>-</td><td>-</td><td>-</td></tr>
+                    <tr><td>Within groups</td><td>...</td><td>...</td><td>...</td><td></td><td></td></tr>
+                    <tr><td>Total</td><td>...</td><td>...</td><td></td><td></td><td></td></tr>
                   </tbody>
                 </table>
               </div>
@@ -695,8 +695,8 @@
           const totalDf = Math.max(0, parseMaybeNumber(ob.anovaDf1) + parseMaybeNumber(ob.anovaDf2));
           anovaBody.innerHTML = ''
             + '<tr><td>Treatments</td><td>' + fmt(ob.anovaSSBetween) + '</td><td>' + Math.round(ob.anovaDf1) + '</td><td>' + fmt(ob.anovaMSBetween) + '</td><td>' + fmt(ob.anovaF) + '</td><td>' + fmtP(ob.anovaP) + '</td></tr>'
-            + '<tr><td>Within groups</td><td>' + fmt(ob.anovaSSWithin) + '</td><td>' + Math.round(ob.anovaDf2) + '</td><td>' + fmt(ob.anovaMSWithin) + '</td><td>-</td><td>-</td></tr>'
-            + '<tr><td>Total</td><td>' + fmt(ob.anovaSSTotal) + '</td><td>' + Math.round(totalDf) + '</td><td>-</td><td>-</td><td>-</td></tr>';
+            + '<tr><td>Within groups</td><td>' + fmt(ob.anovaSSWithin) + '</td><td>' + Math.round(ob.anovaDf2) + '</td><td>' + fmt(ob.anovaMSWithin) + '</td><td></td><td></td></tr>'
+            + '<tr><td>Total</td><td>' + fmt(ob.anovaSSTotal) + '</td><td>' + Math.round(totalDf) + '</td><td></td><td></td><td></td></tr>';
         }
         setText("kEtaSquared", fmt(ob.etaSquared));
         setText("kCohenF", fmt(ob.cohenF));
