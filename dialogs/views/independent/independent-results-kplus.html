@@ -776,6 +776,21 @@
         console.log("Found explore.selectedColumnStats:", lastBundle.explore.selectedColumnStats);
         groupData = lastBundle.explore.selectedColumnStats.filter(function(cs){
           return cs && isFinite(parseMaybeNumber(cs.n)) && parseMaybeNumber(cs.n) > 0;
+        }).map(function(cs) {
+          // Calculate variance if not provided (using stdDev or sd)
+          let variance = cs.variance;
+          if (!isFinite(parseMaybeNumber(variance))) {
+            const sd = parseMaybeNumber(cs.stdDev || cs.sd || cs.stdev);
+            if (isFinite(sd)) {
+              variance = sd * sd; // variance = stdDev²
+            }
+          }
+          return {
+            name: cs.name,
+            mean: cs.mean,
+            variance: variance,
+            n: cs.n
+          };
         });
       }
       
