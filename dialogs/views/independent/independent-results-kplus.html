@@ -1826,6 +1826,15 @@
       const nMax = nValues.length > 0 ? Math.max.apply(null, nValues) : 0;
       const nRatio = nMin > 0 ? (nMax / nMin) : 1;
       
+      // Debug: Log the actual results structure
+      console.log('🔍 Debug lastBundle.results:', b.results);
+      console.log('🔍 Debug lastBundle.results.omnibus:', b.results && b.results.omnibus);
+      console.log('🔍 Debug lastBundle.results.omnibus keys:', b.results && b.results.omnibus && Object.keys(b.results.omnibus));
+      
+      // Results data - try both nested and flat structures
+      const ob = (b.results && b.results.omnibus) || {};
+      console.log('🔍 Full omnibus object:', JSON.stringify(ob, null, 2));
+      
       // Assumptions data - Levene test can be in diagnostics or omnibus object
       const leveneData = (b.diagnostics && b.diagnostics.levene) || ob.levene || {};
       const leveneP = parseMaybeNumber(leveneData.p);
@@ -1835,15 +1844,6 @@
       const homogeneityOk = isFinite(leveneP) ? (leveneP >= alpha) : null;
       
       console.log('🔍 Debug Levene test - p:', leveneP, 'F:', leveneF, 'homogeneityOk:', homogeneityOk);
-      
-      // Debug: Log the actual results structure
-      console.log('🔍 Debug lastBundle.results:', b.results);
-      console.log('🔍 Debug lastBundle.results.omnibus:', b.results && b.results.omnibus);
-      console.log('🔍 Debug lastBundle.results.omnibus keys:', b.results && b.results.omnibus && Object.keys(b.results.omnibus));
-      
-      // Results data - try both nested and flat structures
-      const ob = (b.results && b.results.omnibus) || {};
-      console.log('🔍 Full omnibus object:', JSON.stringify(ob, null, 2));
       
       const anovaF = parseMaybeNumber(ob.anovaF !== undefined ? ob.anovaF : (ob.anova && ob.anova.F));
       const anovaDf1 = parseMaybeNumber(ob.anovaDf1 !== undefined ? ob.anovaDf1 : (ob.anova && ob.anova.df1));
