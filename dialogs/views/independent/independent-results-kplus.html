@@ -131,6 +131,8 @@
 .desc-summary-stats div:last-child{border-bottom:none;}
 .desc-summary-stats strong{color:var(--text-secondary);}
 .desc-summary-stats span{color:var(--accent-2);font-weight:700;}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.7);z-index:1000;backdrop-filter:blur(3px);}
+.normality-button:hover{background:linear-gradient(to right,rgb(255,160,160),rgb(255,192,192));transform:translateY(-2px);}
 
   </style>
 </head>
@@ -154,7 +156,6 @@
           <button class="tab-button" data-tab="assumptions"><i class="fa-solid fa-shield-halved"></i> Assumptions</button>
           <button class="tab-button" data-tab="results"><i class="fa-solid fa-square-poll-vertical"></i> Results</button>
           <button class="tab-button" data-tab="effects"><i class="fa-solid fa-wave-square"></i> Effects</button>
-          <button class="tab-button" data-tab="descriptive"><i class="fa-solid fa-table"></i> Descriptive</button>
           <button class="tab-button" data-tab="power"><i class="fa-solid fa-bolt"></i> Power</button>
           <button class="tab-button" data-tab="report"><i class="fa-solid fa-file-lines"></i> Report</button>
           <div class="tab-controls-right">
@@ -287,7 +288,8 @@
         
       <div class="view-container">
         <section id="tab-explore" class="tab-panel active">
-          <div class="stats-container">
+          <!-- Group Summaries at top -->
+          <div class="stats-container" style="margin-bottom:16px;">
             <div class="stat-panel"><div class="stat-panel-heading">Group Summaries</div><div class="stat-panel-body">
               <div class="stat-field"><span class="stat-label">Variables compared</span><span class="stat-value" id="expVarCount">...</span></div>
               <div class="stat-field"><span class="stat-label">Total N</span><span class="stat-value" id="expTotalN">...</span></div>
@@ -295,6 +297,57 @@
               <div class="stat-field"><span class="stat-label">Overall mean</span><span class="stat-value" id="expOverallMean">...</span></div>
               <div class="stat-field"><span class="stat-label">Primary framework</span><span class="stat-value" id="expFramework">...</span></div>
             </div></div>
+          </div>
+          
+          <!-- Descriptive Statistics integrated -->
+          <div class="stat-panel">
+            <div class="stat-panel-heading">Descriptive Statistics</div>
+            <div class="stat-panel-body">
+              <div class="desc-table-wrap">
+                <table id="desc-stats-table">
+                  <colgroup>
+                    <col style="min-width: 140px; max-width: 200px;">
+                    <col style="min-width: 70px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 80px;">
+                    <col style="min-width: 80px;">
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th data-key="Variable" style="text-align:left">Variable <i class="fa fa-sort"></i></th>
+                      <th data-key="N">N <i class="fa fa-sort"></i></th>
+                      <th data-key="Mean">Mean <i class="fa fa-sort"></i></th>
+                      <th data-key="StdDev">StdDev <i class="fa fa-sort"></i></th>
+                      <th data-key="Min">Min <i class="fa fa-sort"></i></th>
+                      <th data-key="Median">Median <i class="fa fa-sort"></i></th>
+                      <th data-key="Max">Max <i class="fa fa-sort"></i></th>
+                      <th data-key="Skew">Skew <i class="fa fa-sort"></i></th>
+                      <th data-key="Kurt">Kurt <i class="fa fa-sort"></i></th>
+                    </tr>
+                  </thead>
+                  <tbody id="desc-stats-body"></tbody>
+                </table>
+              </div>
+              
+              <div style="display:none;" id="desc-histogram-panel">
+                <div style="font-weight:700;margin:16px 0 8px;color:var(--accent-1);display:flex;justify-content:space-between;align-items:center;">
+                  <span>Histogram: <span id="desc-histogram-title">Select a variable</span></span>
+                  <button class="normality-button" onclick="openNormalityModal()" style="background:linear-gradient(to right, rgb(255,192,192), rgb(255,160,160));color:black;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-weight:bold;transition:all 0.3s ease;">
+                    Normality Tests
+                  </button>
+                </div>
+                <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+                  <div id="histogram-container-kplus"></div>
+                  <div>
+                    <div class="desc-summary-stats" id="desc-summary-table"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
         <section id="tab-assumptions" class="tab-panel">
@@ -398,54 +451,6 @@
             <div class="stat-field"><span class="stat-label">Kruskal H</span><span class="stat-value" id="efKwH">...</span></div>
           </div></div></div>
         </section>
-        <section id="tab-descriptive" class="tab-panel">
-          <div class="stat-panel">
-            <div class="stat-panel-heading">Descriptive Statistics</div>
-            <div class="stat-panel-body">
-              <div class="desc-table-wrap">
-                <table id="desc-stats-table">
-                  <colgroup>
-                    <col style="min-width: 140px; max-width: 200px;">
-                    <col style="min-width: 70px;">
-                    <col style="min-width: 90px;">
-                    <col style="min-width: 90px;">
-                    <col style="min-width: 90px;">
-                    <col style="min-width: 90px;">
-                    <col style="min-width: 90px;">
-                    <col style="min-width: 80px;">
-                    <col style="min-width: 80px;">
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      <th data-key="Variable" style="text-align:left">Variable <i class="fa fa-sort"></i></th>
-                      <th data-key="N">N <i class="fa fa-sort"></i></th>
-                      <th data-key="Mean">Mean <i class="fa fa-sort"></i></th>
-                      <th data-key="StdDev">StdDev <i class="fa fa-sort"></i></th>
-                      <th data-key="Min">Min <i class="fa fa-sort"></i></th>
-                      <th data-key="Median">Median <i class="fa fa-sort"></i></th>
-                      <th data-key="Max">Max <i class="fa fa-sort"></i></th>
-                      <th data-key="Skew">Skew <i class="fa fa-sort"></i></th>
-                      <th data-key="Kurt">Kurt <i class="fa fa-sort"></i></th>
-                    </tr>
-                  </thead>
-                  <tbody id="desc-stats-body"></tbody>
-                </table>
-              </div>
-              
-              <div style="display:none;" id="desc-histogram-panel">
-                <div style="font-weight:700;margin-bottom:8px;color:var(--accent-1);">
-                  Histogram: <span id="desc-histogram-title">Select a variable</span>
-                </div>
-                <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
-                  <div id="histogram-container-kplus"></div>
-                  <div>
-                    <div class="desc-summary-stats" id="desc-summary-table"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
         <section id="tab-power" class="tab-panel">
           <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Power & Sample Size (Python)</div><div class="stat-panel-body">
             <div class="stat-field"><span class="stat-label">Status</span><span class="stat-value" id="powNote">...</span></div>
@@ -462,6 +467,30 @@
       </div>
     </section>
   </div>
+  
+  <!-- Normality Tests Modal -->
+  <div class="modal-overlay" id="normality-modal" style="display:none;">
+    <div class="modal-content" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:900px;max-height:90vh;background-color:var(--surface-1);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.4);border:1px solid var(--border);overflow-y:auto;">
+      <div class="modal-header" style="background-color:var(--surface-0);padding:15px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div class="modal-title" style="color:var(--accent-1);font-size:1.2rem;font-weight:600;">
+          Normality Tests - <span id="modal-variable-name">Variable</span> <span id="modal-sample-size">(n=—)</span>
+        </div>
+        <button class="close-btn" onclick="closeNormalityModal()" style="background:none;border:none;color:var(--text-secondary);font-size:1.5rem;cursor:pointer;padding:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;">&times;</button>
+      </div>
+      <div class="modal-body" style="padding:20px;">
+        <div style="text-align:center;padding:10px;font-size:14px;font-weight:bold;">
+          Normality testing placeholder (can be wired to Python service if needed)
+        </div>
+        <div style="padding:20px;background:rgba(255,165,120,.1);border-left:3px solid var(--accent-1);margin-top:10px;">
+          <strong>Selected Variable:</strong> <span id="modal-variable-detail">—</span><br/>
+          <strong>Sample Size:</strong> <span id="modal-n-detail">—</span><br/>
+          <strong>Mean:</strong> <span id="modal-mean-detail">—</span><br/>
+          <strong>StdDev:</strong> <span id="modal-sd-detail">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <script>
     let globalDecimalPrecision = "auto";
     let lastBundle = null;
@@ -970,6 +999,28 @@
         .attr('d', line);
     }
     
+    function openNormalityModal() {
+      if (!descSelectedRow) {
+        alert('Please select a variable first');
+        return;
+      }
+      
+      document.getElementById('modal-variable-name').textContent = descSelectedRow.Variable;
+      document.getElementById('modal-sample-size').textContent = `(n=${descSelectedRow.N})`;
+      document.getElementById('modal-variable-detail').textContent = descSelectedRow.Variable;
+      document.getElementById('modal-n-detail').textContent = descSelectedRow.N;
+      document.getElementById('modal-mean-detail').textContent = fmt(descSelectedRow.Mean);
+      document.getElementById('modal-sd-detail').textContent = fmt(descSelectedRow.StdDev);
+      
+      document.getElementById('normality-modal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeNormalityModal() {
+      document.getElementById('normality-modal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+    
     function populateBundle(b){
       lastBundle = b || {};
       const s=b.setup||{}, e=b.explore||{}, a=b.assumptions||{}, r=b.results||{}, fx=b.effects||{}, p=b.power||{}, rep=b.report||{};
@@ -1059,6 +1110,21 @@
       setFrameworkButtons(primaryFramework);
       refreshSettingsVisibility();
       Office.onReady(function(){
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+          const modal = document.getElementById('normality-modal');
+          if (event.target === modal) {
+            closeNormalityModal();
+          }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+          if (event.key === 'Escape') {
+            closeNormalityModal();
+          }
+        });
+        
         Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function(arg){
           const msg = JSON.parse(arg.message||"{}");
           if(msg.type==="INDEPENDENT_BUNDLE"){
