@@ -1836,9 +1836,12 @@
       // Debug: Log the actual results structure
       console.log('🔍 Debug lastBundle.results:', b.results);
       console.log('🔍 Debug lastBundle.results.omnibus:', b.results && b.results.omnibus);
+      console.log('🔍 Debug lastBundle.results.omnibus keys:', b.results && b.results.omnibus && Object.keys(b.results.omnibus));
       
       // Results data - try both nested and flat structures
       const ob = (b.results && b.results.omnibus) || {};
+      console.log('🔍 Full omnibus object:', JSON.stringify(ob, null, 2));
+      
       const anovaF = parseMaybeNumber(ob.anovaF || (ob.anova && ob.anova.F));
       const anovaDf1 = parseMaybeNumber(ob.anovaDf1 || (ob.anova && ob.anova.df1));
       const anovaDf2 = parseMaybeNumber(ob.anovaDf2 || (ob.anova && ob.anova.df2));
@@ -2095,13 +2098,20 @@
 4. Only interpret fields that are not null
 5. Use precise statistical language
 6. Format output in clear sections with proper APA-style reporting
+7. Focus on the PRIMARY test indicated in setup.framework (parametric = ANOVA/Welch, nonparametric = Kruskal-Wallis)
+8. If the primary test has null values, report what data IS available
 
 Respond with:
 - Executive Summary (3-5 bullet points)
 - Detailed Interpretation (one paragraph, academic style)
 - APA-Ready Text (copy-paste ready for publications)`;
 
-      const userPrompt = `Analyze the following independent means analysis results and provide a conservative statistical interpretation:\n\n${JSON.stringify(payload, null, 2)}`;
+      const userPrompt = `Analyze the following independent means analysis results and provide a conservative statistical interpretation.
+
+IMPORTANT: The user requested a ${payload.setup.framework} analysis. Focus on the ${payload.setup.omnibus} test results. If those values are null, report on whatever test results ARE available.
+
+Data:
+${JSON.stringify(payload, null, 2)}`;
       
       console.log('🤖 Full AI Payload being sent:', JSON.stringify(payload, null, 2));
       
