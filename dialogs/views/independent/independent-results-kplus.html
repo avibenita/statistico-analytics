@@ -146,6 +146,7 @@
           <button class="tab-button active" data-tab="explore"><i class="fa-solid fa-chart-column"></i> Explore</button>
           <button class="tab-button" data-tab="assumptions"><i class="fa-solid fa-shield-halved"></i> Assumptions</button>
           <button class="tab-button" data-tab="results"><i class="fa-solid fa-square-poll-vertical"></i> Results</button>
+          <button class="tab-button" data-tab="posthoc"><i class="fa-solid fa-table-cells"></i> Post-hoc</button>
           <button class="tab-button" data-tab="effects"><i class="fa-solid fa-wave-square"></i> Effects</button>
           <button class="tab-button" data-tab="power"><i class="fa-solid fa-bolt"></i> Power</button>
           <button class="tab-button" data-tab="report"><i class="fa-solid fa-file-lines"></i> Report</button>
@@ -415,19 +416,23 @@
               </div>
             </div>
           </div>
+        </section>
 
-          <div class="stat-panel" id="posthocPanel" style="margin-top:12px; display:none;">
-            <div class="stat-panel-heading">Post-hoc Pairwise</div>
+        <!-- ===== POST-HOC TAB ===== -->
+        <section id="tab-posthoc" class="tab-panel">
+          <div class="stat-panel">
+            <div class="stat-panel-heading parametric" id="posthocHeading">Post-hoc Pairwise Comparisons</div>
             <div class="stat-panel-body" style="padding:0;">
               <div class="table-container" style="margin:0;">
                 <table class="analysis-table">
                   <thead><tr><th>Comparison</th><th>Statistic</th><th>Raw p</th><th>Adj p</th><th>Estimate</th></tr></thead>
-                  <tbody id="posthocBody"><tr><td colspan="5">No post-hoc rows</td></tr></tbody>
+                  <tbody id="posthocBody"><tr><td colspan="5">No post-hoc comparisons available</td></tr></tbody>
                 </table>
               </div>
             </div>
           </div>
         </section>
+
         <section id="tab-effects" class="tab-panel">
           <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Effect Sizes</div><div class="stat-panel-body">
             <div class="stat-field"><span class="stat-label">Eta squared</span><span class="stat-value" id="efEta">...</span></div>
@@ -735,18 +740,22 @@
       }
     }
     function renderPosthoc(posthoc, compareMode){
-      const panel = document.getElementById("posthocPanel");
       const body = document.getElementById("posthocBody");
-      if (!panel || !body) return;
+      const heading = document.getElementById("posthocHeading");
+      if (!body) return;
+      
+      // Update heading color based on framework
+      if (heading) {
+        heading.className = "stat-panel-heading " + (primaryFramework === "nonparametric" ? "nonparametric" : "parametric");
+      }
+      
       if (compareMode !== "k-plus" || !posthoc || !posthoc.enabled) {
-        panel.style.display = "none";
-        body.innerHTML = '<tr><td colspan="5">No post-hoc rows</td></tr>';
+        body.innerHTML = '<tr><td colspan="5">No post-hoc comparisons available</td></tr>';
         return;
       }
-      panel.style.display = "block";
       const rows = posthoc.rows || [];
       if (!rows.length) {
-        body.innerHTML = '<tr><td colspan="5">No post-hoc rows</td></tr>';
+        body.innerHTML = '<tr><td colspan="5">No post-hoc comparisons available</td></tr>';
         return;
       }
       body.innerHTML = "";
