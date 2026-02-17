@@ -338,12 +338,51 @@
           </div>
         </section>
         <section id="tab-assumptions" class="tab-panel">
-          <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Diagnostics</div><div class="stat-panel-body">
-            <div class="stat-field"><span class="stat-label">Levene p-value</span><span class="stat-value" id="asLeveneP">...</span></div>
-            <div class="stat-field"><span class="stat-label">Brown-Forsythe p-value</span><span class="stat-value" id="asBfP">...</span></div>
-            <div class="stat-field"><span class="stat-label">Welch ANOVA p-value</span><span class="stat-value" id="asWelchP">...</span></div>
-            <div class="stat-field"><span class="stat-label">Recommendation</span><span class="stat-value" id="asReco">...</span></div>
-          </div></div></div>
+          <div class="stat-panel">
+            <div class="stat-panel-heading">Assumption Testing</div>
+            <div class="stat-panel-body" style="padding:12px;">
+              
+              <!-- Homogeneity of Variance -->
+              <div style="margin-bottom:20px;">
+                <h4 style="color:var(--accent-1);margin:0 0 8px 0;font-size:13px;font-weight:700;">1. Homogeneity of Variance (Levene's Test)</h4>
+                <p style="margin:0 0 8px 0;color:var(--text-secondary);font-size:12px;line-height:1.5;">
+                  <strong>Assumption:</strong> The variances across groups should be approximately equal.<br/>
+                  <strong>H₀:</strong> All group variances are equal &nbsp;|&nbsp; <strong>H₁:</strong> At least one variance differs
+                </p>
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+                  <span style="font-size:12px;color:var(--text-muted);">Levene p-value:</span>
+                  <span class="stat-value" id="asLeveneP" style="min-width:80px;">...</span>
+                  <span id="asLeveneVerdict" style="font-size:12px;font-weight:600;"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="font-size:12px;color:var(--text-muted);">Brown-Forsythe p-value:</span>
+                  <span class="stat-value" id="asBfP" style="min-width:80px;">...</span>
+                  <span id="asBfVerdict" style="font-size:12px;font-weight:600;"></span>
+                </div>
+              </div>
+
+              <!-- Robustness Check -->
+              <div style="margin-bottom:20px;">
+                <h4 style="color:var(--accent-1);margin:0 0 8px 0;font-size:13px;font-weight:700;">2. Robustness to Heterogeneity (Welch ANOVA)</h4>
+                <p style="margin:0 0 8px 0;color:var(--text-secondary);font-size:12px;line-height:1.5;">
+                  <strong>Purpose:</strong> Tests for group differences without assuming equal variances.<br/>
+                  <strong>H₀:</strong> All group means are equal &nbsp;|&nbsp; <strong>H₁:</strong> At least one mean differs
+                </p>
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+                  <span style="font-size:12px;color:var(--text-muted);">Welch ANOVA p-value:</span>
+                  <span class="stat-value" id="asWelchP" style="min-width:80px;">...</span>
+                  <span id="asWelchVerdict" style="font-size:12px;font-weight:600;"></span>
+                </div>
+              </div>
+
+              <!-- Final Recommendation -->
+              <div style="background:rgba(255,165,120,.08);border-left:4px solid var(--accent-1);padding:12px;border-radius:6px;">
+                <h4 style="color:var(--accent-1);margin:0 0 8px 0;font-size:13px;font-weight:700;">📋 Recommendation & Conclusion</h4>
+                <p id="asRecoText" style="margin:0;color:var(--text-primary);font-size:12px;line-height:1.6;font-weight:600;"></p>
+              </div>
+
+            </div>
+          </div>
         </section>
         <section id="tab-results" class="tab-panel">
           <div class="stat-panel">
@@ -1259,10 +1298,64 @@
       setText("expLevels", isFinite(parseMaybeNumber(ksum.levelsCount)) ? Math.round(parseMaybeNumber(ksum.levelsCount)) : "...");
       setText("expOverallMean", isFinite(parseMaybeNumber(ksum.meanOverall)) ? fmt(ksum.meanOverall) : "...");
       setText("expFramework", primaryFramework === "nonparametric" ? "Nonparametric (ranks)" : "Parametric (means)");
-      setText("asLeveneP", fmtP((ob.levene || {}).p));
-      setText("asBfP", fmtP((ob.brownForsythe || {}).p));
-      setText("asWelchP", fmtP((ob.welchAnova || {}).p));
-      setText("asReco", a.recommendation);
+      const alpha = 0.05;
+      const leveneP = parseMaybeNumber((ob.levene || {}).p);
+      const bfP = parseMaybeNumber((ob.brownForsythe || {}).p);
+      const welchP = parseMaybeNumber((ob.welchAnova || {}).p);
+      
+      setText("asLeveneP", fmtP(leveneP));
+      setText("asBfP", fmtP(bfP));
+      setText("asWelchP", fmtP(welchP));
+      
+      // Levene verdict
+      const leveneEl = document.getElementById("asLeveneVerdict");
+      if (leveneEl) {
+        if (leveneP > alpha) {
+          leveneEl.textContent = "✓ Assumption met (p > 0.05): Variances are approximately equal";
+          leveneEl.style.color = "#4ade80";
+        } else {
+          leveneEl.textContent = "⚠ Assumption violated (p < 0.05): Variances differ significantly";
+          leveneEl.style.color = "#fbbf24";
+        }
+      }
+      
+      // Brown-Forsythe verdict
+      const bfEl = document.getElementById("asBfVerdict");
+      if (bfEl) {
+        if (bfP > alpha) {
+          bfEl.textContent = "✓ Confirms equal variances";
+          bfEl.style.color = "#4ade80";
+        } else {
+          bfEl.textContent = "⚠ Confirms unequal variances";
+          bfEl.style.color = "#fbbf24";
+        }
+      }
+      
+      // Welch verdict
+      const welchEl = document.getElementById("asWelchVerdict");
+      if (welchEl) {
+        if (welchP < alpha) {
+          welchEl.textContent = "→ Groups differ significantly even without equal variance assumption";
+          welchEl.style.color = "#e91e63";
+        } else {
+          welchEl.textContent = "→ No significant difference detected";
+          welchEl.style.color = "#4ade80";
+        }
+      }
+      
+      // Recommendation text
+      const recoEl = document.getElementById("asRecoText");
+      if (recoEl) {
+        let recoText = "";
+        if (leveneP > alpha && bfP > alpha) {
+          recoText = "✓ <strong>Standard one-way ANOVA is appropriate.</strong> The assumption of homogeneity of variance is met. You can proceed with the regular ANOVA F-test and standard post-hoc tests (e.g., Tukey HSD).";
+        } else if (welchP < alpha) {
+          recoText = "⚠ <strong>Use Welch ANOVA and Games-Howell post-hoc.</strong> The equal variance assumption is violated, but Welch's test (which doesn't assume equal variances) still shows significant differences. Use Games-Howell for pairwise comparisons.";
+        } else {
+          recoText = "⚠ <strong>Consider Welch ANOVA or non-parametric alternative.</strong> The equal variance assumption is violated. Welch's test is more robust to this violation. If results differ from standard ANOVA, prefer Welch's result. Alternatively, consider Kruskal-Wallis if normality is also questionable.";
+        }
+        recoEl.innerHTML = recoText;
+      }
       updateResultsPanels(r, fx, s, 1 - (parseMaybeNumber(s.confidence) || 0.95));
       renderPosthoc(r.posthoc || {}, "k-plus");
       setText("efEta", fmt(ob.etaSquared)); setText("efCohenF", fmt(ob.cohenF)); setText("efAnovaF", fmt(ob.anovaF)); setText("efKwH", fmt(ob.kwH));
