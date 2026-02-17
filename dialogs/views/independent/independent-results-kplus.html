@@ -365,10 +365,19 @@
 
           <div class="stats-container" style="margin-top:12px;">
             <div class="stat-panel">
-              <div class="stat-panel-heading">Effect Size</div>
-              <div class="stat-panel-body">
-                <div class="stat-field"><span class="stat-label">Eta squared</span><span class="stat-value" id="kEtaSquared">...</span></div>
-                <div class="stat-field"><span class="stat-label">Cohen's f</span><span class="stat-value" id="kCohenF">...</span></div>
+              <div class="stat-panel-heading">
+                Group Visualization
+                <div style="float:right;display:inline-flex;gap:12px;font-size:11px;font-weight:600;">
+                  <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
+                    <input type="radio" name="chartMetric" value="means" checked onchange="updateGroupChart()"> Means
+                  </label>
+                  <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
+                    <input type="radio" name="chartMetric" value="variances" onchange="updateGroupChart()"> Variances
+                  </label>
+                </div>
+              </div>
+              <div class="stat-panel-body" style="padding:8px;">
+                <div id="groupChartContainer" style="width:100%;height:280px;"></div>
               </div>
             </div>
             <div class="stat-panel secondary">
@@ -701,8 +710,8 @@
             + '<tr><td>Within groups</td><td>' + fmt(ob.anovaSSWithin) + '</td><td>' + Math.round(ob.anovaDf2) + '</td><td>' + fmt(ob.anovaMSWithin) + '</td><td></td><td></td></tr>'
             + '<tr><td>Total</td><td>' + fmt(ob.anovaSSTotal) + '</td><td>' + Math.round(totalDf) + '</td><td></td><td></td><td></td></tr>';
         }
-        setText("kEtaSquared", fmt(ob.etaSquared));
-        setText("kCohenF", fmt(ob.cohenF));
+        // Update group visualization chart
+        updateGroupChart();
 
         const varBody = document.getElementById("varianceTestBody");
         if (varBody) {
@@ -742,6 +751,78 @@
         }
       }
     }
+    function updateGroupChart() {
+      if (!lastBundle || !lastBundle.explore) return;
+      const explore = lastBundle.explore;
+      const colStats = Array.isArray(explore.selectedColumnStats) ? explore.selectedColumnStats.filter(function(cs){
+        return isFinite(parseMaybeNumber(cs && cs.n)) && parseMaybeNumber(cs.n) > 0;
+      }) : [];
+      
+      const metricType = document.querySelector('input[name="chartMetric"]:checked')?.value || 'means';
+      const categories = colStats.map(cs => cs.name || 'Group');
+      const data = colStats.map(cs => {
+        if (metricType === 'means') {
+          return parseMaybeNumber(cs.mean);
+        } else {
+          return parseMaybeNumber(cs.variance);
+        }
+      });
+      
+      const chartTitle = metricType === 'means' ? 'Group Means' : 'Group Variances';
+      const yAxisTitle = metricType === 'means' ? 'Mean' : 'Variance';
+      
+      Highcharts.chart('groupChartContainer', {
+        chart: {
+          type: 'column',
+          backgroundColor: 'transparent',
+          style: { fontFamily: 'Segoe UI, Tahoma, sans-serif' }
+        },
+        title: {
+          text: chartTitle,
+          style: { color: '#fff', fontSize: '13px', fontWeight: '700' }
+        },
+        xAxis: {
+          categories: categories,
+          labels: { style: { color: '#e5eefc', fontSize: '11px' } },
+          lineColor: '#2d3748',
+          tickColor: '#2d3748'
+        },
+        yAxis: {
+          title: {
+            text: yAxisTitle,
+            style: { color: '#e5eefc', fontSize: '11px', fontWeight: '600' }
+          },
+          labels: { style: { color: '#e5eefc', fontSize: '10px' } },
+          gridLineColor: '#2d3748'
+        },
+        legend: { enabled: false },
+        plotOptions: {
+          column: {
+            dataLabels: {
+              enabled: true,
+              format: '{y:.2f}',
+              style: { color: '#fff', fontSize: '10px', fontWeight: '600', textOutline: 'none' }
+            },
+            colorByPoint: true,
+            colors: ['#4a90e2', '#26a69a', '#ff9800', '#e91e63', '#9c27b0', '#3f51b5', '#00bcd4', '#4caf50']
+          }
+        },
+        tooltip: {
+          backgroundColor: '#1a1f2e',
+          borderColor: '#2d3748',
+          style: { color: '#fff', fontSize: '11px' },
+          formatter: function() {
+            return '<b>' + this.x + '</b><br/>' + yAxisTitle + ': <b>' + this.y.toFixed(globalDecimalPrecision) + '</b>';
+          }
+        },
+        series: [{
+          name: yAxisTitle,
+          data: data
+        }],
+        credits: { enabled: false }
+      });
+    }
+    
     function renderPosthoc(posthoc, compareMode){
       const body = document.getElementById("posthocBody");
       const heading = document.getElementById("posthocHeading");
