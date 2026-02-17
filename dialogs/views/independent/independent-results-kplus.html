@@ -983,9 +983,19 @@
       
       // Populate descriptive stats with selected columns data
       if (window.independentRangeData && Array.isArray(s.selectedColumns)) {
-        const headers = window.independentRangeData[0] || s.selectedColumns;
-        const rows = window.independentRangeData.slice(1);
-        populateDescriptiveStats(s.selectedColumns, rows);
+        const headers = window.independentRangeData[0] || [];
+        const dataRows = window.independentRangeData.slice(1);
+        
+        // Convert array-of-arrays to array-of-objects
+        const rowObjects = dataRows.map(row => {
+          const obj = {};
+          headers.forEach((header, idx) => {
+            obj[header] = row[idx];
+          });
+          return obj;
+        });
+        
+        populateDescriptiveStats(s.selectedColumns, rowObjects);
       }
       
       var testSel = document.getElementById("setPrimaryTest");
