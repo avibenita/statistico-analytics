@@ -288,20 +288,16 @@
         
       <div class="view-container">
         <section id="tab-explore" class="tab-panel active">
-          <!-- Group Summaries at top -->
-          <div class="stats-container" style="margin-bottom:16px;">
-            <div class="stat-panel"><div class="stat-panel-heading">Group Summaries</div><div class="stat-panel-body">
-              <div class="stat-field"><span class="stat-label">Variables compared</span><span class="stat-value" id="expVarCount">...</span></div>
-              <div class="stat-field"><span class="stat-label">Total N</span><span class="stat-value" id="expTotalN">...</span></div>
-              <div class="stat-field"><span class="stat-label">Levels</span><span class="stat-value" id="expLevels">...</span></div>
-              <div class="stat-field"><span class="stat-label">Overall mean</span><span class="stat-value" id="expOverallMean">...</span></div>
-              <div class="stat-field"><span class="stat-label">Primary framework</span><span class="stat-value" id="expFramework">...</span></div>
-            </div></div>
-          </div>
-          
-          <!-- Descriptive Statistics integrated -->
+          <!-- Descriptive Statistics with integrated summary info -->
           <div class="stat-panel">
             <div class="stat-panel-heading">Descriptive Statistics</div>
+            <div style="padding:8px 12px;background:rgba(255,165,120,.08);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:12px;font-size:12px;">
+              <span style="color:var(--text-secondary);"><strong>Variables:</strong> <span id="expVarCount" style="color:var(--accent-2);font-weight:700;">...</span></span>
+              <span style="color:var(--text-secondary);"><strong>Total N:</strong> <span id="expTotalN" style="color:var(--accent-2);font-weight:700;">...</span></span>
+              <span style="color:var(--text-secondary);"><strong>Levels:</strong> <span id="expLevels" style="color:var(--accent-2);font-weight:700;">...</span></span>
+              <span style="color:var(--text-secondary);"><strong>Overall x̄:</strong> <span id="expOverallMean" style="color:var(--accent-2);font-weight:700;">...</span></span>
+              <span style="color:var(--text-secondary);"><strong>Framework:</strong> <span id="expFramework" style="color:var(--accent-2);font-weight:700;">...</span></span>
+            </div>
             <div class="stat-panel-body">
               <div class="desc-table-wrap">
                 <table id="desc-stats-table">
