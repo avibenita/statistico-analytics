@@ -1247,17 +1247,6 @@
       }
       updatePosthocDisplay();
     }
-      });
-      if (clipped) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 5;
-        td.textContent = "Showing first " + MAX_RENDER + " of " + rows.length + " post-hoc rows for responsiveness.";
-        td.style.opacity = "0.8";
-        tr.appendChild(td);
-        body.appendChild(tr);
-      }
-    }
 
     
     // === Descriptive Stats Functions ===
