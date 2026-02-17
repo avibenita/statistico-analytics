@@ -981,9 +981,55 @@
       try {
         const isVariance = metricType === 'variances';
         
+        // Calculate grand mean and standard errors for error bars
+        let grandMean = null;
+        const chartData = [];
+        const errorData = [];
+        
+        if (metricType === 'means') {
+          // Calculate grand mean (weighted by sample size if available)
+          let totalWeighted = 0;
+          let totalN = 0;
+          groupData.forEach(function(g) {
+            if (isFinite(g.mean) && isFinite(g.n)) {
+              totalWeighted += g.mean * g.n;
+              totalN += g.n;
+            }
+          });
+          grandMean = totalN > 0 ? totalWeighted / totalN : null;
+          
+          // Prepare data with error bars (95% CI)
+          groupData.forEach(function(g, idx) {
+            const mean = g.mean;
+            const sd = Math.sqrt(g.variance);
+            const n = g.n || 1;
+            const se = sd / Math.sqrt(n); // Standard error
+            const ci95 = 1.96 * se; // Approximate 95% CI
+            
+            chartData.push({
+              y: mean,
+              name: g.name,
+              n: n,
+              sd: sd,
+              se: se,
+              color: null // Will be set based on significance
+            });
+            
+            errorData.push({
+              low: mean - ci95,
+              high: mean + ci95
+            });
+          });
+        } else {
+          // For variance chart (no error bars)
+          groupData.forEach(function(g) {
+            chartData.push(g.variance);
+          });
+        }
+        
         Highcharts.chart('groupChartContainer', {
           chart: {
-            type: 'column',
+            type: isVariance ? 'column' : 'column',
             backgroundColor: 'transparent',
             style: { fontFamily: 'Segoe UI, Tahoma, sans-serif' }
           },
@@ -1003,7 +1049,18 @@
               style: { color: '#e5eefc', fontSize: '11px', fontWeight: '600' }
             },
             labels: { style: { color: '#e5eefc', fontSize: '10px' } },
-            gridLineColor: '#2d3748'
+            gridLineColor: '#2d3748',
+            plotLines: metricType === 'means' && grandMean !== null ? [{
+              value: grandMean,
+              color: '#ffb74d',
+              width: 2,
+              dashStyle: 'Dash',
+              zIndex: 5,
+              label: {
+                text: 'Grand Mean: ' + grandMean.toFixed(2),
+                style: { color: '#ffb74d', fontSize: '10px', fontWeight: '600' }
+              }
+            }] : []
           },
           legend: { enabled: false },
           plotOptions: {
@@ -1020,25 +1077,58 @@
                   textOutline: 'none'
                 }
               },
-              colorByPoint: true,
+              colorByPoint: !isVariance, // Only use different colors for means
               colors: isVariance 
                 ? ['#e57373', '#ba68c8', '#4fc3f7', '#81c784', '#ffb74d', '#f06292', '#7986cb', '#aed581']
                 : ['#4a90e2', '#26a69a', '#ff9800', '#e91e63', '#9c27b0', '#3f51b5', '#00bcd4', '#4caf50'],
               opacity: isVariance ? 0.7 : 1,
               groupPadding: isVariance ? 0.15 : 0.2
+            },
+            errorbar: {
+              color: '#ffffff',
+              whiskerLength: '80%',
+              stemWidth: 2,
+              whiskerWidth: 2
             }
           },
           tooltip: {
             backgroundColor: '#1a1f2e',
             borderColor: '#2d3748',
             style: { color: '#fff', fontSize: '11px' },
+            shared: metricType === 'means',
             formatter: function() {
-              return '<b>' + this.x + '</b><br/>' + yAxisTitle + ': <b>' + this.y.toFixed(globalDecimalPrecision) + '</b>';
+              if (metricType === 'means' && this.points) {
+                const point = this.points[0].point;
+                let tooltip = '<b>' + point.name + '</b><br/>';
+                tooltip += 'Mean: <b>' + point.y.toFixed(2) + '</b><br/>';
+                tooltip += 'n = <b>' + point.n + '</b><br/>';
+                tooltip += 'SD = <b>' + point.sd.toFixed(2) + '</b><br/>';
+                tooltip += 'SE = <b>' + point.se.toFixed(3) + '</b><br/>';
+                tooltip += '95% CI: [' + errorData[point.index].low.toFixed(2) + ', ' + errorData[point.index].high.toFixed(2) + ']';
+                return tooltip;
+              } else {
+                return '<b>' + this.x + '</b><br/>' + yAxisTitle + ': <b>' + this.y.toFixed(2) + '</b>';
+              }
             }
           },
-          series: [{
+          series: metricType === 'means' ? [
+            {
+              name: yAxisTitle,
+              data: chartData,
+              type: 'column'
+            },
+            {
+              name: '95% CI',
+              data: errorData,
+              type: 'errorbar',
+              tooltip: {
+                pointFormat: '95% CI: {point.low:.2f} - {point.high:.2f}<br/>'
+              }
+            }
+          ] : [{
             name: yAxisTitle,
-            data: data
+            data: data,
+            type: 'column'
           }],
           credits: { enabled: false }
         });
