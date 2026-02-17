@@ -1872,9 +1872,15 @@
       const epsilon2 = parseMaybeNumber(fxObj.epsilon2 || fxObj.epsilonSquared || ob.epsilonSquared);
       
       // Post-hoc data
+      console.log('🔍 Debug posthoc - b.posthoc:', b.posthoc);
+      console.log('🔍 Debug posthoc - lastBundle.posthoc:', lastBundle && lastBundle.posthoc);
+      
       const posthocRows = [];
-      if (b.posthoc && b.posthoc.rows) {
-        b.posthoc.rows.forEach(function(r) {
+      const posthocSource = b.posthoc || (lastBundle && lastBundle.posthoc) || {};
+      
+      if (posthocSource && posthocSource.rows && posthocSource.rows.length > 0) {
+        console.log('🔍 Found posthoc rows:', posthocSource.rows.length);
+        posthocSource.rows.forEach(function(r) {
           const parts = (r.comparison || '').split(/\s*vs\.?\s*/i);
           posthocRows.push({
             a: parts[0] || '',
@@ -1882,14 +1888,18 @@
             statLabel: 't',
             stat: parseMaybeNumber(r.statistic),
             pRaw: parseMaybeNumber(r.rawP),
-            pAdj: parseMaybeNumber(r.adjP),
+            pAdj: parseMaybeNumber(r.adjP !== undefined ? r.adjP : r.adjp),
             estimate: parseMaybeNumber(r.estimate),
-            ciLow: parseMaybeNumber(r.ciLower),
-            ciHigh: parseMaybeNumber(r.ciUpper),
-            significant: parseMaybeNumber(r.adjP) < alpha
+            ciLow: parseMaybeNumber(r.ciLower || r.ciLow),
+            ciHigh: parseMaybeNumber(r.ciUpper || r.ciHigh),
+            significant: parseMaybeNumber(r.adjP !== undefined ? r.adjP : r.adjp) < alpha
           });
         });
+      } else {
+        console.log('⚠️ No posthoc rows found - posthocSource.rows:', posthocSource.rows);
       }
+      
+      console.log('🔍 Total posthoc rows extracted:', posthocRows.length);
       
       // Build schema-compliant JSON
       const payload = {
