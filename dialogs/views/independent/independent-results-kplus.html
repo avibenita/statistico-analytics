@@ -1840,13 +1840,6 @@
       // Results data - try both nested and flat structures
       const ob = (b.results && b.results.omnibus) || {};
       const anovaF = parseMaybeNumber(ob.anovaF || (ob.anova && ob.anova.F));
-      // Debug: Log the actual results structure
-      console.log('🔍 Debug lastBundle.results:', b.results);
-      console.log('🔍 Debug lastBundle.results.omnibus:', b.results && b.results.omnibus);
-      
-      // Results data - try both nested and flat structures
-      const ob = (b.results && b.results.omnibus) || {};
-      const anovaF = parseMaybeNumber(ob.anovaF || (ob.anova && ob.anova.F));
       const anovaDf1 = parseMaybeNumber(ob.anovaDf1 || (ob.anova && ob.anova.df1));
       const anovaDf2 = parseMaybeNumber(ob.anovaDf2 || (ob.anova && ob.anova.df2));
       const anovaP = parseMaybeNumber(ob.anovaP || (ob.anova && ob.anova.p));
