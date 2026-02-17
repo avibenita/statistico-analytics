@@ -469,13 +469,48 @@
         <!-- ===== POST-HOC TAB ===== -->
         <section id="tab-posthoc" class="tab-panel">
           <div class="stat-panel">
-            <div class="stat-panel-heading parametric" id="posthocHeading">Post-hoc Pairwise Comparisons</div>
-            <div class="stat-panel-body" style="padding:0;">
+            <div class="stat-panel-heading parametric" id="posthocHeading">
+              Post-hoc Pairwise Comparisons
+              <div style="float:right;display:inline-flex;gap:8px;align-items:center;font-size:11px;font-weight:600;text-transform:none;">
+                <span style="opacity:0.8;">Group by:</span>
+                <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
+                  <input type="radio" name="posthocGrouping" value="all" checked onchange="updatePosthocDisplay()"> All pairs
+                </label>
+                <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
+                  <input type="radio" name="posthocGrouping" value="ref" onchange="updatePosthocDisplay()"> vs Reference
+                </label>
+                <select id="posthocRefGroup" style="height:24px;padding:0 6px;border-radius:4px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:11px;display:none;" onchange="updatePosthocDisplay()">
+                  <option value="">Select group...</option>
+                </select>
+              </div>
+            </div>
+            <div class="stat-panel-body" style="padding:8px;">
+              <!-- Omnibus Warning -->
+              <div id="posthocWarning" style="display:none;padding:8px 12px;margin-bottom:12px;background:rgba(251,191,36,.15);border-left:3px solid #fbbf24;border-radius:4px;">
+                <span style="font-size:12px;color:#fbbf24;font-weight:600;">⚠ Omnibus test not significant (p > α). Interpret post-hoc comparisons with caution.</span>
+              </div>
+              
               <div class="table-container" style="margin:0;">
-                <table class="analysis-table">
-                  <thead><tr><th>Comparison</th><th>Statistic</th><th>Raw p</th><th>Adj p</th><th>Estimate</th></tr></thead>
-                  <tbody id="posthocBody"><tr><td colspan="5">No post-hoc comparisons available</td></tr></tbody>
+                <table class="analysis-table" id="posthocTable">
+                  <thead>
+                    <tr>
+                      <th style="cursor:pointer;" onclick="sortPosthocTable('comparison')">Comparison ↕</th>
+                      <th style="cursor:pointer;" onclick="sortPosthocTable('statistic')">Statistic ↕</th>
+                      <th style="cursor:pointer;" onclick="sortPosthocTable('rawp')">Raw p ↕</th>
+                      <th style="cursor:pointer;" onclick="sortPosthocTable('adjp')">Adj p ↕</th>
+                      <th style="cursor:pointer;" onclick="sortPosthocTable('estimate')">Estimate ↕</th>
+                      <th style="cursor:pointer;" onclick="sortPosthocTable('ci')">95% CI ↕</th>
+                      <th style="text-align:center;">Sig</th>
+                    </tr>
+                  </thead>
+                  <tbody id="posthocBody">
+                    <tr><td colspan="7">No post-hoc comparisons available</td></tr>
+                  </tbody>
                 </table>
+              </div>
+              
+              <div style="margin-top:12px;padding:8px;background:rgba(120,200,255,.08);border-radius:4px;font-size:11px;color:var(--text-secondary);">
+                <strong>Note:</strong> <span id="posthocMethodNote">...</span>
               </div>
             </div>
           </div>
@@ -984,9 +1019,17 @@
       }
     }
     
+    let posthocData = [];
+    let posthocSortColumn = 'adjp';
+    let posthocSortAsc = true;
+    
     function renderPosthoc(posthoc, compareMode){
       const body = document.getElementById("posthocBody");
       const heading = document.getElementById("posthocHeading");
+      const warningEl = document.getElementById("posthocWarning");
+      const noteEl = document.getElementById("posthocMethodNote");
+      const refSelect = document.getElementById("posthocRefGroup");
+      
       if (!body) return;
       
       // Update heading color based on framework
@@ -995,26 +1038,215 @@
       }
       
       if (compareMode !== "k-plus" || !posthoc || !posthoc.enabled) {
-        body.innerHTML = '<tr><td colspan="5">No post-hoc comparisons available</td></tr>';
+        body.innerHTML = '<tr><td colspan="7">No post-hoc comparisons available</td></tr>';
         return;
       }
+      
+      // Check omnibus significance and show warning
+      if (warningEl && lastBundle && lastBundle.results && lastBundle.results.omnibus) {
+        const ob = lastBundle.results.omnibus;
+        const anovaP = parseMaybeNumber(ob.anovaP);
+        const alpha = 0.05;
+        if (anovaP > alpha) {
+          warningEl.style.display = 'block';
+        } else {
+          warningEl.style.display = 'none';
+        }
+      }
+      
+      // Update method note
+      const method = posthoc.method || "Games-Howell";
+      const correction = posthoc.correction || "Holm";
+      if (noteEl) {
+        let methodDesc = "";
+        if (method === "gameshowell" || method === "Games-Howell") {
+          methodDesc = "Welch-type t (Games–Howell) without equal variance assumption";
+        } else if (method === "tukey" || method === "Tukey") {
+          methodDesc = "Studentized range q (Tukey HSD) assuming equal variances";
+        } else if (method === "dunn" || method === "Dunn") {
+          methodDesc = "Rank-based z (Dunn) for nonparametric comparisons";
+        } else {
+          methodDesc = method + " test";
+        }
+        noteEl.textContent = methodDesc + " | p-value correction: " + correction;
+      }
+      
       const rows = posthoc.rows || [];
       if (!rows.length) {
-        body.innerHTML = '<tr><td colspan="5">No post-hoc comparisons available</td></tr>';
+        body.innerHTML = '<tr><td colspan="7">No post-hoc comparisons available</td></tr>';
         return;
       }
+      
+      // Store data globally for sorting/filtering
+      posthocData = rows.map(function(r) {
+        // Calculate CI if not provided (using standard error approximation)
+        let ciLower = r.ciLower;
+        let ciUpper = r.ciUpper;
+        if (!isFinite(parseMaybeNumber(ciLower)) || !isFinite(parseMaybeNumber(ciUpper))) {
+          // Approximate CI from estimate and t-statistic
+          const est = parseMaybeNumber(r.estimate);
+          const t = Math.abs(parseMaybeNumber(r.statistic));
+          if (isFinite(est) && isFinite(t) && t > 0) {
+            const se = Math.abs(est / t);
+            const tCrit = 2.0; // Approximate 95% t-critical
+            ciLower = est - tCrit * se;
+            ciUpper = est + tCrit * se;
+          }
+        }
+        
+        return {
+          comparison: r.comparison || "",
+          statistic: r.statistic,
+          rawP: parseMaybeNumber(r.rawP),
+          adjP: parseMaybeNumber(r.adjP),
+          estimate: parseMaybeNumber(r.estimate),
+          ciLower: ciLower,
+          ciUpper: ciUpper,
+          significant: parseMaybeNumber(r.adjP) < 0.05
+        };
+      });
+      
+      // Populate reference group dropdown
+      if (refSelect) {
+        const groups = [];
+        posthocData.forEach(function(r) {
+          const parts = r.comparison.split(/\s*vs\s*/i);
+          if (parts.length === 2) {
+            if (groups.indexOf(parts[0].trim()) === -1) groups.push(parts[0].trim());
+            if (groups.indexOf(parts[1].trim()) === -1) groups.push(parts[1].trim());
+          }
+        });
+        refSelect.innerHTML = '<option value="">Select group...</option>' + 
+          groups.map(g => '<option value="' + g + '">' + g + '</option>').join('');
+      }
+      
+      updatePosthocDisplay();
+    }
+    
+    function updatePosthocDisplay() {
+      const body = document.getElementById("posthocBody");
+      const refSelect = document.getElementById("posthocRefGroup");
+      if (!body || !posthocData.length) return;
+      
+      // Get grouping mode
+      const grouping = document.querySelector('input[name="posthocGrouping"]:checked')?.value || 'all';
+      const refGroup = refSelect ? refSelect.value : '';
+      
+      // Show/hide reference dropdown
+      if (refSelect) {
+        refSelect.style.display = (grouping === 'ref') ? 'inline-block' : 'none';
+      }
+      
+      // Filter data
+      let displayData = posthocData;
+      if (grouping === 'ref' && refGroup) {
+        displayData = posthocData.filter(function(r) {
+          return r.comparison.toLowerCase().includes(refGroup.toLowerCase());
+        });
+      }
+      
+      // Sort data
+      displayData.sort(function(a, b) {
+        let valA, valB;
+        if (posthocSortColumn === 'comparison') {
+          return posthocSortAsc ? a.comparison.localeCompare(b.comparison) : b.comparison.localeCompare(a.comparison);
+        } else if (posthocSortColumn === 'statistic') {
+          valA = a.statistic; valB = b.statistic;
+        } else if (posthocSortColumn === 'rawp') {
+          valA = a.rawP; valB = b.rawP;
+        } else if (posthocSortColumn === 'adjp') {
+          valA = a.adjP; valB = b.adjP;
+        } else if (posthocSortColumn === 'estimate') {
+          valA = Math.abs(a.estimate); valB = Math.abs(b.estimate);
+        } else if (posthocSortColumn === 'ci') {
+          valA = a.ciUpper - a.ciLower; valB = b.ciUpper - b.ciLower;
+        }
+        return posthocSortAsc ? (valA - valB) : (valB - valA);
+      });
+      
+      // Render table
       body.innerHTML = "";
       const MAX_RENDER = 200;
-      const clipped = rows.length > MAX_RENDER;
-      const rowsToRender = clipped ? rows.slice(0, MAX_RENDER) : rows;
+      const rowsToRender = displayData.slice(0, MAX_RENDER);
+      
       rowsToRender.forEach(function(r){
         const tr = document.createElement("tr");
-        [r.comparison, r.statistic, fmtP(r.rawP), fmtP(r.adjP), fmt(r.estimate)].forEach(function(v){
-          const td = document.createElement("td");
-          td.textContent = v;
-          tr.appendChild(td);
-        });
+        
+        // Comparison
+        let td = document.createElement("td");
+        td.textContent = r.comparison;
+        tr.appendChild(td);
+        
+        // Statistic
+        td = document.createElement("td");
+        td.textContent = fmt(r.statistic);
+        td.style.fontFamily = "monospace";
+        tr.appendChild(td);
+        
+        // Raw p
+        td = document.createElement("td");
+        td.textContent = fmtP(r.rawP);
+        td.style.fontFamily = "monospace";
+        tr.appendChild(td);
+        
+        // Adj p
+        td = document.createElement("td");
+        td.textContent = fmtP(r.adjP);
+        td.style.fontFamily = "monospace";
+        tr.appendChild(td);
+        
+        // Estimate
+        td = document.createElement("td");
+        td.textContent = fmt(r.estimate);
+        td.style.fontFamily = "monospace";
+        tr.appendChild(td);
+        
+        // 95% CI
+        td = document.createElement("td");
+        if (isFinite(r.ciLower) && isFinite(r.ciUpper)) {
+          td.textContent = "[" + fmt(r.ciLower) + ", " + fmt(r.ciUpper) + "]";
+        } else {
+          td.textContent = "—";
+        }
+        td.style.fontFamily = "monospace";
+        td.style.fontSize = "10px";
+        tr.appendChild(td);
+        
+        // Significance indicator
+        td = document.createElement("td");
+        td.style.textAlign = "center";
+        if (r.significant) {
+          td.innerHTML = '<span style="color:#4ade80;font-weight:800;font-size:14px;">✔</span>';
+        } else {
+          td.innerHTML = '<span style="color:#64748b;font-weight:400;font-size:14px;">✖</span>';
+        }
+        tr.appendChild(td);
+        
         body.appendChild(tr);
+      });
+      
+      if (displayData.length > MAX_RENDER) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 7;
+        td.textContent = "... " + (displayData.length - MAX_RENDER) + " more rows (table capped at " + MAX_RENDER + ")";
+        td.style.textAlign = "center";
+        td.style.fontStyle = "italic";
+        td.style.color = "var(--text-muted)";
+        tr.appendChild(td);
+        body.appendChild(tr);
+      }
+    }
+    
+    function sortPosthocTable(column) {
+      if (posthocSortColumn === column) {
+        posthocSortAsc = !posthocSortAsc;
+      } else {
+        posthocSortColumn = column;
+        posthocSortAsc = (column === 'adjp' || column === 'rawp'); // Ascending for p-values
+      }
+      updatePosthocDisplay();
+    }
       });
       if (clipped) {
         const tr = document.createElement("tr");
