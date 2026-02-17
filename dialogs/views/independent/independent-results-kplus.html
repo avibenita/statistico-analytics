@@ -858,6 +858,8 @@
       
       console.log("About to create chart...");
       try {
+        const isVariance = metricType === 'variances';
+        
         Highcharts.chart('groupChartContainer', {
           chart: {
             type: 'column',
@@ -885,13 +887,24 @@
           legend: { enabled: false },
           plotOptions: {
             column: {
+              borderWidth: isVariance ? 2 : 0,
+              borderColor: isVariance ? '#ffffff' : 'transparent',
               dataLabels: {
                 enabled: true,
                 format: '{y:.2f}',
-                style: { color: '#fff', fontSize: '10px', fontWeight: '600', textOutline: 'none' }
+                style: { 
+                  color: '#fff', 
+                  fontSize: '10px', 
+                  fontWeight: '600', 
+                  textOutline: 'none'
+                }
               },
               colorByPoint: true,
-              colors: ['#4a90e2', '#26a69a', '#ff9800', '#e91e63', '#9c27b0', '#3f51b5', '#00bcd4', '#4caf50']
+              colors: isVariance 
+                ? ['#e57373', '#ba68c8', '#4fc3f7', '#81c784', '#ffb74d', '#f06292', '#7986cb', '#aed581']
+                : ['#4a90e2', '#26a69a', '#ff9800', '#e91e63', '#9c27b0', '#3f51b5', '#00bcd4', '#4caf50'],
+              opacity: isVariance ? 0.7 : 1,
+              groupPadding: isVariance ? 0.15 : 0.2
             }
           },
           tooltip: {
