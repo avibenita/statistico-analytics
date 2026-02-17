@@ -1874,12 +1874,31 @@
       // Post-hoc data
       console.log('🔍 Debug posthoc - b.posthoc:', b.posthoc);
       console.log('🔍 Debug posthoc - lastBundle.posthoc:', lastBundle && lastBundle.posthoc);
+      console.log('🔍 Debug posthoc - global posthocData:', typeof posthocData !== 'undefined' ? posthocData : 'not available');
       
       const posthocRows = [];
       const posthocSource = b.posthoc || (lastBundle && lastBundle.posthoc) || {};
       
-      if (posthocSource && posthocSource.rows && posthocSource.rows.length > 0) {
-        console.log('🔍 Found posthoc rows:', posthocSource.rows.length);
+      // Try to get from global posthocData array if bundle doesn't have it
+      if (typeof posthocData !== 'undefined' && Array.isArray(posthocData) && posthocData.length > 0) {
+        console.log('🔍 Using global posthocData array with', posthocData.length, 'rows');
+        posthocData.forEach(function(r) {
+          const parts = (r.comparison || '').split(/\s*vs\.?\s*/i);
+          posthocRows.push({
+            a: parts[0] || '',
+            b: parts[1] || '',
+            statLabel: 't',
+            stat: parseMaybeNumber(r.statistic),
+            pRaw: parseMaybeNumber(r.rawP),
+            pAdj: parseMaybeNumber(r.adjP !== undefined ? r.adjP : r.adjp),
+            estimate: parseMaybeNumber(r.estimate),
+            ciLow: parseMaybeNumber(r.ciLower || r.ciLow),
+            ciHigh: parseMaybeNumber(r.ciUpper || r.ciHigh),
+            significant: parseMaybeNumber(r.adjP !== undefined ? r.adjP : r.adjp) < alpha
+          });
+        });
+      } else if (posthocSource && posthocSource.rows && posthocSource.rows.length > 0) {
+        console.log('🔍 Found posthoc rows in bundle:', posthocSource.rows.length);
         posthocSource.rows.forEach(function(r) {
           const parts = (r.comparison || '').split(/\s*vs\.?\s*/i);
           posthocRows.push({
