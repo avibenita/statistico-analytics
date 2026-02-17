@@ -342,6 +342,11 @@
             <div class="stat-panel-heading">Assumption Testing</div>
             <div class="stat-panel-body" style="padding:12px;">
               
+              <!-- Design Balance Indicator -->
+              <div id="designBalanceInfo" style="margin-bottom:16px;padding:8px 12px;background:rgba(120,200,255,.08);border-left:3px solid var(--accent-2);border-radius:4px;">
+                <span style="font-size:12px;color:var(--text-secondary);"><strong>Design:</strong> <span id="balanceText">...</span></span>
+              </div>
+              
               <!-- Homogeneity of Variance -->
               <div style="margin-bottom:20px;">
                 <h4 style="color:var(--accent-1);margin:0 0 8px 0;font-size:13px;font-weight:700;">1. Homogeneity of Variance (Levene's Test)</h4>
@@ -363,16 +368,28 @@
 
               <!-- Robustness Check -->
               <div style="margin-bottom:20px;">
-                <h4 style="color:var(--accent-1);margin:0 0 8px 0;font-size:13px;font-weight:700;">2. Robustness to Heterogeneity (Welch ANOVA)</h4>
+                <h4 style="color:var(--accent-1);margin:0 0 8px 0;font-size:13px;font-weight:700;">2. Robust Omnibus Test (Welch ANOVA)</h4>
                 <p style="margin:0 0 8px 0;color:var(--text-secondary);font-size:12px;line-height:1.5;">
                   <strong>Purpose:</strong> Tests for group differences without assuming equal variances.<br/>
                   <strong>H₀:</strong> All group means are equal &nbsp;|&nbsp; <strong>H₁:</strong> At least one mean differs
                 </p>
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
-                  <span style="font-size:12px;color:var(--text-muted);">Welch ANOVA p-value:</span>
+                <div style="margin-bottom:8px;">
+                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+                    <span style="font-size:11px;color:var(--text-muted);min-width:120px;">Standard ANOVA:</span>
+                    <span id="anovaFStat" style="font-size:11px;color:var(--text-secondary);font-family:monospace;"></span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <span style="font-size:11px;color:var(--text-muted);min-width:120px;">Welch ANOVA:</span>
+                    <span id="welchFStat" style="font-size:11px;color:var(--text-secondary);font-family:monospace;"></span>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                  <span style="font-size:12px;color:var(--text-muted);">Welch p-value:</span>
                   <span class="stat-value" id="asWelchP" style="min-width:80px;">...</span>
                   <span id="asWelchVerdict" style="font-size:12px;font-weight:600;"></span>
                 </div>
+                <!-- Robustness Badge -->
+                <div id="robustnessBadge" style="display:inline-block;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;margin-top:4px;"></div>
               </div>
 
               <!-- Final Recommendation -->
@@ -1302,6 +1319,41 @@
       const leveneP = parseMaybeNumber((ob.levene || {}).p);
       const bfP = parseMaybeNumber((ob.brownForsythe || {}).p);
       const welchP = parseMaybeNumber((ob.welchAnova || {}).p);
+      const anovaP = parseMaybeNumber(ob.anovaP);
+      
+      // Design Balance Indicator
+      const balanceEl = document.getElementById("balanceText");
+      if (balanceEl && lastBundle && lastBundle.explore && lastBundle.explore.selectedColumnStats) {
+        const stats = lastBundle.explore.selectedColumnStats;
+        const nValues = stats.map(cs => parseMaybeNumber(cs.n)).filter(n => isFinite(n) && n > 0);
+        if (nValues.length > 0) {
+          const maxN = Math.max(...nValues);
+          const minN = Math.min(...nValues);
+          const ratio = maxN / minN;
+          let balanceText = "";
+          if (ratio === 1) {
+            balanceText = "✓ Perfectly balanced (all n = " + Math.round(minN) + ")";
+          } else if (ratio < 1.2) {
+            balanceText = "✓ Well balanced (max/min n = " + ratio.toFixed(2) + ")";
+          } else if (ratio < 1.5) {
+            balanceText = "⚠ Mildly unbalanced (max/min n = " + ratio.toFixed(2) + ")";
+          } else {
+            balanceText = "⚠ Substantially unbalanced (max/min n = " + ratio.toFixed(2) + ")";
+          }
+          balanceEl.textContent = balanceText;
+        }
+      }
+      
+      // F Statistics
+      const anovaFEl = document.getElementById("anovaFStat");
+      const welchFEl = document.getElementById("welchFStat");
+      if (anovaFEl) {
+        anovaFEl.textContent = "F(" + Math.round(ob.anovaDf1) + ", " + Math.round(ob.anovaDf2) + ") = " + fmt(ob.anovaF) + ", p " + fmtP(anovaP);
+      }
+      if (welchFEl) {
+        const wa = ob.welchAnova || {};
+        welchFEl.textContent = "F(" + fmt(wa.df1) + ", " + fmt(wa.df2) + ") = " + fmt(wa.f) + ", p " + fmtP(welchP);
+      }
       
       setText("asLeveneP", fmtP(leveneP));
       setText("asBfP", fmtP(bfP));
@@ -1343,18 +1395,54 @@
         }
       }
       
-      // Recommendation text
+      // Robustness Badge
+      const badgeEl = document.getElementById("robustnessBadge");
+      const variancesEqual = leveneP > alpha && bfP > alpha;
+      const anovaSig = anovaP < alpha;
+      const welchSig = welchP < alpha;
+      
+      if (badgeEl) {
+        if (anovaSig === welchSig) {
+          badgeEl.textContent = "✔ Robust result (ANOVA = Welch)";
+          badgeEl.style.background = "rgba(74,222,128,.2)";
+          badgeEl.style.color = "#4ade80";
+          badgeEl.style.border = "1px solid #4ade80";
+        } else {
+          badgeEl.textContent = "⚠ Sensitive to variance (ANOVA ≠ Welch)";
+          badgeEl.style.background = "rgba(251,191,36,.2)";
+          badgeEl.style.color = "#fbbf24";
+          badgeEl.style.border = "1px solid #fbbf24";
+        }
+      }
+      
+      // Recommendation text with robustness emphasis
       const recoEl = document.getElementById("asRecoText");
       if (recoEl) {
         let recoText = "";
-        if (leveneP > alpha && bfP > alpha) {
-          recoText = "✓ <strong>Standard one-way ANOVA is appropriate.</strong> The assumption of homogeneity of variance is met. You can proceed with the regular ANOVA F-test and standard post-hoc tests (e.g., Tukey HSD).";
-        } else if (welchP < alpha) {
-          recoText = "⚠ <strong>Use Welch ANOVA and Games-Howell post-hoc.</strong> The equal variance assumption is violated, but Welch's test (which doesn't assume equal variances) still shows significant differences. Use Games-Howell for pairwise comparisons.";
+        if (variancesEqual) {
+          if (anovaSig === welchSig) {
+            recoText = "✓ <strong>Standard one-way ANOVA is appropriate.</strong> The assumption of homogeneity of variance is met. <strong>Results are robust:</strong> both standard ANOVA and Welch ANOVA " + (anovaSig ? "show significant differences" : "show no significant differences") + ". You can proceed with the regular ANOVA F-test and standard post-hoc tests (e.g., Tukey HSD).";
+          } else {
+            recoText = "✓ <strong>Standard one-way ANOVA is appropriate.</strong> The assumption of homogeneity of variance is met. You can proceed with Tukey HSD post-hoc tests.";
+          }
+        } else if (welchSig && anovaSig) {
+          recoText = "⚠ <strong>Use Welch ANOVA and Games-Howell post-hoc.</strong> The equal variance assumption is violated, but <strong>results are robust:</strong> both standard ANOVA and Welch's test show significant differences. Use Games-Howell for pairwise comparisons as it doesn't assume equal variances.";
+        } else if (welchSig) {
+          recoText = "⚠ <strong>Use Welch ANOVA and Games-Howell post-hoc.</strong> The equal variance assumption is violated. Welch's test (which doesn't assume equal variances) shows significant differences. Use Games-Howell for pairwise comparisons.";
         } else {
-          recoText = "⚠ <strong>Consider Welch ANOVA or non-parametric alternative.</strong> The equal variance assumption is violated. Welch's test is more robust to this violation. If results differ from standard ANOVA, prefer Welch's result. Alternatively, consider Kruskal-Wallis if normality is also questionable.";
+          recoText = "⚠ <strong>Consider Welch ANOVA or non-parametric alternative.</strong> The equal variance assumption is violated. Welch's test is more robust to this violation. " + (anovaSig !== welchSig ? "⚠ <strong>Results are sensitive:</strong> ANOVA and Welch disagree. Prefer Welch's result. " : "") + "Alternatively, consider Kruskal-Wallis if normality is also questionable.";
         }
         recoEl.innerHTML = recoText;
+      }
+      
+      // Auto-select post-hoc method based on recommendation
+      const posthocSelect = document.getElementById("setPosthocMethod");
+      if (posthocSelect) {
+        if (variancesEqual) {
+          posthocSelect.value = "tukey";
+        } else {
+          posthocSelect.value = "gameshowell";
+        }
       }
       updateResultsPanels(r, fx, s, 1 - (parseMaybeNumber(s.confidence) || 0.95));
       renderPosthoc(r.posthoc || {}, "k-plus");
