@@ -1833,25 +1833,40 @@
       const leveneDf2 = parseMaybeNumber(b.diagnostics && b.diagnostics.levene && b.diagnostics.levene.df2);
       const homogeneityOk = isFinite(leveneP) ? (leveneP >= alpha) : null;
       
-      // Results data
-      const anovaF = parseMaybeNumber(b.results && b.results.omnibus && b.results.omnibus.anova && b.results.omnibus.anova.F);
-      const anovaDf1 = parseMaybeNumber(b.results && b.results.omnibus && b.results.omnibus.anova && b.results.omnibus.anova.df1);
-      const anovaDf2 = parseMaybeNumber(b.results && b.results.omnibus && b.results.omnibus.anova && b.results.omnibus.anova.df2);
-      const anovaP = parseMaybeNumber(b.results && b.results.omnibus && b.results.omnibus.anova && b.results.omnibus.anova.p);
+      // Debug: Log the actual results structure
+      console.log('🔍 Debug lastBundle.results:', b.results);
+      console.log('🔍 Debug lastBundle.results.omnibus:', b.results && b.results.omnibus);
       
-      const welchF = parseMaybeNumber(b.results && b.results.omnibus && b.results.omnibus.welch && b.results.omnibus.welch.F);
-      const welchDf1 = parseMaybeNumber(b.results && b.results.omnibus && b.results.omnibus.welch && b.results.omnibus.welch.df1);
-      const welchDf2 = parseMaybeNumber(b.results && b.results.omnibus && b.results.omnibus.welch && b.results.omnibus.welch.df2);
-      const welchP = parseMaybeNumber(b.results && b.results.omnibus && b.results.omnibus.welch && b.results.omnibus.welch.p);
+      // Results data - try both nested and flat structures
+      const ob = (b.results && b.results.omnibus) || {};
+      const anovaF = parseMaybeNumber(ob.anovaF || (ob.anova && ob.anova.F));
+      // Debug: Log the actual results structure
+      console.log('🔍 Debug lastBundle.results:', b.results);
+      console.log('🔍 Debug lastBundle.results.omnibus:', b.results && b.results.omnibus);
       
-      const kwH = parseMaybeNumber(b.results && b.results.omnibus && b.results.omnibus.kruskalWallis && b.results.omnibus.kruskalWallis.H);
-      const kwDf = parseMaybeNumber(b.results && b.results.omnibus && b.results.omnibus.kruskalWallis && b.results.omnibus.kruskalWallis.df);
-      const kwP = parseMaybeNumber(b.results && b.results.omnibus && b.results.omnibus.kruskalWallis && b.results.omnibus.kruskalWallis.p);
+      // Results data - try both nested and flat structures
+      const ob = (b.results && b.results.omnibus) || {};
+      const anovaF = parseMaybeNumber(ob.anovaF || (ob.anova && ob.anova.F));
+      const anovaDf1 = parseMaybeNumber(ob.anovaDf1 || (ob.anova && ob.anova.df1));
+      const anovaDf2 = parseMaybeNumber(ob.anovaDf2 || (ob.anova && ob.anova.df2));
+      const anovaP = parseMaybeNumber(ob.anovaP || (ob.anova && ob.anova.p));
       
-      // Effect sizes
-      const eta2 = parseMaybeNumber(b.effects && b.effects.eta2);
-      const omega2 = parseMaybeNumber(b.effects && b.effects.omega2);
-      const epsilon2 = parseMaybeNumber(b.effects && b.effects.epsilon2);
+      const welchF = parseMaybeNumber(ob.welchF || (ob.welch && ob.welch.F));
+      const welchDf1 = parseMaybeNumber(ob.welchDf1 || (ob.welch && ob.welch.df1));
+      const welchDf2 = parseMaybeNumber(ob.welchDf2 || (ob.welch && ob.welch.df2));
+      const welchP = parseMaybeNumber(ob.welchP || (ob.welch && ob.welch.p));
+      
+      const kwH = parseMaybeNumber(ob.kwH || (ob.kruskalWallis && ob.kruskalWallis.H));
+      const kwDf = parseMaybeNumber(ob.kwDf || (ob.kruskalWallis && ob.kruskalWallis.df));
+      const kwP = parseMaybeNumber(ob.kwP || (ob.kruskalWallis && ob.kruskalWallis.p));
+      
+      console.log('🔍 Extracted values - anovaF:', anovaF, 'anovaP:', anovaP, 'welchF:', welchF, 'welchP:', welchP);
+      
+      // Effect sizes - try both flat and nested structures
+      const fxObj = b.effects || {};
+      const eta2 = parseMaybeNumber(fxObj.eta2 || fxObj.etaSquared || ob.etaSquared);
+      const omega2 = parseMaybeNumber(fxObj.omega2 || fxObj.omegaSquared || ob.omegaSquared);
+      const epsilon2 = parseMaybeNumber(fxObj.epsilon2 || fxObj.epsilonSquared || ob.epsilonSquared);
       
       // Post-hoc data
       const posthocRows = [];
