@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Independent Means Results (More Than 2 Groups)</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
   <style>
     :root{--surface-0:#0c1624;--surface-1:#1a1f2e;--surface-2:#242938;--border:#2d3748;--accent-1:rgb(255,165,120);--accent-2:rgb(120,200,255);--text-primary:#fff;--text-secondary:rgba(255,255,255,.82);--text-muted:rgba(255,255,255,.62);--panel-radius:10px;--panel-shadow:0 4px 20px rgba(0,0,0,.4);}
@@ -108,6 +109,28 @@
   letter-spacing:.3px;
   margin-bottom:4px;
 }
+/* Descriptive Stats Tab Styles */
+.desc-table-wrap{max-height:300px;overflow:auto;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);margin-bottom:16px;}
+#desc-stats-table{width:100%;min-width:820px;border-collapse:collapse;table-layout:auto;}
+#desc-stats-table th,#desc-stats-table td{padding:8px 10px;border:1px solid rgba(255,255,255,.18);box-sizing:border-box;text-align:right;font-size:11px;line-height:18px;height:36px;white-space:nowrap;}
+#desc-stats-table th:first-child,#desc-stats-table td:first-child{text-align:left;min-width:140px;max-width:200px;overflow:hidden;text-overflow:ellipsis;}
+#desc-stats-table thead th{position:sticky;top:0;background:#003366cc;color:#fff;z-index:2;cursor:pointer;}
+#desc-stats-table tbody tr:nth-child(even) td{background:rgba(255,255,255,.05)}
+#desc-stats-table tbody tr:hover td{background:rgba(255,221,87,.18)}
+#desc-stats-table tbody tr.selected td{background:rgba(255,165,120,.3)}
+#histogram-container-kplus{height:280px;margin-top:16px;}
+.histogram-bar{fill:#74b9ff;stroke:#0984e3;stroke-width:1px;}
+.histogram-bar:hover{fill:#0984e3;}
+.normal-curve{fill:none;stroke:yellow;stroke-width:2px;stroke-dasharray:5,5;}
+.axis text{fill:white;font-size:10px;}
+.axis path,.axis line{stroke:#999;}
+.grid line{stroke:#555;stroke-opacity:0.7;shape-rendering:crispEdges;}
+.grid path{stroke-width:0;}
+.desc-summary-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;font-size:12px;}
+.desc-summary-stats div{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.08);}
+.desc-summary-stats div:last-child{border-bottom:none;}
+.desc-summary-stats strong{color:var(--text-secondary);}
+.desc-summary-stats span{color:var(--accent-2);font-weight:700;}
 
   </style>
 </head>
@@ -131,6 +154,7 @@
           <button class="tab-button" data-tab="assumptions"><i class="fa-solid fa-shield-halved"></i> Assumptions</button>
           <button class="tab-button" data-tab="results"><i class="fa-solid fa-square-poll-vertical"></i> Results</button>
           <button class="tab-button" data-tab="effects"><i class="fa-solid fa-wave-square"></i> Effects</button>
+          <button class="tab-button" data-tab="descriptive"><i class="fa-solid fa-table"></i> Descriptive</button>
           <button class="tab-button" data-tab="power"><i class="fa-solid fa-bolt"></i> Power</button>
           <button class="tab-button" data-tab="report"><i class="fa-solid fa-file-lines"></i> Report</button>
           <div class="tab-controls-right">
@@ -373,6 +397,54 @@
             <div class="stat-field"><span class="stat-label">ANOVA F</span><span class="stat-value" id="efAnovaF">...</span></div>
             <div class="stat-field"><span class="stat-label">Kruskal H</span><span class="stat-value" id="efKwH">...</span></div>
           </div></div></div>
+        </section>
+        <section id="tab-descriptive" class="tab-panel">
+          <div class="stat-panel">
+            <div class="stat-panel-heading">Descriptive Statistics</div>
+            <div class="stat-panel-body">
+              <div class="desc-table-wrap">
+                <table id="desc-stats-table">
+                  <colgroup>
+                    <col style="min-width: 140px; max-width: 200px;">
+                    <col style="min-width: 70px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 80px;">
+                    <col style="min-width: 80px;">
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th data-key="Variable" style="text-align:left">Variable <i class="fa fa-sort"></i></th>
+                      <th data-key="N">N <i class="fa fa-sort"></i></th>
+                      <th data-key="Mean">Mean <i class="fa fa-sort"></i></th>
+                      <th data-key="StdDev">StdDev <i class="fa fa-sort"></i></th>
+                      <th data-key="Min">Min <i class="fa fa-sort"></i></th>
+                      <th data-key="Median">Median <i class="fa fa-sort"></i></th>
+                      <th data-key="Max">Max <i class="fa fa-sort"></i></th>
+                      <th data-key="Skew">Skew <i class="fa fa-sort"></i></th>
+                      <th data-key="Kurt">Kurt <i class="fa fa-sort"></i></th>
+                    </tr>
+                  </thead>
+                  <tbody id="desc-stats-body"></tbody>
+                </table>
+              </div>
+              
+              <div style="display:none;" id="desc-histogram-panel">
+                <div style="font-weight:700;margin-bottom:8px;color:var(--accent-1);">
+                  Histogram: <span id="desc-histogram-title">Select a variable</span>
+                </div>
+                <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+                  <div id="histogram-container-kplus"></div>
+                  <div>
+                    <div class="desc-summary-stats" id="desc-summary-table"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
         <section id="tab-power" class="tab-panel">
           <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Power & Sample Size (Python)</div><div class="stat-panel-body">
@@ -687,6 +759,217 @@
       }
     }
 
+    
+    // === Descriptive Stats Functions ===
+    let descSelectedRow = null;
+    let descData = [];
+    
+    function populateDescriptiveStats(headers, rows) {
+      if (!Array.isArray(headers) || !Array.isArray(rows)) return;
+      
+      descData = headers.map(varName => {
+        const values = rows
+          .map(row => row[varName])
+          .map(v => typeof v === 'number' ? v : parseFloat(v))
+          .filter(v => isFinite(v));
+        
+        if (values.length === 0) return null;
+        
+        const sorted = values.slice().sort((a, b) => a - b);
+        const n = values.length;
+        const mean = values.reduce((sum, v) => sum + v, 0) / n;
+        const median = n % 2 === 0 
+          ? (sorted[n/2 - 1] + sorted[n/2]) / 2 
+          : sorted[Math.floor(n/2)];
+        
+        const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / n;
+        const stdDev = Math.sqrt(variance);
+        const skew = values.reduce((sum, v) => sum + Math.pow((v - mean) / stdDev, 3), 0) / n;
+        const kurt = values.reduce((sum, v) => sum + Math.pow((v - mean) / stdDev, 4), 0) / n - 3;
+        
+        return {
+          Variable: varName,
+          N: n,
+          Mean: mean,
+          StdDev: stdDev,
+          Min: Math.min(...values),
+          Median: median,
+          Max: Math.max(...values),
+          Skew: skew,
+          Kurt: kurt,
+          vector: values
+        };
+      }).filter(stat => stat !== null);
+      
+      renderDescriptiveTable();
+      if (descData.length > 0) {
+        selectDescRow(descData[0]);
+      }
+    }
+    
+    function renderDescriptiveTable() {
+      const tbody = document.getElementById('desc-stats-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      
+      descData.forEach(row => {
+        const tr = document.createElement('tr');
+        if (descSelectedRow && row.Variable === descSelectedRow.Variable) {
+          tr.className = 'selected';
+        }
+        
+        const tdVariable = document.createElement('td');
+        tdVariable.textContent = row.Variable;
+        tdVariable.style.textAlign = 'left';
+        tr.appendChild(tdVariable);
+        
+        ['N', 'Mean', 'StdDev', 'Min', 'Median', 'Max', 'Skew', 'Kurt'].forEach(field => {
+          const td = document.createElement('td');
+          td.textContent = field === 'N' ? row[field] : fmt(row[field]);
+          tr.appendChild(td);
+        });
+        
+        tr.addEventListener('click', () => selectDescRow(row));
+        tbody.appendChild(tr);
+      });
+    }
+    
+    function selectDescRow(row) {
+      descSelectedRow = row;
+      renderDescriptiveTable();
+      
+      document.getElementById('desc-histogram-title').textContent = row.Variable;
+      document.getElementById('desc-histogram-panel').style.display = 'block';
+      
+      renderDescHistogram();
+      updateDescSummary();
+    }
+    
+    function updateDescSummary() {
+      if (!descSelectedRow) return;
+      const summaryTable = document.getElementById('desc-summary-table');
+      if (!summaryTable) return;
+      
+      summaryTable.innerHTML = `
+        <div><strong>N:</strong><span>${descSelectedRow.N}</span></div>
+        <div><strong>Mean:</strong><span>${fmt(descSelectedRow.Mean)}</span></div>
+        <div><strong>StdDev:</strong><span>${fmt(descSelectedRow.StdDev)}</span></div>
+        <div><strong>Min:</strong><span>${fmt(descSelectedRow.Min)}</span></div>
+        <div><strong>Median:</strong><span>${fmt(descSelectedRow.Median)}</span></div>
+        <div><strong>Max:</strong><span>${fmt(descSelectedRow.Max)}</span></div>
+        <div><strong>Skew:</strong><span>${fmt(descSelectedRow.Skew)}</span></div>
+        <div><strong>Kurt:</strong><span>${fmt(descSelectedRow.Kurt)}</span></div>
+      `;
+    }
+    
+    function renderDescHistogram() {
+      if (!descSelectedRow || !descSelectedRow.vector) return;
+      
+      const container = document.getElementById('histogram-container-kplus');
+      if (!container) return;
+      
+      const width = container.clientWidth || 600;
+      const height = 280;
+      
+      d3.select('#histogram-container-kplus').selectAll('*').remove();
+      
+      const svg = d3.select('#histogram-container-kplus')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+      
+      const margin = { top: 15, right: 25, bottom: 40, left: 40 };
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+      
+      const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+      
+      const numBins = 10;
+      const values = descSelectedRow.vector;
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const range = max - min;
+      const binWidth = range / numBins;
+      
+      const histData = Array.from({ length: numBins }, (_, i) => {
+        const start = min + i * binWidth;
+        const end = min + (i + 1) * binWidth;
+        const bin = `${start.toFixed(1)}-${end.toFixed(1)}`;
+        let count = 0;
+        values.forEach(v => {
+          if (v >= start && (i === numBins - 1 ? v <= end : v < end)) count++;
+        });
+        return { bin, start, end, count };
+      });
+      
+      const x = d3.scaleBand()
+        .domain(histData.map(d => d.bin))
+        .range([0, innerWidth])
+        .padding(0.1);
+      
+      const maxCount = d3.max(histData, d => d.count);
+      const y = d3.scaleLinear()
+        .domain([0, maxCount + (maxCount * 0.1)])
+        .range([innerHeight, 0]);
+      
+      g.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${innerHeight})`)
+        .call(d3.axisBottom(x).tickValues(x.domain().filter((d, i) => i % 2 === 0)))
+        .selectAll('text')
+        .style('text-anchor', 'end')
+        .attr('dx', '-.8em')
+        .attr('dy', '.15em')
+        .attr('font-size', '8px')
+        .attr('transform', 'rotate(-45)');
+      
+      g.append('g')
+        .attr('class', 'axis')
+        .call(d3.axisLeft(y).ticks(5));
+      
+      g.append('g')
+        .attr('class', 'grid')
+        .call(d3.axisLeft(y).ticks(5).tickSize(-innerWidth).tickFormat(''));
+      
+      g.selectAll('.histogram-bar')
+        .data(histData)
+        .enter().append('rect')
+        .attr('class', 'histogram-bar')
+        .attr('x', d => x(d.bin))
+        .attr('width', x.bandwidth())
+        .attr('y', d => y(d.count))
+        .attr('height', d => innerHeight - y(d.count));
+      
+      // Add normal curve
+      const mean = descSelectedRow.Mean;
+      const stdDev = descSelectedRow.StdDev;
+      const normalData = [];
+      const step = range / 50;
+      for (let x_val = min - range * 0.1; x_val <= max + range * 0.1; x_val += step) {
+        const exponent = -Math.pow(x_val - mean, 2) / (2 * Math.pow(stdDev, 2));
+        const y_val = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
+        normalData.push({ x: x_val, y: y_val });
+      }
+      
+      const maxNormalY = d3.max(normalData, d => d.y);
+      const normalScale = maxCount / maxNormalY * 0.8;
+      
+      const xScale = d3.scaleLinear()
+        .domain([min, max])
+        .range([0, innerWidth]);
+      
+      const line = d3.line()
+        .x(d => xScale(d.x))
+        .y(d => y(d.y * normalScale))
+        .curve(d3.curveCardinal);
+      
+      g.append('path')
+        .datum(normalData)
+        .attr('class', 'normal-curve')
+        .attr('d', line);
+    }
+    
     function populateBundle(b){
       lastBundle = b || {};
       const s=b.setup||{}, e=b.explore||{}, a=b.assumptions||{}, r=b.results||{}, fx=b.effects||{}, p=b.power||{}, rep=b.report||{};
@@ -697,6 +980,14 @@
       persistedColumns.groupColumn = s.groupColumn || persistedColumns.groupColumn;
       currentCompareMode = "k-plus";
       currentPrimaryTest = s.primaryTest || currentPrimaryTest || "welch";
+      
+      // Populate descriptive stats with selected columns data
+      if (window.independentRangeData && Array.isArray(s.selectedColumns)) {
+        const headers = window.independentRangeData[0] || s.selectedColumns;
+        const rows = window.independentRangeData.slice(1);
+        populateDescriptiveStats(s.selectedColumns, rows);
+      }
+      
       var testSel = document.getElementById("setPrimaryTest");
       if (testSel) testSel.value = currentPrimaryTest;
       setFrameworkButtons(s.primaryFramework || primaryFramework);
@@ -760,7 +1051,13 @@
       Office.onReady(function(){
         Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function(arg){
           const msg = JSON.parse(arg.message||"{}");
-          if(msg.type==="INDEPENDENT_BUNDLE") populateBundle(msg.payload||{});
+          if(msg.type==="INDEPENDENT_BUNDLE"){
+            // Store raw data for descriptive stats
+            if (msg.rawData) {
+              window.independentRangeData = msg.rawData;
+            }
+            populateBundle(msg.payload||{});
+          }
         });
         sendToHost("independentDashboardReady",{});
         setTimeout(()=>sendToHost("independentDashboardReady",{}),500);

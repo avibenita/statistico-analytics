@@ -742,7 +742,11 @@ function sendIndependentBundle() {
   console.log("sendIndependentBundle: calling buildIndependentBundle with modelSpec:", modelSpec);
   const bundle = buildIndependentBundle(headers, rows, modelSpec);
   console.log("sendIndependentBundle: bundle built, sending to dialog");
-  independentDialog.messageChild(JSON.stringify({ type: "INDEPENDENT_BUNDLE", payload: bundle }));
+  independentDialog.messageChild(JSON.stringify({ 
+    type: "INDEPENDENT_BUNDLE", 
+    payload: bundle,
+    rawData: independentRangeData  // Include raw data for descriptive stats
+  }));
 }
 
 function resetIndependentModel() {
