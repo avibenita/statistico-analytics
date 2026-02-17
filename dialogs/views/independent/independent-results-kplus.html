@@ -752,20 +752,47 @@
       }
     }
     function updateGroupChart() {
-      if (!lastBundle || !lastBundle.explore) return;
-      const explore = lastBundle.explore;
-      const colStats = Array.isArray(explore.selectedColumnStats) ? explore.selectedColumnStats.filter(function(cs){
-        return isFinite(parseMaybeNumber(cs && cs.n)) && parseMaybeNumber(cs.n) > 0;
-      }) : [];
+      const container = document.getElementById('groupChartContainer');
+      if (!container) return;
+      
+      if (!lastBundle) {
+        console.log('No lastBundle available for chart');
+        return;
+      }
+      
+      // Try to get group data from multiple sources
+      let groupData = [];
+      
+      // Source 1: explore.selectedColumnStats
+      if (lastBundle.explore && Array.isArray(lastBundle.explore.selectedColumnStats)) {
+        groupData = lastBundle.explore.selectedColumnStats.filter(function(cs){
+          return cs && isFinite(parseMaybeNumber(cs.n)) && parseMaybeNumber(cs.n) > 0;
+        });
+      }
+      
+      // Source 2: If no explore data, try to build from groupDescriptives
+      if (groupData.length === 0 && lastBundle.groupDescriptives && Array.isArray(lastBundle.groupDescriptives)) {
+        groupData = lastBundle.groupDescriptives.map(function(gd) {
+          return {
+            name: gd.name || gd.groupName || 'Group',
+            mean: gd.mean,
+            variance: gd.variance,
+            n: gd.n
+          };
+        });
+      }
+      
+      if (groupData.length === 0) {
+        console.log('No group data available for chart');
+        container.innerHTML = '<div style="text-align:center;padding:80px 20px;color:var(--text-muted);font-size:12px;">No data available for visualization</div>';
+        return;
+      }
       
       const metricType = document.querySelector('input[name="chartMetric"]:checked')?.value || 'means';
-      const categories = colStats.map(cs => cs.name || 'Group');
-      const data = colStats.map(cs => {
-        if (metricType === 'means') {
-          return parseMaybeNumber(cs.mean);
-        } else {
-          return parseMaybeNumber(cs.variance);
-        }
+      const categories = groupData.map(cs => cs.name || 'Group');
+      const data = groupData.map(cs => {
+        const val = metricType === 'means' ? parseMaybeNumber(cs.mean) : parseMaybeNumber(cs.variance);
+        return isFinite(val) ? val : 0;
       });
       
       const chartTitle = metricType === 'means' ? 'Group Means' : 'Group Variances';
