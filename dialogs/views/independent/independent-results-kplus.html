@@ -2124,7 +2124,7 @@ IMPORTANT: The user requested a ${payload.setup.framework} analysis. Focus on th
 FORMATTING NOTES:
 - Report p < .001 when p-value is 0 or very small (< 0.001)
 - Include group means: ${payload.groups.variables.map(g => g.label + ' (M=' + (g.mean ? g.mean.toFixed(2) : 'N/A') + ', SD=' + (g.sd ? g.sd.toFixed(2) : 'N/A') + ')').join(', ')}
-- Levene's test p = ${isFinite(leveneP) ? leveneP.toFixed(3) : 'not available'}
+- Levene's test p = ${payload.assumptions && payload.assumptions.homogeneity && payload.assumptions.homogeneity.levene && isFinite(payload.assumptions.homogeneity.levene.p) ? payload.assumptions.homogeneity.levene.p.toFixed(3) : 'not available'}
 
 Data:
 ${JSON.stringify(payload, null, 2)}`;
