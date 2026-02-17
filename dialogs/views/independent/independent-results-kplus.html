@@ -1110,14 +1110,23 @@
       if (refSelect) {
         const groups = [];
         posthocData.forEach(function(r) {
-          const parts = r.comparison.split(/\s*vs\s*/i);
+          const parts = r.comparison.split(/\s*vs\.?\s*/i);
           if (parts.length === 2) {
-            if (groups.indexOf(parts[0].trim()) === -1) groups.push(parts[0].trim());
-            if (groups.indexOf(parts[1].trim()) === -1) groups.push(parts[1].trim());
+            const g1 = parts[0].trim();
+            const g2 = parts[1].trim();
+            if (g1 && groups.indexOf(g1) === -1) groups.push(g1);
+            if (g2 && groups.indexOf(g2) === -1) groups.push(g2);
           }
         });
-        refSelect.innerHTML = '<option value="">Select group...</option>' + 
-          groups.map(g => '<option value="' + g + '">' + g + '</option>').join('');
+        
+        if (groups.length > 0) {
+          refSelect.innerHTML = '<option value="">All groups</option>' + 
+            groups.map(g => '<option value="' + g + '">' + g + '</option>').join('');
+          // Auto-select first group for better UX
+          if (groups.length > 0) refSelect.value = groups[0];
+        } else {
+          refSelect.innerHTML = '<option value="">No groups available</option>';
+        }
       }
       
       updatePosthocDisplay();
@@ -1141,7 +1150,9 @@
       let displayData = posthocData;
       if (grouping === 'ref' && refGroup) {
         displayData = posthocData.filter(function(r) {
-          return r.comparison.toLowerCase().includes(refGroup.toLowerCase());
+          // Match if refGroup appears in the comparison
+          const parts = r.comparison.split(/\s*vs\.?\s*/i);
+          return parts.some(p => p.trim().toLowerCase() === refGroup.toLowerCase());
         });
       }
       
