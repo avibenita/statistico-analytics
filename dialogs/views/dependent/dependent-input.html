@@ -239,6 +239,13 @@
       validateBucket();
     }
     Office.onReady(function(){
+      Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function(arg){
+        var msg = JSON.parse(arg.message || "{}");
+        if (msg.type === "DEPENDENT_DATA" && msg.payload) applyPayload(msg.payload);
+      });
+      send("requestData", null);
+      send("ready", null);
+      
       qs("btnRefresh").addEventListener("click", function(){ send("requestData"); });
       qs("btnCancel").addEventListener("click", function(){ send("close"); });
       qs("btnRun").addEventListener("click", function(){
@@ -262,15 +269,6 @@
           renderInterestChecks(STATE.headers);
         });
       });
-      send("ready");
-    });
-    Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function(arg){
-      try {
-        var msg = JSON.parse(arg.message || "{}");
-        if (msg.type === "DEPENDENT_DATA" && msg.payload) {
-          applyPayload(msg.payload);
-        }
-      } catch(_e){}
     });
   </script>
 </body>
