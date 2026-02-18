@@ -444,29 +444,12 @@
                 <div id="groupChartContainer" style="width:100%;height:280px;"></div>
               </div>
             </div>
-            <div class="stat-panel secondary">
-              <div class="stat-panel-heading">Robustness Test of Equality of Means</div>
+            <div class="stat-panel secondary" id="robustnessPanel" style="display:none;">
+              <div class="stat-panel-heading">⚠️ Not Applicable for Repeated Measures</div>
               <div class="stat-panel-body">
-                <div class="table-container" style="margin:0;max-height:none;">
-                  <table class="analysis-table">
-                    <thead>
-                      <tr><th>Equality of Variance Test</th><th>F Statistic</th><th>df1</th><th>df2</th><th>p-value</th></tr>
-                    </thead>
-                    <tbody id="varianceTestBody">
-                      <tr><td>Levene test</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
-                      <tr><td>Brown-Forsythe</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="table-container" style="margin-top:10px;max-height:none;">
-                  <table class="analysis-table">
-                    <thead>
-                      <tr><th>Welch ANOVA</th><th>df1</th><th>df2</th><th>F Statistic</th><th>p-value</th></tr>
-                    </thead>
-                    <tbody id="welchAnovaBody">
-                      <tr><td>Welch</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
-                    </tbody>
-                  </table>
+                <div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px;">
+                  <p style="margin:0 0 10px 0;"><strong>Levene, Brown-Forsythe, and Welch tests</strong> are designed for <strong>independent groups</strong> and test equality of variances <em>between</em> different subjects.</p>
+                  <p style="margin:0;"><strong>In repeated measures:</strong> The same subjects are measured across timepoints. Sphericity (Mauchly's test) is the relevant assumption. See the <strong>Assumptions</strong> tab.</p>
                 </div>
               </div>
             </div>
@@ -524,12 +507,26 @@
         </section>
 
         <section id="tab-effects" class="tab-panel">
-          <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Effect Sizes</div><div class="stat-panel-body">
-            <div class="stat-field"><span class="stat-label">Eta squared</span><span class="stat-value" id="efEta">...</span></div>
-            <div class="stat-field"><span class="stat-label">Cohen's f</span><span class="stat-value" id="efCohenF">...</span></div>
-            <div class="stat-field"><span class="stat-label">ANOVA F</span><span class="stat-value" id="efAnovaF">...</span></div>
-            <div class="stat-field"><span class="stat-label">Kruskal H</span><span class="stat-value" id="efKwH">...</span></div>
-          </div></div></div>
+          <div class="stats-container">
+            <div class="stat-panel">
+              <div class="stat-panel-heading parametric">Parametric Effect Sizes</div>
+              <div class="stat-panel-body">
+                <div class="stat-field"><span class="stat-label">Partial η² (SPSS)</span><span class="stat-value" id="efPartialEta">...</span></div>
+                <div class="stat-field"><span class="stat-label">Generalized η² (JASP)</span><span class="stat-value" id="efGeneralizedEta">...</span></div>
+                <div class="stat-field"><span class="stat-label">Eta squared</span><span class="stat-value" id="efEta">...</span></div>
+                <div class="stat-field"><span class="stat-label">Omega squared</span><span class="stat-value" id="efOmega">...</span></div>
+                <div class="stat-field"><span class="stat-label">Cohen's f</span><span class="stat-value" id="efCohenF">...</span></div>
+              </div>
+            </div>
+            <div class="stat-panel">
+              <div class="stat-panel-heading nonparametric">Non-parametric Effect Sizes</div>
+              <div class="stat-panel-body">
+                <div class="stat-field"><span class="stat-label">Kendall's W</span><span class="stat-value" id="efKendallW">...</span></div>
+                <div class="stat-field"><span class="stat-label">Friedman χ²</span><span class="stat-value" id="efFriedmanChi">...</span></div>
+                <div class="stat-field"><span class="stat-label">Epsilon squared</span><span class="stat-value" id="efEpsilonSq">...</span></div>
+              </div>
+            </div>
+          </div>
         </section>
         <section id="tab-power" class="tab-panel">
           <div class="stats-container"><div class="stat-panel"><div class="stat-panel-heading">Power & Sample Size (Python)</div><div class="stat-panel-body">
@@ -825,16 +822,29 @@
           // Friedman Test (Non-parametric)
           if (primaryTestHeading) primaryTestHeading.textContent = "Friedman Test (Non-parametric)";
           if (primaryTestTableHead) {
-            primaryTestTableHead.innerHTML = '<tr><th>Source</th><th>Mean Rank</th><th>Chi-Square</th><th>df</th><th>p-value</th></tr>';
+            primaryTestTableHead.innerHTML = '<tr><th>Timepoint</th><th>Mean Rank</th><th>χ²</th><th>df</th><th>p-value</th><th>Kendall W</th></tr>';
           }
           if (anovaBody) {
-            const meanRanks = ob.meanRanks || {};
+            const meanRanks = ob.friedmanMeanRanks || ob.meanRanks || {};
             const rankKeys = Object.keys(meanRanks);
+            const chiSquare = ob.friedmanChiSquare || ob.kwH;
+            const df = ob.friedmanDf || ob.kwDf;
+            const pValue = ob.friedmanP || ob.kwP;
+            const kendallW = ob.kendallW || ob.friedmanW || 0;
+            
             let rowsHtml = rankKeys.map(function(key, idx) {
-              return '<tr><td>' + key + '</td><td>' + fmt(meanRanks[key]) + '</td><td>' + (idx === 0 ? fmt(ob.kwH) : '') + '</td><td>' + (idx === 0 ? Math.round(ob.kwDf) : '') + '</td><td>' + (idx === 0 ? fmtP(ob.kwP) : '') + '</td></tr>';
+              return '<tr>' 
+                + '<td>' + key.replace('Timepoint', 'Time') + '</td>'
+                + '<td>' + fmt(meanRanks[key]) + '</td>'
+                + '<td>' + (idx === 0 ? '<strong>' + fmt(chiSquare) + '</strong>' : '') + '</td>'
+                + '<td>' + (idx === 0 ? Math.round(df) : '') + '</td>'
+                + '<td>' + (idx === 0 ? '<strong>' + fmtP(pValue) + '</strong>' : '') + '</td>'
+                + '<td>' + (idx === 0 ? fmt(kendallW) + ' <span style="font-size:9px;color:#aaa;">(effect size)</span>' : '') + '</td>'
+                + '</tr>';
             }).join('');
+            
             if (rankKeys.length === 0) {
-              rowsHtml = '<tr><td colspan="5" style="text-align:center;">No rank data available</td></tr>';
+              rowsHtml = '<tr><td colspan="6" style="text-align:center;">No rank data available</td></tr>';
             }
             anovaBody.innerHTML = rowsHtml;
             console.log("✅ Friedman test table populated successfully");
@@ -846,14 +856,18 @@
             primaryTestTableHead.innerHTML = '<tr><th>Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p-value</th></tr>';
           }
           if (anovaBody) {
-            const df1 = parseMaybeNumber(ob.anovaDf1);
-            const df2 = parseMaybeNumber(ob.anovaDf2);
-            const totalDf = isFinite(df1) && isFinite(df2) ? df1 + df2 : NaN;
+            const dfTime = parseMaybeNumber(ob.anovaDf1);
+            const dfError = parseMaybeNumber(ob.anovaDf2);
+            const dfSubjects = parseMaybeNumber(ob.anovaDfSubjects);
+            const dfTotal = isFinite(dfTime) && isFinite(dfError) && isFinite(dfSubjects) ? dfTime + dfError + dfSubjects : NaN;
+            
+            // Proper RM-ANOVA table: Time, Subjects, Error
             anovaBody.innerHTML = ''
-              + '<tr><td>Treatments</td><td>' + fmt(ob.anovaSSBetween) + '</td><td>' + (isFinite(df1) ? Math.round(df1) : '...') + '</td><td>' + fmt(ob.anovaMSBetween) + '</td><td>' + fmt(ob.anovaF) + '</td><td>' + fmtP(ob.anovaP) + '</td></tr>'
-              + '<tr><td>Within subjects</td><td>' + fmt(ob.anovaSSWithin) + '</td><td>' + (isFinite(df2) ? Math.round(df2) : '...') + '</td><td>' + fmt(ob.anovaMSWithin) + '</td><td></td><td></td></tr>'
-              + '<tr><td>Total</td><td>' + fmt(ob.anovaSSTotal) + '</td><td>' + (isFinite(totalDf) ? Math.round(totalDf) : '...') + '</td><td></td><td></td><td></td></tr>';
-            console.log("✅ ANOVA table populated successfully");
+              + '<tr style="background:rgba(74,144,226,0.15);"><td><strong>Time (Treatment)</strong></td><td>' + fmt(ob.anovaSSTime || ob.anovaSSBetween) + '</td><td>' + (isFinite(dfTime) ? Math.round(dfTime) : '...') + '</td><td>' + fmt(ob.anovaMSTime || ob.anovaMSBetween) + '</td><td>' + fmt(ob.anovaF) + '</td><td><strong>' + fmtP(ob.anovaP) + '</strong></td></tr>'
+              + '<tr style="background:rgba(255,255,255,0.03);"><td>Subjects (Between)</td><td>' + fmt(ob.anovaSSSubjects) + '</td><td>' + (isFinite(dfSubjects) ? Math.round(dfSubjects) : '...') + '</td><td>' + fmt(ob.anovaMSSubjects) + '</td><td style="color:#666;">—</td><td style="color:#666;">—</td></tr>'
+              + '<tr style="background:rgba(255,255,255,0.03);"><td>Error (Time × Subject)</td><td>' + fmt(ob.anovaSSError || ob.anovaSSWithin) + '</td><td>' + (isFinite(dfError) ? Math.round(dfError) : '...') + '</td><td>' + fmt(ob.anovaMSError || ob.anovaMSWithin) + '</td><td style="color:#666;">—</td><td style="color:#666;">—</td></tr>'
+              + '<tr style="border-top:2px solid rgba(255,165,120,0.5);font-weight:700;"><td>Total</td><td>' + fmt(ob.anovaSSTotal) + '</td><td>' + (isFinite(dfTotal) ? Math.round(dfTotal) : '...') + '</td><td style="color:#666;">—</td><td style="color:#666;">—</td><td style="color:#666;">—</td></tr>';
+            console.log("✅ RM-ANOVA table populated successfully with proper structure");
           }
         }
         
@@ -863,28 +877,10 @@
         // Update group visualization chart
         updateGroupChart();
 
-        const varBody = document.getElementById("varianceTestBody");
-        console.log("🔍 Populating variance tests with:", { levene: ob.levene, brownForsythe: ob.brownForsythe });
-        if (varBody) {
-          const lv = ob.levene || {};
-          const bf = ob.brownForsythe || {};
-          varBody.innerHTML = ''
-            + '<tr><td>Levene test</td><td>' + fmt(lv.f) + '</td><td>' + fmt(lv.df1) + '</td><td>' + fmt(lv.df2) + '</td><td>' + fmtP(lv.p) + '</td></tr>'
-            + '<tr><td>Brown-Forsythe</td><td>' + fmt(bf.f) + '</td><td>' + fmt(bf.df1) + '</td><td>' + fmt(bf.df2) + '</td><td>' + fmtP(bf.p) + '</td></tr>';
-          console.log("✅ Variance tests table populated");
-        } else {
-          console.error("❌ Variance tests table body not found!");
-        }
-
-        const welchBody = document.getElementById("welchAnovaBody");
-        console.log("🔍 Populating Welch ANOVA with:", ob.welchAnova);
-        if (welchBody) {
-          const wa = ob.welchAnova || {};
-          welchBody.innerHTML = '<tr><td>Welch</td><td>' + fmt(wa.df1) + '</td><td>' + fmt(wa.df2) + '</td><td>' + fmt(wa.f) + '</td><td>' + fmtP(wa.p) + '</td></tr>';
-          console.log("✅ Welch ANOVA table populated");
-        } else {
-          console.error("❌ Welch ANOVA table body not found!");
-        }
+        // REMOVED: Levene/Brown-Forsythe/Welch tests - not valid for repeated measures
+        // These tests are for independent groups. RM uses sphericity instead.
+        // const varBody = document.getElementById("varianceTestBody");
+        // const welchBody = document.getElementById("welchAnovaBody");
 
         const compareBodyReport = document.getElementById("methodComparisonBodyReport");
         if (compareBodyReport) {
@@ -1761,27 +1757,21 @@
       const welchP = parseMaybeNumber((ob.welchAnova || {}).p);
       const anovaP = parseMaybeNumber(ob.anovaP);
       
-      // Design Balance Indicator
+      // Design Balance Indicator (RM: focus on complete cases, not balance)
       const balanceEl = document.getElementById("balanceText");
-      if (balanceEl && lastBundle && lastBundle.explore && lastBundle.explore.selectedColumnStats) {
-        const stats = lastBundle.explore.selectedColumnStats;
-        const nValues = stats.map(cs => parseMaybeNumber(cs.n)).filter(n => isFinite(n) && n > 0);
-        if (nValues.length > 0) {
-          const maxN = Math.max(...nValues);
-          const minN = Math.min(...nValues);
-          const ratio = maxN / minN;
-          let balanceText = "";
-          if (ratio === 1) {
-            balanceText = "✓ Perfectly balanced (all n = " + Math.round(minN) + ")";
-          } else if (ratio < 1.2) {
-            balanceText = "✓ Well balanced (max/min n = " + ratio.toFixed(2) + ")";
-          } else if (ratio < 1.5) {
-            balanceText = "⚠ Mildly unbalanced (max/min n = " + ratio.toFixed(2) + ")";
-          } else {
-            balanceText = "⚠ Substantially unbalanced (max/min n = " + ratio.toFixed(2) + ")";
-          }
-          balanceEl.textContent = balanceText;
+      if (balanceEl) {
+        const completeCases = parseMaybeNumber(ob.N) || 0;
+        const totalRows = parseMaybeNumber(e.totalRows) || parseMaybeNumber(lastBundle.results.totalRows) || 0;
+        const missingSubjects = totalRows - completeCases;
+        
+        let balanceText = "";
+        if (missingSubjects === 0) {
+          balanceText = "✓ Complete data: " + completeCases + " subjects (no missing values)";
+        } else {
+          const missingPct = totalRows > 0 ? ((missingSubjects / totalRows) * 100).toFixed(1) : 0;
+          balanceText = "⚠ Complete cases: " + completeCases + " subjects (" + missingSubjects + " excluded due to missing data, " + missingPct + "%)";
         }
+        balanceEl.textContent = balanceText;
       }
       
       // Sphericity Test (Mauchly)
@@ -1855,10 +1845,20 @@
       }
       updateResultsPanels(r, fx, s, 1 - (parseMaybeNumber(s.confidence) || 0.95));
       renderPosthoc(r.posthoc || {}, "k-plus");
-      setText("efEta", fmt(ob.etaSquared)); setText("efCohenF", fmt(ob.cohenF)); setText("efAnovaF", fmt(ob.anovaF)); setText("efKwH", fmt(ob.kwH));
+      
+      // Effect sizes (RM-appropriate)
+      setText("efPartialEta", fmt(ob.partialEtaSquared));
+      setText("efGeneralizedEta", fmt(ob.generalizedEtaSquared));
+      setText("efEta", fmt(ob.etaSquared));
+      setText("efOmega", fmt(ob.omegaSquared));
+      setText("efCohenF", fmt(ob.cohenF));
+      setText("efKendallW", fmt(ob.kendallW || ob.friedmanW));
+      setText("efFriedmanChi", fmt(ob.friedmanChiSquare || ob.kwH));
+      setText("efEpsilonSq", fmt(ob.epsilonSquared));
+      
       setText("powNote", p.note); setText("powEndpoint", p.suggestedEndpoint); setText("powVal", fmt(p.placeholderPower));
       setText("repAnova", "RM-ANOVA: F(" + Math.round(ob.anovaDf1) + ", " + Math.round(ob.anovaDf2) + ") = " + fmt(ob.anovaF) + ", p " + fmtP(ob.anovaP) + ".");
-      setText("repKw", "Friedman: χ²(" + Math.round(ob.kwDf) + ") = " + fmt(ob.kwH) + ", p " + fmtP(ob.kwP) + ".");
+      setText("repKw", "Friedman: χ²(" + Math.round(ob.friedmanDf || ob.kwDf) + ") = " + fmt(ob.friedmanChiSquare || ob.kwH) + ", p " + fmtP(ob.friedmanP || ob.kwP) + ", Kendall W = " + fmt(ob.kendallW || 0) + ".");
       setText("repCons", rep.consistency);
     }
     function saveCurrentModel(){ sendToHost("savedependentModel", lastBundle||{}); }

@@ -281,6 +281,7 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
   
   // Mean squares
   const msBetween = dfBetween > 0 ? ssBetween / dfBetween : 0;
+  const msSubjects = dfSubjects > 0 ? ssSubjects / dfSubjects : 0;
   const msError = dfError > 0 ? ssError / dfError : 0;
   
   // F-statistic
@@ -289,14 +290,29 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
   // Approximate p-value using F-distribution approximation
   const pValue = approximateFTest(fStat, dfBetween, dfError);
   
-  // Effect sizes
+  // Effect sizes for RM-ANOVA
+  // Eta squared (total effect)
   const etaSquared = ssTotal > 0 ? ssBetween / ssTotal : 0;
+  
+  // Partial eta squared (effect excluding subject variability) - SPSS standard
   const partialEtaSquared = (ssBetween + ssError) > 0 ? ssBetween / (ssBetween + ssError) : 0;
+  
+  // Generalized eta squared (comparable across designs) - JASP standard
+  const generalizedEtaSquared = (ssBetween + ssSubjects + ssError) > 0 
+    ? ssBetween / (ssBetween + ssSubjects + ssError) 
+    : 0;
+  
+  // Omega squared (less biased than eta squared)
   const omegaSquared = ssTotal > 0 ? (ssBetween - dfBetween * msError) / (ssTotal + msError) : 0;
-  const cohenF = Math.sqrt(Math.abs(partialEtaSquared / (1 - partialEtaSquared)));
+  
+  // Cohen's f from partial eta squared (FIXED: was computing incorrectly)
+  const cohenF = partialEtaSquared < 1 ? Math.sqrt(partialEtaSquared / (1 - partialEtaSquared)) : 0;
   
   // Friedman test (nonparametric alternative)
   const friedman = computeFriedmanTest(completeCases, k, n);
+  
+  // Kendall's W (effect size for Friedman) - Coefficient of concordance
+  const kendallW = friedman.W || 0;
   
   // Mauchly's Test of Sphericity
   const sphericity = computeMauchlySphericity(completeCases, k, n);
@@ -335,6 +351,7 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
     grandMean: grandMean,
     omnibus: {
       N: n,
+      k: k,
       levels: selectedColumns,
       groupDescriptives: selectedColumns.map((name, i) => ({
         name: name,
@@ -343,49 +360,68 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
         sd: groupSDs[i],
         median: groupMedians[i]
       })),
-      // ANOVA results
+      // RM-ANOVA results (proper structure: Time, Subjects, Error)
       anovaF: fStat,
-      anovaDf1: dfBetween,
-      anovaDf2: dfError,
+      anovaDf1: dfBetween,  // df for Time
+      anovaDf2: dfError,     // df for Error (Time × Subject interaction)
+      anovaDfSubjects: dfSubjects,  // df for Subjects
       anovaP: pValue,
       // Sphericity corrected values
       anovaPGG: pValueGG,
       anovaPHF: pValueHF,
       anovaDf1GG: dfBetweenCorrected,
       anovaDf2GG: dfErrorCorrected,
+      // Sum of Squares (proper RM decomposition)
+      anovaSSTime: ssBetween,      // SS for Time (treatment)
+      anovaSSSubjects: ssSubjects,  // SS for Subjects (between-subject variation)
+      anovaSSError: ssError,        // SS for Error (residual)
+      anovaSSTotal: ssTotal,        // Total SS
+      // Mean Squares
+      anovaMSTime: msBetween,       // MS for Time
+      anovaMSSubjects: msSubjects,  // MS for Subjects
+      anovaMSError: msError,        // MS for Error
+      // Legacy names for backward compatibility (will be deprecated)
       anovaSSBetween: ssBetween,
       anovaSSWithin: ssError,
-      anovaSSTotal: ssTotal,
       anovaMSBetween: msBetween,
       anovaMSWithin: msError,
-      // Friedman results
-      kwH: friedman.H,
+      // Friedman results (use correct terminology: Chi-square, not H or Kruskal)
+      friedmanChiSquare: friedman.chiSquare,
+      friedmanDf: friedman.df,
+      friedmanP: friedman.p,
+      friedmanMeanRanks: friedman.meanRanks,
+      friedmanW: friedman.kendallW,  // Kendall's W effect size
+      kendallW: friedman.kendallW,
+      // Legacy names (will be deprecated - these reference Kruskal which is WRONG for RM)
+      kwH: friedman.H,  // DEPRECATED: This is actually Friedman χ², not Kruskal H
       kwDf: friedman.df,
       kwP: friedman.p,
       meanRanks: friedman.meanRanks,
       // Sphericity test
       sphericity: sphericity,
-      // Effect sizes
-      etaSquared: etaSquared,
-      partialEtaSquared: partialEtaSquared,
-      omegaSquared: omegaSquared,
-      cohenF: cohenF,
-      epsilonSquared: friedman.epsilonSquared,
-      etaSquaredH: friedman.etaSquaredH,
-      // Homogeneity tests (for robustness panel)
-      levene: levene,
-      brownForsythe: brownForsythe
+      // Effect sizes (RM-appropriate)
+      etaSquared: etaSquared,                    // Total eta squared
+      partialEtaSquared: partialEtaSquared,      // Partial eta squared (SPSS standard)
+      generalizedEtaSquared: generalizedEtaSquared,  // Generalized eta squared (JASP standard)
+      omegaSquared: omegaSquared,                // Omega squared (less biased)
+      cohenF: cohenF,                            // Cohen's f (corrected formula)
+      epsilonSquared: friedman.epsilonSquared,   // Friedman effect size
+      etaSquaredH: friedman.etaSquaredH,         // Alternative Friedman effect size
+      // REMOVED for RM: levene, brownForsythe, welchAnova (not valid for repeated measures)
     },
     assumptions: {
-      homogeneity: {
-        levene: levene,
-        brownForsythe: brownForsythe
-      }
+      sphericity: sphericity,
+      completeCases: n,
+      missingSubjects: missingCount,
+      note: "Repeated measures assumptions: sphericity (tested via Mauchly), normality of differences (visual inspection recommended)"
     },
     effects: {
       etaSquared: etaSquared,
+      partialEtaSquared: partialEtaSquared,
+      generalizedEtaSquared: generalizedEtaSquared,
       omegaSquared: omegaSquared,
-      cohenF: cohenF
+      cohenF: cohenF,
+      kendallW: kendallW
     },
     posthoc: posthoc,
     consistency: pValue < 0.05 && friedman.p < 0.05 ? "Both tests significant" :
@@ -441,19 +477,33 @@ function computeFriedmanTest(completeCases, k, n) {
     meanRanks[`Timepoint ${j + 1}`] = sum / n;
   });
   
-  // Friedman test statistic
+  // Friedman test statistic (Chi-square)
   const sumOfSquaredRankSums = rankSums.reduce((acc, rs) => acc + rs * rs, 0);
-  const H = (12 / (n * k * (k + 1))) * sumOfSquaredRankSums - 3 * n * (k + 1);
+  const chiSquare = (12 / (n * k * (k + 1))) * sumOfSquaredRankSums - 3 * n * (k + 1);
   
   // Approximate p-value using chi-square distribution
   const df = k - 1;
-  const p = approximateChiSquareTest(H, df);
+  const p = approximateChiSquareTest(chiSquare, df);
   
-  // Effect sizes for Friedman
-  const epsilonSquared = H / (n * (k - 1));
-  const etaSquaredH = H / (n * k - 1);
+  // Kendall's W (Coefficient of Concordance) - effect size for Friedman
+  // W ranges from 0 (no agreement) to 1 (perfect agreement)
+  const kendallW = chiSquare / (n * (k - 1));
   
-  return { H, df, p, meanRanks, epsilonSquared, etaSquaredH };
+  // Legacy effect sizes for Friedman
+  const epsilonSquared = chiSquare / (n * (k - 1));
+  const etaSquaredH = chiSquare / (n * k - 1);
+  
+  return { 
+    H: chiSquare,  // Use consistent naming (this is chi-square, not H)
+    chiSquare: chiSquare,
+    df, 
+    p, 
+    meanRanks, 
+    W: kendallW,  // Kendall's W
+    kendallW: kendallW,
+    epsilonSquared, 
+    etaSquaredH 
+  };
 }
 
 function computeMauchlySphericity(completeCases, k, n) {
