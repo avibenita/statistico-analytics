@@ -152,6 +152,7 @@
         </div>
         <div class="tab-navigation">
           <button class="tab-button active" data-tab="explore"><i class="fa-solid fa-chart-column"></i> Explore</button>
+          <button class="tab-button" data-tab="trajectories"><i class="fa-solid fa-chart-line"></i> Trajectories</button>
           <button class="tab-button" data-tab="assumptions"><i class="fa-solid fa-shield-halved"></i> Assumptions</button>
           <button class="tab-button" data-tab="results"><i class="fa-solid fa-square-poll-vertical"></i> Results</button>
           <button class="tab-button" data-tab="posthoc"><i class="fa-solid fa-table-cells"></i> Post-hoc</button>
@@ -328,44 +329,6 @@
                 </table>
               </div>
               
-              <!-- Profile Plot (Spaghetti + Mean Line) -->
-              <div style="margin-top:20px;">
-                <div style="font-weight:700;margin-bottom:8px;color:var(--accent-1);font-size:13px;">Profile Plot</div>
-                <div style="padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
-                  <svg id="profilePlot" width="100%" height="300" style="background:#1a2332;border-radius:4px;"></svg>
-                  <div style="margin-top:8px;display:flex;gap:16px;font-size:11px;color:var(--text-muted);justify-content:center;">
-                    <span><span style="width:20px;height:2px;background:#4fc3f7;display:inline-block;vertical-align:middle;"></span> Individual Subjects</span>
-                    <span><span style="width:20px;height:3px;background:#ff9800;display:inline-block;vertical-align:middle;"></span> Group Mean</span>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Correlation Matrix -->
-              <div style="margin-top:20px;">
-                <div style="font-weight:700;margin-bottom:8px;color:var(--accent-1);font-size:13px;">Within-Subject Correlation Matrix</div>
-                <div style="padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
-                  <table id="correlationMatrix" style="width:100%;border-collapse:collapse;font-size:11px;">
-                    <thead>
-                      <tr id="corrMatrixHeader" style="background:#003366cc;">
-                        <th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;">Pair</th>
-                        <th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;">Pearson r</th>
-                        <th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;">Interpretation</th>
-                      </tr>
-                    </thead>
-                    <tbody id="corrMatrixBody"></tbody>
-                  </table>
-                  <div id="corrSummary" style="margin-top:12px;padding:8px 10px;background:rgba(120,200,255,.08);border-left:3px solid var(--accent-2);border-radius:4px;font-size:11px;">
-                    <div style="color:var(--text-secondary);margin-bottom:4px;"><strong>Summary:</strong></div>
-                    <div style="display:flex;flex-wrap:wrap;gap:12px;">
-                      <span><strong>Avg r:</strong> <span id="corrAvgR" style="color:var(--accent-2);font-weight:700;">...</span></span>
-                      <span><strong>Range:</strong> <span id="corrRange" style="color:var(--accent-2);font-weight:700;">...</span></span>
-                      <span><strong>Compound Symmetry:</strong> <span id="corrCompound" style="color:var(--accent-2);font-weight:700;">...</span></span>
-                    </div>
-                    <div style="margin-top:6px;color:var(--text-muted);font-style:italic;" id="corrInterpretation">...</div>
-                  </div>
-                </div>
-              </div>
-              
               <div style="display:none;" id="desc-histogram-panel">
                 <div style="font-weight:700;margin:16px 0 8px;color:var(--accent-1);display:flex;justify-content:space-between;align-items:center;">
                   <span>Histogram: <span id="desc-histogram-title">Select a variable</span></span>
@@ -383,6 +346,86 @@
             </div>
           </div>
         </section>
+        
+        <!-- Trajectories Tab (Profile Plot + Correlation Matrix) -->
+        <section id="tab-trajectories" class="tab-panel">
+          <div class="stat-panel">
+            <div class="stat-panel-heading">Trajectory Analysis</div>
+            <div class="stat-panel-body" style="padding:12px;">
+              
+              <!-- Profile Plot (Spaghetti + Mean Line) -->
+              <div style="margin-bottom:24px;">
+                <div style="font-weight:700;margin-bottom:8px;color:var(--accent-1);font-size:14px;">
+                  <i class="fa-solid fa-chart-line"></i> Profile Plot
+                </div>
+                <p style="margin:0 0 12px 0;color:var(--text-muted);font-size:11px;line-height:1.5;">
+                  <strong>Purpose:</strong> Visualize individual subject trajectories (spaghetti lines) and the group mean trajectory. 
+                  This reveals patterns of change, individual variability, and potential outliers.
+                </p>
+                <div style="padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
+                  <svg id="profilePlot" width="100%" height="320" style="background:#1a2332;border-radius:4px;"></svg>
+                  <div style="margin-top:10px;display:flex;gap:20px;font-size:11px;color:var(--text-muted);justify-content:center;">
+                    <span><span style="width:24px;height:2px;background:#4fc3f7;display:inline-block;vertical-align:middle;"></span> Individual Subjects (n subjects)</span>
+                    <span><span style="width:24px;height:3px;background:#ff9800;display:inline-block;vertical-align:middle;"></span> Group Mean Trajectory</span>
+                  </div>
+                  <div style="margin-top:10px;padding:8px;background:rgba(120,200,255,.08);border-left:3px solid var(--accent-2);border-radius:4px;font-size:11px;">
+                    <strong>Interpretation:</strong>
+                    <ul style="margin:6px 0 0 0;padding-left:20px;color:var(--text-secondary);">
+                      <li><strong>Parallel lines:</strong> Consistent individual trajectories (low variability)</li>
+                      <li><strong>Crossing lines:</strong> Individual differences in response patterns</li>
+                      <li><strong>Steep slopes:</strong> Large changes across timepoints</li>
+                      <li><strong>Flat lines:</strong> Minimal change over time</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Correlation Matrix -->
+              <div>
+                <div style="font-weight:700;margin-bottom:8px;color:var(--accent-1);font-size:14px;">
+                  <i class="fa-solid fa-table"></i> Within-Subject Correlation Matrix
+                </div>
+                <p style="margin:0 0 12px 0;color:var(--text-muted);font-size:11px;line-height:1.5;">
+                  <strong>Purpose:</strong> Assess within-subject consistency across timepoints. 
+                  High correlations indicate stable individual differences; low correlations suggest high measurement variability or treatment effects.
+                </p>
+                <div style="padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
+                  <table id="correlationMatrix" style="width:100%;border-collapse:collapse;font-size:11px;">
+                    <thead>
+                      <tr id="corrMatrixHeader" style="background:#003366cc;">
+                        <th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;">Pair</th>
+                        <th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;">Pearson r</th>
+                        <th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;">Interpretation</th>
+                      </tr>
+                    </thead>
+                    <tbody id="corrMatrixBody"></tbody>
+                  </table>
+                  <div id="corrSummary" style="margin-top:12px;padding:8px 10px;background:rgba(120,200,255,.08);border-left:3px solid var(--accent-2);border-radius:4px;font-size:11px;">
+                    <div style="color:var(--text-secondary);margin-bottom:6px;"><strong>Summary Statistics:</strong></div>
+                    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+                      <span><strong>Avg r:</strong> <span id="corrAvgR" style="color:var(--accent-2);font-weight:700;">...</span></span>
+                      <span><strong>Range:</strong> <span id="corrRange" style="color:var(--accent-2);font-weight:700;">...</span></span>
+                      <span><strong>Compound Symmetry:</strong> <span id="corrCompound" style="color:var(--accent-2);font-weight:700;">...</span></span>
+                    </div>
+                    <div style="padding-top:8px;border-top:1px solid rgba(255,255,255,.15);">
+                      <strong style="color:var(--text-secondary);">Interpretation:</strong>
+                      <div style="margin-top:4px;color:var(--text-muted);font-style:italic;" id="corrInterpretation">...</div>
+                    </div>
+                  </div>
+                  <div style="margin-top:12px;padding:8px;background:rgba(255,193,7,.08);border-left:3px solid #ffc107;border-radius:4px;font-size:11px;">
+                    <strong style="color:#ffc107;"><i class="fa-solid fa-circle-info"></i> Note on Compound Symmetry:</strong>
+                    <p style="margin:4px 0 0 0;color:var(--text-muted);">
+                      Compound symmetry (similar correlations across all pairs) is a stronger assumption than sphericity. 
+                      <strong>Good</strong> compound symmetry suggests homogeneous covariance, which increases RM-ANOVA power.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </section>
+        
         <section id="tab-assumptions" class="tab-panel">
           <div class="stat-panel">
             <div class="stat-panel-heading">Assumption Testing</div>
