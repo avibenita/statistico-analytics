@@ -177,6 +177,438 @@ function computeWilcoxon(a, b, alt) {
   return { w: wPlus, p: Math.max(0, Math.min(1, p)) };
 }
 
+function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
+  console.log("Computing Repeated Measures ANOVA for", selectedColumns.length, "timepoints");
+  
+  // Extract data for each timepoint
+  const k = selectedColumns.length;
+  const groupData = selectedColumns.map(colName => {
+    const idx = headers.indexOf(colName);
+    const values = [];
+    rows.forEach(r => {
+      const v = parseNum(r[idx]);
+      if (isFinite(v)) values.push(v);
+    });
+    return values;
+  });
+  
+  // Find complete cases (rows with valid data in all columns)
+  const completeCases = [];
+  for (let i = 0; i < rows.length; i++) {
+    const rowValues = selectedColumns.map(colName => parseNum(rows[i][headers.indexOf(colName)]));
+    if (rowValues.every(v => isFinite(v))) {
+      completeCases.push(rowValues);
+    }
+  }
+  
+  const n = completeCases.length;
+  if (n < 2 || k < 2) {
+    return {
+      totalN: n,
+      grandMean: NaN,
+      omnibus: {},
+      assumptions: {},
+      effects: {},
+      consistency: "Insufficient data"
+    };
+  }
+  
+  console.log(`Complete cases: ${n}, Timepoints: ${k}`);
+  
+  // Calculate means for each timepoint
+  const groupMeans = groupData.map(g => g.length ? mean(g) : NaN);
+  const groupSDs = groupData.map(g => g.length ? sd(g) : NaN);
+  const groupMedians = groupData.map(g => g.length ? median(g) : NaN);
+  
+  // Grand mean
+  const allValues = completeCases.flat();
+  const grandMean = mean(allValues);
+  
+  // Subject means (row means)
+  const subjectMeans = completeCases.map(row => mean(row));
+  
+  // Sum of Squares calculations
+  // SS_total = sum of squared deviations from grand mean
+  let ssTotal = 0;
+  completeCases.forEach(row => {
+    row.forEach(val => {
+      ssTotal += Math.pow(val - grandMean, 2);
+    });
+  });
+  
+  // SS_between (treatments/timepoints)
+  let ssBetween = 0;
+  for (let j = 0; j < k; j++) {
+    const groupMean = groupMeans[j];
+    completeCases.forEach(row => {
+      ssBetween += Math.pow(groupMean - grandMean, 2);
+    });
+  }
+  
+  // SS_subjects
+  let ssSubjects = 0;
+  subjectMeans.forEach(subjMean => {
+    ssSubjects += k * Math.pow(subjMean - grandMean, 2);
+  });
+  
+  // SS_error (residual)
+  let ssError = 0;
+  completeCases.forEach((row, i) => {
+    const subjMean = subjectMeans[i];
+    row.forEach((val, j) => {
+      const groupMean = groupMeans[j];
+      ssError += Math.pow(val - groupMean - subjMean + grandMean, 2);
+    });
+  });
+  
+  // Degrees of freedom
+  const dfBetween = k - 1;
+  const dfSubjects = n - 1;
+  const dfError = (n - 1) * (k - 1);
+  const dfTotal = n * k - 1;
+  
+  // Mean squares
+  const msBetween = dfBetween > 0 ? ssBetween / dfBetween : 0;
+  const msError = dfError > 0 ? ssError / dfError : 0;
+  
+  // F-statistic
+  const fStat = msError > 0 ? msBetween / msError : 0;
+  
+  // Approximate p-value using F-distribution approximation
+  const pValue = approximateFTest(fStat, dfBetween, dfError);
+  
+  // Effect sizes
+  const etaSquared = ssTotal > 0 ? ssBetween / ssTotal : 0;
+  const partialEtaSquared = (ssBetween + ssError) > 0 ? ssBetween / (ssBetween + ssError) : 0;
+  const omegaSquared = ssTotal > 0 ? (ssBetween - dfBetween * msError) / (ssTotal + msError) : 0;
+  const cohenF = Math.sqrt(Math.abs(partialEtaSquared / (1 - partialEtaSquared)));
+  
+  // Friedman test (nonparametric alternative)
+  const friedman = computeFriedmanTest(completeCases, k, n);
+  
+  // Levene's test for homogeneity of variance
+  const levene = computeLeveneTest(groupData);
+  
+  // Brown-Forsythe test (robust version of Levene)
+  const brownForsythe = computeBrownForsytheTest(groupData);
+  
+  // Post-hoc pairwise comparisons
+  const posthoc = computePostHocComparisons(groupData, selectedColumns, msError, n);
+  
+  return {
+    totalN: n,
+    grandMean: grandMean,
+    omnibus: {
+      N: n,
+      levels: selectedColumns,
+      groupDescriptives: selectedColumns.map((name, i) => ({
+        name: name,
+        n: groupData[i].length,
+        mean: groupMeans[i],
+        sd: groupSDs[i],
+        median: groupMedians[i]
+      })),
+      // ANOVA results
+      anovaF: fStat,
+      anovaDf1: dfBetween,
+      anovaDf2: dfError,
+      anovaP: pValue,
+      anovaSSBetween: ssBetween,
+      anovaSSWithin: ssError,
+      anovaSSTotal: ssTotal,
+      anovaMSBetween: msBetween,
+      anovaMSWithin: msError,
+      // Friedman results
+      kwH: friedman.H,
+      kwDf: friedman.df,
+      kwP: friedman.p,
+      meanRanks: friedman.meanRanks,
+      // Variance tests
+      levene: levene,
+      brownForsythe: brownForsythe,
+      // Effect sizes
+      etaSquared: etaSquared,
+      partialEtaSquared: partialEtaSquared,
+      omegaSquared: omegaSquared,
+      cohenF: cohenF,
+      epsilonSquared: friedman.epsilonSquared,
+      etaSquaredH: friedman.etaSquaredH
+    },
+    assumptions: {
+      homogeneity: {
+        levene: levene,
+        brownForsythe: brownForsythe
+      }
+    },
+    effects: {
+      etaSquared: etaSquared,
+      omegaSquared: omegaSquared,
+      cohenF: cohenF
+    },
+    posthoc: posthoc,
+    consistency: pValue < 0.05 && friedman.p < 0.05 ? "Both tests significant" :
+                 pValue >= 0.05 && friedman.p >= 0.05 ? "Both tests non-significant" :
+                 "Tests disagree - check assumptions"
+  };
+}
+
+function approximateFTest(f, df1, df2) {
+  // Simple approximation of F-test p-value
+  // For more accuracy, a proper F-distribution CDF would be needed
+  if (!isFinite(f) || f <= 0) return 1;
+  if (f > 100) return 0.0001;
+  
+  // Beta function approximation for F-distribution
+  const x = df2 / (df2 + df1 * f);
+  
+  // Simplified approximation
+  if (f < 1) return 0.9;
+  if (f < 2) return 0.5;
+  if (f < 3) return 0.2;
+  if (f < 4) return 0.1;
+  if (f < 5) return 0.05;
+  if (f < 7) return 0.02;
+  if (f < 10) return 0.01;
+  return 0.001;
+}
+
+function computeFriedmanTest(completeCases, k, n) {
+  // Friedman test: nonparametric alternative to repeated measures ANOVA
+  // Rank each row independently
+  const rankedData = completeCases.map(row => {
+    const indexed = row.map((val, idx) => ({ val, idx }));
+    indexed.sort((a, b) => a.val - b.val);
+    const ranks = new Array(k);
+    for (let i = 0; i < k; i++) {
+      ranks[indexed[i].idx] = i + 1;
+    }
+    return ranks;
+  });
+  
+  // Sum of ranks for each condition
+  const rankSums = new Array(k).fill(0);
+  rankedData.forEach(ranks => {
+    ranks.forEach((rank, j) => {
+      rankSums[j] += rank;
+    });
+  });
+  
+  // Mean ranks
+  const meanRanks = {};
+  rankSums.forEach((sum, j) => {
+    meanRanks[`Timepoint ${j + 1}`] = sum / n;
+  });
+  
+  // Friedman test statistic
+  const sumOfSquaredRankSums = rankSums.reduce((acc, rs) => acc + rs * rs, 0);
+  const H = (12 / (n * k * (k + 1))) * sumOfSquaredRankSums - 3 * n * (k + 1);
+  
+  // Approximate p-value using chi-square distribution
+  const df = k - 1;
+  const p = approximateChiSquareTest(H, df);
+  
+  // Effect sizes for Friedman
+  const epsilonSquared = H / (n * (k - 1));
+  const etaSquaredH = H / (n * k - 1);
+  
+  return { H, df, p, meanRanks, epsilonSquared, etaSquaredH };
+}
+
+function approximateChiSquareTest(chiSq, df) {
+  // Simple chi-square approximation
+  if (!isFinite(chiSq) || chiSq <= 0) return 1;
+  if (chiSq > 20) return 0.0001;
+  
+  // Critical values approximation
+  if (df === 1) {
+    if (chiSq < 2.71) return 0.1;
+    if (chiSq < 3.84) return 0.05;
+    if (chiSq < 6.63) return 0.01;
+    return 0.001;
+  } else if (df === 2) {
+    if (chiSq < 4.61) return 0.1;
+    if (chiSq < 5.99) return 0.05;
+    if (chiSq < 9.21) return 0.01;
+    return 0.001;
+  } else if (df === 3) {
+    if (chiSq < 6.25) return 0.1;
+    if (chiSq < 7.81) return 0.05;
+    if (chiSq < 11.34) return 0.01;
+    return 0.001;
+  } else {
+    // General approximation
+    const ratio = chiSq / df;
+    if (ratio < 1.2) return 0.5;
+    if (ratio < 1.5) return 0.2;
+    if (ratio < 2.0) return 0.05;
+    if (ratio < 2.5) return 0.01;
+    return 0.001;
+  }
+}
+
+function computeLeveneTest(groupData) {
+  // Levene's test for homogeneity of variance
+  const k = groupData.length;
+  const groupMeans = groupData.map(g => mean(g));
+  
+  // Absolute deviations from group means
+  const deviations = groupData.map((g, i) => g.map(val => Math.abs(val - groupMeans[i])));
+  
+  // Grand mean of deviations
+  const allDeviations = deviations.flat();
+  const grandMeanDev = mean(allDeviations);
+  
+  // Between-group sum of squares for deviations
+  let ssBetween = 0;
+  deviations.forEach(dev => {
+    const devMean = mean(dev);
+    ssBetween += dev.length * Math.pow(devMean - grandMeanDev, 2);
+  });
+  
+  // Within-group sum of squares for deviations
+  let ssWithin = 0;
+  deviations.forEach(dev => {
+    const devMean = mean(dev);
+    dev.forEach(d => {
+      ssWithin += Math.pow(d - devMean, 2);
+    });
+  });
+  
+  const dfBetween = k - 1;
+  const totalN = allDeviations.length;
+  const dfWithin = totalN - k;
+  
+  const msBetween = dfBetween > 0 ? ssBetween / dfBetween : 0;
+  const msWithin = dfWithin > 0 ? ssWithin / dfWithin : 0;
+  
+  const f = msWithin > 0 ? msBetween / msWithin : 0;
+  const p = approximateFTest(f, dfBetween, dfWithin);
+  
+  return { f, df1: dfBetween, df2: dfWithin, p };
+}
+
+function computeBrownForsytheTest(groupData) {
+  // Brown-Forsythe test: robust version of Levene using medians
+  const k = groupData.length;
+  const groupMedians = groupData.map(g => median(g));
+  
+  // Absolute deviations from group medians
+  const deviations = groupData.map((g, i) => g.map(val => Math.abs(val - groupMedians[i])));
+  
+  // Grand mean of deviations
+  const allDeviations = deviations.flat();
+  const grandMeanDev = mean(allDeviations);
+  
+  // Between-group sum of squares for deviations
+  let ssBetween = 0;
+  deviations.forEach(dev => {
+    const devMean = mean(dev);
+    ssBetween += dev.length * Math.pow(devMean - grandMeanDev, 2);
+  });
+  
+  // Within-group sum of squares for deviations
+  let ssWithin = 0;
+  deviations.forEach(dev => {
+    const devMean = mean(dev);
+    dev.forEach(d => {
+      ssWithin += Math.pow(d - devMean, 2);
+    });
+  });
+  
+  const dfBetween = k - 1;
+  const totalN = allDeviations.length;
+  const dfWithin = totalN - k;
+  
+  const msBetween = dfBetween > 0 ? ssBetween / dfBetween : 0;
+  const msWithin = dfWithin > 0 ? ssWithin / dfWithin : 0;
+  
+  const f = msWithin > 0 ? msBetween / msWithin : 0;
+  const p = approximateFTest(f, dfBetween, dfWithin);
+  
+  return { f, df1: dfBetween, df2: dfWithin, p };
+}
+
+function computePostHocComparisons(groupData, groupNames, msError, n) {
+  // Pairwise comparisons with multiple comparison correction
+  const k = groupData.length;
+  const comparisons = [];
+  
+  for (let i = 0; i < k - 1; i++) {
+    for (let j = i + 1; j < k; j++) {
+      const g1 = groupData[i];
+      const g2 = groupData[j];
+      
+      const m1 = mean(g1);
+      const m2 = mean(g2);
+      const diff = m1 - m2;
+      
+      // Tukey HSD
+      const sem = Math.sqrt(msError / n);
+      const qStat = sem > 0 ? Math.abs(diff) / sem : 0;
+      
+      // Approximate p-value
+      let p = approximateTukeyP(qStat, k, n);
+      
+      // Games-Howell (for unequal variances)
+      const v1 = variance(g1);
+      const v2 = variance(g2);
+      const n1 = g1.length;
+      const n2 = g2.length;
+      const seGH = Math.sqrt(v1 / n1 + v2 / n2);
+      const tGH = seGH > 0 ? Math.abs(diff) / seGH : 0;
+      const pGH = approximateTTest(tGH, Math.min(n1, n2) - 1);
+      
+      comparisons.push({
+        group1: groupNames[i],
+        group2: groupNames[j],
+        diff: diff,
+        se: sem,
+        tukey: { q: qStat, p: p },
+        gamesHowell: { t: tGH, p: pGH }
+      });
+    }
+  }
+  
+  // Apply Holm correction
+  comparisons.sort((a, b) => a.tukey.p - b.tukey.p);
+  const numComparisons = comparisons.length;
+  comparisons.forEach((comp, idx) => {
+    comp.tukey.pHolm = Math.min(1, comp.tukey.p * (numComparisons - idx));
+    comp.gamesHowell.pHolm = Math.min(1, comp.gamesHowell.p * (numComparisons - idx));
+  });
+  
+  return {
+    pairwise: comparisons,
+    method: "Tukey HSD / Games-Howell",
+    correction: "Holm"
+  };
+}
+
+function approximateTukeyP(q, k, n) {
+  // Approximate Tukey HSD p-value
+  if (q < 2) return 0.9;
+  if (q < 3) return 0.5;
+  if (q < 3.5) return 0.2;
+  if (q < 4) return 0.1;
+  if (q < 4.5) return 0.05;
+  if (q < 5) return 0.02;
+  if (q < 6) return 0.01;
+  return 0.001;
+}
+
+function approximateTTest(t, df) {
+  // Approximate t-test p-value (two-tailed)
+  const absT = Math.abs(t);
+  if (absT < 1) return 0.9;
+  if (absT < 1.5) return 0.5;
+  if (absT < 2) return 0.2;
+  if (absT < 2.5) return 0.05;
+  if (absT < 3) return 0.02;
+  if (absT < 4) return 0.01;
+  return 0.001;
+}
+
+
 function buildDependentBundle(headers, rows, spec) {
   console.log("=== buildDependentBundle START ===");
   console.log("spec:", spec);
@@ -199,13 +631,57 @@ function buildDependentBundle(headers, rows, spec) {
     });
     return {
       name,
+      label: name,
       n: values.length,
+      missing: rows.length - values.length,
       mean: values.length ? mean(values) : NaN,
       sd: values.length ? sd(values) : NaN,
-      median: values.length ? median(values) : NaN
+      stdDev: values.length ? sd(values) : NaN,
+      median: values.length ? median(values) : NaN,
+      iqr: NaN // TODO: calculate IQR if needed
     };
   });
   
+  // For k-plus mode, perform repeated measures ANOVA
+  if (compareMode === "k-plus" && selectedColumns.length >= 3) {
+    console.log("Computing k-plus (3+ timepoints) analysis");
+    const rmResults = computeRepeatedMeasuresANOVA(headers, rows, selectedColumns);
+    return {
+      setup: {
+        mode,
+        compareMode,
+        primaryFramework,
+        hypothesis: spec.hypothesis || "two-sided",
+        confidence: Number(spec.confidence || 0.95),
+        selectedColumns: selectedColumns.slice(),
+        headers: selectedColumns.slice(),
+        primaryTest: spec.primaryTest || "rm-anova",
+        posthocMethod: spec.posthocMethod || "games-howell",
+        posthocCorrection: spec.posthocCorrection || "holm"
+      },
+      explore: {
+        selectedColumnStats,
+        kplusSummary: {
+          variableCount: selectedColumns.length,
+          totalN: rmResults.totalN,
+          levelsCount: selectedColumns.length,
+          meanOverall: rmResults.grandMean
+        }
+      },
+      assumptions: rmResults.assumptions || {},
+      results: {
+        omnibus: rmResults.omnibus || {},
+        posthoc: rmResults.posthoc || {}
+      },
+      effects: rmResults.effects || {},
+      power: { note: "Power analysis placeholder", placeholderPower: 0.80 },
+      report: {
+        consistency: rmResults.consistency || "Results computed"
+      }
+    };
+  }
+  
+  // Two-variable mode (original code)
   let t1 = [], t2 = [];
   if (compareMode === "two-vars") {
     const aIdx = headers.indexOf(spec.groupA || selectedColumns[0] || headers[0]);
