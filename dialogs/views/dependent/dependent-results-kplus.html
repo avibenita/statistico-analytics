@@ -139,7 +139,7 @@
     <section class="card">
       <div class="hero-section">
         <div class="hero-content">
-          <div class="hero-title"><span>Dependent (Repeated Measures) Module (>2 Timepoints)</span></div>
+          <div class="hero-title"><span>Repeated Measures Module (3+ Timepoints)</span></div>
           <div class="hero-controls">
             <button class="hero-action-btn" onclick="generateAISummary()" title="Generate AI statistical summary from all results" id="aiSummaryBtn">
               <i class="fa-solid fa-brain"></i> AI Summary
@@ -204,9 +204,8 @@
           <div class="inference-card" id="primaryTestWrap" style="flex:1 1 auto;min-width:280px;">
             <div class="inference-title">Test method</div>
             <select id="setPrimaryTest" style="width:100%;height:42px;font-size:14px;padding:0 12px;border-radius:10px;border:1px solid rgba(120,200,255,.45);background:rgba(15,23,42,.95);color:#fff;font-weight:600;">
-              <option value="welch">Welch t-test (recommended)</option>
-              <option value="student">Student t-test (equal variance)</option>
-              <option value="permutation">Permutation test (mean difference)</option>
+              <option value="rm-anova">RM-ANOVA (recommended)</option>
+              <option value="friedman">Friedman test</option>
             </select>
           </div>
 
@@ -243,7 +242,7 @@
         <div class="hyp-row">
 
           <div class="hyp-block hyp-main">
-            <strong>H0:</strong> <span id="h0Text">Difference = 0</span>
+            <strong>H0:</strong> <span id="h0Text">All timepoint means equal</span>
           </div>
 
           <div class="hyp-block">
@@ -721,8 +720,8 @@
       });
       if (testSel) {
         var options = primaryFramework === "nonparametric"
-          ? [{ v: "kruskal", t: "Kruskal-Wallis" }]
-          : [{ v: "anova", t: "One-way ANOVA" }];
+          ? [{ v: "friedman", t: "Friedman test" }]
+          : [{ v: "rm-anova", t: "Repeated Measures ANOVA" }];
         testSel.innerHTML = options.map(function(o){ return '<option value="' + o.v + '">' + o.t + '</option>'; }).join("");
         currentPrimaryTest = options[0].v;
         testSel.value = currentPrimaryTest;
@@ -795,19 +794,19 @@
         const ob = r.omnibus;
         const paramPrimary = primaryFramework !== "nonparametric";
         if (paramPrimary) {
-          setText("resPrimaryTest", "One-way ANOVA");
+          setText("resPrimaryTest", "Repeated Measures ANOVA");
           setText("resPrimaryStat", "F(" + Math.round(ob.anovaDf1) + ", " + Math.round(ob.anovaDf2) + ") = " + fmt(ob.anovaF));
           setText("resPrimaryP", fmtP(ob.anovaP));
-          setText("resPrimaryEstimate", "Omnibus effect across " + fmt(ob.levels ? ob.levels.length : 0) + " groups");
-          setText("resSecondaryTest", "Kruskal-Wallis");
-          setText("resSecondaryStat", "H(" + Math.round(ob.kwDf) + ") = " + fmt(ob.kwH));
+          setText("resPrimaryEstimate", "Omnibus effect across " + fmt(ob.levels ? ob.levels.length : 0) + " timepoints");
+          setText("resSecondaryTest", "Friedman test");
+          setText("resSecondaryStat", "χ²(" + Math.round(ob.kwDf) + ") = " + fmt(ob.kwH));
           setText("resSecondaryP", fmtP(ob.kwP));
         } else {
-          setText("resPrimaryTest", "Kruskal-Wallis");
-          setText("resPrimaryStat", "H(" + Math.round(ob.kwDf) + ") = " + fmt(ob.kwH));
+          setText("resPrimaryTest", "Friedman test");
+          setText("resPrimaryStat", "χ²(" + Math.round(ob.kwDf) + ") = " + fmt(ob.kwH));
           setText("resPrimaryP", fmtP(ob.kwP));
-          setText("resPrimaryEstimate", "Distribution shift across " + fmt(ob.levels ? ob.levels.length : 0) + " groups");
-          setText("resSecondaryTest", "One-way ANOVA");
+          setText("resPrimaryEstimate", "Rank-based comparison across " + fmt(ob.levels ? ob.levels.length : 0) + " timepoints");
+          setText("resSecondaryTest", "Repeated Measures ANOVA");
           setText("resSecondaryStat", "F(" + Math.round(ob.anovaDf1) + ", " + Math.round(ob.anovaDf2) + ") = " + fmt(ob.anovaF));
           setText("resSecondaryP", fmtP(ob.anovaP));
         }
@@ -1784,7 +1783,7 @@
         } else if (welchSig) {
           recoText = "⚠ <strong>Use Welch ANOVA and Games-Howell post-hoc.</strong> The equal variance assumption is violated. Welch's test (which doesn't assume equal variances) shows significant differences. Use Games-Howell for pairwise comparisons.";
         } else {
-          recoText = "⚠ <strong>Consider Welch ANOVA or non-parametric alternative.</strong> The equal variance assumption is violated. Welch's test is more robust to this violation. " + (anovaSig !== welchSig ? "⚠ <strong>Results are sensitive:</strong> ANOVA and Welch disagree. Prefer Welch's result. " : "") + "Alternatively, consider Kruskal-Wallis if normality is also questionable.";
+          recoText = "⚠ <strong>Consider Welch ANOVA or non-parametric alternative.</strong> The equal variance assumption is violated. Welch's test is more robust to this violation. " + (anovaSig !== welchSig ? "⚠ <strong>Results are sensitive:</strong> ANOVA and Welch disagree. Prefer Welch's result. " : "") + "Alternatively, consider Friedman test if normality is also questionable.";
         }
         recoEl.innerHTML = recoText;
       }
@@ -1802,8 +1801,8 @@
       renderPosthoc(r.posthoc || {}, "k-plus");
       setText("efEta", fmt(ob.etaSquared)); setText("efCohenF", fmt(ob.cohenF)); setText("efAnovaF", fmt(ob.anovaF)); setText("efKwH", fmt(ob.kwH));
       setText("powNote", p.note); setText("powEndpoint", p.suggestedEndpoint); setText("powVal", fmt(p.placeholderPower));
-      setText("repAnova", "ANOVA: F(" + Math.round(ob.anovaDf1) + ", " + Math.round(ob.anovaDf2) + ") = " + fmt(ob.anovaF) + ", p " + fmtP(ob.anovaP) + ".");
-      setText("repKw", "Kruskal-Wallis: H(" + Math.round(ob.kwDf) + ") = " + fmt(ob.kwH) + ", p " + fmtP(ob.kwP) + ".");
+      setText("repAnova", "RM-ANOVA: F(" + Math.round(ob.anovaDf1) + ", " + Math.round(ob.anovaDf2) + ") = " + fmt(ob.anovaF) + ", p " + fmtP(ob.anovaP) + ".");
+      setText("repKw", "Friedman: χ²(" + Math.round(ob.kwDf) + ") = " + fmt(ob.kwH) + ", p " + fmtP(ob.kwP) + ".");
       setText("repCons", rep.consistency);
     }
     function saveCurrentModel(){ sendToHost("savedependentModel", lastBundle||{}); }
@@ -2226,7 +2225,7 @@
 4. Only interpret fields that are not null
 5. Use precise statistical language
 6. Format output in clear sections with proper APA-style reporting
-7. Focus on the PRIMARY test indicated in setup.framework (parametric = ANOVA/Welch, nonparametric = Kruskal-Wallis)
+7. Focus on the PRIMARY test indicated in setup.framework (parametric = RM-ANOVA, nonparametric = Friedman)
 8. If the primary test has null values, report what data IS available
 9. For p-values: if p < 0.001, report as "p < .001" (APA style), otherwise report the actual value
 10. Include group means and standard deviations when available
@@ -2238,7 +2237,7 @@ Respond with:
 - Detailed Interpretation (one paragraph, academic style)
 - APA-Ready Text (copy-paste ready for publications)`;
 
-      const userPrompt = `Analyze the following Dependent (Repeated Measures) analysis results and provide a conservative statistical interpretation.
+      const userPrompt = `Analyze the following Repeated Measures (3+ timepoints) analysis results and provide a conservative statistical interpretation.
 
 IMPORTANT: The user requested a ${payload.setup.framework} analysis. Focus on the ${payload.setup.omnibus} test results. If those values are null, report on whatever test results ARE available.
 
