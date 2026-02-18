@@ -370,15 +370,15 @@
                   <span id="asMauchlyVerdict" style="font-size:12px;font-weight:600;"></span>
                 </div>
                 <div style="margin-top:12px;padding:10px;background:#f8f9fa;border-radius:6px;">
-                  <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;"><strong>Corrections (if violated):</strong></div>
+                  <div style="font-size:12px;color:#263238;margin-bottom:4px;"><strong>Corrections (if violated):</strong></div>
                   <div style="display:flex;gap:20px;font-size:12px;">
                     <div>
-                      <span style="color:var(--text-muted);">Greenhouse-Geisser ε:</span>
-                      <span class="stat-value" id="asEpsilonGG" style="margin-left:6px;">...</span>
+                      <span style="color:#546e7a;">Greenhouse-Geisser ε:</span>
+                      <span class="stat-value" id="asEpsilonGG" style="margin-left:6px;background:rgba(74,144,226,0.15);color:#1976d2;">...</span>
                     </div>
                     <div>
-                      <span style="color:var(--text-muted);">Huynh-Feldt ε:</span>
-                      <span class="stat-value" id="asEpsilonHF" style="margin-left:6px;">...</span>
+                      <span style="color:#546e7a;">Huynh-Feldt ε:</span>
+                      <span class="stat-value" id="asEpsilonHF" style="margin-left:6px;background:rgba(74,144,226,0.15);color:#1976d2;">...</span>
                     </div>
                   </div>
                 </div>
@@ -1736,12 +1736,12 @@
       
       // Display missing data information
       const totalRows = parseMaybeNumber(e.totalRows) || 0;
-      const completeCases = isFinite(parseMaybeNumber(ksum.totalN)) ? Math.round(parseMaybeNumber(ksum.totalN)) : (isFinite(ob.N) ? Math.round(ob.N) : 0);
+      const completeCasesExplore = isFinite(parseMaybeNumber(ksum.totalN)) ? Math.round(parseMaybeNumber(ksum.totalN)) : (isFinite(ob.N) ? Math.round(ob.N) : 0);
       const missingCount = parseMaybeNumber(e.missingCount) || 0;
       const missingPct = parseMaybeNumber(e.missingPct) || 0;
       
       setText("expTotalRows", totalRows);
-      setText("expTotalN", completeCases);
+      setText("expTotalN", completeCasesExplore);
       
       const warningEl = document.getElementById("missingDataWarning");
       if (warningEl && missingCount > 0) {
@@ -1764,16 +1764,16 @@
       // Design Balance Indicator (RM: focus on complete cases, not balance)
       const balanceEl = document.getElementById("balanceText");
       if (balanceEl) {
-        const completeCases = parseMaybeNumber(ob.N) || 0;
-        const totalRows = parseMaybeNumber(e.totalRows) || parseMaybeNumber(lastBundle.results.totalRows) || 0;
-        const missingSubjects = totalRows - completeCases;
+        const completeCasesBalance = parseMaybeNumber(ob.N) || 0;
+        const totalRowsBalance = parseMaybeNumber(e.totalRows) || parseMaybeNumber(lastBundle.totalRows) || 0;
+        const missingSubjects = totalRowsBalance - completeCasesBalance;
         
         let balanceText = "";
         if (missingSubjects === 0) {
-          balanceText = "✓ Complete data: " + completeCases + " subjects (no missing values)";
+          balanceText = "✓ Complete data: " + completeCasesBalance + " subjects (no missing values)";
         } else {
-          const missingPct = totalRows > 0 ? ((missingSubjects / totalRows) * 100).toFixed(1) : 0;
-          balanceText = "⚠ Complete cases: " + completeCases + " subjects (" + missingSubjects + " excluded due to missing data, " + missingPct + "%)";
+          const missingPct = totalRowsBalance > 0 ? ((missingSubjects / totalRowsBalance) * 100).toFixed(1) : 0;
+          balanceText = "⚠ Complete cases: " + completeCasesBalance + " subjects (" + missingSubjects + " excluded due to missing data, " + missingPct + "%)";
         }
         balanceEl.textContent = balanceText;
       }
@@ -1790,7 +1790,10 @@
       setText("asMauchlyP", fmtP(mauchlyP));
       setText("asEpsilonGG", fmt(epsilonGG));
       setText("asEpsilonHF", fmt(epsilonHF));
-      setText("asCompleteCases", lastBundle.results.totalN || 0);
+      
+      // Complete cases: use ob.N (from omnibus) or fall back to totalN
+      const completeCasesAssumptions = parseMaybeNumber(ob.N) || parseMaybeNumber(lastBundle.totalN) || 0;
+      setText("asCompleteCases", completeCasesAssumptions);
       
       // Mauchly verdict
       const mauchlyEl = document.getElementById("asMauchlyVerdict");
