@@ -207,14 +207,11 @@
             </select>
           </div>
 
-          <!-- Post-hoc controls (visible only for k+ groups) -->
-          <div id="setPosthocWrap" style="display:none;flex:0 0 auto;">
+          <!-- Post-hoc controls for RM (always visible, shows paired tests) -->
+          <div id="setPosthocWrap" style="flex:0 0 auto;">
             <label for="setPosthocMethod">Post-hoc</label>
-            <select id="setPosthocMethod">
-              <option value="games-howell">Games-Howell</option>
-              <option value="tukey">Tukey HSD</option>
-              <option value="dunn">Dunn</option>
-              <option value="conover">Conover</option>
+            <select id="setPosthocMethod" disabled title="Repeated measures uses paired t-tests">
+              <option value="paired">Paired t-tests</option>
             </select>
           </div>
 
@@ -544,11 +541,11 @@
                 <table class="analysis-table">
                   <thead><tr><th>Parametric</th><th>Nonparametric</th></tr></thead>
                   <tbody id="methodComparisonBodyReport">
-                    <tr><td>ANOVA F: ...</td><td>Kruskal H: ...</td></tr>
+                    <tr><td>RM-ANOVA F: ...</td><td>Friedman χ²: ...</td></tr>
                     <tr><td>Means: ...</td><td>Mean ranks: ...</td></tr>
-                    <tr><td>η² / ω²: ... / ...</td><td>ε² / η²(H): ... / ...</td></tr>
-                    <tr><td>Post-hoc: Tukey / Games-Howell</td><td>Post-hoc: Dunn / Conover</td></tr>
-                    <tr><td>Levene p: ...</td><td>Tie/normality info: rank-based robust</td></tr>
+                    <tr><td>Partial η² / ω²: ... / ...</td><td>Kendall W / ε²: ... / ...</td></tr>
+                    <tr><td>Post-hoc: Paired t-tests + Holm</td><td>Post-hoc: Wilcoxon signed-rank + Holm</td></tr>
+                    <tr><td>Sphericity: Mauchly test</td><td>Assumption-free (rank-based)</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -896,12 +893,19 @@
           const meanRankSummary = rankKeys.length
             ? rankKeys.map(function(k){ return k + "=" + fmt(meanRanks[k]); }).join(" | ")
             : "...";
+          
+          // RM-appropriate summary (not independent ANOVA terminology)
+          const mauchlyP = parseMaybeNumber((ob.sphericity || {}).p);
+          const sphericityNote = isFinite(mauchlyP) 
+            ? (mauchlyP > 0.05 ? "Met (p=" + fmtP(mauchlyP) + ")" : "Violated (p=" + fmtP(mauchlyP) + ")")
+            : "...";
+          
           compareBodyReport.innerHTML = ''
-            + '<tr><td>ANOVA F: ' + fmt(ob.anovaF) + '</td><td>Kruskal H: ' + fmt(ob.kwH) + '</td></tr>'
+            + '<tr><td>RM-ANOVA F: ' + fmt(ob.anovaF) + '</td><td>Friedman χ²: ' + fmt(ob.friedmanChiSquare || ob.kwH) + '</td></tr>'
             + '<tr><td>Means: ' + meansSummary + '</td><td>Mean ranks: ' + meanRankSummary + '</td></tr>'
-            + '<tr><td>η² / ω²: ' + fmt(ob.etaSquared) + ' / ' + fmt(ob.omegaSquared) + '</td><td>ε² / η²(H): ' + fmt(ob.epsilonSquared) + ' / ' + fmt(ob.etaSquaredH) + '</td></tr>'
-            + '<tr><td>Post-hoc: Tukey / Games-Howell</td><td>Post-hoc: Dunn / Conover</td></tr>'
-            + '<tr><td>Levene p: ' + fmtP((ob.levene || {}).p) + '</td><td>Tie/normality info: rank-based robust</td></tr>';
+            + '<tr><td>Partial η² / ω²: ' + fmt(ob.partialEtaSquared) + ' / ' + fmt(ob.omegaSquared) + '</td><td>Kendall W / ε²: ' + fmt(ob.kendallW) + ' / ' + fmt(ob.epsilonSquared) + '</td></tr>'
+            + '<tr><td>Post-hoc: Paired t-tests + Holm</td><td>Post-hoc: Wilcoxon signed-rank + Holm</td></tr>'
+            + '<tr><td>Sphericity: ' + sphericityNote + '</td><td>Assumption-free (rank-based)</td></tr>';
         }
       }
     }
