@@ -376,26 +376,26 @@
           </div></div></div>
         </section>
         <section id="tab-results" class="tab-panel">
-          <div class="stats-container">
-            <div class="stat-panel"><div class="stat-panel-heading">Primary Results</div><div class="stat-panel-body">
-              <div class="stat-field">
+          <div class="stats-container" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="stat-panel"><div class="stat-panel-heading">Primary Results</div><div class="stat-panel-body" style="padding:8px;">
+              <div class="stat-field" style="padding:4px 8px;">
                 <span class="stat-label">Primary Framework</span><span class="stat-value" id="resPrimaryFramework">...</span>
               </div>
-              <div class="stat-field"><span class="stat-label">Primary Test</span><span class="stat-value" id="resPrimaryTest">...</span></div>
-              <div class="stat-field"><span class="stat-label">Test Rationale</span><span class="stat-value" id="resTestRationale" style="font-size:10px;background:rgba(255,165,120,.08);border-color:rgba(255,165,120,.3);">...</span></div>
-              <div class="stat-field"><span class="stat-label">Statistic</span><span class="stat-value" id="resPrimaryStat">...</span></div>
-              <div class="stat-field"><span class="stat-label">p-value</span><span class="stat-value" id="resPrimaryP">...</span></div>
-              <div class="stat-field"><span class="stat-label">Decision</span><span class="stat-value" id="resDecision" style="font-weight:800;font-size:13px;">...</span></div>
-              <div class="stat-field"><span class="stat-label">Mean Difference + 95% CI</span><span class="stat-value" id="resPrimaryEstimate">...</span></div>
-              <div class="stat-field"><span class="stat-label">Effect Size (Hedges g)</span><span class="stat-value" id="resEffectSize" style="background:rgba(120,200,255,.15);border-color:rgba(120,200,255,.4);">...</span></div>
+              <div class="stat-field" style="padding:4px 8px;"><span class="stat-label">Primary Test</span><span class="stat-value" id="resPrimaryTest">...</span></div>
+              <div class="stat-field" style="padding:4px 8px;"><span class="stat-label">Test Rationale</span><span class="stat-value" id="resTestRationale" style="font-size:10px;background:rgba(255,165,120,.08);border-color:rgba(255,165,120,.3);">...</span></div>
+              <div class="stat-field" style="padding:4px 8px;"><span class="stat-label">Statistic</span><span class="stat-value" id="resPrimaryStat">...</span></div>
+              <div class="stat-field" style="padding:4px 8px;"><span class="stat-label">p-value</span><span class="stat-value" id="resPrimaryP">...</span></div>
+              <div class="stat-field" style="padding:4px 8px;"><span class="stat-label">Decision</span><span class="stat-value" id="resDecision" style="font-weight:800;font-size:12px;">...</span></div>
+              <div class="stat-field" style="padding:4px 8px;"><span class="stat-label">Mean Difference + 95% CI</span><span class="stat-value" id="resPrimaryEstimate">...</span></div>
+              <div class="stat-field" style="padding:4px 8px;"><span class="stat-label">Effect Size (Hedges g)</span><span class="stat-value" id="resEffectSize" style="background:rgba(120,200,255,.15);border-color:rgba(120,200,255,.4);">...</span></div>
             </div></div>
-            <div class="stat-panel secondary"><div class="stat-panel-heading">Robustness & Sensitivity Analysis</div><div class="stat-panel-body">
-              <div class="stat-field"><span class="stat-label">Secondary Test</span><span class="stat-value" id="resSecondaryTest">...</span></div>
-              <div class="stat-field"><span class="stat-label">Statistic</span><span class="stat-value" id="resSecondaryStat">...</span></div>
-              <div class="stat-field"><span class="stat-label">p-value</span><span class="stat-value" id="resSecondaryP">...</span></div>
-              <div class="stat-field"><span class="stat-label">Rank-biserial r</span><span class="stat-value" id="resRankBiserial">...</span></div>
-              <div class="stat-field"><span class="stat-label">Agreement</span><span class="stat-value" id="resAgreement">...</span></div>
-              <div class="stat-field"><span class="stat-label">Interpretation</span><span class="stat-value" id="resHint" style="font-size:10px;">...</span></div>
+            <div class="stat-panel secondary"><div class="stat-panel-heading">Robustness & Sensitivity Analysis</div><div class="stat-panel-body" style="padding:8px;">
+              <div class="stat-field" style="padding:4px 8px;"><span class="stat-label">Secondary Test</span><span class="stat-value" id="resSecondaryTest">...</span></div>
+              <div class="stat-field" style="padding:4px 8px;"><span class="stat-label">Statistic</span><span class="stat-value" id="resSecondaryStat">...</span></div>
+              <div class="stat-field" style="padding:4px 8px;"><span class="stat-label">p-value</span><span class="stat-value" id="resSecondaryP">...</span></div>
+              <div class="stat-field" style="padding:4px 8px;"><span class="stat-label">Rank-biserial r</span><span class="stat-value" id="resRankBiserial">...</span></div>
+              <div class="stat-field" style="padding:4px 8px;"><span class="stat-label">Agreement</span><span class="stat-value" id="resAgreement">...</span></div>
+              <div class="stat-field" style="padding:4px 8px;"><span class="stat-label">Interpretation</span><span class="stat-value" id="resHint" style="font-size:10px;">...</span></div>
             </div></div>
           </div>
           <div class="stat-panel" style="margin-top:12px;">
@@ -407,7 +407,7 @@
               </label>
             </div>
             <div class="stat-panel-body">
-              <div id="groupChart" style="height:300px;"></div>
+              <div id="groupChart" style="height:220px;"></div>
             </div>
           </div>
           <div class="stat-panel" id="posthocPanel" style="margin-top:12px; display:none;">
@@ -729,14 +729,14 @@
         setText("resEffectSize", fmt(fx.hedgesG) + effectLabel);
         
         setText("resSecondaryTest", "Wilcoxon signed-rank (rank-based)");
-        setText("resSecondaryStat", "W = " + fmt(r.wilcoxonW || r.u));
-        setText("resSecondaryP", fmtP(r.wilcoxonP || r.mwP));
+        setText("resSecondaryStat", "W = " + fmt(r.wilcoxonW || r.w || 0));
+        setText("resSecondaryP", fmtP(r.wilcoxonP || r.p));
         setText("resRankBiserial", fmt(fx.rankBiserial));
       } else {
         setText("resTestRationale", "Non-parametric test for paired ordinal/skewed data");
         setText("resPrimaryTest", "Wilcoxon signed-rank");
-        setText("resPrimaryStat", "W = " + fmt(r.wilcoxonW || r.u));
-        setText("resPrimaryP", fmtP(r.wilcoxonP || r.mwP));
+        setText("resPrimaryStat", "W = " + fmt(r.wilcoxonW || r.w || 0));
+        setText("resPrimaryP", fmtP(r.wilcoxonP || r.p));
         setText("resPrimaryEstimate", "Median change = " + fmt(r.medianDiff || 0));
         const rankBis = parseMaybeNumber(fx.rankBiserial);
         let rbLabel = "";
