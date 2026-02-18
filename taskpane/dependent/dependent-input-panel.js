@@ -671,7 +671,7 @@ function computeRMPostHocComparisons(completeCases, timepointNames, n, k) {
       if (diffs.length === 0) continue;
       
       const meanDiff = mean(diffs);
-      const sdDiff = stdDev(diffs);
+      const sdDiff = sd(diffs);
       const seDiff = sdDiff / Math.sqrt(diffs.length);
       
       // Paired t-statistic
