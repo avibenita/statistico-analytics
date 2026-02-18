@@ -119,9 +119,23 @@
 #desc-stats-table{width:100%;min-width:820px;border-collapse:collapse;table-layout:auto;}
 #desc-stats-table th,#desc-stats-table td{padding:6px 8px;border:1px solid rgba(255,255,255,.18);box-sizing:border-box;text-align:right;font-size:10px;line-height:16px;height:30px;white-space:nowrap;}
 #desc-stats-table th:first-child,#desc-stats-table td:first-child{text-align:left;min-width:120px;max-width:180px;overflow:hidden;text-overflow:ellipsis;}
-#desc-stats-table thead th{background:#003366cc;color:#fff;z-index:2;}
+#desc-stats-table thead th{background:#003366cc;color:#fff;z-index:2;cursor:pointer;}
 #desc-stats-table tbody tr:nth-child(even) td{background:rgba(255,255,255,.05)}
 #desc-stats-table tbody tr:hover td{background:rgba(255,221,87,.18)}
+#desc-stats-table tbody tr.selected td{background:rgba(255,165,120,.3)}
+#histogram-container-two{height:240px;margin-top:12px;}
+.histogram-bar{fill:#74b9ff;stroke:#0984e3;stroke-width:1px;}
+.histogram-bar:hover{fill:#0984e3;}
+.normal-curve{fill:none;stroke:yellow;stroke-width:2px;stroke-dasharray:5,5;}
+.axis text{fill:white;font-size:10px;}
+.axis path,.axis line{stroke:#999;}
+.grid line{stroke:#555;stroke-opacity:0.7;shape-rendering:crispEdges;}
+.grid path{stroke-width:0;}
+.desc-summary-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;font-size:11px;}
+.desc-summary-stats div{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.08);}
+.desc-summary-stats div:last-child{border-bottom:none;}
+.desc-summary-stats strong{color:var(--text-secondary);}
+.desc-summary-stats span{color:var(--accent-2);font-weight:700;}
 
   </style>
 </head>
@@ -314,7 +328,7 @@
                   </colgroup>
                   <thead>
                     <tr>
-                      <th style="text-align:left">Variable</th>
+                      <th style="text-align:left;cursor:pointer">Variable</th>
                       <th>N</th>
                       <th>Mean</th>
                       <th>StdDev</th>
@@ -328,12 +342,18 @@
                   <tbody id="desc-stats-body"></tbody>
                 </table>
               </div>
-            </div>
-          </div>
-          <div class="stat-panel" style="margin-top:12px;">
-            <div class="stat-panel-heading">Comparison of Means</div>
-            <div class="stat-panel-body">
-              <div id="groupChart" style="height:300px;"></div>
+              
+              <div style="display:none;" id="desc-histogram-panel">
+                <div style="font-weight:700;margin:16px 0 8px;color:var(--accent-1);display:flex;justify-content:space-between;align-items:center;">
+                  <span>Histogram: <span id="desc-histogram-title">Select a variable</span></span>
+                </div>
+                <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+                  <div id="histogram-container-two"></div>
+                  <div>
+                    <div class="desc-summary-stats" id="desc-summary-table"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -363,6 +383,18 @@
               <div class="stat-field"><span class="stat-label">Agreement</span><span class="stat-value" id="resAgreement">...</span></div>
               <div class="stat-field"><span class="stat-label">Diagnostic Hint</span><span class="stat-value" id="resHint">...</span></div>
             </div></div>
+          </div>
+          <div class="stat-panel" style="margin-top:12px;">
+            <div class="stat-panel-heading" style="display:flex;justify-content:space-between;align-items:center;">
+              <span>Comparison of Means</span>
+              <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;cursor:pointer;text-transform:none;">
+                <input type="checkbox" id="showVarianceToggle" style="cursor:pointer;"/>
+                <span>Assume Equal Variance</span>
+              </label>
+            </div>
+            <div class="stat-panel-body">
+              <div id="groupChart" style="height:300px;"></div>
+            </div>
           </div>
           <div class="stat-panel" id="posthocPanel" style="margin-top:12px; display:none;">
             <div class="stat-panel-heading">Post-hoc Pairwise</div>
@@ -784,8 +816,11 @@
         }
       ];
       
-      groups.forEach(function(grp) {
+      let descSelectedRow = null;
+      
+      groups.forEach(function(grp, idx) {
         const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
         
         const cells = [
           grp.name,
@@ -799,11 +834,20 @@
           calcKurt(grp.mean, grp.sd, grp.n)
         ];
         
-        cells.forEach(function(val, idx) {
+        cells.forEach(function(val, cellIdx) {
           const td = document.createElement('td');
           td.textContent = val;
-          if (idx === 0) td.style.textAlign = 'left';
+          if (cellIdx === 0) td.style.textAlign = 'left';
           tr.appendChild(td);
+        });
+        
+        // Add click handler for histogram
+        tr.addEventListener('click', function() {
+          document.querySelectorAll('#desc-stats-body tr').forEach(function(r) {
+            r.classList.remove('selected');
+          });
+          tr.classList.add('selected');
+          selectDescRow(grp);
         });
         
         body.appendChild(tr);
@@ -820,6 +864,56 @@
       setText('expTotalN', totalN);
       setText('expOverallMean', fmt(overallMean));
       setText('expFramework', primaryFramework === 'nonparametric' ? 'Non-parametric (ranks)' : 'Parametric (means)');
+    }
+    
+    function selectDescRow(grp) {
+      const panel = document.getElementById('desc-histogram-panel');
+      const title = document.getElementById('desc-histogram-title');
+      const summaryTable = document.getElementById('desc-summary-table');
+      
+      if (panel) panel.style.display = 'block';
+      if (title) title.textContent = grp.name;
+      
+      // Update summary table
+      if (summaryTable) {
+        summaryTable.innerHTML = `
+          <div><strong>N:</strong><span>${grp.n}</span></div>
+          <div><strong>Mean:</strong><span>${fmt(grp.mean)}</span></div>
+          <div><strong>StdDev:</strong><span>${fmt(grp.sd)}</span></div>
+          <div><strong>Min:</strong><span>${fmt(grp.min)}</span></div>
+          <div><strong>Median:</strong><span>${fmt(grp.median)}</span></div>
+          <div><strong>Max:</strong><span>${fmt(grp.max)}</span></div>
+        `;
+      }
+      
+      // Render histogram (placeholder - would need raw data)
+      renderDescHistogram(grp);
+    }
+    
+    function renderDescHistogram(grp) {
+      if (typeof d3 === 'undefined') return;
+      
+      const container = document.getElementById('histogram-container-two');
+      if (!container) return;
+      
+      const width = container.clientWidth || 600;
+      const height = 240;
+      
+      d3.select('#histogram-container-two').selectAll('*').remove();
+      
+      // Show placeholder message since we don't have raw data
+      const svg = d3.select('#histogram-container-two')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+      
+      svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', height / 2)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'var(--text-secondary)')
+        .style('font-size', '14px')
+        .text('Histogram requires raw data (not available in summary)');
     }
     
     function updateGroupChart() {
@@ -840,18 +934,38 @@
       
       if (!isFinite(mean1) || !isFinite(mean2)) return;
       
+      // Check if equal variance is assumed
+      const varianceToggle = document.getElementById('showVarianceToggle');
+      const assumeEqualVar = varianceToggle && varianceToggle.checked;
+      
       // Calculate SE and 95% CI for each group
-      const se1 = isFinite(sd1) && n1 > 0 ? sd1 / Math.sqrt(n1) : 0;
-      const se2 = isFinite(sd2) && n2 > 0 ? sd2 / Math.sqrt(n2) : 0;
-      const ci1 = 1.96 * se1;
-      const ci2 = 1.96 * se2;
+      let se1, se2, ci1, ci2;
+      
+      if (assumeEqualVar) {
+        // Pooled standard error
+        const pooledVar = ((n1 - 1) * sd1 * sd1 + (n2 - 1) * sd2 * sd2) / (n1 + n2 - 2);
+        const pooledSE = Math.sqrt(pooledVar * (1/n1 + 1/n2));
+        se1 = Math.sqrt(pooledVar / n1);
+        se2 = Math.sqrt(pooledVar / n2);
+        ci1 = 1.96 * se1;
+        ci2 = 1.96 * se2;
+      } else {
+        // Separate variance (Welch)
+        se1 = isFinite(sd1) && n1 > 0 ? sd1 / Math.sqrt(n1) : 0;
+        se2 = isFinite(sd2) && n2 > 0 ? sd2 / Math.sqrt(n2) : 0;
+        ci1 = 1.96 * se1;
+        ci2 = 1.96 * se2;
+      }
       
       // Calculate grand mean
       const grandMean = (mean1 * n1 + mean2 * n2) / (n1 + n2);
       
       Highcharts.chart('groupChart', {
         chart: { type: 'column', backgroundColor: 'transparent' },
-        title: { text: null },
+        title: { 
+          text: assumeEqualVar ? 'Equal Variance Assumed (Pooled)' : 'Unequal Variance (Welch)',
+          style: { color: '#fff', fontSize: '12px', fontWeight: '600' }
+        },
         xAxis: {
           categories: [groupAName, groupBName],
           labels: { style: { color: '#fff', fontSize: '12px' } }
@@ -899,7 +1013,7 @@
                    `n: ${n}<br/>` +
                    `Mean: ${mean.toFixed(2)}<br/>` +
                    `SD: ${sd.toFixed(2)}<br/>` +
-                   `SE: ${se.toFixed(3)}<br/>` +
+                   `SE: ${se.toFixed(3)}${assumeEqualVar ? ' (pooled)' : ''}<br/>` +
                    `95% CI: [${(mean - ci).toFixed(2)}, ${(mean + ci).toFixed(2)}]`;
           }
         },
@@ -914,8 +1028,8 @@
             [mean1 - ci1, mean1 + ci1],
             [mean2 - ci2, mean2 + ci2]
           ],
-          color: 'rgba(255,255,255,0.4)',
-          lineWidth: 1.5,
+          color: assumeEqualVar ? 'rgba(120,200,255,0.6)' : 'rgba(255,255,255,0.4)',
+          lineWidth: assumeEqualVar ? 2 : 1.5,
           whiskerLength: '80%'
         }]
       });
@@ -1086,6 +1200,15 @@
       var rn = document.getElementById("fwNonparametric");
       if (rp) rp.addEventListener("change", function(){ if (rp.checked) { setFrameworkButtons("parametric"); notifySettingsChanged(); } });
       if (rn) rn.addEventListener("change", function(){ if (rn.checked) { setFrameworkButtons("nonparametric"); notifySettingsChanged(); } });
+      
+      // Variance toggle handler
+      const varianceToggle = document.getElementById("showVarianceToggle");
+      if (varianceToggle) {
+        varianceToggle.addEventListener("change", function() {
+          updateGroupChart();
+        });
+      }
+      
       setFrameworkButtons(primaryFramework);
       refreshSettingsVisibility();
       Office.onReady(function(){
