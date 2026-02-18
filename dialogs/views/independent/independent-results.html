@@ -1046,26 +1046,43 @@
         return;
       }
       
-      // Create theoretical normal distribution curve
+      // Create simulated histogram bins using normal distribution
       const xMin = Math.min(min, mean - 3.5 * sd);
       const xMax = Math.max(max, mean + 3.5 * sd);
       const xScale = d3.scaleLinear()
         .domain([xMin, xMax])
         .range([0, innerWidth]);
       
-      // Generate normal curve points
-      const points = [];
-      const numPoints = 100;
-      for (let i = 0; i <= numPoints; i++) {
-        const x = xMin + (xMax - xMin) * i / numPoints;
-        const z = (x - mean) / sd;
-        const y = Math.exp(-0.5 * z * z) / (sd * Math.sqrt(2 * Math.PI));
-        points.push({ x, y });
+      // Generate histogram bins (simulated from normal distribution)
+      const numBins = 12;
+      const binWidth = (xMax - xMin) / numBins;
+      const histBins = [];
+      
+      for (let i = 0; i < numBins; i++) {
+        const binStart = xMin + i * binWidth;
+        const binEnd = binStart + binWidth;
+        const binMid = (binStart + binEnd) / 2;
+        
+        // Calculate expected frequency in this bin using normal CDF
+        const zStart = (binStart - mean) / sd;
+        const zEnd = (binEnd - mean) / sd;
+        
+        // Approximate CDF using error function approximation
+        const cdf = (z) => 0.5 * (1 + Math.tanh(z * Math.sqrt(2 / Math.PI) * 0.7));
+        const prob = cdf(zEnd) - cdf(zStart);
+        const expectedCount = prob * n;
+        
+        histBins.push({
+          x: binStart,
+          width: binWidth,
+          height: expectedCount,
+          binMid: binMid
+        });
       }
       
-      const yMax = d3.max(points, d => d.y);
+      const yMax = d3.max(histBins, d => d.height);
       const yScale = d3.scaleLinear()
-        .domain([0, yMax * 1.1])
+        .domain([0, yMax * 1.15])
         .range([innerHeight, 0]);
       
       // Add grid
@@ -1076,31 +1093,44 @@
           .tickSize(-innerWidth)
           .tickFormat(''));
       
-      // Draw normal curve
+      // Draw histogram bars
+      g.selectAll('.histogram-bar')
+        .data(histBins)
+        .enter()
+        .append('rect')
+        .attr('class', 'histogram-bar')
+        .attr('x', d => xScale(d.x))
+        .attr('y', d => yScale(d.height))
+        .attr('width', d => Math.max(0, xScale(d.x + d.width) - xScale(d.x) - 1))
+        .attr('height', d => innerHeight - yScale(d.height))
+        .attr('fill', '#74b9ff')
+        .attr('stroke', '#0984e3')
+        .attr('stroke-width', 1);
+      
+      // Generate smooth normal curve points for overlay
+      const curvePoints = [];
+      const numPoints = 100;
+      for (let i = 0; i <= numPoints; i++) {
+        const x = xMin + (xMax - xMin) * i / numPoints;
+        const z = (x - mean) / sd;
+        const density = Math.exp(-0.5 * z * z) / (sd * Math.sqrt(2 * Math.PI));
+        // Scale to match histogram height
+        const scaledHeight = density * n * binWidth;
+        curvePoints.push({ x, y: scaledHeight });
+      }
+      
+      // Draw normal curve overlay
       const line = d3.line()
         .x(d => xScale(d.x))
         .y(d => yScale(d.y))
         .curve(d3.curveBasis);
       
       g.append('path')
-        .datum(points)
+        .datum(curvePoints)
         .attr('fill', 'none')
-        .attr('stroke', '#74b9ff')
+        .attr('stroke', '#ffd700')
         .attr('stroke-width', 2.5)
         .attr('d', line);
-      
-      // Fill area under curve
-      const area = d3.area()
-        .x(d => xScale(d.x))
-        .y0(innerHeight)
-        .y1(d => yScale(d.y))
-        .curve(d3.curveBasis);
-      
-      g.append('path')
-        .datum(points)
-        .attr('fill', '#74b9ff')
-        .attr('fill-opacity', 0.2)
-        .attr('d', area);
       
       // Mark mean
       g.append('line')
@@ -1142,23 +1172,6 @@
           .text('M');
       }
       
-      // Mark ±1 SD
-      g.append('line')
-        .attr('x1', xScale(mean - sd))
-        .attr('x2', xScale(mean - sd))
-        .attr('y1', innerHeight * 0.2)
-        .attr('y2', innerHeight * 0.8)
-        .attr('stroke', 'rgba(255,255,255,0.3)')
-        .attr('stroke-width', 1);
-      
-      g.append('line')
-        .attr('x1', xScale(mean + sd))
-        .attr('x2', xScale(mean + sd))
-        .attr('y1', innerHeight * 0.2)
-        .attr('y2', innerHeight * 0.8)
-        .attr('stroke', 'rgba(255,255,255,0.3)')
-        .attr('stroke-width', 1);
-      
       // X axis
       g.append('g')
         .attr('class', 'axis')
@@ -1190,7 +1203,7 @@
         .attr('transform', 'rotate(-90)')
         .attr('fill', 'white')
         .style('font-size', '11px')
-        .text('Density');
+        .text('Frequency');
       
       // Add annotation
       g.append('text')
@@ -1200,7 +1213,7 @@
         .attr('fill', 'rgba(255,255,255,0.5)')
         .style('font-size', '10px')
         .style('font-style', 'italic')
-        .text('Theoretical normal distribution (based on μ and σ)');
+        .text('Expected distribution from normal model (μ, σ)');
     }
     
     function updateGroupChart() {
