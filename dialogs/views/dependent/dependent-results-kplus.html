@@ -410,7 +410,7 @@
         </section>
         <section id="tab-results" class="tab-panel">
           <div class="stat-panel">
-            <div class="stat-panel-heading">dependent Measures ANOVA</div>
+            <div class="stat-panel-heading">Dependent Measures ANOVA</div>
             <div class="stat-panel-body" style="padding:10px;">
               <div class="table-container" style="margin:0;max-height:none;">
                 <table class="analysis-table">
@@ -418,9 +418,9 @@
                     <tr><th>Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p-value</th></tr>
                   </thead>
                   <tbody id="anovaSummaryBody">
-                    <tr><td>Treatments</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
-                    <tr><td>Within groups</td><td>...</td><td>...</td><td>...</td><td></td><td></td></tr>
-                    <tr><td>Total</td><td>...</td><td>...</td><td></td><td></td><td></td></tr>
+                    <tr><td>Treatments</td><td id="anova-ss-between">...</td><td id="anova-df1">...</td><td id="anova-ms-between">...</td><td id="anova-f">...</td><td id="anova-p">...</td></tr>
+                    <tr><td>Within groups</td><td id="anova-ss-within">...</td><td id="anova-df2">...</td><td id="anova-ms-within">...</td><td></td><td></td></tr>
+                    <tr><td>Total</td><td id="anova-ss-total">...</td><td id="anova-df-total">...</td><td></td><td></td><td></td></tr>
                   </tbody>
                 </table>
               </div>
@@ -802,29 +802,54 @@
 
         // ANOVA summary block
         const anovaBody = document.getElementById("anovaSummaryBody");
+        console.log("🔍 Populating ANOVA table with omnibus data:", ob);
+        console.log("📊 ANOVA Values:", {
+          SSBetween: ob.anovaSSBetween,
+          SSWithin: ob.anovaSSWithin,
+          SSTotal: ob.anovaSSTotal,
+          df1: ob.anovaDf1,
+          df2: ob.anovaDf2,
+          MSBetween: ob.anovaMSBetween,
+          MSWithin: ob.anovaMSWithin,
+          F: ob.anovaF,
+          P: ob.anovaP
+        });
         if (anovaBody) {
-          const totalDf = Math.max(0, parseMaybeNumber(ob.anovaDf1) + parseMaybeNumber(ob.anovaDf2));
+          const df1 = parseMaybeNumber(ob.anovaDf1);
+          const df2 = parseMaybeNumber(ob.anovaDf2);
+          const totalDf = isFinite(df1) && isFinite(df2) ? df1 + df2 : NaN;
           anovaBody.innerHTML = ''
-            + '<tr><td>Treatments</td><td>' + fmt(ob.anovaSSBetween) + '</td><td>' + Math.round(ob.anovaDf1) + '</td><td>' + fmt(ob.anovaMSBetween) + '</td><td>' + fmt(ob.anovaF) + '</td><td>' + fmtP(ob.anovaP) + '</td></tr>'
-            + '<tr><td>Within groups</td><td>' + fmt(ob.anovaSSWithin) + '</td><td>' + Math.round(ob.anovaDf2) + '</td><td>' + fmt(ob.anovaMSWithin) + '</td><td></td><td></td></tr>'
-            + '<tr><td>Total</td><td>' + fmt(ob.anovaSSTotal) + '</td><td>' + Math.round(totalDf) + '</td><td></td><td></td><td></td></tr>';
+            + '<tr><td>Treatments</td><td>' + fmt(ob.anovaSSBetween) + '</td><td>' + (isFinite(df1) ? Math.round(df1) : '...') + '</td><td>' + fmt(ob.anovaMSBetween) + '</td><td>' + fmt(ob.anovaF) + '</td><td>' + fmtP(ob.anovaP) + '</td></tr>'
+            + '<tr><td>Within groups</td><td>' + fmt(ob.anovaSSWithin) + '</td><td>' + (isFinite(df2) ? Math.round(df2) : '...') + '</td><td>' + fmt(ob.anovaMSWithin) + '</td><td></td><td></td></tr>'
+            + '<tr><td>Total</td><td>' + fmt(ob.anovaSSTotal) + '</td><td>' + (isFinite(totalDf) ? Math.round(totalDf) : '...') + '</td><td></td><td></td><td></td></tr>';
+          console.log("✅ ANOVA table populated successfully");
+        } else {
+          console.error("❌ ANOVA table body not found!");
         }
         // Update group visualization chart
         updateGroupChart();
 
         const varBody = document.getElementById("varianceTestBody");
+        console.log("🔍 Populating variance tests with:", { levene: ob.levene, brownForsythe: ob.brownForsythe });
         if (varBody) {
           const lv = ob.levene || {};
           const bf = ob.brownForsythe || {};
           varBody.innerHTML = ''
             + '<tr><td>Levene test</td><td>' + fmt(lv.f) + '</td><td>' + fmt(lv.df1) + '</td><td>' + fmt(lv.df2) + '</td><td>' + fmtP(lv.p) + '</td></tr>'
             + '<tr><td>Brown-Forsythe</td><td>' + fmt(bf.f) + '</td><td>' + fmt(bf.df1) + '</td><td>' + fmt(bf.df2) + '</td><td>' + fmtP(bf.p) + '</td></tr>';
+          console.log("✅ Variance tests table populated");
+        } else {
+          console.error("❌ Variance tests table body not found!");
         }
 
         const welchBody = document.getElementById("welchAnovaBody");
+        console.log("🔍 Populating Welch ANOVA with:", ob.welchAnova);
         if (welchBody) {
           const wa = ob.welchAnova || {};
           welchBody.innerHTML = '<tr><td>Welch</td><td>' + fmt(wa.df1) + '</td><td>' + fmt(wa.df2) + '</td><td>' + fmt(wa.f) + '</td><td>' + fmtP(wa.p) + '</td></tr>';
+          console.log("✅ Welch ANOVA table populated");
+        } else {
+          console.error("❌ Welch ANOVA table body not found!");
         }
 
         const compareBodyReport = document.getElementById("methodComparisonBodyReport");
@@ -1591,11 +1616,29 @@
     }
     
     function populateBundle(b){
-      console.log("populateBundle called with:", b);
+      console.log("🔄 populateBundle called with:", b);
       lastBundle = b || {};
       const s=b.setup||{}, e=b.explore||{}, a=b.assumptions||{}, r=b.results||{}, fx=b.effects||{}, p=b.power||{}, rep=b.report||{};
-      console.log("Results object:", r);
-      console.log("Explore object:", e);
+      console.log("📦 Bundle sections:", {
+        hasSetup: !!b.setup,
+        hasExplore: !!b.explore,
+        hasAssumptions: !!b.assumptions,
+        hasResults: !!b.results,
+        hasEffects: !!b.effects,
+        hasPower: !!b.power,
+        hasReport: !!b.report
+      });
+      console.log("🔬 Results object:", r);
+      console.log("📊 Results.omnibus:", r.omnibus);
+      console.log("🔍 Explore object:", e);
+      
+      // Check if we have the required data for ANOVA
+      if (!r.omnibus) {
+        console.warn("⚠️ WARNING: No omnibus data in results - ANOVA table will show placeholders");
+      } else if (!r.omnibus.anovaF && !r.omnibus.kwH) {
+        console.warn("⚠️ WARNING: Omnibus data exists but missing test statistics");
+      }
+      
       availableHeaders = Array.isArray(s.headers) ? s.headers.slice() : availableHeaders;
       persistedColumns.groupA = s.groupA || persistedColumns.groupA;
       persistedColumns.groupB = s.groupB || persistedColumns.groupB;

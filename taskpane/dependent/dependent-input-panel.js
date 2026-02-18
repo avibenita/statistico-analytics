@@ -323,6 +323,10 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
   // Post-hoc pairwise comparisons using PAIRED t-tests (not Tukey)
   const posthoc = computeRMPostHocComparisons(completeCases, selectedColumns, n, k);
   
+  // Compute Levene and Brown-Forsythe tests for homogeneity
+  const levene = computeLeveneTest(groupData);
+  const brownForsythe = computeBrownForsytheTest(groupData);
+  
   return {
     totalN: n,
     totalRows: totalRows,
@@ -367,7 +371,10 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
       omegaSquared: omegaSquared,
       cohenF: cohenF,
       epsilonSquared: friedman.epsilonSquared,
-      etaSquaredH: friedman.etaSquaredH
+      etaSquaredH: friedman.etaSquaredH,
+      // Homogeneity tests (for robustness panel)
+      levene: levene,
+      brownForsythe: brownForsythe
     },
     assumptions: {
       homogeneity: {
