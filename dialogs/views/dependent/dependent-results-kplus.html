@@ -410,11 +410,11 @@
         </section>
         <section id="tab-results" class="tab-panel">
           <div class="stat-panel">
-            <div class="stat-panel-heading">Dependent Measures ANOVA</div>
+            <div class="stat-panel-heading" id="primaryTestHeading">Repeated Measures ANOVA</div>
             <div class="stat-panel-body" style="padding:10px;">
               <div class="table-container" style="margin:0;max-height:none;">
-                <table class="analysis-table">
-                  <thead>
+                <table class="analysis-table" id="primaryTestTable">
+                  <thead id="primaryTestTableHead">
                     <tr><th>Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p-value</th></tr>
                   </thead>
                   <tbody id="anovaSummaryBody">
@@ -802,6 +802,9 @@
 
         // ANOVA summary block
         const anovaBody = document.getElementById("anovaSummaryBody");
+        const primaryTestHeading = document.getElementById("primaryTestHeading");
+        const primaryTestTableHead = document.getElementById("primaryTestTableHead");
+        
         console.log("🔍 Populating ANOVA table with omnibus data:", ob);
         console.log("📊 ANOVA Values:", {
           SSBetween: ob.anovaSSBetween,
@@ -814,16 +817,47 @@
           F: ob.anovaF,
           P: ob.anovaP
         });
-        if (anovaBody) {
-          const df1 = parseMaybeNumber(ob.anovaDf1);
-          const df2 = parseMaybeNumber(ob.anovaDf2);
-          const totalDf = isFinite(df1) && isFinite(df2) ? df1 + df2 : NaN;
-          anovaBody.innerHTML = ''
-            + '<tr><td>Treatments</td><td>' + fmt(ob.anovaSSBetween) + '</td><td>' + (isFinite(df1) ? Math.round(df1) : '...') + '</td><td>' + fmt(ob.anovaMSBetween) + '</td><td>' + fmt(ob.anovaF) + '</td><td>' + fmtP(ob.anovaP) + '</td></tr>'
-            + '<tr><td>Within groups</td><td>' + fmt(ob.anovaSSWithin) + '</td><td>' + (isFinite(df2) ? Math.round(df2) : '...') + '</td><td>' + fmt(ob.anovaMSWithin) + '</td><td></td><td></td></tr>'
-            + '<tr><td>Total</td><td>' + fmt(ob.anovaSSTotal) + '</td><td>' + (isFinite(totalDf) ? Math.round(totalDf) : '...') + '</td><td></td><td></td><td></td></tr>';
-          console.log("✅ ANOVA table populated successfully");
+        
+        // Update table based on framework selection
+        const isNonParametric = primaryFramework === "nonparametric";
+        
+        if (isNonParametric) {
+          // Friedman Test (Non-parametric)
+          if (primaryTestHeading) primaryTestHeading.textContent = "Friedman Test (Non-parametric)";
+          if (primaryTestTableHead) {
+            primaryTestTableHead.innerHTML = '<tr><th>Source</th><th>Mean Rank</th><th>Chi-Square</th><th>df</th><th>p-value</th></tr>';
+          }
+          if (anovaBody) {
+            const meanRanks = ob.meanRanks || {};
+            const rankKeys = Object.keys(meanRanks);
+            let rowsHtml = rankKeys.map(function(key, idx) {
+              return '<tr><td>' + key + '</td><td>' + fmt(meanRanks[key]) + '</td><td>' + (idx === 0 ? fmt(ob.kwH) : '') + '</td><td>' + (idx === 0 ? Math.round(ob.kwDf) : '') + '</td><td>' + (idx === 0 ? fmtP(ob.kwP) : '') + '</td></tr>';
+            }).join('');
+            if (rankKeys.length === 0) {
+              rowsHtml = '<tr><td colspan="5" style="text-align:center;">No rank data available</td></tr>';
+            }
+            anovaBody.innerHTML = rowsHtml;
+            console.log("✅ Friedman test table populated successfully");
+          }
         } else {
+          // Repeated Measures ANOVA (Parametric)
+          if (primaryTestHeading) primaryTestHeading.textContent = "Repeated Measures ANOVA (Parametric)";
+          if (primaryTestTableHead) {
+            primaryTestTableHead.innerHTML = '<tr><th>Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p-value</th></tr>';
+          }
+          if (anovaBody) {
+            const df1 = parseMaybeNumber(ob.anovaDf1);
+            const df2 = parseMaybeNumber(ob.anovaDf2);
+            const totalDf = isFinite(df1) && isFinite(df2) ? df1 + df2 : NaN;
+            anovaBody.innerHTML = ''
+              + '<tr><td>Treatments</td><td>' + fmt(ob.anovaSSBetween) + '</td><td>' + (isFinite(df1) ? Math.round(df1) : '...') + '</td><td>' + fmt(ob.anovaMSBetween) + '</td><td>' + fmt(ob.anovaF) + '</td><td>' + fmtP(ob.anovaP) + '</td></tr>'
+              + '<tr><td>Within subjects</td><td>' + fmt(ob.anovaSSWithin) + '</td><td>' + (isFinite(df2) ? Math.round(df2) : '...') + '</td><td>' + fmt(ob.anovaMSWithin) + '</td><td></td><td></td></tr>'
+              + '<tr><td>Total</td><td>' + fmt(ob.anovaSSTotal) + '</td><td>' + (isFinite(totalDf) ? Math.round(totalDf) : '...') + '</td><td></td><td></td><td></td></tr>';
+            console.log("✅ ANOVA table populated successfully");
+          }
+        }
+        
+        if (!anovaBody) {
           console.error("❌ ANOVA table body not found!");
         }
         // Update group visualization chart
