@@ -569,10 +569,15 @@ function computePostHocComparisons(groupData, groupNames, msError, n) {
       const pGH = approximateTTest(tGH, Math.min(n1, n2) - 1);
       
       comparisons.push({
+        comparison: groupNames[i] + " vs " + groupNames[j],
         group1: groupNames[i],
         group2: groupNames[j],
+        estimate: diff,
         diff: diff,
         se: sem,
+        statistic: qStat,
+        rawP: p,
+        adjP: p, // Will be updated with Holm correction
         tukey: { q: qStat, p: p },
         gamesHowell: { t: tGH, p: pGH }
       });
@@ -580,14 +585,17 @@ function computePostHocComparisons(groupData, groupNames, msError, n) {
   }
   
   // Apply Holm correction
-  comparisons.sort((a, b) => a.tukey.p - b.tukey.p);
+  comparisons.sort((a, b) => a.rawP - b.rawP);
   const numComparisons = comparisons.length;
   comparisons.forEach((comp, idx) => {
+    comp.adjP = Math.min(1, comp.rawP * (numComparisons - idx));
     comp.tukey.pHolm = Math.min(1, comp.tukey.p * (numComparisons - idx));
     comp.gamesHowell.pHolm = Math.min(1, comp.gamesHowell.p * (numComparisons - idx));
   });
   
   return {
+    enabled: true,
+    rows: comparisons,
     pairwise: comparisons,
     method: "Tukey HSD / Games-Howell",
     correction: "Holm"
