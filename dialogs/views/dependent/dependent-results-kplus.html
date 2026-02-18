@@ -477,9 +477,9 @@
         <section id="tab-posthoc" class="tab-panel">
           <div class="stat-panel">
             <div class="stat-panel-heading parametric" id="posthocHeading">
-              Post-hoc Pairwise Comparisons
+              Post-hoc Pairwise Comparisons (Paired t-tests)
               <div style="float:right;display:inline-flex;gap:8px;align-items:center;font-size:11px;font-weight:600;text-transform:none;">
-                <span style="opacity:0.8;">Group by:</span>
+                <span style="opacity:0.8;">Filter:</span>
                 <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
                   <input type="radio" name="posthocGrouping" value="all" checked onchange="updatePosthocDisplay()"> All pairs
                 </label>
@@ -487,7 +487,7 @@
                   <input type="radio" name="posthocGrouping" value="ref" onchange="updatePosthocDisplay()"> vs Reference
                 </label>
                 <select id="posthocRefGroup" style="height:24px;padding:0 6px;border-radius:4px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:11px;display:none;" onchange="updatePosthocDisplay()">
-                  <option value="">Select group...</option>
+                  <option value="">Select timepoint...</option>
                 </select>
               </div>
             </div>
@@ -1718,34 +1718,48 @@
         }
       }
       
-      // Recommendation text with robustness emphasis
+      // Recommendation text for repeated measures
       const recoEl = document.getElementById("asRecoText");
       if (recoEl) {
         let recoText = "";
-        if (variancesEqual) {
-          if (anovaSig === welchSig) {
-            recoText = "✓ <strong>Standard one-way ANOVA is appropriate.</strong> The assumption of homogeneity of variance is met. <strong>Results are robust:</strong> both standard ANOVA and Welch ANOVA " + (anovaSig ? "show significant differences" : "show no significant differences") + ". You can proceed with the regular ANOVA F-test and standard post-hoc tests (e.g., Tukey HSD).";
+        const anovaSig = anovaP < alpha;
+        const friedmanP = parseMaybeNumber(ob.kwP);
+        const friedmanSig = friedmanP < alpha;
+        
+        if (sphericityMet) {
+          recoText = "✓ <strong>Repeated Measures ANOVA is appropriate.</strong> The sphericity assumption is met (Mauchly's W = " + fmt(mauchlyW) + ", p = " + fmtP(mauchlyP) + "). ";
+          if (anovaSig) {
+            recoText += "The RM-ANOVA shows <strong>significant differences</strong> across timepoints (p " + fmtP(anovaP) + "). Proceed with <strong>paired post-hoc tests</strong> with Holm-Bonferroni correction.";
           } else {
-            recoText = "✓ <strong>Standard one-way ANOVA is appropriate.</strong> The assumption of homogeneity of variance is met. You can proceed with Tukey HSD post-hoc tests.";
+            recoText += "The RM-ANOVA shows <strong>no significant differences</strong> across timepoints (p = " + fmtP(anovaP) + ").";
           }
-        } else if (welchSig && anovaSig) {
-          recoText = "⚠ <strong>Use Welch ANOVA and Games-Howell post-hoc.</strong> The equal variance assumption is violated, but <strong>results are robust:</strong> both standard ANOVA and Welch's test show significant differences. Use Games-Howell for pairwise comparisons as it doesn't assume equal variances.";
-        } else if (welchSig) {
-          recoText = "⚠ <strong>Use Welch ANOVA and Games-Howell post-hoc.</strong> The equal variance assumption is violated. Welch's test (which doesn't assume equal variances) shows significant differences. Use Games-Howell for pairwise comparisons.";
         } else {
-          recoText = "⚠ <strong>Consider Welch ANOVA or non-parametric alternative.</strong> The equal variance assumption is violated. Welch's test is more robust to this violation. " + (anovaSig !== welchSig ? "⚠ <strong>Results are sensitive:</strong> ANOVA and Welch disagree. Prefer Welch's result. " : "") + "Alternatively, consider Friedman test if normality is also questionable.";
+          recoText = "⚠ <strong>Sphericity assumption violated - Corrections applied.</strong> ";
+          recoText += "Greenhouse-Geisser ε = " + fmt(epsilonGG) + ", Huynh-Feldt ε = " + fmt(epsilonHF) + ". ";
+          
+          const pValueGG = parseMaybeNumber(ob.anovaPGG);
+          const pValueHF = parseMaybeNumber(ob.anovaPHF);
+          
+          if (pValueGG < alpha) {
+            recoText += "Even with correction, differences are <strong>significant</strong> (GG-corrected p " + fmtP(pValueGG) + "). ";
+            recoText += "Proceed with <strong>paired post-hoc tests</strong> with Holm-Bonferroni correction.";
+          } else {
+            recoText += "With correction applied, no significant differences detected (GG-corrected p = " + fmtP(pValueGG) + ").";
+          }
         }
+        
+        // Add Friedman note if parametric assumptions are questionable
+        if (friedmanSig === anovaSig) {
+          recoText += " <em>Note: Friedman test (nonparametric alternative) confirms the " + (anovaSig ? "significant" : "non-significant") + " result.</em>";
+        }
+        
         recoEl.innerHTML = recoText;
       }
       
-      // Auto-select post-hoc method based on recommendation
+      // Auto-select post-hoc method based on recommendation (paired tests for RM)
       const posthocSelect = document.getElementById("setPosthocMethod");
       if (posthocSelect) {
-        if (variancesEqual) {
-          posthocSelect.value = "tukey";
-        } else {
-          posthocSelect.value = "gameshowell";
-        }
+        posthocSelect.value = "paired"; // Always use paired for RM
       }
       updateResultsPanels(r, fx, s, 1 - (parseMaybeNumber(s.confidence) || 0.95));
       renderPosthoc(r.posthoc || {}, "k-plus");
