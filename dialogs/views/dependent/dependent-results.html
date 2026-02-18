@@ -151,7 +151,7 @@
     <section class="card">
       <div class="hero-section">
         <div class="hero-content">
-          <div class="hero-title"><span>Dependent (Paired) Module (Paired Samples)</span></div>
+          <div class="hero-title"><span>Paired Samples Module</span></div>
           <div class="hero-controls">
             <button class="hero-action-btn" onclick="generateAISummary()" title="Generate AI statistical summary from all results" id="aiSummaryBtn">
               <i class="fa-solid fa-brain"></i> AI Summary
@@ -216,9 +216,8 @@
           <div class="inference-card" id="primaryTestWrap" style="flex:1 1 auto;min-width:280px;">
             <div class="inference-title">Test method</div>
             <select id="setPrimaryTest" style="width:100%;height:42px;font-size:14px;padding:0 12px;border-radius:10px;border:1px solid rgba(120,200,255,.45);background:rgba(15,23,42,.95);color:#fff;font-weight:600;">
-              <option value="welch">Welch t-test (recommended)</option>
-              <option value="student">Student t-test (equal variance)</option>
-              <option value="permutation">Permutation test (mean difference)</option>
+              <option value="paired">Paired t-test (recommended)</option>
+              <option value="wilcoxon">Wilcoxon signed-rank test</option>
             </select>
           </div>
 
@@ -255,7 +254,7 @@
         <div class="hyp-row">
 
           <div class="hyp-block hyp-main">
-            <strong>H0:</strong> <span id="h0Text">Difference = 0</span>
+            <strong>H0:</strong> <span id="h0Text">Mean change = 0</span>
           </div>
 
           <div class="hyp-block">
@@ -265,17 +264,17 @@
   <div class="hbox-row hyp-options" id="h1Row">
     <label class="h-radio">
       <input type="radio" name="h1Orientation" value="less"/>
-      Difference &lt; 0
+      Change &lt; 0
     </label>
 
     <label class="h-radio">
       <input type="radio" name="h1Orientation" value="two-sided" checked/>
-      Difference ≠ 0
+      Change ≠ 0
     </label>
 
     <label class="h-radio">
       <input type="radio" name="h1Orientation" value="greater"/>
-      Difference &gt; 0
+      Change &gt; 0
     </label>
   </div>
 
@@ -546,12 +545,10 @@
             ? [{ v: "kruskal", t: "Kruskal-Wallis" }]
             : [{ v: "anova", t: "One-way ANOVA" }];
         } else if (primaryFramework === "nonparametric") {
-          options = [{ v: "mann-whitney", t: "Mann-Whitney U" }];
+          options = [{ v: "wilcoxon", t: "Wilcoxon signed-rank" }];
         } else {
           options = [
-            { v: "welch", t: "Welch t-test" },
-            { v: "student", t: "Student t-test (equal var)" },
-            { v: "permutation", t: "Permutation t-test" }
+            { v: "paired", t: "Paired t-test" }
           ];
         }
         testSel.innerHTML = options.map(function(o){ return '<option value="' + o.v + '">' + o.t + '</option>'; }).join("");
@@ -561,15 +558,13 @@
         testSel.disabled = options.length === 1;
       }
       if (testBadge) {
-        var text = "Welch t-test";
+        var text = "Paired t-test";
         if (compareMode === "k-plus") {
-          text = primaryFramework === "nonparametric" ? "Kruskal-Wallis" : "One-way ANOVA";
+          text = primaryFramework === "nonparametric" ? "Friedman test" : "Repeated Measures ANOVA";
         } else if (primaryFramework === "nonparametric") {
-          text = "Mann-Whitney U";
-        } else if (currentPrimaryTest === "student") {
-          text = "Student t-test (equal var)";
-        } else if (currentPrimaryTest === "permutation") {
-          text = "Permutation t-test";
+          text = "Wilcoxon signed-rank";
+        } else if (currentPrimaryTest === "paired") {
+          text = "Paired t-test";
         }
         testBadge.textContent = "Test: " + text;
       }
@@ -707,33 +702,19 @@
       }
 
       if (primaryParametric) {
-        const chosen = currentPrimaryTest || "welch";
+        const chosen = currentPrimaryTest || "paired";
         
         // Set test rationale
-        if (chosen === "student") {
-          setText("resTestRationale", "Equal variances assumed (pooled estimate)");
-        } else if (chosen === "welch") {
-          setText("resTestRationale", "Robust default for unequal variances/sample sizes");
+        if (chosen === "paired") {
+          setText("resTestRationale", "Parametric test for within-subject differences");
         } else {
-          setText("resTestRationale", "Distribution-free permutation approach");
+          setText("resTestRationale", "Non-parametric test for paired ordinal/skewed data");
         }
         
-        if (chosen === "student") {
-          setText("resPrimaryTest", "Student t-test (equal var)");
-          setText("resPrimaryStat", "t(" + fmt(r.studentDf) + ") = " + fmt(r.studentT));
-          setText("resPrimaryP", fmtP(r.studentP));
-          setText("resPrimaryEstimate", fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "]");
-        } else if (chosen === "permutation") {
-          setText("resPrimaryTest", "Permutation t-test");
-          setText("resPrimaryStat", "Permutation B=" + fmt(r.permutationIterations || 1200));
-          setText("resPrimaryP", fmtP(r.permutationP));
-          setText("resPrimaryEstimate", fmt(r.meanDiff));
-        } else {
-          setText("resPrimaryTest", "Welch t-test");
-          setText("resPrimaryStat", "t(" + fmt(r.welchDf) + ") = " + fmt(r.welchT));
-          setText("resPrimaryP", fmtP(r.welchP));
-          setText("resPrimaryEstimate", fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "]");
-        }
+        setText("resPrimaryTest", "Paired t-test");
+        setText("resPrimaryStat", "t(" + fmt(r.pairedDf || r.welchDf) + ") = " + fmt(r.pairedT || r.welchT));
+        setText("resPrimaryP", fmtP(r.pairedP || r.welchP));
+        setText("resPrimaryEstimate", fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "]");
         
         // Effect size
         const hedgesG = parseMaybeNumber(fx.hedgesG);
@@ -747,16 +728,16 @@
         }
         setText("resEffectSize", fmt(fx.hedgesG) + effectLabel);
         
-        setText("resSecondaryTest", "Mann-Whitney U (rank-based)");
-        setText("resSecondaryStat", "U = " + fmt(r.u));
-        setText("resSecondaryP", fmtP(r.mwP));
+        setText("resSecondaryTest", "Wilcoxon signed-rank (rank-based)");
+        setText("resSecondaryStat", "W = " + fmt(r.wilcoxonW || r.u));
+        setText("resSecondaryP", fmtP(r.wilcoxonP || r.mwP));
         setText("resRankBiserial", fmt(fx.rankBiserial));
       } else {
-        setText("resTestRationale", "Non-parametric test for ordinal/skewed data");
-        setText("resPrimaryTest", "Mann-Whitney U");
-        setText("resPrimaryStat", "U = " + fmt(r.u));
-        setText("resPrimaryP", fmtP(r.mwP));
-        setText("resPrimaryEstimate", "P(X>Y) = " + fmt(fx.probabilitySuperiority));
+        setText("resTestRationale", "Non-parametric test for paired ordinal/skewed data");
+        setText("resPrimaryTest", "Wilcoxon signed-rank");
+        setText("resPrimaryStat", "W = " + fmt(r.wilcoxonW || r.u));
+        setText("resPrimaryP", fmtP(r.wilcoxonP || r.mwP));
+        setText("resPrimaryEstimate", "Median change = " + fmt(r.medianDiff || 0));
         const rankBis = parseMaybeNumber(fx.rankBiserial);
         let rbLabel = "";
         if (isFinite(rankBis)) {
@@ -767,9 +748,9 @@
           else rbLabel = " (large)";
         }
         setText("resEffectSize", fmt(fx.rankBiserial) + rbLabel);
-        setText("resSecondaryTest", "Welch t-test (parametric)");
-        setText("resSecondaryStat", "t(" + fmt(r.welchDf) + ") = " + fmt(r.welchT));
-        setText("resSecondaryP", fmtP(r.welchP));
+        setText("resSecondaryTest", "Paired t-test (parametric)");
+        setText("resSecondaryStat", "t(" + fmt(r.pairedDf || r.welchDf) + ") = " + fmt(r.pairedT || r.welchT));
+        setText("resSecondaryP", fmtP(r.pairedP || r.welchP));
         setText("resRankBiserial", fmt(fx.rankBiserial) + rbLabel);
       }
 
@@ -1233,8 +1214,8 @@
       
       const e = lastBundle.explore;
       const s = lastBundle.setup || {};
-      const groupAName = s.groupA || 'Group A';
-      const groupBName = s.groupB || 'Group B';
+      const groupAName = s.groupA || 'Time 1';
+      const groupBName = s.groupB || 'Time 2';
       
       const n1 = parseMaybeNumber(e.n1) || 0;
       const n2 = parseMaybeNumber(e.n2) || 0;
@@ -1373,7 +1354,7 @@
         const payload = buildAIPayload();
         console.log('📦 AI Payload:', payload);
         
-        const systemPrompt = `You are a statistical expert. Provide a concise, professional summary of the dependent t-test/Mann-Whitney U analysis results. Format p-values as "p < .001" when p < 0.001. Include group means and standard deviations. Include assumption test results (normality, homogeneity of variance). Use APA style where appropriate.`;
+        const systemPrompt = `You are a statistical expert. Provide a concise, professional summary of the paired samples t-test/Wilcoxon signed-rank analysis results. Format p-values as "p < .001" when p < 0.001. Include means for both time points and the mean change. Include assumption test results (normality of differences). Use APA style where appropriate.`;
         
         const userPrompt = `Summarize this 2-group comparison analysis:\n\n${JSON.stringify(payload, null, 2)}\n\nProvide a brief, clear summary highlighting: 1) group descriptives, 2) assumption tests, 3) primary test result, 4) effect size, 5) interpretation.`;
         
@@ -1448,16 +1429,16 @@
           primaryFramework: s.primaryFramework || primaryFramework
         },
         groups: {
-          groupA: {
-            name: s.groupA || 'Group A',
+          time1: {
+            name: s.groupA || 'Time 1',
             n: e.n1,
             mean: e.mean1,
             sd: e.sd1,
             median: e.med1,
             iqr: e.iqr1
           },
-          groupB: {
-            name: s.groupB || 'Group B',
+          time2: {
+            name: s.groupB || 'Time 2',
             n: e.n2,
             mean: e.mean2,
             sd: e.sd2,
@@ -1466,31 +1447,24 @@
           }
         },
         assumptions: {
-          normalityA: a.normalityA,
-          normalityB: a.normalityB,
-          equalVariance: a.equalVariance,
+          normalityDifferences: a.normalityA, // For paired data, we check normality of differences
           recommendation: a.recommendation
         },
         results: {
           parametric: {
-            welch: {
-              t: r.welchT,
-              df: r.welchDf,
-              p: r.welchP
-            },
-            student: {
-              t: r.studentT,
-              df: r.studentDf,
-              p: r.studentP
+            paired: {
+              t: r.pairedT || r.welchT,
+              df: r.pairedDf || r.welchDf,
+              p: r.pairedP || r.welchP
             },
             meanDiff: r.meanDiff,
             ciLow: r.ciLow,
             ciHigh: r.ciHigh
           },
           nonparametric: {
-            mannWhitneyU: {
-              u: r.u,
-              p: r.mwP
+            wilcoxon: {
+              w: r.wilcoxonW || r.u,
+              p: r.wilcoxonP || r.mwP
             }
           }
         },
