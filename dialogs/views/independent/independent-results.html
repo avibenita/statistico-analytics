@@ -1015,19 +1015,192 @@
       
       d3.select('#histogram-container-two').selectAll('*').remove();
       
-      // Show placeholder message since we don't have raw data
       const svg = d3.select('#histogram-container-two')
         .append('svg')
         .attr('width', width)
         .attr('height', height);
       
-      svg.append('text')
-        .attr('x', width / 2)
-        .attr('y', height / 2)
+      const margin = { top: 20, right: 25, bottom: 40, left: 50 };
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+      
+      const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+      
+      // Get stats
+      const mean = parseMaybeNumber(grp.mean);
+      const sd = parseMaybeNumber(grp.sd);
+      const min = parseMaybeNumber(grp.min);
+      const max = parseMaybeNumber(grp.max);
+      const median = parseMaybeNumber(grp.median);
+      const n = grp.n || 0;
+      
+      if (!isFinite(mean) || !isFinite(sd) || sd <= 0) {
+        g.append('text')
+          .attr('x', innerWidth / 2)
+          .attr('y', innerHeight / 2)
+          .attr('text-anchor', 'middle')
+          .attr('fill', 'var(--text-secondary)')
+          .style('font-size', '12px')
+          .text('Insufficient data for distribution visualization');
+        return;
+      }
+      
+      // Create theoretical normal distribution curve
+      const xMin = Math.min(min, mean - 3.5 * sd);
+      const xMax = Math.max(max, mean + 3.5 * sd);
+      const xScale = d3.scaleLinear()
+        .domain([xMin, xMax])
+        .range([0, innerWidth]);
+      
+      // Generate normal curve points
+      const points = [];
+      const numPoints = 100;
+      for (let i = 0; i <= numPoints; i++) {
+        const x = xMin + (xMax - xMin) * i / numPoints;
+        const z = (x - mean) / sd;
+        const y = Math.exp(-0.5 * z * z) / (sd * Math.sqrt(2 * Math.PI));
+        points.push({ x, y });
+      }
+      
+      const yMax = d3.max(points, d => d.y);
+      const yScale = d3.scaleLinear()
+        .domain([0, yMax * 1.1])
+        .range([innerHeight, 0]);
+      
+      // Add grid
+      g.append('g')
+        .attr('class', 'grid')
+        .attr('opacity', 0.1)
+        .call(d3.axisLeft(yScale)
+          .tickSize(-innerWidth)
+          .tickFormat(''));
+      
+      // Draw normal curve
+      const line = d3.line()
+        .x(d => xScale(d.x))
+        .y(d => yScale(d.y))
+        .curve(d3.curveBasis);
+      
+      g.append('path')
+        .datum(points)
+        .attr('fill', 'none')
+        .attr('stroke', '#74b9ff')
+        .attr('stroke-width', 2.5)
+        .attr('d', line);
+      
+      // Fill area under curve
+      const area = d3.area()
+        .x(d => xScale(d.x))
+        .y0(innerHeight)
+        .y1(d => yScale(d.y))
+        .curve(d3.curveBasis);
+      
+      g.append('path')
+        .datum(points)
+        .attr('fill', '#74b9ff')
+        .attr('fill-opacity', 0.2)
+        .attr('d', area);
+      
+      // Mark mean
+      g.append('line')
+        .attr('x1', xScale(mean))
+        .attr('x2', xScale(mean))
+        .attr('y1', 0)
+        .attr('y2', innerHeight)
+        .attr('stroke', '#fbbf24')
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '5,5');
+      
+      g.append('text')
+        .attr('x', xScale(mean))
+        .attr('y', -5)
         .attr('text-anchor', 'middle')
-        .attr('fill', 'var(--text-secondary)')
-        .style('font-size', '14px')
-        .text('Histogram requires raw data (not available in summary)');
+        .attr('fill', '#fbbf24')
+        .style('font-size', '11px')
+        .style('font-weight', 'bold')
+        .text('μ');
+      
+      // Mark median if different from mean
+      if (isFinite(median) && Math.abs(median - mean) > 0.01) {
+        g.append('line')
+          .attr('x1', xScale(median))
+          .attr('x2', xScale(median))
+          .attr('y1', 0)
+          .attr('y2', innerHeight)
+          .attr('stroke', '#4ade80')
+          .attr('stroke-width', 2)
+          .attr('stroke-dasharray', '3,3');
+        
+        g.append('text')
+          .attr('x', xScale(median))
+          .attr('y', -5)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#4ade80')
+          .style('font-size', '11px')
+          .style('font-weight', 'bold')
+          .text('M');
+      }
+      
+      // Mark ±1 SD
+      g.append('line')
+        .attr('x1', xScale(mean - sd))
+        .attr('x2', xScale(mean - sd))
+        .attr('y1', innerHeight * 0.2)
+        .attr('y2', innerHeight * 0.8)
+        .attr('stroke', 'rgba(255,255,255,0.3)')
+        .attr('stroke-width', 1);
+      
+      g.append('line')
+        .attr('x1', xScale(mean + sd))
+        .attr('x2', xScale(mean + sd))
+        .attr('y1', innerHeight * 0.2)
+        .attr('y2', innerHeight * 0.8)
+        .attr('stroke', 'rgba(255,255,255,0.3)')
+        .attr('stroke-width', 1);
+      
+      // X axis
+      g.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${innerHeight})`)
+        .call(d3.axisBottom(xScale).ticks(6))
+        .selectAll('text')
+        .attr('fill', 'white');
+      
+      // Y axis
+      g.append('g')
+        .attr('class', 'axis')
+        .call(d3.axisLeft(yScale).ticks(5))
+        .selectAll('text')
+        .attr('fill', 'white');
+      
+      // Labels
+      g.append('text')
+        .attr('x', innerWidth / 2)
+        .attr('y', innerHeight + 35)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .style('font-size', '11px')
+        .text('Value');
+      
+      g.append('text')
+        .attr('x', -innerHeight / 2)
+        .attr('y', -35)
+        .attr('text-anchor', 'middle')
+        .attr('transform', 'rotate(-90)')
+        .attr('fill', 'white')
+        .style('font-size', '11px')
+        .text('Density');
+      
+      // Add annotation
+      g.append('text')
+        .attr('x', innerWidth / 2)
+        .attr('y', 15)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'rgba(255,255,255,0.5)')
+        .style('font-size', '10px')
+        .style('font-style', 'italic')
+        .text('Theoretical normal distribution (based on μ and σ)');
     }
     
     function updateGroupChart() {
