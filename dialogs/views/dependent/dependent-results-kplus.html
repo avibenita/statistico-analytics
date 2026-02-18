@@ -430,7 +430,7 @@
           <div class="stats-container" style="margin-top:12px;">
             <div class="stat-panel">
               <div class="stat-panel-heading">
-                Group Visualization
+                Timepoint Visualization
                 <div style="float:right;display:inline-flex;gap:12px;font-size:11px;font-weight:600;">
                   <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">
                     <input type="radio" name="chartMetric" value="means" checked onchange="updateGroupChart()"> Means
@@ -650,8 +650,8 @@
       var h0 = document.getElementById("h0Text");
       var h1Row = document.getElementById("h1Row");
       if (!h0 || !h1Row) return;
-      h0.textContent = "All groups are equal";
-      h1Row.innerHTML = '<span style="color:#1f2937;font-weight:800;">At least one group differs.</span>';
+      h0.textContent = "All timepoint means equal";
+      h1Row.innerHTML = '<span style="color:#1f2937;font-weight:800;">At least one timepoint differs.</span>';
     }
     function refreshSettingsVisibility(){
       const setDisplay = (id, show) => { const el = document.getElementById(id); if (el) el.style.display = show ? "flex" : "none"; };
@@ -951,7 +951,7 @@
       }
       console.log("Highcharts version:", Highcharts.version);
       
-      const chartTitle = metricType === 'means' ? 'Group Means' : 'Group Variances';
+      const chartTitle = metricType === 'means' ? 'Timepoint Means' : 'Timepoint Variances';
       const yAxisTitle = metricType === 'means' ? 'Mean' : 'Variance';
       
       console.log("About to create chart...");
