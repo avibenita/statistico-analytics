@@ -43,12 +43,12 @@
     .radio-label:hover{border-color:#3b82f6;background:#1e3a8a;}
     .radio-label .radio-icon{font-size:16px;margin-bottom:4px;display:block;}
     .radio-label .radio-text{font-size:12px;display:block;}
-    .bucket{border:2px dashed #2a3d5f;border-radius:10px;padding:8px;background:#0b1428;min-height:52px;max-height:116px;overflow:auto;}
-    .bucket-title{font-size:12px;color:#9fb0cc;font-weight:700;margin-bottom:6px;}
+    .bucket{border:2px solid #2b5fd9;border-radius:12px;padding:10px;background:#f7f9fd;min-height:60px;max-height:120px;overflow:auto;margin-top:8px;}
+    .bucket-title{font-size:12px;color:#4b5563;font-weight:700;margin-bottom:6px;}
     .bucket-items{display:flex;gap:6px;flex-wrap:wrap;}
     .bucket-pill{display:inline-flex;align-items:center;gap:6px;background:#1e3a8a;color:#dbeafe;padding:4px 7px;border-radius:999px;font-size:11px;}
     .bucket-pill button{border:none;background:transparent;color:#fff;cursor:pointer;font-size:12px;}
-    .hint{font-size:10px;color:#9fb0cc;margin-top:4px;}
+    .hint{font-size:10px;color:#6b7280;margin-top:4px;}
   </style>
 </head>
 <body>
@@ -61,12 +61,6 @@
     <div class="panel">
       <div class="meta">Range: <strong id="rangeAddr">-</strong></div>
       <div class="meta">Rows: <strong id="rowCount">0</strong> | Columns: <strong id="colCount">0</strong></div>
-    </div>
-
-    <div class="panel">
-      <label>Available variables</label>
-      <div id="interestChecks" class="checks"></div>
-      <div class="hint">Drag variables into the comparison bucket below.</div>
     </div>
 
     <div class="panel">
@@ -99,6 +93,9 @@
     </div>
 
     <div class="panel">
+      <label>Available variables</label>
+      <div id="interestChecks" class="checks"></div>
+      <div class="hint">Click to select variables, then they'll appear in the comparison bucket below.</div>
       <div class="bucket">
         <div class="bucket-title">Comparison bucket</div>
         <div id="compareBucket" class="bucket-items"></div>
