@@ -1035,12 +1035,12 @@
       const median = parseMaybeNumber(grp.median);
       const n = grp.n || 0;
       
-      if (!isFinite(mean) || !isFinite(sd) || sd <= 0) {
+      if (!isFinite(mean) || !isFinite(sd) || sd <= 0 || !isFinite(min) || !isFinite(max)) {
         g.append('text')
           .attr('x', innerWidth / 2)
           .attr('y', innerHeight / 2)
           .attr('text-anchor', 'middle')
-          .attr('fill', 'var(--text-secondary)')
+          .attr('fill', '#999')
           .style('font-size', '12px')
           .text('Insufficient data for distribution visualization');
         return;
@@ -1049,6 +1049,9 @@
       // Create simulated histogram bins using normal distribution
       const xMin = Math.min(min, mean - 3.5 * sd);
       const xMax = Math.max(max, mean + 3.5 * sd);
+      
+      if (!isFinite(xMin) || !isFinite(xMax) || xMin >= xMax) return;
+      
       const xScale = d3.scaleLinear()
         .domain([xMin, xMax])
         .range([0, innerWidth]);
@@ -1061,7 +1064,6 @@
       for (let i = 0; i < numBins; i++) {
         const binStart = xMin + i * binWidth;
         const binEnd = binStart + binWidth;
-        const binMid = (binStart + binEnd) / 2;
         
         // Calculate expected frequency in this bin using normal CDF
         const zStart = (binStart - mean) / sd;
@@ -1072,15 +1074,20 @@
         const prob = cdf(zEnd) - cdf(zStart);
         const expectedCount = prob * n;
         
-        histBins.push({
-          x: binStart,
-          width: binWidth,
-          height: expectedCount,
-          binMid: binMid
-        });
+        if (isFinite(expectedCount)) {
+          histBins.push({
+            x: binStart,
+            width: binWidth,
+            height: expectedCount
+          });
+        }
       }
       
+      if (histBins.length === 0) return;
+      
       const yMax = d3.max(histBins, d => d.height);
+      if (!isFinite(yMax) || yMax <= 0) return;
+      
       const yScale = d3.scaleLinear()
         .domain([0, yMax * 1.15])
         .range([innerHeight, 0]);
@@ -1102,7 +1109,7 @@
         .attr('x', d => xScale(d.x))
         .attr('y', d => yScale(d.height))
         .attr('width', d => Math.max(0, xScale(d.x + d.width) - xScale(d.x) - 1))
-        .attr('height', d => innerHeight - yScale(d.height))
+        .attr('height', d => Math.max(0, innerHeight - yScale(d.height)))
         .attr('fill', '#74b9ff')
         .attr('stroke', '#0984e3')
         .attr('stroke-width', 1);
@@ -1116,21 +1123,25 @@
         const density = Math.exp(-0.5 * z * z) / (sd * Math.sqrt(2 * Math.PI));
         // Scale to match histogram height
         const scaledHeight = density * n * binWidth;
-        curvePoints.push({ x, y: scaledHeight });
+        if (isFinite(scaledHeight)) {
+          curvePoints.push({ x, y: scaledHeight });
+        }
       }
       
-      // Draw normal curve overlay
-      const line = d3.line()
-        .x(d => xScale(d.x))
-        .y(d => yScale(d.y))
-        .curve(d3.curveBasis);
-      
-      g.append('path')
-        .datum(curvePoints)
-        .attr('fill', 'none')
-        .attr('stroke', '#ffd700')
-        .attr('stroke-width', 2.5)
-        .attr('d', line);
+      if (curvePoints.length > 0) {
+        // Draw normal curve overlay
+        const line = d3.line()
+          .x(d => xScale(d.x))
+          .y(d => yScale(d.y))
+          .curve(d3.curveBasis);
+        
+        g.append('path')
+          .datum(curvePoints)
+          .attr('fill', 'none')
+          .attr('stroke', '#ffd700')
+          .attr('stroke-width', 2.5)
+          .attr('d', line);
+      }
       
       // Mark mean
       g.append('line')
