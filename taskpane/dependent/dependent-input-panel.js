@@ -737,8 +737,12 @@ function computeRMPostHocComparisons(completeCases, timepointNames, n, k) {
       // Cohen's d for paired samples
       const cohenD = sdDiff > 0 ? Math.abs(meanDiff / sdDiff) : 0;
       
+      // Format comparison label for RM (use "Time" terminology)
+      const label1 = timepointNames[i].replace(/^(Group|Var|Column)/, 'Time');
+      const label2 = timepointNames[j].replace(/^(Group|Var|Column)/, 'Time');
+      
       comparisons.push({
-        comparison: timepointNames[i] + " vs " + timepointNames[j],
+        comparison: label1 + " vs " + label2,
         timepoint1: timepointNames[i],
         timepoint2: timepointNames[j],
         estimate: meanDiff,
