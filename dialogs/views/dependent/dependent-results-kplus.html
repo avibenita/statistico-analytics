@@ -358,49 +358,45 @@
                 <span style="font-size:12px;color:var(--text-secondary);"><strong>Design:</strong> <span id="balanceText">...</span></span>
               </div>
               
-              <!-- Homogeneity of Variance -->
+              <!-- Sphericity -->
               <div style="margin-bottom:20px;">
-                <h4 style="color:var(--accent-1);margin:0 0 8px 0;font-size:13px;font-weight:700;">1. Homogeneity of Variance (Levene's Test)</h4>
+                <h4 style="color:var(--accent-1);margin:0 0 8px 0;font-size:13px;font-weight:700;">1. Sphericity (Mauchly's Test)</h4>
                 <p style="margin:0 0 8px 0;color:var(--text-secondary);font-size:12px;line-height:1.5;">
-                  <strong>Assumption:</strong> The variances across groups should be approximately equal.<br/>
-                  <strong>H₀:</strong> All group variances are equal &nbsp;|&nbsp; <strong>H₁:</strong> At least one variance differs
+                  <strong>Assumption:</strong> Variances of differences between all pairs of timepoints should be equal.<br/>
+                  <strong>H₀:</strong> Sphericity assumption is met &nbsp;|&nbsp; <strong>H₁:</strong> Sphericity is violated
                 </p>
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
-                  <span style="font-size:12px;color:var(--text-muted);">Levene p-value:</span>
-                  <span class="stat-value" id="asLeveneP" style="min-width:80px;">...</span>
-                  <span id="asLeveneVerdict" style="font-size:12px;font-weight:600;"></span>
+                  <span style="font-size:12px;color:var(--text-muted);">Mauchly's W:</span>
+                  <span class="stat-value" id="asMauchlyW" style="min-width:80px;">...</span>
+                  <span style="font-size:12px;color:var(--text-muted);">p-value:</span>
+                  <span class="stat-value" id="asMauchlyP" style="min-width:80px;">...</span>
+                  <span id="asMauchlyVerdict" style="font-size:12px;font-weight:600;"></span>
                 </div>
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <span style="font-size:12px;color:var(--text-muted);">Brown-Forsythe p-value:</span>
-                  <span class="stat-value" id="asBfP" style="min-width:80px;">...</span>
-                  <span id="asBfVerdict" style="font-size:12px;font-weight:600;"></span>
+                <div style="margin-top:12px;padding:10px;background:#f8f9fa;border-radius:6px;">
+                  <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;"><strong>Corrections (if violated):</strong></div>
+                  <div style="display:flex;gap:20px;font-size:12px;">
+                    <div>
+                      <span style="color:var(--text-muted);">Greenhouse-Geisser ε:</span>
+                      <span class="stat-value" id="asEpsilonGG" style="margin-left:6px;">...</span>
+                    </div>
+                    <div>
+                      <span style="color:var(--text-muted);">Huynh-Feldt ε:</span>
+                      <span class="stat-value" id="asEpsilonHF" style="margin-left:6px;">...</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Robustness Check -->
+              <!-- Design Balance (Optional) -->
               <div style="margin-bottom:20px;">
-                <h4 style="color:var(--accent-1);margin:0 0 8px 0;font-size:13px;font-weight:700;">2. Robust Omnibus Test (Welch ANOVA)</h4>
+                <h4 style="color:var(--accent-1);margin:0 0 8px 0;font-size:13px;font-weight:700;">2. Missing Data</h4>
                 <p style="margin:0 0 8px 0;color:var(--text-secondary);font-size:12px;line-height:1.5;">
-                  <strong>Purpose:</strong> Tests for group differences without assuming equal variances.<br/>
-                  <strong>H₀:</strong> All group means are equal &nbsp;|&nbsp; <strong>H₁:</strong> At least one mean differs
+                  Repeated measures ANOVA uses <strong>listwise deletion</strong>. Only subjects with complete data across all timepoints are included.
                 </p>
-                <div style="margin-bottom:8px;">
-                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
-                    <span style="font-size:11px;color:var(--text-muted);min-width:120px;">Standard ANOVA:</span>
-                    <span id="anovaFStat" style="font-size:11px;color:var(--text-secondary);font-family:monospace;"></span>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <span style="font-size:11px;color:var(--text-muted);min-width:120px;">Welch ANOVA:</span>
-                    <span id="welchFStat" style="font-size:11px;color:var(--text-secondary);font-family:monospace;"></span>
-                  </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="font-size:12px;color:var(--text-muted);">Complete cases:</span>
+                  <span class="stat-value" id="asCompleteCases">...</span>
                 </div>
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-                  <span style="font-size:12px;color:var(--text-muted);">Welch p-value:</span>
-                  <span class="stat-value" id="asWelchP" style="min-width:80px;">...</span>
-                  <span id="asWelchVerdict" style="font-size:12px;font-weight:600;"></span>
-                </div>
-                <!-- Robustness Badge -->
-                <div id="robustnessBadge" style="display:inline-block;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;margin-top:4px;"></div>
               </div>
 
               <!-- Final Recommendation -->
@@ -1696,74 +1692,29 @@
         }
       }
       
-      // F Statistics
-      const anovaFEl = document.getElementById("anovaFStat");
-      const welchFEl = document.getElementById("welchFStat");
-      if (anovaFEl) {
-        anovaFEl.textContent = "F(" + Math.round(ob.anovaDf1) + ", " + Math.round(ob.anovaDf2) + ") = " + fmt(ob.anovaF) + ", p " + fmtP(anovaP);
-      }
-      if (welchFEl) {
-        const wa = ob.welchAnova || {};
-        welchFEl.textContent = "F(" + fmt(wa.df1) + ", " + fmt(wa.df2) + ") = " + fmt(wa.f) + ", p " + fmtP(welchP);
-      }
+      // Sphericity Test (Mauchly)
+      const sphericity = ob.sphericity || {};
+      const mauchlyW = parseMaybeNumber(sphericity.W);
+      const mauchlyP = parseMaybeNumber(sphericity.p);
+      const epsilonGG = parseMaybeNumber(sphericity.epsilonGG);
+      const epsilonHF = parseMaybeNumber(sphericity.epsilonHF);
+      const sphericityMet = sphericity.sphericityMet !== false;
       
-      setText("asLeveneP", fmtP(leveneP));
-      setText("asBfP", fmtP(bfP));
-      setText("asWelchP", fmtP(welchP));
+      setText("asMauchlyW", fmt(mauchlyW));
+      setText("asMauchlyP", fmtP(mauchlyP));
+      setText("asEpsilonGG", fmt(epsilonGG));
+      setText("asEpsilonHF", fmt(epsilonHF));
+      setText("asCompleteCases", lastBundle.results.totalN || 0);
       
-      // Levene verdict
-      const leveneEl = document.getElementById("asLeveneVerdict");
-      if (leveneEl) {
-        if (leveneP > alpha) {
-          leveneEl.textContent = "✓ Assumption met (p > 0.05): Variances are approximately equal";
-          leveneEl.style.color = "#4ade80";
+      // Mauchly verdict
+      const mauchlyEl = document.getElementById("asMauchlyVerdict");
+      if (mauchlyEl) {
+        if (sphericityMet) {
+          mauchlyEl.textContent = "✓ Sphericity assumption met (p > 0.05)";
+          mauchlyEl.style.color = "#4ade80";
         } else {
-          leveneEl.textContent = "⚠ Assumption violated (p < 0.05): Variances differ significantly";
-          leveneEl.style.color = "#fbbf24";
-        }
-      }
-      
-      // Brown-Forsythe verdict
-      const bfEl = document.getElementById("asBfVerdict");
-      if (bfEl) {
-        if (bfP > alpha) {
-          bfEl.textContent = "✓ Confirms equal variances";
-          bfEl.style.color = "#4ade80";
-        } else {
-          bfEl.textContent = "⚠ Confirms unequal variances";
-          bfEl.style.color = "#fbbf24";
-        }
-      }
-      
-      // Welch verdict
-      const welchEl = document.getElementById("asWelchVerdict");
-      if (welchEl) {
-        if (welchP < alpha) {
-          welchEl.textContent = "→ Groups differ significantly even without equal variance assumption";
-          welchEl.style.color = "#e91e63";
-        } else {
-          welchEl.textContent = "→ No significant difference detected";
-          welchEl.style.color = "#4ade80";
-        }
-      }
-      
-      // Robustness Badge
-      const badgeEl = document.getElementById("robustnessBadge");
-      const variancesEqual = leveneP > alpha && bfP > alpha;
-      const anovaSig = anovaP < alpha;
-      const welchSig = welchP < alpha;
-      
-      if (badgeEl) {
-        if (anovaSig === welchSig) {
-          badgeEl.textContent = "✔ Robust result (ANOVA = Welch)";
-          badgeEl.style.background = "rgba(74,222,128,.2)";
-          badgeEl.style.color = "#4ade80";
-          badgeEl.style.border = "1px solid #4ade80";
-        } else {
-          badgeEl.textContent = "⚠ Sensitive to variance (ANOVA ≠ Welch)";
-          badgeEl.style.background = "rgba(251,191,36,.2)";
-          badgeEl.style.color = "#fbbf24";
-          badgeEl.style.border = "1px solid #fbbf24";
+          mauchlyEl.textContent = "⚠ Sphericity violated (p < 0.05) - Corrections applied";
+          mauchlyEl.style.color = "#fbbf24";
         }
       }
       

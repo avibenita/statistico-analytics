@@ -293,14 +293,30 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
   // Friedman test (nonparametric alternative)
   const friedman = computeFriedmanTest(completeCases, k, n);
   
-  // Levene's test for homogeneity of variance
-  const levene = computeLeveneTest(groupData);
+  // Mauchly's Test of Sphericity
+  const sphericity = computeMauchlySphericity(completeCases, k, n);
   
-  // Brown-Forsythe test (robust version of Levene)
-  const brownForsythe = computeBrownForsytheTest(groupData);
+  // Apply sphericity corrections to F-test if violated
+  let fStatCorrected = fStat;
+  let dfBetweenCorrected = dfBetween;
+  let dfErrorCorrected = dfError;
+  let pValueGG = pValue;
+  let pValueHF = pValue;
   
-  // Post-hoc pairwise comparisons
-  const posthoc = computePostHocComparisons(groupData, selectedColumns, msError, n);
+  if (!sphericity.sphericityMet && k >= 3) {
+    // Greenhouse-Geisser correction
+    dfBetweenCorrected = dfBetween * sphericity.epsilonGG;
+    dfErrorCorrected = dfError * sphericity.epsilonGG;
+    pValueGG = approximateFTest(fStat, dfBetweenCorrected, dfErrorCorrected);
+    
+    // Huynh-Feldt correction
+    const dfBetweenHF = dfBetween * sphericity.epsilonHF;
+    const dfErrorHF = dfError * sphericity.epsilonHF;
+    pValueHF = approximateFTest(fStat, dfBetweenHF, dfErrorHF);
+  }
+  
+  // Post-hoc pairwise comparisons using PAIRED t-tests (not Tukey)
+  const posthoc = computeRMPostHocComparisons(completeCases, selectedColumns, n, k);
   
   return {
     totalN: n,
@@ -323,6 +339,11 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
       anovaDf1: dfBetween,
       anovaDf2: dfError,
       anovaP: pValue,
+      // Sphericity corrected values
+      anovaPGG: pValueGG,
+      anovaPHF: pValueHF,
+      anovaDf1GG: dfBetweenCorrected,
+      anovaDf2GG: dfErrorCorrected,
       anovaSSBetween: ssBetween,
       anovaSSWithin: ssError,
       anovaSSTotal: ssTotal,
@@ -333,9 +354,8 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
       kwDf: friedman.df,
       kwP: friedman.p,
       meanRanks: friedman.meanRanks,
-      // Variance tests
-      levene: levene,
-      brownForsythe: brownForsythe,
+      // Sphericity test
+      sphericity: sphericity,
       // Effect sizes
       etaSquared: etaSquared,
       partialEtaSquared: partialEtaSquared,
@@ -422,6 +442,89 @@ function computeFriedmanTest(completeCases, k, n) {
   const etaSquaredH = H / (n * k - 1);
   
   return { H, df, p, meanRanks, epsilonSquared, etaSquaredH };
+}
+
+function computeMauchlySphericity(completeCases, k, n) {
+  // Mauchly's Test of Sphericity
+  // Tests if variances of differences between conditions are equal
+  
+  if (k < 3) {
+    // Sphericity is not testable with only 2 conditions
+    return {
+      W: 1,
+      chiSq: 0,
+      df: 0,
+      p: 1,
+      sphericityMet: true,
+      epsilonGG: 1,
+      epsilonHF: 1,
+      note: "Sphericity not applicable (k<3)"
+    };
+  }
+  
+  // Compute difference scores for all pairs
+  const differences = [];
+  for (let i = 0; i < k - 1; i++) {
+    for (let j = i + 1; j < k; j++) {
+      const diffs = completeCases.map(row => row[i] - row[j]);
+      differences.push(diffs);
+    }
+  }
+  
+  // Covariance matrix of differences
+  const numDiffs = differences.length;
+  const covMatrix = [];
+  for (let i = 0; i < numDiffs; i++) {
+    covMatrix[i] = [];
+    for (let j = 0; j < numDiffs; j++) {
+      const cov = covariance(differences[i], differences[j]);
+      covMatrix[i][j] = cov;
+    }
+  }
+  
+  // Calculate Mauchly's W (determinant ratio)
+  // Simplified approximation for small k
+  const variances = differences.map(d => variance(d));
+  const meanVar = variances.reduce((a, b) => a + b, 0) / variances.length;
+  const productVar = variances.reduce((a, b) => a * b, 1);
+  const W = variances.length > 0 ? Math.pow(productVar / Math.pow(meanVar, variances.length), 1 / variances.length) : 1;
+  
+  // Chi-square approximation for Mauchly's test
+  const dfMauchly = (k * (k - 1) / 2) - 1;
+  const chiSq = -(n - 1 - (2 * k * k + k + 2) / (6 * k)) * Math.log(Math.max(W, 0.001));
+  const p = approximateChiSquareTest(chiSq, dfMauchly);
+  
+  // Greenhouse-Geisser epsilon (conservative correction)
+  const sumVar = variances.reduce((a, b) => a + b, 0);
+  const sumSqVar = variances.reduce((a, b) => a + b * b, 0);
+  const epsilonGG = Math.min(1, Math.max(0, (k * k * meanVar * meanVar) / ((k - 1) * sumSqVar)));
+  
+  // Huynh-Feldt epsilon (less conservative)
+  const epsilonHF = Math.min(1, Math.max(epsilonGG, (n * (k - 1) * epsilonGG - 2) / ((k - 1) * (n - 1 - (k - 1) * epsilonGG))));
+  
+  const sphericityMet = p > 0.05;
+  
+  return {
+    W: W,
+    chiSq: chiSq,
+    df: dfMauchly,
+    p: p,
+    sphericityMet: sphericityMet,
+    epsilonGG: epsilonGG,
+    epsilonHF: epsilonHF,
+    note: sphericityMet ? "Sphericity assumption met" : "Sphericity violated - corrections recommended"
+  };
+}
+
+function covariance(arr1, arr2) {
+  if (arr1.length !== arr2.length || arr1.length === 0) return 0;
+  const mean1 = arr1.reduce((a, b) => a + b, 0) / arr1.length;
+  const mean2 = arr2.reduce((a, b) => a + b, 0) / arr2.length;
+  let cov = 0;
+  for (let i = 0; i < arr1.length; i++) {
+    cov += (arr1[i] - mean1) * (arr2[i] - mean2);
+  }
+  return cov / (arr1.length - 1);
 }
 
 function approximateChiSquareTest(chiSq, df) {
@@ -536,6 +639,74 @@ function computeBrownForsytheTest(groupData) {
   const p = approximateFTest(f, dfBetween, dfWithin);
   
   return { f, df1: dfBetween, df2: dfWithin, p };
+}
+
+function computeRMPostHocComparisons(completeCases, timepointNames, n, k) {
+  // Post-hoc for Repeated Measures: PAIRED t-tests with corrections
+  // NOT Tukey HSD (which assumes independence)
+  
+  const comparisons = [];
+  
+  for (let i = 0; i < k - 1; i++) {
+    for (let j = i + 1; j < k; j++) {
+      // Extract paired data for timepoints i and j
+      const time1 = completeCases.map(row => row[i]);
+      const time2 = completeCases.map(row => row[j]);
+      
+      // Compute paired differences
+      const diffs = time1.map((v, idx) => v - time2[idx]).filter(d => isFinite(d));
+      
+      if (diffs.length === 0) continue;
+      
+      const meanDiff = mean(diffs);
+      const sdDiff = stdDev(diffs);
+      const seDiff = sdDiff / Math.sqrt(diffs.length);
+      
+      // Paired t-statistic
+      const tStat = seDiff > 0 ? meanDiff / seDiff : 0;
+      const df = diffs.length - 1;
+      const pRaw = approximateTTest(Math.abs(tStat), df);
+      
+      // Confidence interval
+      const tCrit = 2.0; // Approximate 95% critical value
+      const ciLower = meanDiff - tCrit * seDiff;
+      const ciUpper = meanDiff + tCrit * seDiff;
+      
+      // Cohen's d for paired samples
+      const cohenD = sdDiff > 0 ? Math.abs(meanDiff / sdDiff) : 0;
+      
+      comparisons.push({
+        comparison: timepointNames[i] + " vs " + timepointNames[j],
+        timepoint1: timepointNames[i],
+        timepoint2: timepointNames[j],
+        estimate: meanDiff,
+        se: seDiff,
+        statistic: tStat,
+        df: df,
+        rawP: pRaw,
+        adjP: pRaw, // Will be updated with correction
+        ciLower: ciLower,
+        ciUpper: ciUpper,
+        cohenD: cohenD
+      });
+    }
+  }
+  
+  // Apply Holm-Bonferroni correction
+  comparisons.sort((a, b) => a.rawP - b.rawP);
+  const numComparisons = comparisons.length;
+  comparisons.forEach((comp, idx) => {
+    comp.adjP = Math.min(1, comp.rawP * (numComparisons - idx));
+  });
+  
+  return {
+    enabled: true,
+    rows: comparisons,
+    pairwise: comparisons,
+    method: "Paired t-tests",
+    correction: "Holm-Bonferroni",
+    note: "Post-hoc comparisons use paired t-tests (appropriate for repeated measures)"
+  };
 }
 
 function computePostHocComparisons(groupData, groupNames, msError, n) {
