@@ -1680,6 +1680,21 @@
       updatePosthocOptions();
       const ksum = e.kplusSummary || {};
       const ob = r.omnibus || {};
+      
+      // Check if we have omnibus data
+      if (!ob || !ob.anovaF) {
+        console.error("❌ CRITICAL: No omnibus data found in results!");
+        console.log("Full results object:", r);
+        console.log("Omnibus object:", ob);
+        console.log("This means computeRepeatedMeasuresANOVA() did not run or failed.");
+        
+        // Display error message in the ANOVA table
+        const anovaBody = document.getElementById("anovaSummaryBody");
+        if (anovaBody) {
+          anovaBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#ff6b6b;padding:20px;">⚠️ No ANOVA results computed. Please ensure you have selected 3+ timepoint columns and have valid data.</td></tr>';
+        }
+      }
+      
       const groupCount = isFinite(parseMaybeNumber(ksum.variableCount)) 
         ? parseMaybeNumber(ksum.variableCount) 
         : (Array.isArray(ob.groupDescriptives) ? ob.groupDescriptives.length : (Array.isArray(s.selectedColumns) ? s.selectedColumns.length : "..."));
