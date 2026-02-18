@@ -291,9 +291,14 @@
             <div class="stat-panel-heading">Descriptive Statistics</div>
             <div style="padding:6px 10px;background:rgba(255,165,120,.08);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px;font-size:11px;align-items:center;">
               <span style="color:var(--text-secondary);"><strong>Variables:</strong> <span id="expVarCount" style="color:var(--accent-2);font-weight:700;">...</span></span>
-              <span style="color:var(--text-secondary);"><strong>Total N:</strong> <span id="expTotalN" style="color:var(--accent-2);font-weight:700;">...</span></span>
+              <span style="color:var(--text-secondary);"><strong>Total Rows:</strong> <span id="expTotalRows" style="color:var(--accent-2);font-weight:700;">...</span></span>
+              <span style="color:var(--text-secondary);"><strong>Complete Cases:</strong> <span id="expTotalN" style="color:var(--accent-2);font-weight:700;">...</span></span>
               <span style="color:var(--text-secondary);"><strong>Overall x̄:</strong> <span id="expOverallMean" style="color:var(--accent-2);font-weight:700;">...</span></span>
               <span style="color:var(--text-secondary);"><strong>Framework:</strong> <span id="expFramework" style="color:var(--accent-2);font-weight:700;">...</span></span>
+            </div>
+            <div id="missingDataWarning" style="display:none;padding:8px 10px;background:rgba(251,191,36,.12);border-left:3px solid #fbbf24;margin:0 10px 10px;font-size:11px;">
+              <strong style="color:#fbbf24;"><i class="fa-solid fa-triangle-exclamation"></i> Missing Data:</strong>
+              <span style="color:var(--text-secondary);"> <span id="missingCount" style="font-weight:700;">0</span> rows (<span id="missingPct">0</span>%) excluded due to incomplete timepoint data. RM-ANOVA requires <strong>complete cases</strong> (valid data at all timepoints).</span>
             </div>
             <div class="stat-panel-body">
               <div class="desc-table-wrap">
@@ -1640,7 +1645,25 @@
         ? parseMaybeNumber(ksum.variableCount) 
         : (Array.isArray(ob.groupDescriptives) ? ob.groupDescriptives.length : (Array.isArray(s.selectedColumns) ? s.selectedColumns.length : "..."));
       setText("expVarCount", Math.round(groupCount));
-      setText("expTotalN", isFinite(parseMaybeNumber(ksum.totalN)) ? Math.round(parseMaybeNumber(ksum.totalN)) : (isFinite(ob.N) ? Math.round(ob.N) : "..."));
+      
+      // Display missing data information
+      const totalRows = parseMaybeNumber(e.totalRows) || 0;
+      const completeCases = isFinite(parseMaybeNumber(ksum.totalN)) ? Math.round(parseMaybeNumber(ksum.totalN)) : (isFinite(ob.N) ? Math.round(ob.N) : 0);
+      const missingCount = parseMaybeNumber(e.missingCount) || 0;
+      const missingPct = parseMaybeNumber(e.missingPct) || 0;
+      
+      setText("expTotalRows", totalRows);
+      setText("expTotalN", completeCases);
+      
+      const warningEl = document.getElementById("missingDataWarning");
+      if (warningEl && missingCount > 0) {
+        warningEl.style.display = "block";
+        setText("missingCount", missingCount);
+        setText("missingPct", missingPct.toFixed(1));
+      } else if (warningEl) {
+        warningEl.style.display = "none";
+      }
+      
       setText("expLevels", isFinite(parseMaybeNumber(ksum.levelsCount)) ? Math.round(parseMaybeNumber(ksum.levelsCount)) : "...");
       setText("expOverallMean", isFinite(parseMaybeNumber(ksum.meanOverall)) ? fmt(ksum.meanOverall) : "...");
       setText("expFramework", primaryFramework === "nonparametric" ? "Nonparametric (ranks)" : "Parametric (means)");

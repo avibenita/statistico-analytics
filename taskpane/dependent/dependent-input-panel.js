@@ -202,9 +202,18 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
   }
   
   const n = completeCases.length;
+  const totalRows = rows.length;
+  const missingCount = totalRows - n;
+  const missingPct = totalRows > 0 ? (missingCount / totalRows * 100) : 0;
+  
+  console.log(`Total rows: ${totalRows}, Complete cases: ${n}, Missing: ${missingCount} (${missingPct.toFixed(1)}%)`);
+  
   if (n < 2 || k < 2) {
     return {
       totalN: n,
+      totalRows: totalRows,
+      missingCount: missingCount,
+      missingPct: missingPct,
       grandMean: NaN,
       omnibus: {},
       assumptions: {},
@@ -212,8 +221,6 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
       consistency: "Insufficient data"
     };
   }
-  
-  console.log(`Complete cases: ${n}, Timepoints: ${k}`);
   
   // Calculate means for each timepoint
   const groupMeans = groupData.map(g => g.length ? mean(g) : NaN);
@@ -297,6 +304,9 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
   
   return {
     totalN: n,
+    totalRows: totalRows,
+    missingCount: missingCount,
+    missingPct: missingPct,
     grandMean: grandMean,
     omnibus: {
       N: n,
@@ -683,6 +693,9 @@ function buildDependentBundle(headers, rows, spec) {
   
   // Two-variable mode (original code)
   let t1 = [], t2 = [];
+  let completePairs = 0;
+  let totalRows = rows.length;
+  
   if (compareMode === "two-vars") {
     const aIdx = headers.indexOf(spec.groupA || selectedColumns[0] || headers[0]);
     const bIdx = headers.indexOf(spec.groupB || selectedColumns[1] || selectedColumns[0] || headers[1] || headers[0]);
@@ -691,8 +704,15 @@ function buildDependentBundle(headers, rows, spec) {
       const b = parseNum(r[bIdx]);
       if (isFinite(a)) t1.push(a);
       if (isFinite(b)) t2.push(b);
+      // Count complete pairs
+      if (isFinite(a) && isFinite(b)) completePairs++;
     });
   }
+  
+  const missingPairs = totalRows - completePairs;
+  const missingPct = totalRows > 0 ? (missingPairs / totalRows * 100) : 0;
+  
+  console.log(`Two-timepoint analysis: Total rows: ${totalRows}, Complete pairs: ${completePairs}, Missing: ${missingPairs} (${missingPct.toFixed(1)}%)`);
   
   const alt = spec.hypothesis || "two-sided";
   const paired = computePairedT(t1, t2, alt);
@@ -719,6 +739,10 @@ function buildDependentBundle(headers, rows, spec) {
     },
     explore: {
       n1, n2,
+      totalRows: totalRows,
+      completePairs: completePairs,
+      missingPairs: missingPairs,
+      missingPct: missingPct,
       mean1: mean(t1), mean2: mean(t2),
       med1: median(t1), med2: median(t2),
       sd1: sd(t1), sd2: sd(t2),
