@@ -136,6 +136,13 @@
 .desc-summary-stats div:last-child{border-bottom:none;}
 .desc-summary-stats strong{color:var(--text-secondary);}
 .desc-summary-stats span{color:var(--accent-2);font-weight:700;}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.8);z-index:1000;backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;}
+.modal-content{background:var(--surface-1);border:2px solid var(--border);border-radius:8px;padding:20px;max-width:800px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.5);}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:2px solid var(--accent-1);padding-bottom:10px;}
+.modal-title{font-size:18px;font-weight:700;color:var(--accent-1);}
+.modal-close{background:none;border:none;color:#fff;font-size:24px;cursor:pointer;padding:0;width:30px;height:30px;}
+.modal-close:hover{color:var(--accent-1);}
+.modal-body{color:var(--text-secondary);line-height:1.8;font-size:13px;white-space:pre-wrap;}
 
   </style>
 </head>
@@ -345,12 +352,16 @@
               
               <div style="display:none;" id="desc-histogram-panel">
                 <div style="font-weight:700;margin:16px 0 8px;color:var(--accent-1);display:flex;justify-content:space-between;align-items:center;">
-                  <span>Histogram: <span id="desc-histogram-title">Select a variable</span></span>
+                  <span>Distribution: <span id="desc-histogram-title">Select a variable</span></span>
                 </div>
                 <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
                   <div id="histogram-container-two"></div>
                   <div>
                     <div class="desc-summary-stats" id="desc-summary-table"></div>
+                    <div style="margin-top:12px;padding:8px;background:rgba(255,165,120,.08);border:1px solid rgba(255,165,120,.3);border-radius:6px;">
+                      <div style="font-size:10px;font-weight:700;color:var(--accent-1);margin-bottom:6px;">Normality Assessment</div>
+                      <div id="normalityInfo" style="font-size:10px;color:var(--text-secondary);line-height:1.6;"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -942,6 +953,7 @@
       const panel = document.getElementById('desc-histogram-panel');
       const title = document.getElementById('desc-histogram-title');
       const summaryTable = document.getElementById('desc-summary-table');
+      const normalityInfo = document.getElementById('normalityInfo');
       
       if (panel) panel.style.display = 'block';
       if (title) title.textContent = grp.name;
@@ -956,6 +968,36 @@
           <div><strong>Median:</strong><span>${fmt(grp.median)}</span></div>
           <div><strong>Max:</strong><span>${fmt(grp.max)}</span></div>
         `;
+      }
+      
+      // Normality assessment based on sample size and available info
+      if (normalityInfo) {
+        const n = grp.n || 0;
+        let assessment = '';
+        
+        if (n < 20) {
+          assessment = `<strong>⚠ Small sample (n=${n})</strong><br/>` +
+                      `• Normality tests have low power<br/>` +
+                      `• Visual inspection recommended<br/>` +
+                      `• Consider non-parametric tests`;
+        } else if (n < 30) {
+          assessment = `<strong>⚠ Moderate sample (n=${n})</strong><br/>` +
+                      `• Visual inspection important<br/>` +
+                      `• Check for outliers and skewness<br/>` +
+                      `• Parametric tests reasonably robust`;
+        } else if (n < 50) {
+          assessment = `<strong>✓ Good sample size (n=${n})</strong><br/>` +
+                      `• Central Limit Theorem applies<br/>` +
+                      `• Parametric tests robust to mild violations<br/>` +
+                      `• Check for extreme outliers`;
+        } else {
+          assessment = `<strong>✓ Large sample (n=${n})</strong><br/>` +
+                      `• Parametric tests very robust<br/>` +
+                      `• Normality assumption less critical<br/>` +
+                      `• Focus on homogeneity of variance`;
+        }
+        
+        normalityInfo.innerHTML = assessment;
       }
       
       // Render histogram (placeholder - would need raw data)
@@ -1117,13 +1159,13 @@
       
       console.log('🔑 Checking API key...', window.AI_API_KEY ? 'Present' : 'Missing');
       if (!window.AI_API_KEY || window.AI_API_KEY === 'YOUR_API_KEY_PLACEHOLDER') {
-        alert('AI API key not configured. Please set up your Groq API key.');
+        showAISummary('AI API key not configured. Please set up your Groq API key.');
         return;
       }
       
       console.log('📦 Checking lastBundle...', lastBundle ? 'Present' : 'Missing');
       if (!lastBundle) {
-        alert('No analysis results available to summarize. Please run an analysis first.');
+        showAISummary('No analysis results available to summarize. Please run an analysis first.');
         return;
       }
       
@@ -1167,16 +1209,30 @@
         console.log('✅ API response received');
         const summary = data.choices[0].message.content;
         
-        // Display in a modal or alert
-        alert(`AI Summary:\n\n${summary}`);
+        // Display in modal
+        showAISummary(summary);
         
       } catch (error) {
         console.error('❌ AI Summary error:', error);
-        alert(`Error generating AI summary: ${error.message}`);
+        showAISummary(`Error generating AI summary:\n\n${error.message}`);
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-brain"></i> AI Summary';
       }
+    }
+    
+    function showAISummary(content) {
+      const modal = document.getElementById('aiSummaryModal');
+      const contentEl = document.getElementById('aiSummaryContent');
+      if (modal && contentEl) {
+        contentEl.textContent = content;
+        modal.style.display = 'flex';
+      }
+    }
+    
+    function closeAISummaryModal() {
+      const modal = document.getElementById('aiSummaryModal');
+      if (modal) modal.style.display = 'none';
     }
     
     function buildAIPayload() {
@@ -1293,5 +1349,16 @@
       });
     });
   </script>
+  
+  <!-- AI Summary Modal -->
+  <div id="aiSummaryModal" style="display:none;" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">🤖 AI Statistical Summary</div>
+        <button class="modal-close" onclick="closeAISummaryModal()">×</button>
+      </div>
+      <div class="modal-body" id="aiSummaryContent"></div>
+    </div>
+  </div>
 </body>
 </html>
