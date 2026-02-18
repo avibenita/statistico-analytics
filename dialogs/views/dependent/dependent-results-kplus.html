@@ -208,22 +208,40 @@
             </select>
           </div>
 
-          <!-- Post-hoc controls for RM (always visible, shows paired tests) -->
-          <div id="setPosthocWrap" style="flex:0 0 auto;">
+          <!-- Post-hoc controls for RM (dynamic based on framework) -->
+          <div id="setPosthocWrap" style="flex:0 0 auto;position:relative;">
             <label for="setPosthocMethod">Post-hoc</label>
-            <select id="setPosthocMethod" disabled title="Repeated measures uses paired t-tests">
-              <option value="paired">Paired t-tests</option>
+            <select id="setPosthocMethod" title="Post-hoc comparison method (changes with framework)" style="min-width:180px;">
+              <!-- Parametric options (RM-ANOVA) -->
+              <optgroup label="Parametric" id="posthocParametric">
+                <option value="paired">Paired t-tests (all pairs)</option>
+                <option value="paired-baseline">Paired t-tests vs Baseline</option>
+                <option value="none-parametric">None</option>
+              </optgroup>
+              <!-- Nonparametric options (Friedman) -->
+              <optgroup label="Nonparametric" id="posthocNonparametric" style="display:none;">
+                <option value="wilcoxon">Wilcoxon Signed-Rank</option>
+                <option value="conover">Conover</option>
+                <option value="nemenyi">Nemenyi</option>
+                <option value="none-nonparametric">None</option>
+              </optgroup>
             </select>
           </div>
 
-          <div id="setCorrectionWrap" style="display:none;flex:0 0 auto;">
+          <div id="setCorrectionWrap" style="flex:0 0 auto;">
             <label for="setPosthocCorrection">p Correction</label>
-            <select id="setPosthocCorrection">
-              <option value="holm">Holm</option>
-              <option value="bh">Benjamini-Hochberg</option>
+            <select id="setPosthocCorrection" style="min-width:150px;">
+              <option value="holm" selected>Holm</option>
               <option value="bonferroni">Bonferroni</option>
+              <option value="bh">FDR (Benjamini-Hochberg)</option>
               <option value="none">None</option>
             </select>
+          </div>
+          
+          <!-- Context-aware tooltip -->
+          <div id="posthocTooltip" style="flex:0 0 auto;display:flex;align-items:center;padding:4px 8px;background:rgba(74,144,226,0.12);border:1px solid rgba(74,144,226,0.3);border-radius:4px;font-size:10px;color:#90caf9;max-width:280px;">
+            <i class="fa-solid fa-circle-info" style="margin-right:4px;"></i>
+            <span id="posthocTooltipText">Auto-selected based on framework</span>
           </div>
 
         </div>
@@ -736,21 +754,74 @@
     }
     function updatePosthocOptions(){
       var sel = document.getElementById("setPosthocMethod");
+      var corrSel = document.getElementById("setPosthocCorrection");
+      var tooltipText = document.getElementById("posthocTooltipText");
       if (!sel) return;
-      var isNonParam = primaryFramework === "nonparametric" || currentPrimaryTest === "kruskal";
-      var options = isNonParam
-        ? [
-            { v: "dunn", t: "Dunn" },
-            { v: "conover", t: "Conover" }
-          ]
-        : [
-            { v: "games-howell", t: "Games-Howell" },
-            { v: "tukey", t: "Tukey HSD" }
-          ];
-      var current = sel.value;
-      sel.innerHTML = options.map(function(o){ return '<option value="' + o.v + '">' + o.t + '</option>'; }).join("");
-      var keep = options.some(function(o){ return o.v === current; });
-      sel.value = keep ? current : options[0].v;
+      
+      var isNonParam = primaryFramework === "nonparametric" || currentPrimaryTest === "friedman";
+      var isParam = !isNonParam;
+      
+      // Smart context-aware options based on framework
+      if (isParam) {
+        // PARAMETRIC (RM-ANOVA): Paired t-tests
+        sel.innerHTML = `
+          <option value="paired">Paired t-tests (all pairs)</option>
+          <option value="paired-baseline">Paired t-tests vs Baseline</option>
+          <option value="none">None</option>
+        `;
+        // Auto-select default
+        if (!sel.value || sel.value === "wilcoxon" || sel.value === "conover" || sel.value === "nemenyi") {
+          sel.value = "paired";
+        }
+        sel.title = "Compares each timepoint using paired tests with multiplicity control";
+        if (tooltipText) tooltipText.textContent = "Paired comparisons with " + (corrSel && corrSel.value === "bh" ? "FDR" : corrSel && corrSel.value === "bonferroni" ? "Bonferroni" : corrSel && corrSel.value === "none" ? "no" : "Holm") + " correction";
+      } else {
+        // NONPARAMETRIC (Friedman): Wilcoxon, Conover, Nemenyi
+        sel.innerHTML = `
+          <option value="wilcoxon">Wilcoxon Signed-Rank</option>
+          <option value="conover">Conover</option>
+          <option value="nemenyi">Nemenyi</option>
+          <option value="none">None</option>
+        `;
+        // Auto-select default
+        if (!sel.value || sel.value === "paired" || sel.value === "paired-baseline") {
+          sel.value = "wilcoxon";
+        }
+        sel.title = "Nonparametric post-hoc comparisons for Friedman test";
+        if (tooltipText) tooltipText.textContent = "Rank-based comparisons with " + (corrSel && corrSel.value === "bh" ? "FDR" : corrSel && corrSel.value === "bonferroni" ? "Bonferroni" : corrSel && corrSel.value === "none" ? "no" : "Holm") + " correction";
+      }
+      
+      // P-correction: Always available, but auto-suggest FDR for many comparisons
+      if (corrSel) {
+        var numComparisons = 0;
+        var ob = (lastBundle && lastBundle.results && lastBundle.results.omnibus) ? lastBundle.results.omnibus : {};
+        var k = ob.k || 3;
+        numComparisons = (k * (k - 1)) / 2; // All pairwise comparisons
+        
+        // Smart default: FDR if >10 comparisons, Holm otherwise
+        if (!corrSel.value || corrSel.value === "") {
+          corrSel.value = numComparisons > 10 ? "bh" : "holm";
+        }
+        
+        // Update tooltip
+        corrSel.title = numComparisons > 10 
+          ? "Many comparisons (" + numComparisons + ") - FDR recommended"
+          : "Multiplicity correction for " + numComparisons + " comparisons";
+        
+        // Update tooltip text when correction changes
+        if (tooltipText) {
+          var corrName = corrSel.value === "bh" ? "FDR" : corrSel.value === "bonferroni" ? "Bonferroni" : corrSel.value === "none" ? "no" : "Holm";
+          if (isParam) {
+            tooltipText.textContent = "Paired comparisons with " + corrName + " correction";
+          } else {
+            tooltipText.textContent = "Rank-based comparisons with " + corrName + " correction";
+          }
+        }
+      }
+      
+      // Enable/disable based on selection
+      sel.disabled = false;
+      if (corrSel) corrSel.disabled = false;
     }
     function setFrameworkButtons(mode){
       primaryFramework = mode === "nonparametric" ? "nonparametric" : "parametric";
@@ -1901,40 +1972,72 @@
         const friedmanP = parseMaybeNumber(ob.kwP);
         const friedmanSig = friedmanP < alpha;
         
-        if (sphericityMet) {
-          recoText = "✓ <strong>Repeated Measures ANOVA is appropriate.</strong> The sphericity assumption is met (Mauchly's W = " + fmt(mauchlyW) + ", p = " + fmtP(mauchlyP) + "). ";
-          if (anovaSig) {
-            recoText += "The RM-ANOVA shows <strong>significant differences</strong> across timepoints (p " + fmtP(anovaP) + "). Proceed with <strong>paired post-hoc tests</strong> with Holm-Bonferroni correction.";
-          } else {
-            recoText += "The RM-ANOVA shows <strong>no significant differences</strong> across timepoints (p = " + fmtP(anovaP) + ").";
-          }
-        } else {
-          recoText = "⚠ <strong>Sphericity assumption violated - Corrections applied.</strong> ";
-          recoText += "Greenhouse-Geisser ε = " + fmt(epsilonGG) + ", Huynh-Feldt ε = " + fmt(epsilonHF) + ". ";
-          
-          const pValueGG = parseMaybeNumber(ob.anovaPGG);
-          const pValueHF = parseMaybeNumber(ob.anovaPHF);
-          
-          if (pValueGG < alpha) {
-            recoText += "Even with correction, differences are <strong>significant</strong> (GG-corrected p " + fmtP(pValueGG) + "). ";
-            recoText += "Proceed with <strong>paired post-hoc tests</strong> with Holm-Bonferroni correction.";
-          } else {
-            recoText += "With correction applied, no significant differences detected (GG-corrected p = " + fmtP(pValueGG) + ").";
-          }
-        }
+        // Get current correction method for dynamic recommendation
+        var corrMethod = document.getElementById("setPosthocCorrection");
+        var corrName = corrMethod && corrMethod.value === "bh" ? "FDR (Benjamini-Hochberg)" : 
+                      corrMethod && corrMethod.value === "bonferroni" ? "Bonferroni" :
+                      corrMethod && corrMethod.value === "none" ? "no" : "Holm";
         
-        // Add Friedman note if parametric assumptions are questionable
-        if (friedmanSig === anovaSig) {
-          recoText += " <em>Note: Friedman test (nonparametric alternative) confirms the " + (anovaSig ? "significant" : "non-significant") + " result.</em>";
+        // PARAMETRIC MODE (RM-ANOVA)
+        if (primaryFramework === "parametric") {
+          if (sphericityMet) {
+            recoText = "✓ <strong>Repeated Measures ANOVA is appropriate.</strong> The sphericity assumption is met (Mauchly's W = " + fmt(mauchlyW) + ", p = " + fmtP(mauchlyP) + "). ";
+            if (anovaSig) {
+              recoText += "The RM-ANOVA shows <strong>significant differences</strong> across timepoints (p " + fmtP(anovaP) + "). Proceed with <strong>paired post-hoc tests</strong> with " + corrName + " correction.";
+            } else {
+              recoText += "The RM-ANOVA shows <strong>no significant differences</strong> across timepoints (p = " + fmtP(anovaP) + ").";
+            }
+          } else {
+            recoText = "⚠ <strong>Sphericity assumption violated - Corrections applied.</strong> ";
+            recoText += "Greenhouse-Geisser ε = " + fmt(epsilonGG) + ", Huynh-Feldt ε = " + fmt(epsilonHF) + ". ";
+            
+            const pValueGG = parseMaybeNumber(ob.anovaPGG);
+            const pValueHF = parseMaybeNumber(ob.anovaPHF);
+            
+            if (pValueGG < alpha) {
+              recoText += "Even with correction, differences are <strong>significant</strong> (GG-corrected p " + fmtP(pValueGG) + "). ";
+              recoText += "Proceed with <strong>paired post-hoc tests</strong> with " + corrName + " correction.";
+            } else {
+              recoText += "With correction applied, no significant differences detected (GG-corrected p = " + fmtP(pValueGG) + ").";
+            }
+          }
+          
+          // Add Friedman note if parametric assumptions are questionable
+          if (friedmanSig === anovaSig) {
+            recoText += " <em>Note: Friedman test (nonparametric alternative) confirms the " + (anovaSig ? "significant" : "non-significant") + " result.</em>";
+          }
+        } 
+        // NONPARAMETRIC MODE (Friedman)
+        else {
+          recoText = "✓ <strong>Friedman test (nonparametric).</strong> This rank-based test is assumption-free and robust to outliers and non-normality. ";
+          
+          if (friedmanSig) {
+            var posthocMethod = document.getElementById("setPosthocMethod");
+            var posthocName = posthocMethod && posthocMethod.value === "conover" ? "Conover" :
+                            posthocMethod && posthocMethod.value === "nemenyi" ? "Nemenyi" : "Wilcoxon Signed-Rank";
+            recoText += "The Friedman test shows <strong>significant differences</strong> across timepoints (χ² = " + fmt(ob.kwH) + ", p " + fmtP(friedmanP) + "). ";
+            recoText += "Proceed with <strong>" + posthocName + " post-hoc tests</strong> with " + corrName + " correction.";
+          } else {
+            recoText += "The Friedman test shows <strong>no significant differences</strong> across timepoints (χ² = " + fmt(ob.kwH) + ", p = " + fmtP(friedmanP) + ").";
+          }
+          
+          // Add RM-ANOVA note for comparison
+          if (friedmanSig === anovaSig) {
+            recoText += " <em>Note: RM-ANOVA (parametric alternative) confirms the " + (friedmanSig ? "significant" : "non-significant") + " result.</em>";
+          }
         }
         
         recoEl.innerHTML = recoText;
       }
       
-      // Auto-select post-hoc method based on recommendation (paired tests for RM)
+      // Auto-select post-hoc method based on framework
       const posthocSelect = document.getElementById("setPosthocMethod");
       if (posthocSelect) {
-        posthocSelect.value = "paired"; // Always use paired for RM
+        if (primaryFramework === "parametric") {
+          posthocSelect.value = "paired"; // Paired t-tests for RM-ANOVA
+        } else {
+          posthocSelect.value = "wilcoxon"; // Wilcoxon for Friedman
+        }
       }
       updateResultsPanels(r, fx, s, 1 - (parseMaybeNumber(s.confidence) || 0.95));
       renderPosthoc(r.posthoc || {}, "k-plus");
@@ -1967,6 +2070,10 @@
           if (id === "setPrimaryTest") {
             currentPrimaryTest = el.value || "welch";
             setFrameworkButtons(primaryFramework);
+          }
+          // Update tooltip when post-hoc or correction changes
+          if (id === "setPosthocMethod" || id === "setPosthocCorrection") {
+            updatePosthocOptions();
           }
           notifySettingsChanged();
         });
