@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Repeated Measures Builder</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <style>
+    body{margin:0;background:#0b1220;color:#e5e7eb;font-family:Segoe UI,Arial,sans-serif;}
+    .wrap{padding:10px;}
+    .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+    .title{font-weight:800;font-size:14px;display:flex;gap:8px;align-items:center;}
+    .panel{border:1px solid #22304b;background:#111c33;border-radius:10px;padding:8px;margin-bottom:8px;}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    label{font-size:12px;color:#9fb0cc;display:block;margin-bottom:4px;}
+    select,input{width:100%;padding:8px;border-radius:8px;border:1px solid #2a3d5f;background:#0b1428;color:#e5e7eb;}
+    .row{display:flex;gap:8px;}
+    .btn{padding:8px 12px;border-radius:8px;border:1px solid #2e4268;background:#162948;color:#e5e7eb;cursor:pointer;}
+    .btn.primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);border-color:#2f5fca;font-weight:700;}
+    .meta{font-size:12px;color:#9fb0cc;}
+    .checks{max-height:210px;overflow:auto;border:2px solid #9333ea;border-radius:12px;background:#f7f9fd;}
+    .checks table{width:100%;border-collapse:collapse;font-size:11px;color:#0f172a;}
+    .checks thead th{position:sticky;top:0;background:#e5e7eb;color:#4b5563;padding:5px 7px;border-bottom:1px solid #cbd5e1;text-align:left;text-transform:uppercase;letter-spacing:.25px;font-weight:800;}
+    .checks tbody td{padding:5px 7px;border-bottom:1px solid #dbe2ea;}
+    .checks tbody tr:last-child td{border-bottom:none;}
+    .checks tbody td.center{text-align:center;}
+    .checks tbody tr{cursor:grab;user-select:none;}
+    .checks tbody tr:hover{background:#f1f5f9;}
+    .checks tbody tr.selected{background:#fae8ff;font-weight:600;}
+    .checks tbody tr.disabled{opacity:0.4;cursor:not-allowed;background:#f8f9fa;}
+    .checks tbody tr.disabled:hover{background:#f8f9fa;}
+    .checks tbody tr.dragging{opacity:.45;}
+    .n-num{color:#1d4ed8;font-weight:700;}
+    .n-str{color:#16a34a;font-weight:700;}
+    .n-miss{color:#64748b;font-weight:700;}
+    .drag-h{color:#64748b;}
+    .radio-group{display:flex;gap:12px;margin-bottom:8px;}
+    .radio-option{flex:1;position:relative;}
+    .radio-option input[type="radio"]{position:absolute;opacity:0;cursor:pointer;}
+    .radio-label{display:block;padding:14px 16px;border:2px solid #2a3d5f;border-radius:10px;background:#0b1428;color:#9fb0cc;font-size:13px;font-weight:600;text-align:center;cursor:pointer;transition:all 0.2s;}
+    .radio-option input[type="radio"]:checked + .radio-label{border-color:#9333ea;background:#7e22ce;color:#fff;box-shadow:0 0 0 3px rgba(147,51,234,0.2);}
+    .radio-label:hover{border-color:#a855f7;background:#6b21a8;}
+    .radio-label .radio-icon{font-size:16px;margin-bottom:4px;display:block;}
+    .radio-label .radio-text{font-size:12px;display:block;}
+    .bucket{border:2px solid #9333ea;border-radius:12px;padding:10px;background:#f7f9fd;min-height:60px;max-height:120px;overflow:auto;margin-top:8px;}
+    .bucket-title{font-size:12px;color:#4b5563;font-weight:700;margin-bottom:6px;}
+    .bucket-items{display:flex;gap:6px;flex-wrap:wrap;}
+    .bucket-pill{display:inline-flex;align-items:center;gap:6px;background:#7e22ce;color:#fae8ff;padding:4px 7px;border-radius:999px;font-size:11px;}
+    .bucket-pill button{border:none;background:transparent;color:#fff;cursor:pointer;font-size:12px;}
+    .hint{font-size:10px;color:#6b7280;margin-top:4px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div class="title"><i class="fa-solid fa-repeat"></i> Repeated Measures Builder</div>
+      <button class="btn" id="btnRefresh"><i class="fa-solid fa-rotate"></i> Refresh</button>
+    </div>
+
+    <div class="panel">
+      <div class="meta">Range: <strong id="rangeAddr">-</strong></div>
+      <div class="meta">Rows: <strong id="rowCount">0</strong> | Columns: <strong id="colCount">0</strong></div>
+    </div>
+
+    <div class="panel">
+      <label>Compare</label>
+      <div class="radio-group">
+        <div class="radio-option">
+          <input type="radio" name="dataMode" id="twoTimepoints" value="two-vars" />
+          <label for="twoTimepoints" class="radio-label">
+            <span class="radio-icon"><i class="fa-solid fa-arrows-left-right"></i></span>
+            <span class="radio-text">2 Timepoints</span>
+          </label>
+        </div>
+        <div class="radio-option">
+          <input type="radio" name="dataMode" id="kPlusTimepoints" value="k-plus" checked />
+          <label for="kPlusTimepoints" class="radio-label">
+            <span class="radio-icon"><i class="fa-solid fa-timeline"></i></span>
+            <span class="radio-text">3+ Timepoints</span>
+          </label>
+        </div>
+      </div>
+      <div class="grid">
+        <div>
+          <label>Primary framework</label>
+          <select id="frameworkMode">
+            <option value="parametric">Parametric (means)</option>
+            <option value="nonparametric">Nonparametric (ranks)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <label>Available timepoint variables</label>
+      <div id="interestChecks" class="checks"></div>
+      <div class="hint">Click to select timepoint variables (e.g., Time1, Time2, Time3) for within-subject comparison.</div>
+      <div class="bucket">
+        <div class="bucket-title">Timepoints bucket</div>
+        <div class="bucket-items" id="bucketItems"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="grid">
+        <div>
+          <label>Confidence level</label>
+          <select id="confidenceLevel">
+            <option value="0.90">90%</option>
+            <option value="0.95" selected>95%</option>
+            <option value="0.99">99%</option>
+          </select>
+        </div>
+        <div>
+          <label>Hypothesis</label>
+          <select id="hypothesisMode">
+            <option value="two-sided">Two-sided</option>
+            <option value="less">Change &lt; 0</option>
+            <option value="greater">Change &gt; 0</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="text-align:center;">
+      <button class="btn primary" id="btnRun" style="width:100%;" disabled>
+        <i class="fa-solid fa-play"></i> Run Analysis
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let STATE = {
+      rangeAddress: "",
+      columns: [],
+      selectedColumns: []
+    };
+
+    Office.onReady(function(){
+      document.getElementById("btnRefresh").addEventListener("click", loadData);
+      document.getElementById("btnRun").addEventListener("click", runAnalysis);
+      
+      // Add radio button listeners
+      document.querySelectorAll('input[name="dataMode"]').forEach(function(radio) {
+        radio.addEventListener("change", function() {
+          validateBucket();
+          renderInterestChecks();
+        });
+      });
+      
+      loadData();
+    });
+
+    async function loadData(){
+      try {
+        await Excel.run(async function(ctx){
+          const sel = ctx.workbook.getSelectedRange();
+          sel.load("address,columnCount,rowCount,values");
+          await ctx.sync();
+
+          const addr = sel.address;
+          const rows = sel.rowCount;
+          const cols = sel.columnCount;
+          const vals = sel.values;
+
+          document.getElementById("rangeAddr").textContent = addr;
+          document.getElementById("rowCount").textContent = rows;
+          document.getElementById("colCount").textContent = cols;
+
+          STATE.rangeAddress = addr;
+          STATE.columns = [];
+
+          for(let c=0; c<cols; c++){
+            const header = vals[0][c] || `Col${c+1}`;
+            let numCount=0, strCount=0, missCount=0;
+            for(let r=1; r<rows; r++){
+              const v = vals[r][c];
+              if(v===null||v===undefined||v==="") missCount++;
+              else if(typeof v==="number") numCount++;
+              else strCount++;
+            }
+            STATE.columns.push({name:header, index:c, numCount, strCount, missCount});
+          }
+
+          renderInterestChecks();
+          validateBucket();
+        });
+      } catch(e){
+        console.error(e);
+      }
+    }
+
+    function renderInterestChecks(){
+      const mode = document.querySelector('input[name="dataMode"]:checked').value;
+      let html = '<table><thead><tr><th>Variable</th><th>Numeric</th><th>Text</th><th>Missing</th></tr></thead><tbody>';
+      
+      STATE.columns.forEach(function(col){
+        const isSelected = STATE.selectedColumns.includes(col.name);
+        const rowClass = isSelected ? 'selected disabled' : '';
+        
+        html += `<tr class="${rowClass}" data-col="${col.name}">`;
+        html += `<td>${col.name}</td>`;
+        html += `<td class="center n-num">${col.numCount}</td>`;
+        html += `<td class="center n-str">${col.strCount}</td>`;
+        html += `<td class="center n-miss">${col.missCount}</td>`;
+        html += '</tr>';
+      });
+      
+      html += '</tbody></table>';
+      document.getElementById("interestChecks").innerHTML = html;
+
+      document.querySelectorAll("#interestChecks tbody tr").forEach(function(row){
+        if (!row.classList.contains('disabled')) {
+          row.addEventListener("click", function(){
+            const colName = row.getAttribute("data-col");
+            addToBucket(colName, row);
+          });
+        }
+      });
+    }
+
+    function addToBucket(colName, row){
+      const mode = document.querySelector('input[name="dataMode"]:checked').value;
+      const maxVars = mode === "two-vars" ? 2 : 99;
+
+      // Check if already selected
+      if(STATE.selectedColumns.includes(colName)) return;
+      
+      // Check if limit reached
+      if(STATE.selectedColumns.length >= maxVars) {
+        if(mode === "two-vars") {
+          // Replace the oldest one
+          STATE.selectedColumns.shift();
+        } else {
+          return;
+        }
+      }
+
+      STATE.selectedColumns.push(colName);
+      renderBucket();
+      renderInterestChecks();
+      validateBucket();
+    }
+
+    function removeFromBucket(colName){
+      STATE.selectedColumns = STATE.selectedColumns.filter(function(c){ return c !== colName; });
+      renderBucket();
+      renderInterestChecks();
+      validateBucket();
+    }
+
+    function renderBucket(){
+      const container = document.getElementById("bucketItems");
+      if(STATE.selectedColumns.length === 0){
+        container.innerHTML = '<span style="color:#9ca3af;font-size:11px;">No timepoints selected</span>';
+        return;
+      }
+      
+      let html = '';
+      STATE.selectedColumns.forEach(function(col){
+        html += `<div class="bucket-pill">${col} <button onclick="removeFromBucket('${col}')">×</button></div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function validateBucket(){
+      const mode = document.querySelector('input[name="dataMode"]:checked').value;
+      const count = STATE.selectedColumns.length;
+      const btn = document.getElementById("btnRun");
+      
+      if(mode === "two-vars"){
+        btn.disabled = count !== 2;
+      } else {
+        btn.disabled = count < 3;
+      }
+    }
+
+    async function runAnalysis(){
+      const mode = document.querySelector('input[name="dataMode"]:checked').value;
+      const framework = document.getElementById("frameworkMode").value;
+      const confidence = parseFloat(document.getElementById("confidenceLevel").value);
+      const hypothesis = document.getElementById("hypothesisMode").value;
+
+      const payload = {
+        rangeAddress: STATE.rangeAddress,
+        columns: STATE.columns,
+        selectedColumns: STATE.selectedColumns,
+        compareMode: mode,
+        primaryFramework: framework,
+        confidence: confidence,
+        hypothesis: hypothesis
+      };
+
+      // Determine which results dialog to open
+      const dialogUrl = mode === "two-vars" 
+        ? "dependent-results.html"
+        : "dependent-results-kplus.html";
+
+      try {
+        const fullUrl = `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, '')}${dialogUrl}`;
+        
+        Office.context.ui.displayDialogAsync(
+          fullUrl,
+          { height: 90, width: 80, displayInIframe: false },
+          function(result){
+            if(result.status === Office.AsyncResultStatus.Succeeded){
+              const dialog = result.value;
+              
+              // Wait a moment for dialog to be ready
+              setTimeout(function(){
+                dialog.messageChild(JSON.stringify({
+                  action: "loadData",
+                  payload: payload
+                }));
+              }, 500);
+
+              dialog.addEventHandler(Office.EventType.DialogMessageReceived, function(arg){
+                console.log("Message from dialog:", arg.message);
+              });
+            } else {
+              console.error("Dialog open failed:", result.error);
+            }
+          }
+        );
+      } catch(e){
+        console.error("Error opening dialog:", e);
+      }
+    }
+
+    renderBucket();
+  </script>
+</body>
+</html>
