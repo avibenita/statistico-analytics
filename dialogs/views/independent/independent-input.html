@@ -25,12 +25,24 @@
     .checks tbody td{padding:5px 7px;border-bottom:1px solid #dbe2ea;}
     .checks tbody tr:last-child td{border-bottom:none;}
     .checks tbody td.center{text-align:center;}
-    .checks tbody tr{cursor:grab;}
+    .checks tbody tr{cursor:grab;user-select:none;}
+    .checks tbody tr:hover{background:#f1f5f9;}
+    .checks tbody tr.selected{background:#dbeafe;font-weight:600;}
+    .checks tbody tr.disabled{opacity:0.4;cursor:not-allowed;background:#f8f9fa;}
+    .checks tbody tr.disabled:hover{background:#f8f9fa;}
     .checks tbody tr.dragging{opacity:.45;}
     .n-num{color:#1d4ed8;font-weight:700;}
     .n-str{color:#16a34a;font-weight:700;}
     .n-miss{color:#64748b;font-weight:700;}
     .drag-h{color:#64748b;}
+    .radio-group{display:flex;gap:12px;margin-bottom:8px;}
+    .radio-option{flex:1;position:relative;}
+    .radio-option input[type="radio"]{position:absolute;opacity:0;cursor:pointer;}
+    .radio-label{display:block;padding:14px 16px;border:2px solid #2a3d5f;border-radius:10px;background:#0b1428;color:#9fb0cc;font-size:13px;font-weight:600;text-align:center;cursor:pointer;transition:all 0.2s;}
+    .radio-option input[type="radio"]:checked + .radio-label{border-color:#2563eb;background:#1e40af;color:#fff;box-shadow:0 0 0 3px rgba(37,99,235,0.2);}
+    .radio-label:hover{border-color:#3b82f6;background:#1e3a8a;}
+    .radio-label .radio-icon{font-size:16px;margin-bottom:4px;display:block;}
+    .radio-label .radio-text{font-size:12px;display:block;}
     .bucket{border:2px dashed #2a3d5f;border-radius:10px;padding:8px;background:#0b1428;min-height:52px;max-height:116px;overflow:auto;}
     .bucket-title{font-size:12px;color:#9fb0cc;font-weight:700;margin-bottom:6px;}
     .bucket-items{display:flex;gap:6px;flex-wrap:wrap;}
@@ -58,14 +70,24 @@
     </div>
 
     <div class="panel">
-      <div class="grid">
-        <div>
-          <label>Compare</label>
-          <select id="dataMode">
-            <option value="two-vars">2 variables</option>
-            <option value="k-plus">More than 2 groups</option>
-          </select>
+      <label>Compare</label>
+      <div class="radio-group">
+        <div class="radio-option">
+          <input type="radio" name="dataMode" id="twoVars" value="two-vars" />
+          <label for="twoVars" class="radio-label">
+            <span class="radio-icon"><i class="fa-solid fa-code-compare"></i></span>
+            <span class="radio-text">2 Variables</span>
+          </label>
         </div>
+        <div class="radio-option">
+          <input type="radio" name="dataMode" id="kPlus" value="k-plus" checked />
+          <label for="kPlus" class="radio-label">
+            <span class="radio-icon"><i class="fa-solid fa-layer-group"></i></span>
+            <span class="radio-text">3+ Groups</span>
+          </label>
+        </div>
+      </div>
+      <div class="grid">
         <div>
           <label>Primary framework</label>
           <select id="frameworkMode">
@@ -116,7 +138,10 @@
       var stats = countKinds(headers, STATE.rows || []);
       var html = '<table><thead><tr><th>Variable</th><th class="center">N Numeric</th><th class="center">N String</th><th class="center">N Missing</th><th class="center"></th></tr></thead><tbody>';
       stats.forEach(function(s){
-        html += '<tr draggable="true" data-col="' + s.name + '">' +
+        var isSelected = STATE.selectedColumns.indexOf(s.name) >= 0;
+        var rowClass = isSelected ? ' class="disabled"' : '';
+        var draggable = isSelected ? 'false' : 'true';
+        html += '<tr draggable="' + draggable + '"' + rowClass + ' data-col="' + s.name + '">' +
           '<td>' + s.name + '</td>' +
           '<td class="center n-num">' + s.numeric + '</td>' +
           '<td class="center n-str">' + s.string + '</td>' +
@@ -127,9 +152,16 @@
       html += '</tbody></table>';
       host.innerHTML = html;
       host.querySelectorAll("tbody tr").forEach(function(tr){
+        var col = tr.getAttribute("data-col");
+        var isDisabled = tr.classList.contains("disabled");
+        
+        // Drag handlers
         tr.addEventListener("dragstart", function(e){
+          if (isDisabled) {
+            e.preventDefault();
+            return;
+          }
           tr.classList.add("dragging");
-          var col = tr.getAttribute("data-col");
           STATE.draggingCol = col;
           if (e && e.dataTransfer) {
             e.dataTransfer.effectAllowed = "copy";
@@ -137,10 +169,44 @@
           }
         });
         tr.addEventListener("dragend", function(){ tr.classList.remove("dragging"); STATE.draggingCol = null; });
-        tr.addEventListener("dblclick", function(){ addToBucket(tr.getAttribute("data-col")); });
+        
+        // Click handlers - support multiselect with Ctrl/Cmd
         tr.addEventListener("click", function(e){
+          if (isDisabled) return;
+          
+          // If clicking on drag handle, add to bucket
           if (e && e.target && e.target.closest && e.target.closest(".drag-h")) {
-            addToBucket(tr.getAttribute("data-col"));
+            addToBucket(col);
+            return;
+          }
+          
+          // Toggle selection for multiselect (Ctrl/Cmd+click or regular click)
+          if (e.ctrlKey || e.metaKey) {
+            tr.classList.toggle("selected");
+          } else {
+            // Clear other selections
+            host.querySelectorAll("tbody tr.selected").forEach(function(otherTr){
+              if (otherTr !== tr) otherTr.classList.remove("selected");
+            });
+            tr.classList.toggle("selected");
+          }
+          
+          // Add all selected rows to bucket when clicking "Add Selected" button or using shortcut
+          var selectedRows = Array.from(host.querySelectorAll("tbody tr.selected"));
+          if (selectedRows.length > 0 && !e.ctrlKey && !e.metaKey) {
+            // Single click without modifier - add immediately
+            selectedRows.forEach(function(selectedTr){
+              var selectedCol = selectedTr.getAttribute("data-col");
+              addToBucket(selectedCol);
+              selectedTr.classList.remove("selected");
+            });
+          }
+        });
+        
+        // Double-click to add (backward compatibility)
+        tr.addEventListener("dblclick", function(){ 
+          if (!isDisabled) {
+            addToBucket(col); 
           }
         });
       });
@@ -162,18 +228,22 @@
     }
     function addToBucket(col){
       if (!col) return;
-      var mode = qs("dataMode").value;
+      var modeRadio = document.querySelector('input[name="dataMode"]:checked');
+      var mode = modeRadio ? modeRadio.value : 'k-plus';
       if (STATE.selectedColumns.indexOf(col) >= 0) return;
       if (mode === "two-vars" && STATE.selectedColumns.length >= 2) return;
       STATE.selectedColumns.push(col);
       renderBucket();
+      renderInterestChecks(STATE.headers); // Re-render to disable selected variables
     }
     function removeFromBucket(col){
       STATE.selectedColumns = STATE.selectedColumns.filter(function(x){ return x !== col; });
       renderBucket();
+      renderInterestChecks(STATE.headers); // Re-render to enable removed variables
     }
     function validateBucket(){
-      var mode = qs("dataMode").value;
+      var modeRadio = document.querySelector('input[name="dataMode"]:checked');
+      var mode = modeRadio ? modeRadio.value : 'k-plus';
       var ok = mode === "two-vars" ? STATE.selectedColumns.length === 2 : STATE.selectedColumns.length >= 3;
       var hint = qs("bucketHint");
       if (hint) hint.textContent = mode === "two-vars"
@@ -192,14 +262,24 @@
       renderInterestChecks(STATE.headers);
       renderBucket();
       if (STATE.saved) {
-        if (STATE.saved.compareMode) qs("dataMode").value = STATE.saved.compareMode;
-        else if (STATE.saved.mode === "k-plus") qs("dataMode").value = "k-plus";
+        if (STATE.saved.compareMode === "two-vars") {
+          qs("twoVars").checked = true;
+        } else {
+          qs("kPlus").checked = true;
+        }
         if (STATE.saved.primaryFramework) qs("frameworkMode").value = STATE.saved.primaryFramework;
       }
+      
+      // Add event listeners for radio buttons
+      document.querySelectorAll('input[name="dataMode"]').forEach(function(radio){
+        radio.addEventListener('change', validateBucket);
+      });
+      
       validateBucket();
     }
     function run(){
-      var mode = qs("dataMode").value;
+      var modeRadio = document.querySelector('input[name="dataMode"]:checked');
+      var mode = modeRadio ? modeRadio.value : 'k-plus';
       var selected = STATE.selectedColumns && STATE.selectedColumns.length ? STATE.selectedColumns.slice() : [];
       if (selected.length < 2) return;
       var spec = {
