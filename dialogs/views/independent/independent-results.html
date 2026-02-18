@@ -372,16 +372,20 @@
                 <span class="stat-label">Primary Framework</span><span class="stat-value" id="resPrimaryFramework">...</span>
               </div>
               <div class="stat-field"><span class="stat-label">Primary Test</span><span class="stat-value" id="resPrimaryTest">...</span></div>
+              <div class="stat-field"><span class="stat-label">Test Rationale</span><span class="stat-value" id="resTestRationale" style="font-size:10px;background:rgba(255,165,120,.08);border-color:rgba(255,165,120,.3);">...</span></div>
               <div class="stat-field"><span class="stat-label">Statistic</span><span class="stat-value" id="resPrimaryStat">...</span></div>
               <div class="stat-field"><span class="stat-label">p-value</span><span class="stat-value" id="resPrimaryP">...</span></div>
-              <div class="stat-field"><span class="stat-label">Primary Estimate + CI</span><span class="stat-value" id="resPrimaryEstimate">...</span></div>
+              <div class="stat-field"><span class="stat-label">Decision</span><span class="stat-value" id="resDecision" style="font-weight:800;font-size:13px;">...</span></div>
+              <div class="stat-field"><span class="stat-label">Mean Difference + 95% CI</span><span class="stat-value" id="resPrimaryEstimate">...</span></div>
+              <div class="stat-field"><span class="stat-label">Effect Size (Hedges g)</span><span class="stat-value" id="resEffectSize" style="background:rgba(120,200,255,.15);border-color:rgba(120,200,255,.4);">...</span></div>
             </div></div>
-            <div class="stat-panel secondary"><div class="stat-panel-heading">Robustness Check (Secondary)</div><div class="stat-panel-body">
+            <div class="stat-panel secondary"><div class="stat-panel-heading">Robustness & Sensitivity Analysis</div><div class="stat-panel-body">
               <div class="stat-field"><span class="stat-label">Secondary Test</span><span class="stat-value" id="resSecondaryTest">...</span></div>
               <div class="stat-field"><span class="stat-label">Statistic</span><span class="stat-value" id="resSecondaryStat">...</span></div>
               <div class="stat-field"><span class="stat-label">p-value</span><span class="stat-value" id="resSecondaryP">...</span></div>
+              <div class="stat-field"><span class="stat-label">Rank-biserial r</span><span class="stat-value" id="resRankBiserial">...</span></div>
               <div class="stat-field"><span class="stat-label">Agreement</span><span class="stat-value" id="resAgreement">...</span></div>
-              <div class="stat-field"><span class="stat-label">Diagnostic Hint</span><span class="stat-value" id="resHint">...</span></div>
+              <div class="stat-field"><span class="stat-label">Interpretation</span><span class="stat-value" id="resHint" style="font-size:10px;">...</span></div>
             </div></div>
           </div>
           <div class="stat-panel" style="margin-top:12px;">
@@ -659,46 +663,114 @@
       const mwSig = parseMaybeNumber(r.mwP) < alpha;
       const primaryParametric = primaryFramework !== "nonparametric";
 
+      // Determine primary p-value and decision
+      let primaryP = 0;
       if (primaryParametric) {
         const chosen = currentPrimaryTest || "welch";
+        primaryP = chosen === "student" ? r.studentP : (chosen === "permutation" ? r.permutationP : r.welchP);
+      } else {
+        primaryP = r.mwP;
+      }
+      
+      // Set decision
+      const pVal = parseMaybeNumber(primaryP);
+      const decisionEl = document.getElementById("resDecision");
+      if (isFinite(pVal)) {
+        if (pVal < alpha) {
+          setText("resDecision", "✓ Reject H₀ (significant difference)");
+          if (decisionEl) {
+            decisionEl.style.color = "#4ade80";
+            decisionEl.style.background = "rgba(74,222,128,.12)";
+            decisionEl.style.borderColor = "rgba(74,222,128,.32)";
+          }
+        } else {
+          setText("resDecision", "✗ Fail to reject H₀ (no significant difference)");
+          if (decisionEl) {
+            decisionEl.style.color = "#fbbf24";
+            decisionEl.style.background = "rgba(251,191,36,.12)";
+            decisionEl.style.borderColor = "rgba(251,191,36,.32)";
+          }
+        }
+      } else {
+        setText("resDecision", "...");
+      }
+
+      if (primaryParametric) {
+        const chosen = currentPrimaryTest || "welch";
+        
+        // Set test rationale
+        if (chosen === "student") {
+          setText("resTestRationale", "Equal variances assumed (pooled estimate)");
+        } else if (chosen === "welch") {
+          setText("resTestRationale", "Robust default for unequal variances/sample sizes");
+        } else {
+          setText("resTestRationale", "Distribution-free permutation approach");
+        }
+        
         if (chosen === "student") {
           setText("resPrimaryTest", "Student t-test (equal var)");
           setText("resPrimaryStat", "t(" + fmt(r.studentDf) + ") = " + fmt(r.studentT));
           setText("resPrimaryP", fmtP(r.studentP));
-          setText("resPrimaryEstimate", "Mean diff " + fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "]");
+          setText("resPrimaryEstimate", fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "]");
         } else if (chosen === "permutation") {
           setText("resPrimaryTest", "Permutation t-test");
           setText("resPrimaryStat", "Permutation B=" + fmt(r.permutationIterations || 1200));
           setText("resPrimaryP", fmtP(r.permutationP));
-          setText("resPrimaryEstimate", "Mean diff " + fmt(r.meanDiff));
+          setText("resPrimaryEstimate", fmt(r.meanDiff));
         } else {
           setText("resPrimaryTest", "Welch t-test");
           setText("resPrimaryStat", "t(" + fmt(r.welchDf) + ") = " + fmt(r.welchT));
           setText("resPrimaryP", fmtP(r.welchP));
-          setText("resPrimaryEstimate", "Mean diff " + fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "]");
+          setText("resPrimaryEstimate", fmt(r.meanDiff) + " [" + fmt(r.ciLow) + ", " + fmt(r.ciHigh) + "]");
         }
-        setText("resSecondaryTest", "Mann-Whitney U");
+        
+        // Effect size
+        const hedgesG = parseMaybeNumber(fx.hedgesG);
+        let effectLabel = "";
+        if (isFinite(hedgesG)) {
+          const absG = Math.abs(hedgesG);
+          if (absG < 0.2) effectLabel = " (negligible)";
+          else if (absG < 0.5) effectLabel = " (small)";
+          else if (absG < 0.8) effectLabel = " (medium)";
+          else effectLabel = " (large)";
+        }
+        setText("resEffectSize", fmt(fx.hedgesG) + effectLabel);
+        
+        setText("resSecondaryTest", "Mann-Whitney U (rank-based)");
         setText("resSecondaryStat", "U = " + fmt(r.u));
         setText("resSecondaryP", fmtP(r.mwP));
+        setText("resRankBiserial", fmt(fx.rankBiserial));
       } else {
+        setText("resTestRationale", "Non-parametric test for ordinal/skewed data");
         setText("resPrimaryTest", "Mann-Whitney U");
         setText("resPrimaryStat", "U = " + fmt(r.u));
         setText("resPrimaryP", fmtP(r.mwP));
-        setText("resPrimaryEstimate", "Rank-biserial " + fmt(fx.rankBiserial) + " | P(X>Y) " + fmt(fx.probabilitySuperiority));
-        setText("resSecondaryTest", "Welch t-test");
+        setText("resPrimaryEstimate", "P(X>Y) = " + fmt(fx.probabilitySuperiority));
+        const rankBis = parseMaybeNumber(fx.rankBiserial);
+        let rbLabel = "";
+        if (isFinite(rankBis)) {
+          const absRb = Math.abs(rankBis);
+          if (absRb < 0.1) rbLabel = " (negligible)";
+          else if (absRb < 0.3) rbLabel = " (small)";
+          else if (absRb < 0.5) rbLabel = " (medium)";
+          else rbLabel = " (large)";
+        }
+        setText("resEffectSize", fmt(fx.rankBiserial) + rbLabel);
+        setText("resSecondaryTest", "Welch t-test (parametric)");
         setText("resSecondaryStat", "t(" + fmt(r.welchDf) + ") = " + fmt(r.welchT));
         setText("resSecondaryP", fmtP(r.welchP));
+        setText("resRankBiserial", fmt(fx.rankBiserial) + rbLabel);
       }
 
       const agreeEl = document.getElementById("resAgreement");
       if (welchSig === mwSig) {
-        setText("resAgreement", "Agree at alpha");
+        setText("resAgreement", "✓ Consistent");
         if (agreeEl) agreeEl.className = "stat-value agreement-good";
-        setText("resHint", "Both frameworks lead to the same significance decision.");
+        setText("resHint", "Robust conclusion: both parametric and non-parametric tests agree.");
       } else {
-        setText("resAgreement", "Disagree at alpha");
+        setText("resAgreement", "⚠ Divergent");
         if (agreeEl) agreeEl.className = "stat-value agreement-warn";
-        setText("resHint", "Inspect skew, outliers, and unequal variance/shape differences.");
+        setText("resHint", "Tests disagree. Check assumptions (normality, outliers, equal variance).");
       }
     }
     function renderPosthoc(posthoc, compareMode){
