@@ -328,6 +328,44 @@
                 </table>
               </div>
               
+              <!-- Profile Plot (Spaghetti + Mean Line) -->
+              <div style="margin-top:20px;">
+                <div style="font-weight:700;margin-bottom:8px;color:var(--accent-1);font-size:13px;">Profile Plot</div>
+                <div style="padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
+                  <svg id="profilePlot" width="100%" height="300" style="background:#1a2332;border-radius:4px;"></svg>
+                  <div style="margin-top:8px;display:flex;gap:16px;font-size:11px;color:var(--text-muted);justify-content:center;">
+                    <span><span style="width:20px;height:2px;background:#4fc3f7;display:inline-block;vertical-align:middle;"></span> Individual Subjects</span>
+                    <span><span style="width:20px;height:3px;background:#ff9800;display:inline-block;vertical-align:middle;"></span> Group Mean</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Correlation Matrix -->
+              <div style="margin-top:20px;">
+                <div style="font-weight:700;margin-bottom:8px;color:var(--accent-1);font-size:13px;">Within-Subject Correlation Matrix</div>
+                <div style="padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
+                  <table id="correlationMatrix" style="width:100%;border-collapse:collapse;font-size:11px;">
+                    <thead>
+                      <tr id="corrMatrixHeader" style="background:#003366cc;">
+                        <th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;">Pair</th>
+                        <th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;">Pearson r</th>
+                        <th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;">Interpretation</th>
+                      </tr>
+                    </thead>
+                    <tbody id="corrMatrixBody"></tbody>
+                  </table>
+                  <div id="corrSummary" style="margin-top:12px;padding:8px 10px;background:rgba(120,200,255,.08);border-left:3px solid var(--accent-2);border-radius:4px;font-size:11px;">
+                    <div style="color:var(--text-secondary);margin-bottom:4px;"><strong>Summary:</strong></div>
+                    <div style="display:flex;flex-wrap:wrap;gap:12px;">
+                      <span><strong>Avg r:</strong> <span id="corrAvgR" style="color:var(--accent-2);font-weight:700;">...</span></span>
+                      <span><strong>Range:</strong> <span id="corrRange" style="color:var(--accent-2);font-weight:700;">...</span></span>
+                      <span><strong>Compound Symmetry:</strong> <span id="corrCompound" style="color:var(--accent-2);font-weight:700;">...</span></span>
+                    </div>
+                    <div style="margin-top:6px;color:var(--text-muted);font-style:italic;" id="corrInterpretation">...</div>
+                  </div>
+                </div>
+              </div>
+              
               <div style="display:none;" id="desc-histogram-panel">
                 <div style="font-weight:700;margin:16px 0 8px;color:var(--accent-1);display:flex;justify-content:space-between;align-items:center;">
                   <span>Histogram: <span id="desc-histogram-title">Select a variable</span></span>
@@ -1755,6 +1793,11 @@
       setText("expLevels", isFinite(parseMaybeNumber(ksum.levelsCount)) ? Math.round(parseMaybeNumber(ksum.levelsCount)) : "...");
       setText("expOverallMean", isFinite(parseMaybeNumber(ksum.meanOverall)) ? fmt(ksum.meanOverall) : "...");
       setText("expFramework", primaryFramework === "nonparametric" ? "Nonparametric (ranks)" : "Parametric (means)");
+      
+      // Populate Profile Plot and Correlation Matrix
+      populateProfilePlot(e, ob);
+      populateCorrelationMatrix(e);
+      
       const alpha = 0.05;
       const leveneP = parseMaybeNumber((ob.levene || {}).p);
       const bfP = parseMaybeNumber((ob.brownForsythe || {}).p);
@@ -1924,6 +1967,218 @@
         }
       });
     });
+    
+    // === Profile Plot Function ===
+    function populateProfilePlot(e, ob) {
+      const svg = document.getElementById("profilePlot");
+      if (!svg) return;
+      
+      // Clear existing content
+      svg.innerHTML = '';
+      
+      // Get timepoint means and raw data
+      const groupDescriptives = ob.groupDescriptives || [];
+      if (groupDescriptives.length === 0) return;
+      
+      const k = groupDescriptives.length;
+      const means = groupDescriptives.map(g => g.mean);
+      const labels = groupDescriptives.map(g => g.name);
+      
+      // SVG dimensions
+      const svgWidth = svg.clientWidth || 800;
+      const svgHeight = 300;
+      const margin = { top: 20, right: 40, bottom: 50, left: 60 };
+      const width = svgWidth - margin.left - margin.right;
+      const height = svgHeight - margin.top - margin.bottom;
+      
+      // Get individual subject data from lastBundle if available
+      let subjectData = [];
+      if (window.dependentRangeData && lastBundle.setup && lastBundle.setup.selectedColumns) {
+        const headers = window.dependentRangeData[0] || [];
+        const dataRows = window.dependentRangeData.slice(1);
+        const selectedCols = lastBundle.setup.selectedColumns;
+        
+        // Extract complete cases
+        dataRows.forEach(row => {
+          const values = selectedCols.map(col => {
+            const idx = headers.indexOf(col);
+            return idx >= 0 ? parseFloat(row[idx]) : NaN;
+          });
+          if (values.every(v => isFinite(v))) {
+            subjectData.push(values);
+          }
+        });
+      }
+      
+      // Calculate scales
+      let allValues = [...means];
+      subjectData.forEach(subject => allValues.push(...subject));
+      const yMin = Math.min(...allValues);
+      const yMax = Math.max(...allValues);
+      const yRange = yMax - yMin;
+      const yPadding = yRange * 0.1;
+      
+      const xScale = (i) => margin.left + (i / (k - 1)) * width;
+      const yScale = (val) => margin.top + height - ((val - yMin + yPadding) / (yRange + 2 * yPadding)) * height;
+      
+      // Create group element
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      
+      // Draw individual subject lines (spaghetti plot)
+      subjectData.forEach((subject, subIdx) => {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        let d = `M ${xScale(0)} ${yScale(subject[0])}`;
+        for (let i = 1; i < k; i++) {
+          d += ` L ${xScale(i)} ${yScale(subject[i])}`;
+        }
+        path.setAttribute("d", d);
+        path.setAttribute("stroke", "#4fc3f7");
+        path.setAttribute("stroke-width", "1");
+        path.setAttribute("fill", "none");
+        path.setAttribute("opacity", "0.3");
+        g.appendChild(path);
+      });
+      
+      // Draw mean line (bold)
+      const meanPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      let meanD = `M ${xScale(0)} ${yScale(means[0])}`;
+      for (let i = 1; i < k; i++) {
+        meanD += ` L ${xScale(i)} ${yScale(means[i])}`;
+      }
+      meanPath.setAttribute("d", meanD);
+      meanPath.setAttribute("stroke", "#ff9800");
+      meanPath.setAttribute("stroke-width", "3");
+      meanPath.setAttribute("fill", "none");
+      g.appendChild(meanPath);
+      
+      // Draw mean points
+      means.forEach((mean, i) => {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", xScale(i));
+        circle.setAttribute("cy", yScale(mean));
+        circle.setAttribute("r", "5");
+        circle.setAttribute("fill", "#ff9800");
+        circle.setAttribute("stroke", "#1a2332");
+        circle.setAttribute("stroke-width", "2");
+        g.appendChild(circle);
+      });
+      
+      // X-axis
+      const xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      xAxis.setAttribute("x1", margin.left);
+      xAxis.setAttribute("y1", margin.top + height);
+      xAxis.setAttribute("x2", margin.left + width);
+      xAxis.setAttribute("y2", margin.top + height);
+      xAxis.setAttribute("stroke", "#666");
+      xAxis.setAttribute("stroke-width", "1");
+      g.appendChild(xAxis);
+      
+      // Y-axis
+      const yAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      yAxis.setAttribute("x1", margin.left);
+      yAxis.setAttribute("y1", margin.top);
+      yAxis.setAttribute("x2", margin.left);
+      yAxis.setAttribute("y2", margin.top + height);
+      yAxis.setAttribute("stroke", "#666");
+      yAxis.setAttribute("stroke-width", "1");
+      g.appendChild(yAxis);
+      
+      // X-axis labels
+      labels.forEach((label, i) => {
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", xScale(i));
+        text.setAttribute("y", margin.top + height + 20);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("fill", "#ccc");
+        text.setAttribute("font-size", "11");
+        text.textContent = label;
+        g.appendChild(text);
+      });
+      
+      // Y-axis labels (3 ticks)
+      const yTicks = [yMin, (yMin + yMax) / 2, yMax];
+      yTicks.forEach(tick => {
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", margin.left - 10);
+        text.setAttribute("y", yScale(tick) + 4);
+        text.setAttribute("text-anchor", "end");
+        text.setAttribute("fill", "#ccc");
+        text.setAttribute("font-size", "10");
+        text.textContent = tick.toFixed(1);
+        g.appendChild(text);
+        
+        // Grid line
+        const gridLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        gridLine.setAttribute("x1", margin.left);
+        gridLine.setAttribute("y1", yScale(tick));
+        gridLine.setAttribute("x2", margin.left + width);
+        gridLine.setAttribute("y2", yScale(tick));
+        gridLine.setAttribute("stroke", "#333");
+        gridLine.setAttribute("stroke-width", "1");
+        gridLine.setAttribute("stroke-dasharray", "3,3");
+        gridLine.setAttribute("opacity", "0.5");
+        g.appendChild(gridLine);
+      });
+      
+      svg.appendChild(g);
+    }
+    
+    // === Correlation Matrix Function ===
+    function populateCorrelationMatrix(e) {
+      const corrMatrix = e.correlationMatrix;
+      if (!corrMatrix) return;
+      
+      const tbody = document.getElementById("corrMatrixBody");
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      
+      // Populate correlation pairs
+      const correlations = corrMatrix.correlations || [];
+      correlations.forEach((corr, idx) => {
+        const tr = document.createElement('tr');
+        if (idx % 2 === 1) tr.style.background = 'rgba(255,255,255,.05)';
+        
+        // Pair name
+        const tdPair = document.createElement('td');
+        tdPair.textContent = corr.label || `Time ${corr.time1 + 1} - Time ${corr.time2 + 1}`;
+        tdPair.style.padding = '6px 8px';
+        tdPair.style.border = '1px solid rgba(255,255,255,.18)';
+        tdPair.style.textAlign = 'left';
+        tr.appendChild(tdPair);
+        
+        // Correlation value
+        const tdR = document.createElement('td');
+        tdR.textContent = corr.r.toFixed(3);
+        tdR.style.padding = '6px 8px';
+        tdR.style.border = '1px solid rgba(255,255,255,.18)';
+        tdR.style.textAlign = 'center';
+        tdR.style.fontWeight = '700';
+        tdR.style.color = corr.r > 0.7 ? '#4caf50' : corr.r > 0.4 ? '#ff9800' : '#f44336';
+        tr.appendChild(tdR);
+        
+        // Interpretation
+        const tdInterp = document.createElement('td');
+        const absR = Math.abs(corr.r);
+        let interp = '';
+        if (absR > 0.7) interp = 'Strong';
+        else if (absR > 0.4) interp = 'Moderate';
+        else if (absR > 0.2) interp = 'Weak';
+        else interp = 'Very weak';
+        tdInterp.textContent = interp;
+        tdInterp.style.padding = '6px 8px';
+        tdInterp.style.border = '1px solid rgba(255,255,255,.18)';
+        tdInterp.style.textAlign = 'center';
+        tr.appendChild(tdInterp);
+        
+        tbody.appendChild(tr);
+      });
+      
+      // Populate summary
+      setText("corrAvgR", corrMatrix.avgR.toFixed(3));
+      setText("corrRange", corrMatrix.range.toFixed(3) + " (" + corrMatrix.minR.toFixed(2) + " to " + corrMatrix.maxR.toFixed(2) + ")");
+      setText("corrCompound", corrMatrix.compoundSymmetry);
+      setText("corrInterpretation", corrMatrix.interpretation);
+    }
     
   </script>
 </body>

@@ -314,6 +314,9 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
   // Kendall's W (effect size for Friedman) - Coefficient of concordance
   const kendallW = friedman.W || 0;
   
+  // Correlation matrix (within-subject consistency)
+  const correlationMatrix = computeCorrelationMatrix(completeCases, k);
+  
   // Mauchly's Test of Sphericity
   const sphericity = computeMauchlySphericity(completeCases, k, n);
   
@@ -349,6 +352,7 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
     missingCount: missingCount,
     missingPct: missingPct,
     grandMean: grandMean,
+    correlationMatrix: correlationMatrix,
     omnibus: {
       N: n,
       k: k,
@@ -863,6 +867,68 @@ function approximateTTest(t, df) {
   return 0.001;
 }
 
+function computeCorrelationMatrix(completeCases, k) {
+  // Compute pairwise Pearson correlations between timepoints
+  const correlations = [];
+  
+  for (let i = 0; i < k; i++) {
+    for (let j = i + 1; j < k; j++) {
+      const time1 = completeCases.map(row => row[i]);
+      const time2 = completeCases.map(row => row[j]);
+      
+      const n = time1.length;
+      if (n < 2) continue;
+      
+      const mean1 = time1.reduce((a, b) => a + b, 0) / n;
+      const mean2 = time2.reduce((a, b) => a + b, 0) / n;
+      
+      let numerator = 0;
+      let sum1Sq = 0;
+      let sum2Sq = 0;
+      
+      for (let idx = 0; idx < n; idx++) {
+        const diff1 = time1[idx] - mean1;
+        const diff2 = time2[idx] - mean2;
+        numerator += diff1 * diff2;
+        sum1Sq += diff1 * diff1;
+        sum2Sq += diff2 * diff2;
+      }
+      
+      const denominator = Math.sqrt(sum1Sq * sum2Sq);
+      const r = denominator > 0 ? numerator / denominator : 0;
+      
+      correlations.push({
+        time1: i,
+        time2: j,
+        r: r,
+        label: `Time ${i + 1} - Time ${j + 1}`
+      });
+    }
+  }
+  
+  // Summary statistics
+  const rValues = correlations.map(c => c.r);
+  const avgR = rValues.length > 0 ? rValues.reduce((a, b) => a + b, 0) / rValues.length : 0;
+  const minR = rValues.length > 0 ? Math.min(...rValues) : 0;
+  const maxR = rValues.length > 0 ? Math.max(...rValues) : 0;
+  
+  // Compound symmetry check (are correlations similar?)
+  const range = maxR - minR;
+  const compoundSymmetry = range < 0.2 ? "Good" : range < 0.4 ? "Moderate" : "Poor";
+  
+  return {
+    correlations: correlations,
+    avgR: avgR,
+    minR: minR,
+    maxR: maxR,
+    range: range,
+    compoundSymmetry: compoundSymmetry,
+    interpretation: avgR > 0.7 ? "Strong within-subject consistency" :
+                    avgR > 0.4 ? "Moderate within-subject consistency" :
+                    "Weak within-subject consistency (high individual variability)"
+  };
+}
+
 
 function buildDependentBundle(headers, rows, spec) {
   console.log("=== buildDependentBundle START ===");
@@ -916,6 +982,7 @@ function buildDependentBundle(headers, rows, spec) {
       },
       explore: {
         selectedColumnStats,
+        correlationMatrix: rmResults.correlationMatrix,
         kplusSummary: {
           variableCount: selectedColumns.length,
           totalN: rmResults.totalN,
