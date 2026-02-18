@@ -269,12 +269,6 @@
         }
         if (STATE.saved.primaryFramework) qs("frameworkMode").value = STATE.saved.primaryFramework;
       }
-      
-      // Add event listeners for radio buttons
-      document.querySelectorAll('input[name="dataMode"]').forEach(function(radio){
-        radio.addEventListener('change', validateBucket);
-      });
-      
       validateBucket();
     }
     function run(){
@@ -329,7 +323,10 @@
         bucketPanel.addEventListener("dragover", allowDrop);
         bucketPanel.addEventListener("drop", handleDrop);
       }
-      qs("dataMode").addEventListener("change", validateBucket);
+      // Add event listeners for radio buttons
+      document.querySelectorAll('input[name="dataMode"]').forEach(function(radio){
+        radio.addEventListener('change', validateBucket);
+      });
       qs("btnRefresh").addEventListener("click", function(){ send("requestData", null); });
       qs("btnCancel").addEventListener("click", function(){ send("close", null); });
       qs("btnRun").addEventListener("click", run);
