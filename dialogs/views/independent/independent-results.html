@@ -114,6 +114,14 @@
   letter-spacing:.3px;
   margin-bottom:4px;
 }
+/* Descriptive Stats Tab Styles */
+.desc-table-wrap{max-height:240px;overflow:auto;border:1px solid var(--border);border-radius:6px;background:var(--surface-2);margin-bottom:12px;}
+#desc-stats-table{width:100%;min-width:820px;border-collapse:collapse;table-layout:auto;}
+#desc-stats-table th,#desc-stats-table td{padding:6px 8px;border:1px solid rgba(255,255,255,.18);box-sizing:border-box;text-align:right;font-size:10px;line-height:16px;height:30px;white-space:nowrap;}
+#desc-stats-table th:first-child,#desc-stats-table td:first-child{text-align:left;min-width:120px;max-width:180px;overflow:hidden;text-overflow:ellipsis;}
+#desc-stats-table thead th{background:#003366cc;color:#fff;z-index:2;}
+#desc-stats-table tbody tr:nth-child(even) td{background:rgba(255,255,255,.05)}
+#desc-stats-table tbody tr:hover td{background:rgba(255,221,87,.18)}
 
   </style>
 </head>
@@ -281,14 +289,46 @@
           </div>
         </section>
         <section id="tab-explore" class="tab-panel active">
-          <div class="stats-container">
-            <div class="stat-panel"><div class="stat-panel-heading">Group Summaries</div><div class="stat-panel-body">
-              <div class="stat-field"><span class="stat-label">n1 / n2</span><span class="stat-value" id="expN">...</span></div>
-              <div class="stat-field"><span class="stat-label">Mean A / Mean B</span><span class="stat-value" id="expMean">...</span></div>
-              <div class="stat-field"><span class="stat-label">Median A / Median B</span><span class="stat-value" id="expMed">...</span></div>
-              <div class="stat-field"><span class="stat-label">SD A / SD B</span><span class="stat-value" id="expSd">...</span></div>
-              <div class="stat-field"><span class="stat-label">IQR A / IQR B</span><span class="stat-value" id="expIqr">...</span></div>
-            </div></div>
+          <!-- Descriptive Statistics with integrated summary info -->
+          <div class="stat-panel">
+            <div class="stat-panel-heading">Descriptive Statistics</div>
+            <div style="padding:6px 10px;background:rgba(255,165,120,.08);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px;font-size:11px;align-items:center;">
+              <span style="color:var(--text-secondary);"><strong>Variables:</strong> <span id="expVarCount" style="color:var(--accent-2);font-weight:700;">2</span></span>
+              <span style="color:var(--text-secondary);"><strong>Total N:</strong> <span id="expTotalN" style="color:var(--accent-2);font-weight:700;">...</span></span>
+              <span style="color:var(--text-secondary);"><strong>Overall x̄:</strong> <span id="expOverallMean" style="color:var(--accent-2);font-weight:700;">...</span></span>
+              <span style="color:var(--text-secondary);"><strong>Framework:</strong> <span id="expFramework" style="color:var(--accent-2);font-weight:700;">...</span></span>
+            </div>
+            <div class="stat-panel-body">
+              <div class="desc-table-wrap">
+                <table id="desc-stats-table">
+                  <colgroup>
+                    <col style="min-width: 140px; max-width: 200px;">
+                    <col style="min-width: 70px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 90px;">
+                    <col style="min-width: 80px;">
+                    <col style="min-width: 80px;">
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th style="text-align:left">Variable</th>
+                      <th>N</th>
+                      <th>Mean</th>
+                      <th>StdDev</th>
+                      <th>Min</th>
+                      <th>Median</th>
+                      <th>Max</th>
+                      <th>Skew</th>
+                      <th>Kurt</th>
+                    </tr>
+                  </thead>
+                  <tbody id="desc-stats-body"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
           <div class="stat-panel" style="margin-top:12px;">
             <div class="stat-panel-heading">Comparison of Means</div>
@@ -695,9 +735,93 @@
       setText("repMw", "Mann-Whitney: U=" + fmt(r.u) + ", p " + fmtP(r.mwP) + ", rank-biserial " + fmt(fx.rankBiserial) + ".");
       setText("repCons", rep.consistency);
       
+      // Update descriptive stats table
+      populateDescriptiveStats(s, e);
+      
       // Update chart
       updateGroupChart();
     }
+    
+    function populateDescriptiveStats(s, e) {
+      const body = document.getElementById('desc-stats-body');
+      if (!body) return;
+      
+      body.innerHTML = '';
+      
+      const groupAName = s.groupA || 'Group A';
+      const groupBName = s.groupB || 'Group B';
+      
+      // Calculate skewness and kurtosis (basic estimators)
+      function calcSkew(mean, sd, n) {
+        // Placeholder - would need raw data for accurate calculation
+        return '...';
+      }
+      
+      function calcKurt(mean, sd, n) {
+        // Placeholder - would need raw data for accurate calculation
+        return '...';
+      }
+      
+      // Create rows for each group
+      const groups = [
+        {
+          name: groupAName,
+          n: e.n1 || 0,
+          mean: e.mean1,
+          sd: e.sd1,
+          min: e.min1,
+          median: e.med1,
+          max: e.max1
+        },
+        {
+          name: groupBName,
+          n: e.n2 || 0,
+          mean: e.mean2,
+          sd: e.sd2,
+          min: e.min2,
+          median: e.med2,
+          max: e.max2
+        }
+      ];
+      
+      groups.forEach(function(grp) {
+        const tr = document.createElement('tr');
+        
+        const cells = [
+          grp.name,
+          grp.n,
+          fmt(grp.mean),
+          fmt(grp.sd),
+          fmt(grp.min),
+          fmt(grp.median),
+          fmt(grp.max),
+          calcSkew(grp.mean, grp.sd, grp.n),
+          calcKurt(grp.mean, grp.sd, grp.n)
+        ];
+        
+        cells.forEach(function(val, idx) {
+          const td = document.createElement('td');
+          td.textContent = val;
+          if (idx === 0) td.style.textAlign = 'left';
+          tr.appendChild(td);
+        });
+        
+        body.appendChild(tr);
+      });
+      
+      // Update summary info
+      const totalN = (e.n1 || 0) + (e.n2 || 0);
+      const mean1 = parseMaybeNumber(e.mean1) || 0;
+      const mean2 = parseMaybeNumber(e.mean2) || 0;
+      const n1 = parseMaybeNumber(e.n1) || 0;
+      const n2 = parseMaybeNumber(e.n2) || 0;
+      const overallMean = totalN > 0 ? (mean1 * n1 + mean2 * n2) / totalN : 0;
+      
+      setText('expTotalN', totalN);
+      setText('expOverallMean', fmt(overallMean));
+      setText('expFramework', primaryFramework === 'nonparametric' ? 'Non-parametric (ranks)' : 'Parametric (means)');
+    }
+    
     function updateGroupChart() {
       if (typeof Highcharts === 'undefined') return;
       if (!lastBundle || !lastBundle.explore) return;
@@ -798,16 +922,22 @@
     }
 
     async function generateAISummary() {
+      console.log('🤖 AI Summary button clicked');
       const btn = document.getElementById('aiSummaryBtn');
-      if (!btn) return;
+      if (!btn) {
+        console.error('❌ AI button not found');
+        return;
+      }
       
+      console.log('🔑 Checking API key...', window.AI_API_KEY ? 'Present' : 'Missing');
       if (!window.AI_API_KEY || window.AI_API_KEY === 'YOUR_API_KEY_PLACEHOLDER') {
         alert('AI API key not configured. Please set up your Groq API key.');
         return;
       }
       
+      console.log('📦 Checking lastBundle...', lastBundle ? 'Present' : 'Missing');
       if (!lastBundle) {
-        alert('No analysis results available to summarize.');
+        alert('No analysis results available to summarize. Please run an analysis first.');
         return;
       }
       
@@ -822,6 +952,7 @@
         
         const userPrompt = `Summarize this 2-group comparison analysis:\n\n${JSON.stringify(payload, null, 2)}\n\nProvide a brief, clear summary highlighting: 1) group descriptives, 2) assumption tests, 3) primary test result, 4) effect size, 5) interpretation.`;
         
+        console.log('🌐 Calling Groq API...');
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -839,14 +970,18 @@
           })
         });
         
+        console.log('📥 Response status:', response.status);
         if (!response.ok) {
           const errorText = await response.text();
+          console.error('❌ API error:', errorText);
           throw new Error(`API error ${response.status}: ${errorText}`);
         }
         
         const data = await response.json();
+        console.log('✅ API response received');
         const summary = data.choices[0].message.content;
         
+        // Display in a modal or alert
         alert(`AI Summary:\n\n${summary}`);
         
       } catch (error) {
