@@ -8,6 +8,11 @@ function onRangeDataLoaded(values, address) {
   if (!values || values.length < 2) return showPanel(false);
   dependentRangeData = values;
   dependentRangeAddress = address || "";
+  
+  // Persist to sessionStorage for reliability
+  sessionStorage.setItem("dependentRangeData", JSON.stringify(values));
+  sessionStorage.setItem("dependentRangeAddress", address || "");
+  
   const headers = values[0] || [];
   const rows = values.slice(1);
   const r = document.getElementById("depRange");
@@ -989,6 +994,17 @@ function openDependentResultsDialog() {
 
 function sendDependentBundle() {
   console.log("=== sendDependentBundle called ===");
+  
+  // Restore from sessionStorage if not in memory
+  if (!dependentRangeData) {
+    const stored = sessionStorage.getItem("dependentRangeData");
+    if (stored) {
+      dependentRangeData = JSON.parse(stored);
+      dependentRangeAddress = sessionStorage.getItem("dependentRangeAddress") || "";
+      console.log("Restored dependentRangeData from sessionStorage");
+    }
+  }
+  
   if (!dependentDialog || !dependentRangeData) {
     console.log("sendDependentBundle: early exit", { dependentDialog: !!dependentDialog, dependentRangeData: !!dependentRangeData });
     return;
