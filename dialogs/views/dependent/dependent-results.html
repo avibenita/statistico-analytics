@@ -1513,10 +1513,12 @@
       Office.onReady(function(){
         Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function(arg){
           const msg = JSON.parse(arg.message||"{}");
-          if(msg.type==="dependent_BUNDLE") populateBundle(msg.payload||{});
+          if(msg.type==="DEPENDENT_BUNDLE") populateBundle(msg.payload||{});
         });
-        sendToHost("dependentDashboardReady",{});
-        setTimeout(()=>sendToHost("dependentDashboardReady",{}),500);
+        if(Office&&Office.context&&Office.context.ui&&Office.context.ui.messageParent) {
+          Office.context.ui.messageParent(JSON.stringify({action:"ready"}));
+          setTimeout(()=>Office.context.ui.messageParent(JSON.stringify({action:"ready"})),500);
+        }
       });
     });
   </script>
