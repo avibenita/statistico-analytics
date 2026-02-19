@@ -2653,9 +2653,13 @@
         heatmapContainer.innerHTML = html;
       }
       
-      // Also populate table view (hidden by default)
+      // Also populate table view
       if (tbody) {
         tbody.innerHTML = '';
+        
+        // Check if we should show p-value and n
+        const showPVal = document.getElementById('showCorrPValue')?.checked || false;
+        const showN = document.getElementById('showCorrN')?.checked || false;
         
         // Table header
         const tableHeader = document.getElementById('corrTableHeader');
@@ -2687,9 +2691,38 @@
             const td = document.createElement('td');
             const cell = corrGrid[i][j];
             if (cell) {
-              td.textContent = cell.r.toFixed(3);
-              td.style.fontWeight = '700';
-              td.style.color = cell.r > 0.7 ? '#4caf50' : cell.r > 0.4 ? '#ff9800' : '#f44336';
+              // Create container div for multi-line content
+              const container = document.createElement('div');
+              
+              // R value (always shown)
+              const rDiv = document.createElement('div');
+              rDiv.textContent = cell.r.toFixed(3);
+              rDiv.style.fontWeight = '700';
+              rDiv.style.fontSize = '13px';
+              rDiv.style.color = cell.r > 0.7 ? '#4caf50' : cell.r > 0.4 ? '#ff9800' : cell.r < -0.3 ? '#f44336' : 'inherit';
+              container.appendChild(rDiv);
+              
+              // P-value (conditional)
+              if (showPVal) {
+                const pDiv = document.createElement('div');
+                pDiv.textContent = `p = ${cell.p < 0.001 ? '<0.001' : cell.p.toFixed(3)}`;
+                pDiv.style.fontSize = '9px';
+                pDiv.style.opacity = '0.7';
+                pDiv.style.marginTop = '2px';
+                container.appendChild(pDiv);
+              }
+              
+              // N value (conditional)
+              if (showN) {
+                const nDiv = document.createElement('div');
+                nDiv.textContent = `N = ${cell.n}`;
+                nDiv.style.fontSize = '9px';
+                nDiv.style.opacity = '0.6';
+                nDiv.style.marginTop = '2px';
+                container.appendChild(nDiv);
+              }
+              
+              td.appendChild(container);
             }
             td.style.padding = '6px 8px';
             td.style.border = '1px solid rgba(255,255,255,.18)';
