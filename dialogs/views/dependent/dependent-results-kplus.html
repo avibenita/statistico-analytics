@@ -63,6 +63,10 @@
     .settings-grid>div{display:flex;flex-direction:column;}
     .settings-grid label{font-size:10px;color:#37474f;margin-bottom:2px;font-weight:700;text-transform:uppercase;}
     .settings-grid select,.settings-grid input{width:100%;height:28px;border-radius:0;border:2px solid #5c6bc0;background:#ffffff;color:#263238;padding:0 6px;font-weight:600;font-size:11px;}
+    .posthoc-radio{display:flex;align-items:center;gap:6px;padding:4px 6px;cursor:pointer;font-size:11px;color:#263238;font-weight:600;border-radius:4px;transition:background 0.2s;}
+    .posthoc-radio:hover{background:rgba(92,107,192,0.1);}
+    .posthoc-radio input[type="radio"]{margin:0;width:16px;height:16px;cursor:pointer;accent-color:#5c6bc0;}
+    .posthoc-radio input[type="radio"]:checked + span{color:#283593;font-weight:700;}
     #setPosthocWrap,#setCorrectionWrap{min-width:160px;max-width:200px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;}
     #setPosthocWrap label,#setCorrectionWrap label{white-space:nowrap;line-height:1;margin-bottom:0;font-size:10px;}
     .inference-row{display:flex;align-items:center;justify-content:flex-start;gap:10px;flex-wrap:nowrap;min-width:max-content;}
@@ -208,34 +212,34 @@
             </select>
           </div>
 
-          <!-- Post-hoc controls for RM (dynamic based on framework) -->
-          <div id="setPosthocWrap" style="flex:0 0 auto;position:relative;">
-            <label for="setPosthocMethod">Post-hoc</label>
-            <select id="setPosthocMethod" title="Post-hoc comparison method (changes with framework)" style="min-width:180px;">
-              <!-- Parametric options (RM-ANOVA) -->
-              <optgroup label="Parametric" id="posthocParametric">
-                <option value="paired">Paired t-tests (all pairs)</option>
-                <option value="paired-baseline">Paired t-tests vs Baseline</option>
-                <option value="none-parametric">None</option>
-              </optgroup>
-              <!-- Nonparametric options (Friedman) -->
-              <optgroup label="Nonparametric" id="posthocNonparametric" style="display:none;">
-                <option value="wilcoxon">Wilcoxon Signed-Rank</option>
-                <option value="conover">Conover</option>
-                <option value="nemenyi">Nemenyi</option>
-                <option value="none-nonparametric">None</option>
-              </optgroup>
-            </select>
+          <!-- Post-hoc controls for RM (radio buttons based on framework) -->
+          <div id="setPosthocWrap" style="flex:0 0 auto;min-width:200px;">
+            <label style="font-size:10px;color:#37474f;margin-bottom:4px;font-weight:700;text-transform:uppercase;display:block;">Post-hoc Method</label>
+            <div id="posthocRadioGroup" style="display:flex;flex-direction:column;gap:4px;padding:6px;background:#fff;border:2px solid #5c6bc0;border-radius:0;">
+              <!-- Will be populated dynamically based on framework -->
+            </div>
           </div>
 
-          <div id="setCorrectionWrap" style="flex:0 0 auto;">
-            <label for="setPosthocCorrection">p Correction</label>
-            <select id="setPosthocCorrection" style="min-width:150px;">
-              <option value="holm" selected>Holm</option>
-              <option value="bonferroni">Bonferroni</option>
-              <option value="bh">FDR (Benjamini-Hochberg)</option>
-              <option value="none">None</option>
-            </select>
+          <div id="setCorrectionWrap" style="flex:0 0 auto;min-width:180px;">
+            <label style="font-size:10px;color:#37474f;margin-bottom:4px;font-weight:700;text-transform:uppercase;display:block;">p-value Correction</label>
+            <div style="display:flex;flex-direction:column;gap:4px;padding:6px;background:#fff;border:2px solid #5c6bc0;border-radius:0;">
+              <label class="posthoc-radio">
+                <input type="radio" name="pCorrection" value="holm" checked onchange="onPosthocSettingsChange()">
+                <span>Holm</span>
+              </label>
+              <label class="posthoc-radio">
+                <input type="radio" name="pCorrection" value="bonferroni" onchange="onPosthocSettingsChange()">
+                <span>Bonferroni</span>
+              </label>
+              <label class="posthoc-radio">
+                <input type="radio" name="pCorrection" value="bh" onchange="onPosthocSettingsChange()">
+                <span>FDR (Benjamini-Hochberg)</span>
+              </label>
+              <label class="posthoc-radio">
+                <input type="radio" name="pCorrection" value="none" onchange="onPosthocSettingsChange()">
+                <span>None</span>
+              </label>
+            </div>
           </div>
 
         </div>
@@ -724,6 +728,11 @@
       currentHypothesis = h;
       var alpha = Number((document.getElementById("setAlpha") || { value: "0.05" }).value || 0.05);
       if (!isFinite(alpha) || alpha <= 0 || alpha >= 1) alpha = 0.05;
+      
+      // Get post-hoc method and correction from radio buttons
+      var posthocMethodChecked = document.querySelector('input[name="posthocMethod"]:checked');
+      var pCorrectionChecked = document.querySelector('input[name="pCorrection"]:checked');
+      
       return {
         compareMode: currentCompareMode,
         primaryFramework: primaryFramework,
@@ -734,8 +743,8 @@
         valueColumn: persistedColumns.valueColumn || "",
         groupColumn: persistedColumns.groupColumn || "",
         primaryTest: (document.getElementById("setPrimaryTest") || {}).value || currentPrimaryTest || "welch",
-        posthocMethod: (document.getElementById("setPosthocMethod") || {}).value || "games-howell",
-        posthocCorrection: (document.getElementById("setPosthocCorrection") || {}).value || "holm"
+        posthocMethod: posthocMethodChecked ? posthocMethodChecked.value : "paired",
+        posthocCorrection: pCorrectionChecked ? pCorrectionChecked.value : "holm"
       };
     }
     function refreshHypothesisFrames(){
@@ -752,62 +761,59 @@
       refreshHypothesisFrames();
     }
     function updatePosthocOptions(){
-      var sel = document.getElementById("setPosthocMethod");
-      var corrSel = document.getElementById("setPosthocCorrection");
-      if (!sel) return;
+      const radioGroup = document.getElementById("posthocRadioGroup");
+      if (!radioGroup) return;
       
-      var isNonParam = primaryFramework === "nonparametric" || currentPrimaryTest === "friedman";
-      var isParam = !isNonParam;
+      const isNonParam = primaryFramework === "nonparametric" || currentPrimaryTest === "friedman";
+      
+      // Get current selection
+      const currentSelected = document.querySelector('input[name="posthocMethod"]:checked');
+      const currentValue = currentSelected ? currentSelected.value : "";
       
       // Smart context-aware options based on framework
-      if (isParam) {
+      if (!isNonParam) {
         // PARAMETRIC (RM-ANOVA): Paired t-tests
-        sel.innerHTML = `
-          <option value="paired">Paired t-tests (all pairs)</option>
-          <option value="paired-baseline">Paired t-tests vs Baseline</option>
-          <option value="none">None</option>
+        radioGroup.innerHTML = `
+          <label class="posthoc-radio">
+            <input type="radio" name="posthocMethod" value="paired" ${currentValue === "paired" || !currentValue ? "checked" : ""} onchange="onPosthocSettingsChange()">
+            <span>Paired t-tests (all pairs)</span>
+          </label>
+          <label class="posthoc-radio">
+            <input type="radio" name="posthocMethod" value="paired-baseline" ${currentValue === "paired-baseline" ? "checked" : ""} onchange="onPosthocSettingsChange()">
+            <span>Paired t-tests vs Baseline</span>
+          </label>
+          <label class="posthoc-radio">
+            <input type="radio" name="posthocMethod" value="none" ${currentValue === "none" ? "checked" : ""} onchange="onPosthocSettingsChange()">
+            <span>None</span>
+          </label>
         `;
-        // Auto-select default
-        if (!sel.value || sel.value === "wilcoxon" || sel.value === "conover" || sel.value === "nemenyi") {
-          sel.value = "paired";
-        }
-        sel.title = "Compares each timepoint using paired tests with multiplicity control";
       } else {
         // NONPARAMETRIC (Friedman): Wilcoxon, Conover, Nemenyi
-        sel.innerHTML = `
-          <option value="wilcoxon">Wilcoxon Signed-Rank</option>
-          <option value="conover">Conover</option>
-          <option value="nemenyi">Nemenyi</option>
-          <option value="none">None</option>
+        radioGroup.innerHTML = `
+          <label class="posthoc-radio">
+            <input type="radio" name="posthocMethod" value="wilcoxon" ${currentValue === "wilcoxon" || (!currentValue && isNonParam) ? "checked" : ""} onchange="onPosthocSettingsChange()">
+            <span>Wilcoxon Signed-Rank</span>
+          </label>
+          <label class="posthoc-radio">
+            <input type="radio" name="posthocMethod" value="conover" ${currentValue === "conover" ? "checked" : ""} onchange="onPosthocSettingsChange()">
+            <span>Conover</span>
+          </label>
+          <label class="posthoc-radio">
+            <input type="radio" name="posthocMethod" value="nemenyi" ${currentValue === "nemenyi" ? "checked" : ""} onchange="onPosthocSettingsChange()">
+            <span>Nemenyi</span>
+          </label>
+          <label class="posthoc-radio">
+            <input type="radio" name="posthocMethod" value="none" ${currentValue === "none" ? "checked" : ""} onchange="onPosthocSettingsChange()">
+            <span>None</span>
+          </label>
         `;
-        // Auto-select default
-        if (!sel.value || sel.value === "paired" || sel.value === "paired-baseline") {
-          sel.value = "wilcoxon";
-        }
-        sel.title = "Nonparametric post-hoc comparisons for Friedman test";
       }
-      
-      // P-correction: Always available, but auto-suggest FDR for many comparisons
-      if (corrSel) {
-        var numComparisons = 0;
-        var ob = (lastBundle && lastBundle.results && lastBundle.results.omnibus) ? lastBundle.results.omnibus : {};
-        var k = ob.k || 3;
-        numComparisons = (k * (k - 1)) / 2; // All pairwise comparisons
-        
-        // Smart default: FDR if >10 comparisons, Holm otherwise
-        if (!corrSel.value || corrSel.value === "") {
-          corrSel.value = numComparisons > 10 ? "bh" : "holm";
-        }
-        
-        // Update tooltip
-        corrSel.title = numComparisons > 10 
-          ? "Many comparisons (" + numComparisons + ") - FDR recommended"
-          : "Multiplicity correction for " + numComparisons + " comparisons";
-      }
-      
-      // Enable/disable based on selection
-      sel.disabled = false;
-      if (corrSel) corrSel.disabled = false;
+    }
+    
+    function onPosthocSettingsChange() {
+      // When user changes post-hoc method or correction, trigger recalculation
+      console.log("Post-hoc settings changed - triggering recalculation");
+      notifySettingsChanged();
     }
     function setFrameworkButtons(mode){
       primaryFramework = mode === "nonparametric" ? "nonparametric" : "parametric";
@@ -1330,8 +1336,8 @@
       
       // Determine if nonparametric
       const isNonParam = primaryFramework === "nonparametric";
-      const posthocMethod = document.getElementById("setPosthocMethod");
-      const currentMethod = posthocMethod ? posthocMethod.value : "paired";
+      const posthocMethodRadio = document.querySelector('input[name="posthocMethod"]:checked');
+      const currentMethod = posthocMethodRadio ? posthocMethodRadio.value : (isNonParam ? "wilcoxon" : "paired");
       
       // Update heading text and color based on framework
       if (heading) {
@@ -1420,7 +1426,11 @@
       
       // Update method note
       const method = posthoc.method || currentMethod || "paired";
-      const correction = posthoc.correction || "Holm";
+      const pCorrectionRadio = document.querySelector('input[name="pCorrection"]:checked');
+      const correction = pCorrectionRadio ? pCorrectionRadio.value : "holm";
+      const correctionName = correction === "bh" ? "FDR (Benjamini-Hochberg)" : 
+                             correction === "bonferroni" ? "Bonferroni" :
+                             correction === "none" ? "None" : "Holm";
       if (noteEl) {
         let methodDesc = "";
         if (isNonParam) {
@@ -1442,7 +1452,7 @@
             methodDesc = "Paired " + method + " test";
           }
         }
-        noteEl.textContent = methodDesc + " | p-value correction: " + correction;
+        noteEl.textContent = methodDesc + " | p-value correction: " + correctionName;
       }
       
       const rows = posthoc.rows || [];
