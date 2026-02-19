@@ -2360,6 +2360,15 @@
       
       setFrameworkButtons(primaryFramework);
       refreshSettingsVisibility();
+      
+      // Scroll to correlation matrix on load
+      setTimeout(() => {
+        const corrMatrix = document.getElementById('correlationMatrixContainer');
+        if (corrMatrix) {
+          corrMatrix.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 1500);
+      
       Office.onReady(function(){
         // Close modal when clicking outside
         document.addEventListener('click', function(event) {
@@ -2759,8 +2768,207 @@
         }
       });
       
-      // TODO: Recompute correlations with selected type (Pearson/Spearman/Kendall)
+      // Recompute correlations with selected type
       console.log('Correlation type changed to:', type);
+      
+      if (!lastBundle || !window.dependentRangeData) {
+        console.warn('Cannot switch correlation type: no data available');
+        return;
+      }
+      
+      // Recompute correlations and update display
+      const headers = window.dependentRangeData[0] || [];
+      const dataRows = window.dependentRangeData.slice(1);
+      const selectedCols = lastBundle.setup?.selectedColumns || [];
+      
+      if (selectedCols.length < 2) {
+        console.warn('Need at least 2 variables for correlation');
+        return;
+      }
+      
+      // Extract complete cases
+      const completeCases = [];
+      dataRows.forEach(row => {
+        const values = selectedCols.map(col => {
+          const idx = headers.indexOf(col);
+          return idx >= 0 ? parseFloat(row[idx]) : NaN;
+        });
+        if (values.every(v => isFinite(v))) {
+          completeCases.push(values);
+        }
+      });
+      
+      // Compute new correlation matrix
+      const newCorrMatrix = computeCorrelationMatrix(selectedCols, completeCases, type);
+      
+      // Update explore object with new correlations
+      if (lastBundle.explore) {
+        lastBundle.explore.correlationMatrix = newCorrMatrix;
+      }
+      
+      // Re-render the correlation display
+      populateCorrelationMatrix(lastBundle.explore);
+    }
+    
+    // === Correlation Computation Functions ===
+    
+    // Pearson correlation
+    function pearsonCorrelation(x, y) {
+      const n = x.length;
+      if (n !== y.length || n < 2) return { r: NaN, p: NaN };
+      
+      const meanX = x.reduce((a, b) => a + b, 0) / n;
+      const meanY = y.reduce((a, b) => a + b, 0) / n;
+      
+      let numerator = 0;
+      let sumXSq = 0;
+      let sumYSq = 0;
+      
+      for (let i = 0; i < n; i++) {
+        const dx = x[i] - meanX;
+        const dy = y[i] - meanY;
+        numerator += dx * dy;
+        sumXSq += dx * dx;
+        sumYSq += dy * dy;
+      }
+      
+      const denominator = Math.sqrt(sumXSq * sumYSq);
+      const r = denominator > 0 ? numerator / denominator : 0;
+      
+      // Compute p-value using t-distribution approximation
+      const t = Math.abs(r) * Math.sqrt((n - 2) / Math.max(1e-10, 1 - r * r));
+      const p = approximateTTestP(t, n - 2);
+      
+      return { r, p };
+    }
+    
+    // Spearman rank correlation
+    function spearmanCorrelation(x, y) {
+      const n = x.length;
+      if (n !== y.length || n < 2) return { r: NaN, p: NaN };
+      
+      // Convert to ranks
+      const xRanks = getRanks(x);
+      const yRanks = getRanks(y);
+      
+      // Compute Pearson on ranks
+      return pearsonCorrelation(xRanks, yRanks);
+    }
+    
+    // Kendall tau correlation
+    function kendallCorrelation(x, y) {
+      const n = x.length;
+      if (n !== y.length || n < 2) return { r: NaN, p: NaN };
+      
+      let concordant = 0;
+      let discordant = 0;
+      
+      for (let i = 0; i < n - 1; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const signX = Math.sign(x[j] - x[i]);
+          const signY = Math.sign(y[j] - y[i]);
+          
+          if (signX * signY > 0) {
+            concordant++;
+          } else if (signX * signY < 0) {
+            discordant++;
+          }
+        }
+      }
+      
+      const tau = (concordant - discordant) / (0.5 * n * (n - 1));
+      
+      // Approximate p-value for Kendall's tau
+      const z = Math.abs(tau) * Math.sqrt((9 * n * (n - 1)) / (2 * (2 * n + 5)));
+      const p = 2 * (1 - normalCDF(z));
+      
+      return { r: tau, p };
+    }
+    
+    // Helper: Convert values to ranks
+    function getRanks(arr) {
+      const indexed = arr.map((val, idx) => ({ val, idx }));
+      indexed.sort((a, b) => a.val - b.val);
+      
+      const ranks = new Array(arr.length);
+      for (let i = 0; i < indexed.length; i++) {
+        ranks[indexed[i].idx] = i + 1;
+      }
+      return ranks;
+    }
+    
+    // Helper: Normal CDF approximation
+    function normalCDF(z) {
+      const t = 1 / (1 + 0.2316419 * Math.abs(z));
+      const d = 0.3989423 * Math.exp(-z * z / 2);
+      const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+      return z > 0 ? 1 - p : p;
+    }
+    
+    // Helper: Approximate t-test p-value
+    function approximateTTestP(t, df) {
+      const absT = Math.abs(t);
+      if (absT < 1) return 0.9;
+      if (absT < 1.5) return 0.5;
+      if (absT < 2) return 0.2;
+      if (absT < 2.5) return 0.05;
+      if (absT < 3) return 0.02;
+      if (absT < 4) return 0.01;
+      return 0.001;
+    }
+    
+    // Compute full correlation matrix
+    function computeCorrelationMatrix(variables, completeCases, type = 'pearson') {
+      const n = variables.length;
+      const correlations = [];
+      
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const xi = completeCases.map(row => row[i]);
+          const xj = completeCases.map(row => row[j]);
+          
+          let result;
+          if (type === 'spearman') {
+            result = spearmanCorrelation(xi, xj);
+          } else if (type === 'kendall') {
+            result = kendallCorrelation(xi, xj);
+          } else {
+            result = pearsonCorrelation(xi, xj);
+          }
+          
+          correlations.push({
+            time1: i,
+            time2: j,
+            r: result.r,
+            p: result.p,
+            n: completeCases.length,
+            label: `${variables[i]} - ${variables[j]}`
+          });
+        }
+      }
+      
+      // Compute summary statistics
+      const rValues = correlations.map(c => c.r).filter(r => isFinite(r));
+      const avgR = rValues.length > 0 ? rValues.reduce((a, b) => a + b, 0) / rValues.length : 0;
+      const minR = rValues.length > 0 ? Math.min(...rValues) : 0;
+      const maxR = rValues.length > 0 ? Math.max(...rValues) : 0;
+      const range = maxR - minR;
+      
+      const compoundSymmetry = range < 0.2 ? "Good" : range < 0.4 ? "Moderate" : "Poor";
+      const interpretation = avgR > 0.7 ? "Strong within-subject consistency" :
+                            avgR > 0.4 ? "Moderate within-subject consistency" :
+                            "Weak within-subject consistency (high individual variability)";
+      
+      return {
+        correlations,
+        avgR,
+        minR,
+        maxR,
+        range,
+        compoundSymmetry,
+        interpretation,
+        type // Store the correlation type
+      };
     }
     
   </script>
