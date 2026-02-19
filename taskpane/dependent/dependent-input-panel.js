@@ -837,7 +837,6 @@ function computeRMPostHocComparisons(completeCases, timepointNames, n, k, primar
         ciUpper: ciUpper,
         effectSize: effectSize
       });
-    }
   }
   
   // Apply p-value correction based on user selection
