@@ -1343,16 +1343,83 @@
       const warningEl = document.getElementById("posthocWarning");
       const noteEl = document.getElementById("posthocMethodNote");
       const refSelect = document.getElementById("posthocRefGroup");
+      const tableHeader = document.querySelector("#posthocTable thead tr");
       
       if (!body) return;
       
-      // Update heading color based on framework
+      // Determine if nonparametric
+      const isNonParam = primaryFramework === "nonparametric";
+      const posthocMethod = document.getElementById("setPosthocMethod");
+      const currentMethod = posthocMethod ? posthocMethod.value : "paired";
+      
+      // Update heading text and color based on framework
       if (heading) {
-        heading.className = "stat-panel-heading " + (primaryFramework === "nonparametric" ? "nonparametric" : "parametric");
+        heading.className = "stat-panel-heading " + (isNonParam ? "nonparametric" : "parametric");
+        
+        // Context-aware heading text
+        if (isNonParam) {
+          if (currentMethod === "wilcoxon") {
+            heading.innerHTML = 'Post-hoc Pairwise Comparisons (Wilcoxon Signed-Rank)' + 
+              '<div style="float:right;display:inline-flex;gap:8px;align-items:center;font-size:11px;font-weight:600;text-transform:none;">' +
+              '<span style="opacity:0.8;">Filter:</span>' +
+              '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">' +
+              '<input type="radio" name="posthocGrouping" value="all" checked onchange="updatePosthocDisplay()"> All pairs' +
+              '</label>' +
+              '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">' +
+              '<input type="radio" name="posthocGrouping" value="ref" onchange="updatePosthocDisplay()"> vs Reference' +
+              '</label>' +
+              '<select id="posthocRefGroup" style="height:24px;padding:0 6px;border-radius:4px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:11px;display:none;" onchange="updatePosthocDisplay()">' +
+              '<option value="">Select timepoint...</option>' +
+              '</select>' +
+              '</div>';
+          } else if (currentMethod === "conover") {
+            heading.textContent = 'Post-hoc Pairwise Comparisons (Conover)';
+          } else if (currentMethod === "nemenyi") {
+            heading.textContent = 'Post-hoc Pairwise Comparisons (Nemenyi)';
+          } else {
+            heading.textContent = 'Post-hoc Pairwise Comparisons (Rank-based)';
+          }
+        } else {
+          heading.innerHTML = 'Post-hoc Pairwise Comparisons (Paired t-tests)' +
+            '<div style="float:right;display:inline-flex;gap:8px;align-items:center;font-size:11px;font-weight:600;text-transform:none;">' +
+            '<span style="opacity:0.8;">Filter:</span>' +
+            '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">' +
+            '<input type="radio" name="posthocGrouping" value="all" checked onchange="updatePosthocDisplay()"> All pairs' +
+            '</label>' +
+            '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;">' +
+            '<input type="radio" name="posthocGrouping" value="ref" onchange="updatePosthocDisplay()"> vs Reference' +
+            '</label>' +
+            '<select id="posthocRefGroup" style="height:24px;padding:0 6px;border-radius:4px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:11px;display:none;" onchange="updatePosthocDisplay()">' +
+            '<option value="">Select timepoint...</option>' +
+            '</select>' +
+            '</div>';
+        }
+      }
+      
+      // Update table header based on framework
+      if (tableHeader && isNonParam) {
+        tableHeader.innerHTML = `
+          <th style="cursor:pointer;" onclick="sortPosthocTable('comparison')">Comparison ↕</th>
+          <th style="cursor:pointer;" onclick="sortPosthocTable('statistic')">Z ↕</th>
+          <th style="cursor:pointer;" onclick="sortPosthocTable('rawp')">Raw p ↕</th>
+          <th style="cursor:pointer;" onclick="sortPosthocTable('adjp')">Adj p ↕</th>
+          <th style="cursor:pointer;" onclick="sortPosthocTable('estimate')">Effect size r ↕</th>
+          <th style="text-align:center;">Sig</th>
+        `;
+      } else if (tableHeader && !isNonParam) {
+        tableHeader.innerHTML = `
+          <th style="cursor:pointer;" onclick="sortPosthocTable('comparison')">Comparison ↕</th>
+          <th style="cursor:pointer;" onclick="sortPosthocTable('statistic')">Statistic ↕</th>
+          <th style="cursor:pointer;" onclick="sortPosthocTable('rawp')">Raw p ↕</th>
+          <th style="cursor:pointer;" onclick="sortPosthocTable('adjp')">Adj p ↕</th>
+          <th style="cursor:pointer;" onclick="sortPosthocTable('estimate')">Estimate ↕</th>
+          <th style="cursor:pointer;" onclick="sortPosthocTable('ci')">95% CI ↕</th>
+          <th style="text-align:center;">Sig</th>
+        `;
       }
       
       if (compareMode !== "k-plus" || !posthoc || !posthoc.enabled) {
-        body.innerHTML = '<tr><td colspan="7">No post-hoc comparisons available</td></tr>';
+        body.innerHTML = isNonParam ? '<tr><td colspan="6">No post-hoc comparisons available</td></tr>' : '<tr><td colspan="7">No post-hoc comparisons available</td></tr>';
         return;
       }
       
@@ -1360,8 +1427,10 @@
       if (warningEl && lastBundle && lastBundle.results && lastBundle.results.omnibus) {
         const ob = lastBundle.results.omnibus;
         const anovaP = parseMaybeNumber(ob.anovaP);
+        const friedmanP = parseMaybeNumber(ob.kwP);
+        const relevantP = isNonParam ? friedmanP : anovaP;
         const alpha = 0.05;
-        if (anovaP > alpha) {
+        if (relevantP > alpha) {
           warningEl.style.display = 'block';
         } else {
           warningEl.style.display = 'none';
@@ -1369,25 +1438,35 @@
       }
       
       // Update method note
-      const method = posthoc.method || "Games-Howell";
+      const method = posthoc.method || currentMethod || "paired";
       const correction = posthoc.correction || "Holm";
       if (noteEl) {
         let methodDesc = "";
-        if (method === "gameshowell" || method === "Games-Howell") {
-          methodDesc = "Welch-type t (Games–Howell) without equal variance assumption";
-        } else if (method === "tukey" || method === "Tukey") {
-          methodDesc = "Studentized range q (Tukey HSD) assuming equal variances";
-        } else if (method === "dunn" || method === "Dunn") {
-          methodDesc = "Rank-based z (Dunn) for nonparametric comparisons";
+        if (isNonParam) {
+          if (method === "wilcoxon") {
+            methodDesc = "Wilcoxon Signed-Rank test (rank-based pairwise comparisons)";
+          } else if (method === "conover") {
+            methodDesc = "Conover test (post-hoc for Friedman)";
+          } else if (method === "nemenyi") {
+            methodDesc = "Nemenyi test (post-hoc for Friedman)";
+          } else {
+            methodDesc = "Rank-based " + method + " test";
+          }
         } else {
-          methodDesc = method + " test";
+          if (method === "paired") {
+            methodDesc = "Paired t-tests (parametric pairwise comparisons)";
+          } else if (method === "paired-baseline") {
+            methodDesc = "Paired t-tests vs Baseline";
+          } else {
+            methodDesc = "Paired " + method + " test";
+          }
         }
         noteEl.textContent = methodDesc + " | p-value correction: " + correction;
       }
       
       const rows = posthoc.rows || [];
       if (!rows.length) {
-        body.innerHTML = '<tr><td colspan="7">No post-hoc comparisons available</td></tr>';
+        body.innerHTML = isNonParam ? '<tr><td colspan="6">No post-hoc comparisons available</td></tr>' : '<tr><td colspan="7">No post-hoc comparisons available</td></tr>';
         return;
       }
       
@@ -1493,6 +1572,7 @@
       body.innerHTML = "";
       const MAX_RENDER = 200;
       const rowsToRender = displayData.slice(0, MAX_RENDER);
+      const isNonParam = primaryFramework === "nonparametric";
       
       rowsToRender.forEach(function(r){
         const tr = document.createElement("tr");
@@ -1502,7 +1582,7 @@
         td.textContent = r.comparison;
         tr.appendChild(td);
         
-        // Statistic
+        // Statistic (label as Z for nonparametric, t for parametric)
         td = document.createElement("td");
         td.textContent = fmt(r.statistic);
         td.style.fontFamily = "monospace";
@@ -1520,22 +1600,24 @@
         td.style.fontFamily = "monospace";
         tr.appendChild(td);
         
-        // Estimate
+        // Estimate (effect size r for nonparametric, mean diff for parametric)
         td = document.createElement("td");
         td.textContent = fmt(r.estimate);
         td.style.fontFamily = "monospace";
         tr.appendChild(td);
         
-        // 95% CI
-        td = document.createElement("td");
-        if (isFinite(r.ciLower) && isFinite(r.ciUpper)) {
-          td.textContent = "[" + fmt(r.ciLower) + ", " + fmt(r.ciUpper) + "]";
-        } else {
-          td.textContent = "—";
+        // 95% CI (only for parametric)
+        if (!isNonParam) {
+          td = document.createElement("td");
+          if (isFinite(r.ciLower) && isFinite(r.ciUpper)) {
+            td.textContent = "[" + fmt(r.ciLower) + ", " + fmt(r.ciUpper) + "]";
+          } else {
+            td.textContent = "—";
+          }
+          td.style.fontFamily = "monospace";
+          td.style.fontSize = "10px";
+          tr.appendChild(td);
         }
-        td.style.fontFamily = "monospace";
-        td.style.fontSize = "10px";
-        tr.appendChild(td);
         
         // Significance indicator
         td = document.createElement("td");
@@ -1553,7 +1635,7 @@
       if (displayData.length > MAX_RENDER) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 7;
+        td.colSpan = isNonParam ? 6 : 7;
         td.textContent = "... " + (displayData.length - MAX_RENDER) + " more rows (table capped at " + MAX_RENDER + ")";
         td.style.textAlign = "center";
         td.style.fontStyle = "italic";
