@@ -91,16 +91,31 @@
     .radio-text small{display:block;font-size:10px;font-weight:500;color:#64748b;margin-top:2px;}
     .radio-button-group input[type="radio"]:checked + .radio-button-label .radio-text{color:#5c6bc0;}
     
-    /* Specific colors for different types */
-    .parametric-label .radio-check{border-color:#4a90e2;}
-    .radio-button-group input[type="radio"]:checked + .parametric-label{border-color:#4a90e2;background:#eff6ff;}
-    .radio-button-group input[type="radio"]:checked + .parametric-label .radio-check{background:#4a90e2;border-color:#4a90e2;}
-    .radio-button-group input[type="radio"]:checked + .parametric-label .radio-text{color:#1e3a8a;}
+    /* Specific colors for different types - MATCHED COLORS */
+    .parametric-label .radio-check{border-color:#8b5cf6;}
+    .radio-button-group input[type="radio"]:checked + .parametric-label{border-color:#8b5cf6;background:#faf5ff;}
+    .radio-button-group input[type="radio"]:checked + .parametric-label .radio-check{background:#8b5cf6;border-color:#8b5cf6;}
+    .radio-button-group input[type="radio"]:checked + .parametric-label .radio-text{color:#5b21b6;}
     
     .nonparametric-label .radio-check{border-color:#10b981;}
     .radio-button-group input[type="radio"]:checked + .nonparametric-label{border-color:#10b981;background:#f0fdf4;}
     .radio-button-group input[type="radio"]:checked + .nonparametric-label .radio-check{background:#10b981;border-color:#10b981;}
     .radio-button-group input[type="radio"]:checked + .nonparametric-label .radio-text{color:#065f46;}
+    
+    /* TEST METHOD CARDS (no radio buttons, display only) */
+    .test-method-group{display:flex;gap:10px;flex-wrap:nowrap;}
+    .test-method-card{display:flex;align-items:center;padding:12px 16px;background:#ffffff;border:2px solid #e0e7ff;border-radius:8px;min-width:140px;transition:all 0.25s ease;}
+    .test-method-card.active{border-color:#8b5cf6;background:#faf5ff;border-width:3px;padding:11px 15px;}
+    .test-method-card.active .test-method-text{color:#5b21b6;}
+    .test-method-card.disabled{opacity:0.4;border-color:#e5e7eb;background:#f9fafb;pointer-events:none;}
+    .test-method-card.disabled .test-method-text{color:#9ca3af;}
+    
+    /* When non-parametric is selected, switch colors to green */
+    .test-method-card.active.nonparametric-active{border-color:#10b981;background:#f0fdf4;}
+    .test-method-card.active.nonparametric-active .test-method-text{color:#065f46;}
+    
+    .test-method-text{font-size:13px;font-weight:700;color:#263238;line-height:1.3;text-align:left;}
+    .test-method-text small{display:block;font-size:10px;font-weight:500;color:#64748b;margin-top:2px;}
     
     .test-label .radio-check{border-color:#8b5cf6;}
     .radio-button-group input[type="radio"]:checked + .test-label{border-color:#8b5cf6;background:#faf5ff;}
@@ -244,18 +259,14 @@
           <!-- Test Method Selection (right) -->
           <div class="inference-card" style="flex:1 1 auto;min-width:280px;">
             <div style="font-size:10px;font-weight:700;color:#5c6bc0;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">Test Method</div>
-            <div class="radio-button-group">
-              <input id="testRmAnova" type="radio" name="primaryTest" value="rm-anova" checked onchange="onTestMethodChange()"/>
-              <label for="testRmAnova" class="radio-button-label test-label">
-                <span class="radio-check"></span>
-                <span class="radio-text">RM-ANOVA<br><small>Only parametric option</small></span>
-              </label>
+            <div class="test-method-group">
+              <div id="testRmAnovaCard" class="test-method-card active">
+                <span class="test-method-text">RM-ANOVA<br><small>Only parametric option</small></span>
+              </div>
               
-              <input id="testFriedman" type="radio" name="primaryTest" value="friedman" onchange="onTestMethodChange()"/>
-              <label for="testFriedman" class="radio-button-label test-label">
-                <span class="radio-check"></span>
-                <span class="radio-text">Friedman Test<br><small>Only non-parametric option</small></span>
-              </label>
+              <div id="testFriedmanCard" class="test-method-card disabled">
+                <span class="test-method-text">Friedman Test<br><small>Only non-parametric option</small></span>
+              </div>
             </div>
           </div>
 
@@ -754,15 +765,31 @@
       const newFramework = fwRadio ? fwRadio.value : "parametric";
       primaryFramework = newFramework;
       
-      // Update test method radio buttons based on framework
-      const testRmAnova = document.getElementById("testRmAnova");
-      const testFriedman = document.getElementById("testFriedman");
+      // Update test method cards based on framework
+      const rmAnovaCard = document.getElementById("testRmAnovaCard");
+      const friedmanCard = document.getElementById("testFriedmanCard");
       
       if (newFramework === "parametric") {
-        if (testRmAnova) testRmAnova.checked = true;
+        // Enable RM-ANOVA, disable Friedman
+        if (rmAnovaCard) {
+          rmAnovaCard.classList.add("active");
+          rmAnovaCard.classList.remove("disabled", "nonparametric-active");
+        }
+        if (friedmanCard) {
+          friedmanCard.classList.remove("active", "nonparametric-active");
+          friedmanCard.classList.add("disabled");
+        }
         currentPrimaryTest = "rm-anova";
       } else {
-        if (testFriedman) testFriedman.checked = true;
+        // Enable Friedman, disable RM-ANOVA
+        if (rmAnovaCard) {
+          rmAnovaCard.classList.remove("active");
+          rmAnovaCard.classList.add("disabled");
+        }
+        if (friedmanCard) {
+          friedmanCard.classList.add("active", "nonparametric-active");
+          friedmanCard.classList.remove("disabled");
+        }
         currentPrimaryTest = "friedman";
       }
       
@@ -775,27 +802,8 @@
     }
     
     function onTestMethodChange() {
-      const testRadio = document.querySelector('input[name="primaryTest"]:checked');
-      currentPrimaryTest = testRadio ? testRadio.value : "rm-anova";
-      
-      // Update framework based on test selection
-      const fwParametric = document.getElementById("fwParametric");
-      const fwNonparametric = document.getElementById("fwNonparametric");
-      
-      if (currentPrimaryTest === "friedman") {
-        primaryFramework = "nonparametric";
-        if (fwNonparametric) fwNonparametric.checked = true;
-      } else {
-        primaryFramework = "parametric";
-        if (fwParametric) fwParametric.checked = true;
-      }
-      
-      // Update post-hoc options
-      updatePosthocOptions();
-      refreshHypothesisFrames();
-      
-      // Trigger recalculation
-      notifySettingsChanged();
+      // Test method cards are now display-only, controlled by framework
+      // This function kept for compatibility but doesn't need to do anything
     }
     
     function parseMaybeNumber(v){ if(v===undefined||v===null) return NaN; const n=Number(String(v).replace(",",".")); return isFinite(n)?n:NaN; }
@@ -834,9 +842,8 @@
       var posthocMethodChecked = document.querySelector('input[name="posthocMethod"]:checked');
       var pCorrectionChecked = document.querySelector('input[name="pCorrection"]:checked');
       
-      // Get test method from radio buttons
-      var testMethodChecked = document.querySelector('input[name="primaryTest"]:checked');
-      var primaryTest = testMethodChecked ? testMethodChecked.value : "rm-anova";
+      // Test method is determined by framework (no radio buttons)
+      var primaryTest = primaryFramework === "nonparametric" ? "friedman" : "rm-anova";
       
       return {
         compareMode: currentCompareMode,
@@ -935,14 +942,29 @@
       if (rp) rp.checked = primaryFramework === "parametric";
       if (rn) rn.checked = primaryFramework === "nonparametric";
       
-      // Update test method radio buttons
-      var testRmAnova = document.getElementById("testRmAnova");
-      var testFriedman = document.getElementById("testFriedman");
+      // Update test method cards
+      const rmAnovaCard = document.getElementById("testRmAnovaCard");
+      const friedmanCard = document.getElementById("testFriedmanCard");
+      
       if (primaryFramework === "parametric") {
-        if (testRmAnova) testRmAnova.checked = true;
+        if (rmAnovaCard) {
+          rmAnovaCard.classList.add("active");
+          rmAnovaCard.classList.remove("disabled", "nonparametric-active");
+        }
+        if (friedmanCard) {
+          friedmanCard.classList.remove("active", "nonparametric-active");
+          friedmanCard.classList.add("disabled");
+        }
         currentPrimaryTest = "rm-anova";
       } else {
-        if (testFriedman) testFriedman.checked = true;
+        if (rmAnovaCard) {
+          rmAnovaCard.classList.remove("active");
+          rmAnovaCard.classList.add("disabled");
+        }
+        if (friedmanCard) {
+          friedmanCard.classList.add("active", "nonparametric-active");
+          friedmanCard.classList.remove("disabled");
+        }
         currentPrimaryTest = "friedman";
       }
       
