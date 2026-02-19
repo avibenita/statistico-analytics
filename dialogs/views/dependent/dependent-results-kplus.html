@@ -77,7 +77,7 @@
     /* WELL-DESIGNED RADIO BUTTON GROUP */
     .radio-button-group{display:flex;gap:10px;flex-wrap:nowrap;}
     .radio-button-group input[type="radio"]{display:none;}
-    .radio-button-label{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#ffffff;border:2px solid #e0e7ff;border-radius:8px;cursor:pointer;transition:all 0.25s ease;min-width:140px;position:relative;}
+    .radio-button-label{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#ffffff;border:2px solid #e0e7ff;border-radius:0;cursor:pointer;transition:all 0.25s ease;min-width:140px;position:relative;}
     .radio-button-label:hover{border-color:#5c6bc0;box-shadow:0 2px 8px rgba(92,107,192,0.15);transform:translateY(-1px);}
     .radio-button-group input[type="radio"]:checked + .radio-button-label{border-color:#5c6bc0;background:#f5f7ff;box-shadow:0 3px 12px rgba(92,107,192,0.2);border-width:3px;padding:11px 15px;}
     
@@ -104,7 +104,7 @@
     
     /* TEST METHOD CARDS (no radio buttons, display only) */
     .test-method-group{display:flex;gap:10px;flex-wrap:nowrap;}
-    .test-method-card{display:flex;align-items:center;padding:12px 16px;background:#ffffff;border:2px solid #e0e7ff;border-radius:8px;min-width:140px;transition:all 0.25s ease;}
+    .test-method-card{display:flex;align-items:center;padding:12px 16px;background:#ffffff;border:2px solid #e0e7ff;border-radius:0;min-width:140px;transition:all 0.25s ease;}
     .test-method-card.active{border-color:#8b5cf6;background:#faf5ff;border-width:3px;padding:11px 15px;}
     .test-method-card.active .test-method-text{color:#5b21b6;}
     .test-method-card.disabled{opacity:0.4;border-color:#e5e7eb;background:#f9fafb;pointer-events:none;}
