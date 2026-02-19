@@ -889,10 +889,6 @@
             <input type="radio" name="posthocMethod" value="paired" ${currentValue === "paired" || !currentValue ? "checked" : ""} onchange="onPosthocSettingsChange()">
             <span>Paired t-tests</span>
           </label>
-          <label class="posthoc-radio">
-            <input type="radio" name="posthocMethod" value="none" ${currentValue === "none" ? "checked" : ""} onchange="onPosthocSettingsChange()">
-            <span>None</span>
-          </label>
         `;
       } else {
         // NONPARAMETRIC (Friedman): Wilcoxon, Conover, Nemenyi
@@ -908,10 +904,6 @@
           <label class="posthoc-radio">
             <input type="radio" name="posthocMethod" value="nemenyi" ${currentValue === "nemenyi" ? "checked" : ""} onchange="onPosthocSettingsChange()">
             <span>Nemenyi</span>
-          </label>
-          <label class="posthoc-radio">
-            <input type="radio" name="posthocMethod" value="none" ${currentValue === "none" ? "checked" : ""} onchange="onPosthocSettingsChange()">
-            <span>None</span>
           </label>
         `;
       }
