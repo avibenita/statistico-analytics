@@ -92,7 +92,7 @@
     .hbox-row{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;color:#e5eefc;}
     .h-radio{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#263238;text-transform:none !important;white-space:nowrap;font-weight:600;}
     .h-radio input{transform:scale(0.85);}
-    .hdr-row{display:flex;justify-content:flex-start;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;scrollbar-width:thin;}
+    .hdr-row{display:flex;justify-content:flex-start;align-items:center;gap:8px;flex-wrap:wrap;overflow:visible;padding-bottom:2px;}
     #compareStatsRow{flex-wrap:wrap;overflow:visible;scrollbar-width:auto;}
     .stat-chip{display:inline-flex;align-items:center;justify-content:center;gap:3px;background:#e3f2fd;border:2px solid #1976d2;border-radius:0;padding:3px 6px;font-size:10px;color:#0d47a1;font-weight:700;min-width:190px;box-sizing:border-box;}
     .test-chip{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.55);color:#d1fae5;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;}
@@ -236,12 +236,6 @@
               <option value="bh">FDR (Benjamini-Hochberg)</option>
               <option value="none">None</option>
             </select>
-          </div>
-          
-          <!-- Context-aware tooltip -->
-          <div id="posthocTooltip" style="flex:0 0 auto;display:flex;align-items:center;padding:4px 8px;background:rgba(74,144,226,0.12);border:1px solid rgba(74,144,226,0.3);border-radius:4px;font-size:10px;color:#90caf9;max-width:280px;">
-            <i class="fa-solid fa-circle-info" style="margin-right:4px;"></i>
-            <span id="posthocTooltipText">Auto-selected based on framework</span>
           </div>
 
         </div>
@@ -760,7 +754,6 @@
     function updatePosthocOptions(){
       var sel = document.getElementById("setPosthocMethod");
       var corrSel = document.getElementById("setPosthocCorrection");
-      var tooltipText = document.getElementById("posthocTooltipText");
       if (!sel) return;
       
       var isNonParam = primaryFramework === "nonparametric" || currentPrimaryTest === "friedman";
@@ -779,7 +772,6 @@
           sel.value = "paired";
         }
         sel.title = "Compares each timepoint using paired tests with multiplicity control";
-        if (tooltipText) tooltipText.textContent = "Paired comparisons with " + (corrSel && corrSel.value === "bh" ? "FDR" : corrSel && corrSel.value === "bonferroni" ? "Bonferroni" : corrSel && corrSel.value === "none" ? "no" : "Holm") + " correction";
       } else {
         // NONPARAMETRIC (Friedman): Wilcoxon, Conover, Nemenyi
         sel.innerHTML = `
@@ -793,7 +785,6 @@
           sel.value = "wilcoxon";
         }
         sel.title = "Nonparametric post-hoc comparisons for Friedman test";
-        if (tooltipText) tooltipText.textContent = "Rank-based comparisons with " + (corrSel && corrSel.value === "bh" ? "FDR" : corrSel && corrSel.value === "bonferroni" ? "Bonferroni" : corrSel && corrSel.value === "none" ? "no" : "Holm") + " correction";
       }
       
       // P-correction: Always available, but auto-suggest FDR for many comparisons
@@ -812,16 +803,6 @@
         corrSel.title = numComparisons > 10 
           ? "Many comparisons (" + numComparisons + ") - FDR recommended"
           : "Multiplicity correction for " + numComparisons + " comparisons";
-        
-        // Update tooltip text when correction changes
-        if (tooltipText) {
-          var corrName = corrSel.value === "bh" ? "FDR" : corrSel.value === "bonferroni" ? "Bonferroni" : corrSel.value === "none" ? "no" : "Holm";
-          if (isParam) {
-            tooltipText.textContent = "Paired comparisons with " + corrName + " correction";
-          } else {
-            tooltipText.textContent = "Rank-based comparisons with " + corrName + " correction";
-          }
-        }
       }
       
       // Enable/disable based on selection
