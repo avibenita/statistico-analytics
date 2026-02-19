@@ -182,9 +182,10 @@ function computeWilcoxon(a, b, alt) {
   return { w: wPlus, p: Math.max(0, Math.min(1, p)) };
 }
 
-function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns, primaryFramework) {
+function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns, primaryFramework, posthocMethod, posthocCorrection) {
   console.log("Computing Repeated Measures ANOVA for", selectedColumns.length, "timepoints");
   console.log("Primary Framework:", primaryFramework);
+  console.log("Post-hoc Method:", posthocMethod, "Correction:", posthocCorrection);
   
   // Extract data for each timepoint
   const k = selectedColumns.length;
@@ -341,7 +342,7 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns, primaryFra
   }
   
   // Post-hoc pairwise comparisons using PAIRED t-tests or Wilcoxon (based on framework)
-  const posthoc = computeRMPostHocComparisons(completeCases, selectedColumns, n, k, primaryFramework);
+  const posthoc = computeRMPostHocComparisons(completeCases, selectedColumns, n, k, primaryFramework, posthocMethod, posthocCorrection);
   
   // Compute Levene and Brown-Forsythe tests for homogeneity
   const levene = computeLeveneTest(groupData);
@@ -708,15 +709,63 @@ function computeBrownForsytheTest(groupData) {
   return { f, df1: dfBetween, df2: dfWithin, p };
 }
 
-function computeRMPostHocComparisons(completeCases, timepointNames, n, k, primaryFramework) {
+function computeRMPostHocComparisons(completeCases, timepointNames, n, k, primaryFramework, posthocMethod, posthocCorrection) {
   // Post-hoc for Repeated Measures: PAIRED t-tests (parametric) or Wilcoxon (nonparametric)
   // NOT Tukey HSD (which assumes independence)
   
+  console.log("computeRMPostHocComparisons called with method:", posthocMethod, "correction:", posthocCorrection);
+  
   const isNonParametric = primaryFramework === "nonparametric";
+  
+  // Handle "none" method
+  if (posthocMethod === "none") {
+    return {
+      enabled: false,
+      rows: [],
+      pairwise: [],
+      method: "None",
+      correction: "N/A",
+      note: "Post-hoc comparisons disabled"
+    };
+  }
+  
+  // Determine actual test to use based on framework and method
+  let useWilcoxon = false;
+  let useConover = false;
+  let useNemenyi = false;
+  
+  if (isNonParametric) {
+    if (posthocMethod === "wilcoxon") {
+      useWilcoxon = true;
+    } else if (posthocMethod === "conover") {
+      useConover = true;
+    } else if (posthocMethod === "nemenyi") {
+      useNemenyi = true;
+    } else {
+      useWilcoxon = true; // Default for nonparametric
+    }
+  }
+  
   const comparisons = [];
   
-  for (let i = 0; i < k - 1; i++) {
-    for (let j = i + 1; j < k; j++) {
+  // Determine which comparisons to run based on method
+  const pairsToCompare = [];
+  
+  if (posthocMethod === "paired-baseline") {
+    // Compare all timepoints vs the first (baseline)
+    for (let j = 1; j < k; j++) {
+      pairsToCompare.push([0, j]);
+    }
+  } else {
+    // All pairwise comparisons (default for "paired", "wilcoxon", "conover", "nemenyi")
+    for (let i = 0; i < k - 1; i++) {
+      for (let j = i + 1; j < k; j++) {
+        pairsToCompare.push([i, j]);
+      }
+    }
+  }
+  
+  for (const [i, j] of pairsToCompare) {
       // Extract paired data for timepoints i and j
       const time1 = completeCases.map(row => row[i]);
       const time2 = completeCases.map(row => row[j]);
@@ -728,7 +777,7 @@ function computeRMPostHocComparisons(completeCases, timepointNames, n, k, primar
       
       let statistic, pRaw, estimate, ciLower, ciUpper, effectSize;
       
-      if (isNonParametric) {
+      if (useWilcoxon) {
         // WILCOXON SIGNED-RANK TEST
         const wilcoxonResult = computeWilcoxon(time1, time2, "two-sided");
         statistic = wilcoxonResult.w;
@@ -791,22 +840,73 @@ function computeRMPostHocComparisons(completeCases, timepointNames, n, k, primar
     }
   }
   
-  // Apply Holm-Bonferroni correction
-  comparisons.sort((a, b) => a.rawP - b.rawP);
-  const numComparisons = comparisons.length;
-  comparisons.forEach((comp, idx) => {
-    comp.adjP = Math.min(1, comp.rawP * (numComparisons - idx));
-  });
+  // Apply p-value correction based on user selection
+  if (posthocCorrection === "holm") {
+    // Holm-Bonferroni correction (step-down)
+    comparisons.sort((a, b) => a.rawP - b.rawP);
+    const numComparisons = comparisons.length;
+    for (let idx = 0; idx < numComparisons; idx++) {
+      comparisons[idx].adjP = Math.min(1, comparisons[idx].rawP * (numComparisons - idx));
+      // Propagate minimum adjusted p-value
+      if (idx > 0) {
+        comparisons[idx].adjP = Math.max(comparisons[idx].adjP, comparisons[idx - 1].adjP);
+      }
+    }
+  } else if (posthocCorrection === "bonferroni") {
+    // Bonferroni correction (simple)
+    const numComparisons = comparisons.length;
+    comparisons.forEach(comp => {
+      comp.adjP = Math.min(1, comp.rawP * numComparisons);
+    });
+  } else if (posthocCorrection === "bh") {
+    // Benjamini-Hochberg (FDR) correction
+    comparisons.sort((a, b) => a.rawP - b.rawP);
+    const numComparisons = comparisons.length;
+    for (let idx = numComparisons - 1; idx >= 0; idx--) {
+      const rank = idx + 1;
+      comparisons[idx].adjP = Math.min(1, comparisons[idx].rawP * numComparisons / rank);
+      // Propagate minimum adjusted p-value
+      if (idx < numComparisons - 1) {
+        comparisons[idx].adjP = Math.min(comparisons[idx].adjP, comparisons[idx + 1].adjP);
+      }
+    }
+  } else {
+    // No correction
+    comparisons.forEach(comp => {
+      comp.adjP = comp.rawP;
+    });
+  }
+  
+  // Format method and correction names for display
+  let methodName;
+  if (useWilcoxon) {
+    methodName = "Wilcoxon Signed-Rank";
+  } else if (useConover) {
+    methodName = "Conover";
+  } else if (useNemenyi) {
+    methodName = "Nemenyi";
+  } else {
+    methodName = "Paired t-tests";
+  }
+  
+  const correctionName = {
+    "holm": "Holm",
+    "bonferroni": "Bonferroni",
+    "bh": "FDR (Benjamini-Hochberg)",
+    "none": "None"
+  }[posthocCorrection] || "Holm";
+  
+  const vsBaseline = (posthocMethod === "paired-baseline");
   
   return {
     enabled: true,
     rows: comparisons,
     pairwise: comparisons,
-    method: isNonParametric ? "Wilcoxon Signed-Rank" : "Paired t-tests",
-    correction: "Holm-Bonferroni",
-    note: isNonParametric 
-      ? "Post-hoc comparisons use Wilcoxon signed-rank test (nonparametric, rank-based)" 
-      : "Post-hoc comparisons use paired t-tests (appropriate for repeated measures)"
+    method: methodName,
+    correction: correctionName,
+    note: useWilcoxon || useConover || useNemenyi
+      ? `Post-hoc comparisons use ${methodName} test (nonparametric, rank-based) with ${correctionName} correction${vsBaseline ? " vs Baseline" : ""}` 
+      : `Post-hoc comparisons use ${methodName} (appropriate for repeated measures) with ${correctionName} correction${vsBaseline ? " vs Baseline" : ""}`
   };
 }
 
@@ -997,7 +1097,9 @@ function buildDependentBundle(headers, rows, spec) {
   // For k-plus mode, perform repeated measures ANOVA
   if (compareMode === "k-plus" && selectedColumns.length >= 3) {
     console.log("Computing k-plus (3+ timepoints) analysis");
-    const rmResults = computeRepeatedMeasuresANOVA(headers, rows, selectedColumns, primaryFramework);
+    const posthocMethod = spec.posthocMethod || "paired";
+    const posthocCorrection = spec.posthocCorrection || "holm";
+    const rmResults = computeRepeatedMeasuresANOVA(headers, rows, selectedColumns, primaryFramework, posthocMethod, posthocCorrection);
     return {
       setup: {
         mode,
@@ -1008,7 +1110,7 @@ function buildDependentBundle(headers, rows, spec) {
         selectedColumns: selectedColumns.slice(),
         headers: selectedColumns.slice(),
         primaryTest: spec.primaryTest || "rm-anova",
-        posthocMethod: spec.posthocMethod || "games-howell",
+        posthocMethod: spec.posthocMethod || "paired",
         posthocCorrection: spec.posthocCorrection || "holm"
       },
       explore: {

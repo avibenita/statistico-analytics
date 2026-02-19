@@ -63,10 +63,10 @@
     .settings-grid>div{display:flex;flex-direction:column;}
     .settings-grid label{font-size:10px;color:#37474f;margin-bottom:2px;font-weight:700;text-transform:uppercase;}
     .settings-grid select,.settings-grid input{width:100%;height:28px;border-radius:0;border:2px solid #5c6bc0;background:#ffffff;color:#263238;padding:0 6px;font-weight:600;font-size:11px;}
-    .posthoc-radio{display:flex;align-items:center;gap:6px;padding:4px 6px;cursor:pointer;font-size:11px;color:#263238;font-weight:600;border-radius:4px;transition:background 0.2s;}
-    .posthoc-radio:hover{background:rgba(92,107,192,0.1);}
-    .posthoc-radio input[type="radio"]{margin:0;width:16px;height:16px;cursor:pointer;accent-color:#5c6bc0;}
-    .posthoc-radio input[type="radio"]:checked + span{color:#283593;font-weight:700;}
+    .posthoc-radio{display:flex;align-items:center;gap:6px;padding:4px 6px;cursor:pointer;font-size:11px;color:var(--text-secondary);font-weight:600;border-radius:4px;transition:background 0.2s;}
+    .posthoc-radio:hover{background:rgba(255,255,255,0.1);}
+    .posthoc-radio input[type="radio"]{margin:0;width:16px;height:16px;cursor:pointer;accent-color:#4a90e2;}
+    .posthoc-radio input[type="radio"]:checked + span{color:var(--accent-2);font-weight:700;}
     #setPosthocWrap,#setCorrectionWrap{min-width:160px;max-width:200px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;}
     #setPosthocWrap label,#setCorrectionWrap label{white-space:nowrap;line-height:1;margin-bottom:0;font-size:10px;}
     .inference-row{display:flex;align-items:center;justify-content:flex-start;gap:10px;flex-wrap:nowrap;min-width:max-content;}
@@ -210,36 +210,6 @@
               <option value="rm-anova">RM-ANOVA (recommended)</option>
               <option value="friedman">Friedman test</option>
             </select>
-          </div>
-
-          <!-- Post-hoc controls for RM (radio buttons based on framework) -->
-          <div id="setPosthocWrap" style="flex:0 0 auto;min-width:200px;">
-            <label style="font-size:10px;color:#37474f;margin-bottom:4px;font-weight:700;text-transform:uppercase;display:block;">Post-hoc Method</label>
-            <div id="posthocRadioGroup" style="display:flex;flex-direction:column;gap:4px;padding:6px;background:#fff;border:2px solid #5c6bc0;border-radius:0;">
-              <!-- Will be populated dynamically based on framework -->
-            </div>
-          </div>
-
-          <div id="setCorrectionWrap" style="flex:0 0 auto;min-width:180px;">
-            <label style="font-size:10px;color:#37474f;margin-bottom:4px;font-weight:700;text-transform:uppercase;display:block;">p-value Correction</label>
-            <div style="display:flex;flex-direction:column;gap:4px;padding:6px;background:#fff;border:2px solid #5c6bc0;border-radius:0;">
-              <label class="posthoc-radio">
-                <input type="radio" name="pCorrection" value="holm" checked onchange="onPosthocSettingsChange()">
-                <span>Holm</span>
-              </label>
-              <label class="posthoc-radio">
-                <input type="radio" name="pCorrection" value="bonferroni" onchange="onPosthocSettingsChange()">
-                <span>Bonferroni</span>
-              </label>
-              <label class="posthoc-radio">
-                <input type="radio" name="pCorrection" value="bh" onchange="onPosthocSettingsChange()">
-                <span>FDR (Benjamini-Hochberg)</span>
-              </label>
-              <label class="posthoc-radio">
-                <input type="radio" name="pCorrection" value="none" onchange="onPosthocSettingsChange()">
-                <span>None</span>
-              </label>
-            </div>
           </div>
 
         </div>
@@ -579,6 +549,40 @@
                 <span style="font-size:12px;color:#fbbf24;font-weight:600;">⚠ Omnibus test not significant (p > α). Interpret post-hoc comparisons with caution.</span>
               </div>
               
+              <!-- Post-hoc Configuration Controls -->
+              <div style="display:flex;gap:16px;margin-bottom:16px;padding:12px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;">
+                <!-- Post-hoc Method -->
+                <div style="flex:1;min-width:200px;">
+                  <label style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;font-weight:700;text-transform:uppercase;display:block;">Post-hoc Method</label>
+                  <div id="posthocRadioGroup" style="display:flex;flex-direction:column;gap:4px;padding:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:4px;">
+                    <!-- Will be populated dynamically based on framework -->
+                  </div>
+                </div>
+                
+                <!-- P-value Correction -->
+                <div style="flex:1;min-width:180px;">
+                  <label style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;font-weight:700;text-transform:uppercase;display:block;">p-value Correction</label>
+                  <div style="display:flex;flex-direction:column;gap:4px;padding:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:4px;">
+                    <label class="posthoc-radio">
+                      <input type="radio" name="pCorrection" value="holm" checked onchange="onPosthocSettingsChange()">
+                      <span>Holm</span>
+                    </label>
+                    <label class="posthoc-radio">
+                      <input type="radio" name="pCorrection" value="bonferroni" onchange="onPosthocSettingsChange()">
+                      <span>Bonferroni</span>
+                    </label>
+                    <label class="posthoc-radio">
+                      <input type="radio" name="pCorrection" value="bh" onchange="onPosthocSettingsChange()">
+                      <span>FDR (Benjamini-Hochberg)</span>
+                    </label>
+                    <label class="posthoc-radio">
+                      <input type="radio" name="pCorrection" value="none" onchange="onPosthocSettingsChange()">
+                      <span>None</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
               <div class="table-container" style="margin:0;">
                 <table class="analysis-table" id="posthocTable">
                   <thead>
@@ -813,7 +817,13 @@
     function onPosthocSettingsChange() {
       // When user changes post-hoc method or correction, trigger recalculation
       console.log("Post-hoc settings changed - triggering recalculation");
+      const spec = currentSettingsSpec();
+      
+      // Save settings
       notifySettingsChanged();
+      
+      // Request host to recompute with new settings
+      sendToHost("recomputeWithSettings", spec);
     }
     function setFrameworkButtons(mode){
       primaryFramework = mode === "nonparametric" ? "nonparametric" : "parametric";
