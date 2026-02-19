@@ -73,6 +73,32 @@
     .inference-card{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;justify-content:flex-start;padding:0;border:0;border-radius:0;background:transparent;min-width:max-content;}
     .inference-card#primaryTestWrap{flex:0 0 auto;min-width:180px;max-width:200px;}
     .inference-title{display:none;}
+    
+    /* NEW FRAMEWORK SELECTOR */
+    .framework-selector{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;}
+    .framework-selector input[type="radio"]{display:none;}
+    .framework-option{display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px 16px;background:#ffffff;border:3px solid #e0e7ff;border-radius:12px;cursor:pointer;transition:all 0.3s ease;text-align:center;}
+    .framework-option:hover{border-color:#5c6bc0;transform:translateY(-2px);box-shadow:0 4px 12px rgba(92,107,192,0.15);}
+    .framework-selector input[type="radio"]:checked + .framework-option{border-color:#5c6bc0;background:#f5f7ff;box-shadow:0 6px 20px rgba(92,107,192,0.25);transform:translateY(-3px);}
+    .framework-selector input[type="radio"]:checked + .framework-option::before{content:'✓';position:absolute;top:8px;right:12px;width:24px;height:24px;background:#5c6bc0;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;}
+    .framework-option{position:relative;}
+    .framework-icon{font-size:32px;margin-bottom:4px;}
+    .framework-name{font-size:15px;font-weight:700;color:#263238;text-transform:none;}
+    .framework-desc{font-size:11px;color:#607d8b;font-weight:500;}
+    
+    /* NEW TEST METHOD SELECTOR */
+    .test-selector{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;}
+    .test-selector input[type="radio"]{display:none;}
+    .test-option{display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px 16px;background:#ffffff;border:3px solid #e0e7ff;border-radius:12px;cursor:pointer;transition:all 0.3s ease;text-align:center;position:relative;}
+    .test-option:hover{border-color:#4a90e2;transform:translateY(-2px);box-shadow:0 4px 12px rgba(74,144,226,0.15);}
+    .test-selector input[type="radio"]:checked + .test-option{border-color:#4a90e2;background:#f0f7ff;box-shadow:0 6px 20px rgba(74,144,226,0.25);transform:translateY(-3px);}
+    .test-selector input[type="radio"]:checked + .test-option::before{content:'✓';position:absolute;top:8px;right:12px;width:24px;height:24px;background:#4a90e2;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;}
+    .test-name{font-size:15px;font-weight:700;color:#263238;margin-top:4px;}
+    .test-badge{font-size:10px;font-weight:700;color:#fff;background:#4a90e2;padding:3px 10px;border-radius:12px;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;}
+    .test-option.friedman-option .test-badge{background:#26a69a;}
+    .test-desc{font-size:11px;color:#607d8b;font-weight:500;margin-top:4px;}
+    
+    /* Legacy styles (keep for compatibility) */
     .fw-radio-group{display:flex;border:0;border-radius:0;overflow:hidden;min-width:320px;gap:5px;}
     .fw-radio-group input{display:none;}
     .fw-radio{padding:8px 14px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;user-select:none;border:3px solid transparent;box-shadow:0 2px 6px rgba(0,0,0,0.1);text-transform:uppercase;letter-spacing:0.4px;opacity:0.6;flex:1;text-align:center;position:relative;}
@@ -187,32 +213,57 @@
       <div class="hdr-row" id="compareStatsRow"></div>
     </div>
 
-    <!-- Inference + Test method (side by side, clearly separated) -->
+    <!-- Inference + Test method (centered, clearly separated) -->
     <div style="grid-column:1/-1;">
-      <div class="hdr-row">
-        <div class="inference-row">
-
-          <!-- Inference Type (left) -->
-          <div class="inference-card" style="flex:0 0 auto;">
-            <div class="inference-title">Inference type</div>
-            <div class="fw-radio-group" role="radiogroup" aria-label="Inference type">
-              <input id="fwParametric" type="radio" name="frameworkMode" value="parametric" checked/>
-              <label for="fwParametric" id="setFrameworkParam" class="fw-radio active">Parametric (means)</label>
-              <input id="fwNonparametric" type="radio" name="frameworkMode" value="nonparametric"/>
-              <label for="fwNonparametric" id="setFrameworkNon" class="fw-radio">Non-parametric (ranks)</label>
-            </div>
+      <div style="display:flex;flex-direction:column;gap:20px;align-items:center;padding:16px 0;">
+        
+        <!-- Framework Selection (Parametric/Non-parametric) -->
+        <div style="width:100%;max-width:700px;">
+          <div style="text-align:center;font-size:11px;font-weight:700;color:#5c6bc0;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">
+            Statistical Framework
           </div>
-
-          <!-- Test Method (right) -->
-          <div class="inference-card" id="primaryTestWrap" style="flex:1 1 auto;min-width:280px;">
-            <div class="inference-title">Test method</div>
-            <select id="setPrimaryTest" style="width:100%;height:42px;font-size:14px;padding:0 12px;border-radius:10px;border:1px solid rgba(120,200,255,.45);background:rgba(15,23,42,.95);color:#fff;font-weight:600;">
-              <option value="rm-anova">RM-ANOVA (recommended)</option>
-              <option value="friedman">Friedman test</option>
-            </select>
+          <div class="framework-selector">
+            <input id="fwParametric" type="radio" name="frameworkMode" value="parametric" checked onchange="onFrameworkChange()"/>
+            <label for="fwParametric" class="framework-option parametric-option">
+              <span class="framework-icon">📊</span>
+              <span class="framework-name">Parametric (Means)</span>
+              <span class="framework-desc">Assumes normality</span>
+            </label>
+            
+            <input id="fwNonparametric" type="radio" name="frameworkMode" value="nonparametric" onchange="onFrameworkChange()"/>
+            <label for="fwNonparametric" class="framework-option nonparametric-option">
+              <span class="framework-icon">📈</span>
+              <span class="framework-name">Non-parametric (Ranks)</span>
+              <span class="framework-desc">Distribution-free</span>
+            </label>
           </div>
-
         </div>
+        
+        <!-- Divider -->
+        <div style="width:100%;max-width:700px;height:1px;background:linear-gradient(to right, transparent, rgba(92,107,192,0.3), transparent);"></div>
+        
+        <!-- Test Method Selection -->
+        <div style="width:100%;max-width:700px;">
+          <div style="text-align:center;font-size:11px;font-weight:700;color:#5c6bc0;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">
+            Test Method
+          </div>
+          <div class="test-selector">
+            <input id="testRmAnova" type="radio" name="primaryTest" value="rm-anova" checked onchange="onTestMethodChange()"/>
+            <label for="testRmAnova" class="test-option rmanova-option">
+              <span class="test-name">Repeated Measures ANOVA</span>
+              <span class="test-badge">Recommended</span>
+              <span class="test-desc">Standard parametric test</span>
+            </label>
+            
+            <input id="testFriedman" type="radio" name="primaryTest" value="friedman" onchange="onTestMethodChange()"/>
+            <label for="testFriedman" class="test-option friedman-option">
+              <span class="test-name">Friedman Test</span>
+              <span class="test-badge">Rank-based</span>
+              <span class="test-desc">Non-parametric alternative</span>
+            </label>
+          </div>
+        </div>
+        
       </div>
     </div>
 
@@ -701,6 +752,56 @@
     let currentHypothesis = "two-sided";
     let currentPrimaryTest = "welch";
     let persistedColumns = { groupA: "", groupB: "", valueColumn: "", groupColumn: "" };
+    
+    function onFrameworkChange() {
+      const fwRadio = document.querySelector('input[name="frameworkMode"]:checked');
+      const newFramework = fwRadio ? fwRadio.value : "parametric";
+      primaryFramework = newFramework;
+      
+      // Update test method radio buttons based on framework
+      const testRmAnova = document.getElementById("testRmAnova");
+      const testFriedman = document.getElementById("testFriedman");
+      
+      if (newFramework === "parametric") {
+        if (testRmAnova) testRmAnova.checked = true;
+        currentPrimaryTest = "rm-anova";
+      } else {
+        if (testFriedman) testFriedman.checked = true;
+        currentPrimaryTest = "friedman";
+      }
+      
+      // Update post-hoc options
+      updatePosthocOptions();
+      refreshHypothesisFrames();
+      
+      // Trigger recalculation
+      notifySettingsChanged();
+    }
+    
+    function onTestMethodChange() {
+      const testRadio = document.querySelector('input[name="primaryTest"]:checked');
+      currentPrimaryTest = testRadio ? testRadio.value : "rm-anova";
+      
+      // Update framework based on test selection
+      const fwParametric = document.getElementById("fwParametric");
+      const fwNonparametric = document.getElementById("fwNonparametric");
+      
+      if (currentPrimaryTest === "friedman") {
+        primaryFramework = "nonparametric";
+        if (fwNonparametric) fwNonparametric.checked = true;
+      } else {
+        primaryFramework = "parametric";
+        if (fwParametric) fwParametric.checked = true;
+      }
+      
+      // Update post-hoc options
+      updatePosthocOptions();
+      refreshHypothesisFrames();
+      
+      // Trigger recalculation
+      notifySettingsChanged();
+    }
+    
     function parseMaybeNumber(v){ if(v===undefined||v===null) return NaN; const n=Number(String(v).replace(",",".")); return isFinite(n)?n:NaN; }
     function fmt(v){ const n=parseMaybeNumber(v); if(!isFinite(n)) return v==null?"...":String(v); if(globalDecimalPrecision==="auto"){ if(Math.abs(n)<1&&n!==0) return n.toFixed(4); return n.toFixed(2);} return n.toFixed(parseInt(globalDecimalPrecision,10)); }
     function fmtP(v){ const n=parseMaybeNumber(v); if(!isFinite(n)) return v==null?"...":String(v); if(n < 0.001) return "< 0.001"; return globalDecimalPrecision === "auto" ? n.toFixed(4) : n.toFixed(Math.max(3, parseInt(globalDecimalPrecision,10))); }
@@ -737,6 +838,10 @@
       var posthocMethodChecked = document.querySelector('input[name="posthocMethod"]:checked');
       var pCorrectionChecked = document.querySelector('input[name="pCorrection"]:checked');
       
+      // Get test method from radio buttons
+      var testMethodChecked = document.querySelector('input[name="primaryTest"]:checked');
+      var primaryTest = testMethodChecked ? testMethodChecked.value : "rm-anova";
+      
       return {
         compareMode: currentCompareMode,
         primaryFramework: primaryFramework,
@@ -746,7 +851,7 @@
         groupB: persistedColumns.groupB || "",
         valueColumn: persistedColumns.valueColumn || "",
         groupColumn: persistedColumns.groupColumn || "",
-        primaryTest: (document.getElementById("setPrimaryTest") || {}).value || currentPrimaryTest || "welch",
+        primaryTest: primaryTest,
         posthocMethod: posthocMethodChecked ? posthocMethodChecked.value : "paired",
         posthocCorrection: pCorrectionChecked ? pCorrectionChecked.value : "holm"
       };
@@ -827,31 +932,30 @@
     }
     function setFrameworkButtons(mode){
       primaryFramework = mode === "nonparametric" ? "nonparametric" : "parametric";
-      var p = document.getElementById("setFrameworkParam");
-      var n = document.getElementById("setFrameworkNon");
-      if (p) p.classList.toggle("active", primaryFramework === "parametric");
-      if (n) n.classList.toggle("active", primaryFramework === "nonparametric");
+      
+      // Update framework radio buttons
       var rp = document.getElementById("fwParametric");
       var rn = document.getElementById("fwNonparametric");
       if (rp) rp.checked = primaryFramework === "parametric";
       if (rn) rn.checked = primaryFramework === "nonparametric";
-      var primaryTestWrap = document.getElementById("primaryTestWrap");
-      if (primaryTestWrap) primaryTestWrap.style.display = "flex";
-      var testSel = document.getElementById("setPrimaryTest");
-      if (testSel) testSel.className = primaryFramework === "nonparametric" ? "nonparametric" : "parametric";
+      
+      // Update test method radio buttons
+      var testRmAnova = document.getElementById("testRmAnova");
+      var testFriedman = document.getElementById("testFriedman");
+      if (primaryFramework === "parametric") {
+        if (testRmAnova) testRmAnova.checked = true;
+        currentPrimaryTest = "rm-anova";
+      } else {
+        if (testFriedman) testFriedman.checked = true;
+        currentPrimaryTest = "friedman";
+      }
+      
+      // Update panel headings
       document.querySelectorAll(".stat-panel-heading").forEach(function(h){
         h.classList.remove("parametric", "nonparametric");
         h.classList.add(primaryFramework);
       });
-      if (testSel) {
-        var options = primaryFramework === "nonparametric"
-          ? [{ v: "friedman", t: "Friedman test" }]
-          : [{ v: "rm-anova", t: "Repeated Measures ANOVA" }];
-        testSel.innerHTML = options.map(function(o){ return '<option value="' + o.v + '">' + o.t + '</option>'; }).join("");
-        currentPrimaryTest = options[0].v;
-        testSel.value = currentPrimaryTest;
-        testSel.disabled = true;
-      }
+      
       updatePosthocOptions();
       refreshHypothesisFrames();
     }
