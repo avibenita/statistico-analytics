@@ -428,44 +428,74 @@
                 </div>
               </div>
               
-              <!-- Correlation Matrix -->
+              <!-- Correlation Matrix with Heatmap -->
               <div>
                 <div style="font-weight:700;margin-bottom:8px;color:var(--accent-1);font-size:14px;">
-                  <i class="fa-solid fa-table"></i> Within-Subject Correlation Matrix
+                  <i class="fa-solid fa-grip"></i> Within-Subject Correlation Matrix & Heatmap
                 </div>
                 <p style="margin:0 0 12px 0;color:var(--text-muted);font-size:11px;line-height:1.5;">
-                  <strong>Purpose:</strong> Assess within-subject consistency across timepoints. 
-                  High correlations indicate stable individual differences; low correlations suggest high measurement variability or treatment effects.
+                  <strong>Purpose:</strong> Visualize pairwise correlations between timepoints. 
+                  Darker colors indicate stronger correlations. Hover for details.
                 </p>
-                <div style="padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
-                  <table id="correlationMatrix" style="width:100%;border-collapse:collapse;font-size:11px;">
-                    <thead>
-                      <tr id="corrMatrixHeader" style="background:#003366cc;">
-                        <th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;">Pair</th>
-                        <th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;">Pearson r</th>
-                        <th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;">Interpretation</th>
-                      </tr>
-                    </thead>
-                    <tbody id="corrMatrixBody"></tbody>
-                  </table>
-                  <div id="corrSummary" style="margin-top:12px;padding:8px 10px;background:rgba(120,200,255,.08);border-left:3px solid var(--accent-2);border-radius:4px;font-size:11px;">
-                    <div style="color:var(--text-secondary);margin-bottom:6px;"><strong>Summary Statistics:</strong></div>
-                    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
-                      <span><strong>Avg r:</strong> <span id="corrAvgR" style="color:var(--accent-2);font-weight:700;">...</span></span>
-                      <span><strong>Range:</strong> <span id="corrRange" style="color:var(--accent-2);font-weight:700;">...</span></span>
-                      <span><strong>Compound Symmetry:</strong> <span id="corrCompound" style="color:var(--accent-2);font-weight:700;">...</span></span>
+                
+                <!-- Interactive Controls -->
+                <div style="padding:12px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;margin-bottom:12px;">
+                  <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+                    <div style="flex:0 0 auto;">
+                      <label style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:4px;display:block;">Correlation Type:</label>
+                      <div style="display:flex;gap:8px;">
+                        <button class="corr-type-btn active" data-type="pearson" style="padding:6px 12px;font-size:11px;border:2px solid #5c6bc0;background:#5c6bc0;color:#fff;border-radius:4px;cursor:pointer;font-weight:600;">Pearson</button>
+                        <button class="corr-type-btn" data-type="spearman" style="padding:6px 12px;font-size:11px;border:2px solid #5c6bc0;background:transparent;color:#5c6bc0;border-radius:4px;cursor:pointer;font-weight:600;">Spearman</button>
+                        <button class="corr-type-btn" data-type="kendall" style="padding:6px 12px;font-size:11px;border:2px solid #5c6bc0;background:transparent;color:#5c6bc0;border-radius:4px;cursor:pointer;font-weight:600;">Kendall</button>
+                      </div>
                     </div>
-                    <div style="padding-top:8px;border-top:1px solid rgba(255,255,255,.15);">
-                      <strong style="color:var(--text-secondary);">Interpretation:</strong>
-                      <div style="margin-top:4px;color:var(--text-muted);font-style:italic;" id="corrInterpretation">...</div>
+                    
+                    <div style="flex:0 0 auto;">
+                      <label style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:4px;display:block;">View:</label>
+                      <div style="display:flex;gap:8px;">
+                        <button class="corr-view-btn" data-view="table" style="padding:6px 12px;font-size:11px;border:2px solid #f57c00;background:transparent;color:#f57c00;border-radius:4px;cursor:pointer;font-weight:600;">Table</button>
+                        <button class="corr-view-btn active" data-view="heatmap" style="padding:6px 12px;font-size:11px;border:2px solid #f57c00;background:#f57c00;color:#fff;border-radius:4px;cursor:pointer;font-weight:600;">Heatmap</button>
+                      </div>
+                    </div>
+                    
+                    <div style="flex:1 1 auto;display:flex;align-items:center;gap:12px;">
+                      <label style="font-size:11px;font-weight:600;color:var(--text-secondary);white-space:nowrap;">Highlight r ≥</label>
+                      <input type="range" id="corrHighlightSlider" min="0" max="1" step="0.05" value="0" style="flex:1;max-width:200px;">
+                      <span id="corrHighlightValue" style="font-size:13px;font-weight:700;color:var(--accent-2);min-width:50px;">0.00</span>
+                      <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;">
+                        <input type="checkbox" id="showCorrPValue" checked>
+                        <span style="color:var(--text-secondary);font-weight:600;">Show p-value</span>
+                      </label>
+                      <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;">
+                        <input type="checkbox" id="showCorrN" checked>
+                        <span style="color:var(--text-secondary);font-weight:600;">Show n</span>
+                      </label>
                     </div>
                   </div>
-                  <div style="margin-top:12px;padding:8px;background:rgba(255,193,7,.08);border-left:3px solid #ffc107;border-radius:4px;font-size:11px;">
-                    <strong style="color:#ffc107;"><i class="fa-solid fa-circle-info"></i> Note on Compound Symmetry:</strong>
-                    <p style="margin:4px 0 0 0;color:var(--text-muted);">
-                      Compound symmetry (similar correlations across all pairs) is a stronger assumption than sphericity. 
-                      <strong>Good</strong> compound symmetry suggests homogeneous covariance, which increases RM-ANOVA power.
-                    </p>
+                </div>
+                
+                <!-- Correlation Heatmap/Table -->
+                <div id="correlationMatrixContainer" style="padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
+                  <div id="correlationHeatmap"></div>
+                  <table id="correlationTable" style="width:100%;border-collapse:collapse;font-size:11px;display:none;">
+                    <thead>
+                      <tr id="corrTableHeader" style="background:#003366cc;"></tr>
+                    </thead>
+                    <tbody id="corrTableBody"></tbody>
+                  </table>
+                </div>
+                
+                <!-- Summary Statistics -->
+                <div id="corrSummary" style="margin-top:12px;padding:8px 10px;background:rgba(120,200,255,.08);border-left:3px solid var(--accent-2);border-radius:4px;font-size:11px;">
+                  <div style="color:var(--text-secondary);margin-bottom:6px;"><strong>Summary Statistics:</strong></div>
+                  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+                    <span><strong>Avg r:</strong> <span id="corrAvgR" style="color:var(--accent-2);font-weight:700;">...</span></span>
+                    <span><strong>Range:</strong> <span id="corrRange" style="color:var(--accent-2);font-weight:700;">...</span></span>
+                    <span><strong>Compound Symmetry:</strong> <span id="corrCompound" style="color:var(--accent-2);font-weight:700;">...</span></span>
+                  </div>
+                  <div style="padding-top:8px;border-top:1px solid rgba(255,255,255,.15);">
+                    <strong style="color:var(--text-secondary);">Interpretation:</strong>
+                    <div style="margin-top:4px;color:var(--text-muted);font-style:italic;" id="corrInterpretation">...</div>
                   </div>
                 </div>
               </div>
@@ -2523,56 +2553,170 @@
       const corrMatrix = e.correlationMatrix;
       if (!corrMatrix) return;
       
-      const tbody = document.getElementById("corrMatrixBody");
-      if (!tbody) return;
-      tbody.innerHTML = '';
+      const tbody = document.getElementById("corrTableBody");
+      const heatmapContainer = document.getElementById("correlationHeatmap");
+      if (!tbody && !heatmapContainer) return;
       
-      // Populate correlation pairs
+      // Get timepoint names
+      const timepoints = corrMatrix.variables || [];
       const correlations = corrMatrix.correlations || [];
-      correlations.forEach((corr, idx) => {
-        const tr = document.createElement('tr');
-        if (idx % 2 === 1) tr.style.background = 'rgba(255,255,255,.05)';
-        
-        // Pair name
-        const tdPair = document.createElement('td');
-        tdPair.textContent = corr.label || `Time ${corr.time1 + 1} - Time ${corr.time2 + 1}`;
-        tdPair.style.padding = '6px 8px';
-        tdPair.style.border = '1px solid rgba(255,255,255,.18)';
-        tdPair.style.textAlign = 'left';
-        tr.appendChild(tdPair);
-        
-        // Correlation value
-        const tdR = document.createElement('td');
-        tdR.textContent = corr.r.toFixed(3);
-        tdR.style.padding = '6px 8px';
-        tdR.style.border = '1px solid rgba(255,255,255,.18)';
-        tdR.style.textAlign = 'center';
-        tdR.style.fontWeight = '700';
-        tdR.style.color = corr.r > 0.7 ? '#4caf50' : corr.r > 0.4 ? '#ff9800' : '#f44336';
-        tr.appendChild(tdR);
-        
-        // Interpretation
-        const tdInterp = document.createElement('td');
-        const absR = Math.abs(corr.r);
-        let interp = '';
-        if (absR > 0.7) interp = 'Strong';
-        else if (absR > 0.4) interp = 'Moderate';
-        else if (absR > 0.2) interp = 'Weak';
-        else interp = 'Very weak';
-        tdInterp.textContent = interp;
-        tdInterp.style.padding = '6px 8px';
-        tdInterp.style.border = '1px solid rgba(255,255,255,.18)';
-        tdInterp.style.textAlign = 'center';
-        tr.appendChild(tdInterp);
-        
-        tbody.appendChild(tr);
+      
+      // Build correlation matrix (2D array)
+      const n = timepoints.length;
+      const corrGrid = Array(n).fill(null).map(() => Array(n).fill(null));
+      
+      // Fill diagonal with 1.0
+      for (let i = 0; i < n; i++) {
+        corrGrid[i][i] = {r: 1.0, p: 0, n: correlations[0]?.n || 0};
+      }
+      
+      // Fill from correlations array
+      correlations.forEach(corr => {
+        const i = corr.time1 || 0;
+        const j = corr.time2 || 0;
+        corrGrid[i][j] = {r: corr.r, p: corr.p || 0, n: corr.n || 0};
+        corrGrid[j][i] = {r: corr.r, p: corr.p || 0, n: corr.n || 0}; // Symmetric
       });
+      
+      // Render Heatmap
+      if (heatmapContainer) {
+        let html = '<div style="display:inline-block;overflow-x:auto;max-width:100%;">';
+        html += '<table style="border-collapse:collapse;font-size:11px;margin:0 auto;">';
+        
+        // Header row
+        html += '<tr><th style="padding:8px;min-width:80px;border:1px solid rgba(255,255,255,.1);background:#1e3a5f;color:#fff;font-weight:700;"></th>';
+        timepoints.forEach(tp => {
+          html += `<th style="padding:8px;min-width:80px;border:1px solid rgba(255,255,255,.1);background:#1e3a5f;color:#fff;font-weight:700;">${tp}</th>`;
+        });
+        html += '</tr>';
+        
+        // Data rows
+        timepoints.forEach((tp, i) => {
+          html += `<tr><th style="padding:8px;border:1px solid rgba(255,255,255,.1);background:#1e3a5f;color:#fff;font-weight:700;text-align:right;">${tp}</th>`;
+          timepoints.forEach((_, j) => {
+            const cell = corrGrid[i][j];
+            if (cell) {
+              const absR = Math.abs(cell.r);
+              const intensity = absR * 255;
+              const bgColor = cell.r >= 0 
+                ? `rgb(${255-intensity}, ${200 + intensity*0.2}, ${255-intensity*0.7})` // Blue for positive
+                : `rgb(${200 + intensity*0.2}, ${255-intensity*0.8}, ${255-intensity})`;  // Red for negative
+              
+              const textColor = absR > 0.5 ? '#fff' : '#263238';
+              const showPVal = document.getElementById('showCorrPValue')?.checked !== false;
+              const showN = document.getElementById('showCorrN')?.checked !== false;
+              
+              html += `<td style="padding:8px;border:1px solid rgba(255,255,255,.1);background:${bgColor};color:${textColor};text-align:center;font-weight:700;cursor:help;" title="r = ${cell.r.toFixed(3)}, p = ${cell.p.toFixed(4)}, n = ${cell.n}">`;
+              html += `<div style="font-size:13px;">${cell.r.toFixed(3)}</div>`;
+              if (showPVal) html += `<div style="font-size:9px;opacity:0.8;">p = ${cell.p < 0.001 ? '<0.001' : cell.p.toFixed(3)}</div>`;
+              if (showN) html += `<div style="font-size:9px;opacity:0.7;">N = ${cell.n}</div>`;
+              html += '</td>';
+            } else {
+              html += '<td style="padding:8px;border:1px solid rgba(255,255,255,.1);background:#333;"></td>';
+            }
+          });
+          html += '</tr>';
+        });
+        
+        html += '</table></div>';
+        heatmapContainer.innerHTML = html;
+      }
+      
+      // Also populate table view (hidden by default)
+      if (tbody) {
+        tbody.innerHTML = '';
+        
+        // Table header
+        const tableHeader = document.getElementById('corrTableHeader');
+        if (tableHeader) {
+          let headerHTML = '<th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;"></th>';
+          timepoints.forEach(tp => {
+            headerHTML += `<th style="padding:6px 8px;border:1px solid rgba(255,255,255,.18);color:#fff;">${tp}</th>`;
+          });
+          tableHeader.innerHTML = headerHTML;
+        }
+        
+        // Table body
+        timepoints.forEach((tp, i) => {
+          const tr = document.createElement('tr');
+          if (i % 2 === 1) tr.style.background = 'rgba(255,255,255,.05)';
+          
+          // Row header
+          const th = document.createElement('th');
+          th.textContent = tp;
+          th.style.padding = '6px 8px';
+          th.style.border = '1px solid rgba(255,255,255,.18)';
+          th.style.background = '#1e3a5f';
+          th.style.color = '#fff';
+          th.style.textAlign = 'right';
+          tr.appendChild(th);
+          
+          // Cells
+          timepoints.forEach((_, j) => {
+            const td = document.createElement('td');
+            const cell = corrGrid[i][j];
+            if (cell) {
+              td.textContent = cell.r.toFixed(3);
+              td.style.fontWeight = '700';
+              td.style.color = cell.r > 0.7 ? '#4caf50' : cell.r > 0.4 ? '#ff9800' : '#f44336';
+            }
+            td.style.padding = '6px 8px';
+            td.style.border = '1px solid rgba(255,255,255,.18)';
+            td.style.textAlign = 'center';
+            tr.appendChild(td);
+          });
+          
+          tbody.appendChild(tr);
+        });
+      }
+      
+      // Keep existing summary statistics code below...
+      const tbody_old = document.getElementById("corrMatrixBody");
+      if (!tbody_old) return;
+      tbody_old.innerHTML = '';
+      
+      // Calculate summary statistics
       
       // Populate summary
       setText("corrAvgR", corrMatrix.avgR.toFixed(3));
       setText("corrRange", corrMatrix.range.toFixed(3) + " (" + corrMatrix.minR.toFixed(2) + " to " + corrMatrix.maxR.toFixed(2) + ")");
       setText("corrCompound", corrMatrix.compoundSymmetry);
       setText("corrInterpretation", corrMatrix.interpretation);
+      
+      // Add event listeners for interactive controls
+      document.querySelectorAll('.corr-view-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.corr-view-btn').forEach(b => {
+            b.classList.remove('active');
+            b.style.background = 'transparent';
+            b.style.color = '#f57c00';
+          });
+          this.classList.add('active');
+          this.style.background = '#f57c00';
+          this.style.color = '#fff';
+          
+          const view = this.getAttribute('data-view');
+          const heatmap = document.getElementById('correlationHeatmap');
+          const table = document.getElementById('correlationTable');
+          if (view === 'heatmap') {
+            if (heatmap) heatmap.style.display = 'block';
+            if (table) table.style.display = 'none';
+          } else {
+            if (heatmap) heatmap.style.display = 'none';
+            if (table) table.style.display = 'table';
+          }
+        });
+      });
+      
+      // Highlight slider
+      const slider = document.getElementById('corrHighlightSlider');
+      const sliderValue = document.getElementById('corrHighlightValue');
+      if (slider && sliderValue) {
+        slider.addEventListener('input', function() {
+          sliderValue.textContent = parseFloat(this.value).toFixed(2);
+          // TODO: Implement highlighting logic
+        });
+      }
     }
     
   </script>
