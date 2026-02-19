@@ -2566,25 +2566,41 @@
         return;
       }
       
-      // Get timepoint names
-      const timepoints = corrMatrix.variables || [];
+      // Get timepoint names from setup or omnibus data
+      const timepoints = lastBundle?.setup?.selectedColumns || lastBundle?.results?.omnibus?.levels || [];
+      console.log("📝 Timepoints:", timepoints);
+      
+      if (timepoints.length === 0) {
+        console.error("❌ No timepoint names available");
+        return;
+      }
+      
       const correlations = corrMatrix.correlations || [];
+      console.log("🔗 Correlations array:", correlations);
+      
+      if (correlations.length === 0) {
+        console.warn("⚠️ No correlations computed");
+        return;
+      }
       
       // Build correlation matrix (2D array)
       const n = timepoints.length;
       const corrGrid = Array(n).fill(null).map(() => Array(n).fill(null));
       
+      // Get sample size from first correlation or omnibus
+      const sampleSize = lastBundle?.results?.omnibus?.N || correlations[0]?.n || 0;
+      
       // Fill diagonal with 1.0
       for (let i = 0; i < n; i++) {
-        corrGrid[i][i] = {r: 1.0, p: 0, n: correlations[0]?.n || 0};
+        corrGrid[i][i] = {r: 1.0, p: 0, n: sampleSize};
       }
       
       // Fill from correlations array
       correlations.forEach(corr => {
         const i = corr.time1 || 0;
         const j = corr.time2 || 0;
-        corrGrid[i][j] = {r: corr.r, p: corr.p || 0, n: corr.n || 0};
-        corrGrid[j][i] = {r: corr.r, p: corr.p || 0, n: corr.n || 0}; // Symmetric
+        corrGrid[i][j] = {r: corr.r, p: corr.p || 0, n: sampleSize};
+        corrGrid[j][i] = {r: corr.r, p: corr.p || 0, n: sampleSize}; // Symmetric
       });
       
       // Render Heatmap
