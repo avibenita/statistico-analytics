@@ -116,7 +116,7 @@
 #desc-stats-table tbody tr:nth-child(even) td{background:rgba(255,255,255,.05)}
 #desc-stats-table tbody tr:hover td{background:rgba(255,221,87,.18)}
 #desc-stats-table tbody tr.selected td{background:rgba(255,165,120,.3)}
-#histogram-container-kplus{height:240px;margin-top:12px;}
+#histogram-container-kplus{height:280px;margin-top:0;overflow:hidden;}
 .histogram-bar{fill:#74b9ff;stroke:#0984e3;stroke-width:1px;}
 .histogram-bar:hover{fill:#0984e3;}
 .normal-curve{fill:none;stroke:yellow;stroke-width:2px;stroke-dasharray:5,5;}
@@ -354,8 +354,13 @@
                     Normality Tests
                   </button>
                 </div>
+                <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
+                  <label for="histogramBins" style="font-size:11px;color:var(--text-secondary);font-weight:700;white-space:nowrap;">Bins:</label>
+                  <input type="range" id="histogramBins" min="5" max="30" value="10" step="1" style="flex:1;height:4px;opacity:0.8;accent-color:#4a90e2;cursor:pointer;">
+                  <span id="histogramBinsValue" style="font-size:11px;color:var(--accent-2);font-weight:700;min-width:30px;text-align:center;">10</span>
+                </div>
                 <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
-                  <div id="histogram-container-kplus"></div>
+                  <div id="histogram-container-kplus" style="overflow:hidden;"></div>
                   <div>
                     <div class="desc-summary-stats" id="desc-summary-table"></div>
                   </div>
@@ -1677,6 +1682,10 @@
       const container = document.getElementById('histogram-container-kplus');
       if (!container) return;
       
+      // Get current bin count from slider
+      const binsSlider = document.getElementById('histogramBins');
+      const numBins = binsSlider ? parseInt(binsSlider.value) : 10;
+      
       const width = container.clientWidth || 600;
       const height = 280;
       
@@ -1685,16 +1694,16 @@
       const svg = d3.select('#histogram-container-kplus')
         .append('svg')
         .attr('width', width)
-        .attr('height', height);
+        .attr('height', height)
+        .style('overflow', 'visible');
       
-      const margin = { top: 15, right: 25, bottom: 40, left: 40 };
+      const margin = { top: 15, right: 25, bottom: 50, left: 40 };
       const innerWidth = width - margin.left - margin.right;
       const innerHeight = height - margin.top - margin.bottom;
       
       const g = svg.append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
       
-      const numBins = 10;
       const values = descSelectedRow.vector;
       const min = Math.min(...values);
       const max = Math.max(...values);
@@ -1704,12 +1713,12 @@
       const histData = Array.from({ length: numBins }, (_, i) => {
         const start = min + i * binWidth;
         const end = min + (i + 1) * binWidth;
-        const bin = `${start.toFixed(1)}-${end.toFixed(1)}`;
+        const binLabel = `${start.toFixed(1)}-${end.toFixed(1)}`;
         let count = 0;
         values.forEach(v => {
           if (v >= start && (i === numBins - 1 ? v <= end : v < end)) count++;
         });
-        return { bin, start, end, count };
+        return { bin: binLabel, start, end, count };
       });
       
       const x = d3.scaleBand()
@@ -1722,25 +1731,38 @@
         .domain([0, maxCount + (maxCount * 0.1)])
         .range([innerHeight, 0]);
       
-      g.append('g')
+      // X-axis with range labels
+      const xAxis = g.append('g')
         .attr('class', 'axis')
         .attr('transform', `translate(0,${innerHeight})`)
-        .call(d3.axisBottom(x).tickValues(x.domain().filter((d, i) => i % 2 === 0)))
-        .selectAll('text')
+        .call(d3.axisBottom(x)
+          .tickValues(x.domain().filter((d, i) => {
+            // Show labels based on number of bins
+            if (numBins <= 10) return true; // Show all
+            if (numBins <= 15) return i % 2 === 0; // Every other
+            if (numBins <= 20) return i % 3 === 0; // Every 3rd
+            return i % 4 === 0; // Every 4th
+          }))
+        );
+      
+      xAxis.selectAll('text')
         .style('text-anchor', 'end')
-        .attr('dx', '-.8em')
-        .attr('dy', '.15em')
-        .attr('font-size', '8px')
+        .attr('dx', '-.5em')
+        .attr('dy', '.5em')
+        .attr('font-size', '9px')
         .attr('transform', 'rotate(-45)');
       
+      // Y-axis
       g.append('g')
         .attr('class', 'axis')
         .call(d3.axisLeft(y).ticks(5));
       
+      // Grid
       g.append('g')
         .attr('class', 'grid')
         .call(d3.axisLeft(y).ticks(5).tickSize(-innerWidth).tickFormat(''));
       
+      // Bars
       g.selectAll('.histogram-bar')
         .data(histData)
         .enter().append('rect')
@@ -1748,7 +1770,9 @@
         .attr('x', d => x(d.bin))
         .attr('width', x.bandwidth())
         .attr('y', d => y(d.count))
-        .attr('height', d => innerHeight - y(d.count));
+        .attr('height', d => innerHeight - y(d.count))
+        .append('title')
+        .text(d => `${d.bin}: ${d.count} values`);
       
       // Add normal curve
       const mean = descSelectedRow.Mean;
@@ -1770,8 +1794,7 @@
       
       const line = d3.line()
         .x(d => xScale(d.x))
-        .y(d => y(d.y * normalScale))
-        .curve(d3.curveCardinal);
+        .y(d => y(d.y * normalScale));
       
       g.append('path')
         .datum(normalData)
@@ -2083,6 +2106,17 @@
       var rn = document.getElementById("fwNonparametric");
       if (rp) rp.addEventListener("change", function(){ if (rp.checked) { setFrameworkButtons("parametric"); notifySettingsChanged(); } });
       if (rn) rn.addEventListener("change", function(){ if (rn.checked) { setFrameworkButtons("nonparametric"); notifySettingsChanged(); } });
+      
+      // Histogram bins slider handler
+      const histogramBinsSlider = document.getElementById("histogramBins");
+      const histogramBinsValue = document.getElementById("histogramBinsValue");
+      if (histogramBinsSlider && histogramBinsValue) {
+        histogramBinsSlider.addEventListener("input", function() {
+          histogramBinsValue.textContent = this.value;
+          renderDescHistogram();
+        });
+      }
+      
       setFrameworkButtons(primaryFramework);
       refreshSettingsVisibility();
       Office.onReady(function(){
