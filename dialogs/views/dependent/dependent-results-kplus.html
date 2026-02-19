@@ -2550,12 +2550,21 @@
     
     // === Correlation Matrix Function ===
     function populateCorrelationMatrix(e) {
+      console.log("🔍 populateCorrelationMatrix called with explore:", e);
       const corrMatrix = e.correlationMatrix;
-      if (!corrMatrix) return;
+      if (!corrMatrix) {
+        console.warn("⚠️ No correlation matrix data found in explore object");
+        return;
+      }
+      
+      console.log("📊 Correlation matrix data:", corrMatrix);
       
       const tbody = document.getElementById("corrTableBody");
       const heatmapContainer = document.getElementById("correlationHeatmap");
-      if (!tbody && !heatmapContainer) return;
+      if (!tbody && !heatmapContainer) {
+        console.error("❌ Could not find corrTableBody or correlationHeatmap elements");
+        return;
+      }
       
       // Get timepoint names
       const timepoints = corrMatrix.variables || [];
