@@ -887,11 +887,7 @@
         radioGroup.innerHTML = `
           <label class="posthoc-radio">
             <input type="radio" name="posthocMethod" value="paired" ${currentValue === "paired" || !currentValue ? "checked" : ""} onchange="onPosthocSettingsChange()">
-            <span>Paired t-tests (all pairs)</span>
-          </label>
-          <label class="posthoc-radio">
-            <input type="radio" name="posthocMethod" value="paired-baseline" ${currentValue === "paired-baseline" ? "checked" : ""} onchange="onPosthocSettingsChange()">
-            <span>Paired t-tests vs Baseline</span>
+            <span>Paired t-tests</span>
           </label>
           <label class="posthoc-radio">
             <input type="radio" name="posthocMethod" value="none" ${currentValue === "none" ? "checked" : ""} onchange="onPosthocSettingsChange()">
@@ -1534,6 +1530,25 @@
           <th style="cursor:pointer;" onclick="sortPosthocTable('ci')">95% CI ↕</th>
           <th style="text-align:center;">Sig</th>
         `;
+      }
+      
+      // Populate reference dropdown with timepoint names
+      const refSelectNew = document.getElementById("posthocRefGroup");
+      if (refSelectNew && posthoc && posthoc.rows && posthoc.rows.length > 0) {
+        // Extract unique timepoint names from comparison strings
+        const timepointSet = new Set();
+        posthoc.rows.forEach(function(row) {
+          if (row.timepoint1) timepointSet.add(row.timepoint1);
+          if (row.timepoint2) timepointSet.add(row.timepoint2);
+        });
+        const timepoints = Array.from(timepointSet);
+        
+        // Populate dropdown
+        let options = '<option value="">Select timepoint...</option>';
+        timepoints.forEach(function(tp) {
+          options += '<option value="' + tp + '">' + tp + '</option>';
+        });
+        refSelectNew.innerHTML = options;
       }
       
       if (compareMode !== "k-plus" || !posthoc || !posthoc.enabled) {
