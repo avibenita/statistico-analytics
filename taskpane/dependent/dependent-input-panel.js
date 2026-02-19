@@ -182,8 +182,9 @@ function computeWilcoxon(a, b, alt) {
   return { w: wPlus, p: Math.max(0, Math.min(1, p)) };
 }
 
-function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
+function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns, primaryFramework) {
   console.log("Computing Repeated Measures ANOVA for", selectedColumns.length, "timepoints");
+  console.log("Primary Framework:", primaryFramework);
   
   // Extract data for each timepoint
   const k = selectedColumns.length;
@@ -339,8 +340,8 @@ function computeRepeatedMeasuresANOVA(headers, rows, selectedColumns) {
     pValueHF = approximateFTest(fStat, dfBetweenHF, dfErrorHF);
   }
   
-  // Post-hoc pairwise comparisons using PAIRED t-tests (not Tukey)
-  const posthoc = computeRMPostHocComparisons(completeCases, selectedColumns, n, k);
+  // Post-hoc pairwise comparisons using PAIRED t-tests or Wilcoxon (based on framework)
+  const posthoc = computeRMPostHocComparisons(completeCases, selectedColumns, n, k, primaryFramework);
   
   // Compute Levene and Brown-Forsythe tests for homogeneity
   const levene = computeLeveneTest(groupData);
@@ -707,10 +708,11 @@ function computeBrownForsytheTest(groupData) {
   return { f, df1: dfBetween, df2: dfWithin, p };
 }
 
-function computeRMPostHocComparisons(completeCases, timepointNames, n, k) {
-  // Post-hoc for Repeated Measures: PAIRED t-tests with corrections
+function computeRMPostHocComparisons(completeCases, timepointNames, n, k, primaryFramework) {
+  // Post-hoc for Repeated Measures: PAIRED t-tests (parametric) or Wilcoxon (nonparametric)
   // NOT Tukey HSD (which assumes independence)
   
+  const isNonParametric = primaryFramework === "nonparametric";
   const comparisons = [];
   
   for (let i = 0; i < k - 1; i++) {
@@ -724,22 +726,51 @@ function computeRMPostHocComparisons(completeCases, timepointNames, n, k) {
       
       if (diffs.length === 0) continue;
       
-      const meanDiff = mean(diffs);
-      const sdDiff = sd(diffs);
-      const seDiff = sdDiff / Math.sqrt(diffs.length);
+      let statistic, pRaw, estimate, ciLower, ciUpper, effectSize;
       
-      // Paired t-statistic
-      const tStat = seDiff > 0 ? meanDiff / seDiff : 0;
-      const df = diffs.length - 1;
-      const pRaw = approximateTTest(Math.abs(tStat), df);
-      
-      // Confidence interval
-      const tCrit = 2.0; // Approximate 95% critical value
-      const ciLower = meanDiff - tCrit * seDiff;
-      const ciUpper = meanDiff + tCrit * seDiff;
-      
-      // Cohen's d for paired samples
-      const cohenD = sdDiff > 0 ? Math.abs(meanDiff / sdDiff) : 0;
+      if (isNonParametric) {
+        // WILCOXON SIGNED-RANK TEST
+        const wilcoxonResult = computeWilcoxon(time1, time2, "two-sided");
+        statistic = wilcoxonResult.w;
+        pRaw = wilcoxonResult.p;
+        
+        // Convert W to Z approximation for large samples
+        const nPairs = diffs.length;
+        const expectedW = nPairs * (nPairs + 1) / 4;
+        const varianceW = nPairs * (nPairs + 1) * (2 * nPairs + 1) / 24;
+        const zStat = (statistic - expectedW) / Math.sqrt(varianceW);
+        
+        // Effect size r = Z / sqrt(N) for Wilcoxon
+        const effectSizeR = Math.abs(zStat) / Math.sqrt(nPairs);
+        
+        estimate = effectSizeR; // Effect size r (between 0 and 1)
+        statistic = zStat; // Z-statistic (standardized)
+        ciLower = NaN; // No CI for nonparametric
+        ciUpper = NaN;
+        effectSize = effectSizeR;
+      } else {
+        // PAIRED T-TEST (PARAMETRIC)
+        const meanDiff = mean(diffs);
+        const sdDiff = sd(diffs);
+        const seDiff = sdDiff / Math.sqrt(diffs.length);
+        
+        // Paired t-statistic
+        const tStat = seDiff > 0 ? meanDiff / seDiff : 0;
+        const df = diffs.length - 1;
+        pRaw = approximateTTest(Math.abs(tStat), df);
+        
+        // Confidence interval
+        const tCrit = 2.0; // Approximate 95% critical value
+        ciLower = meanDiff - tCrit * seDiff;
+        ciUpper = meanDiff + tCrit * seDiff;
+        
+        // Cohen's d for paired samples
+        const cohenD = sdDiff > 0 ? Math.abs(meanDiff / sdDiff) : 0;
+        
+        statistic = tStat;
+        estimate = meanDiff; // Mean difference
+        effectSize = cohenD;
+      }
       
       // Format comparison label for RM (use "Time" terminology)
       const label1 = timepointNames[i].replace(/^(Group|Var|Column)/, 'Time');
@@ -749,15 +780,13 @@ function computeRMPostHocComparisons(completeCases, timepointNames, n, k) {
         comparison: label1 + " vs " + label2,
         timepoint1: timepointNames[i],
         timepoint2: timepointNames[j],
-        estimate: meanDiff,
-        se: seDiff,
-        statistic: tStat,
-        df: df,
+        estimate: estimate,
+        statistic: statistic,
         rawP: pRaw,
         adjP: pRaw, // Will be updated with correction
         ciLower: ciLower,
         ciUpper: ciUpper,
-        cohenD: cohenD
+        effectSize: effectSize
       });
     }
   }
@@ -773,9 +802,11 @@ function computeRMPostHocComparisons(completeCases, timepointNames, n, k) {
     enabled: true,
     rows: comparisons,
     pairwise: comparisons,
-    method: "Paired t-tests",
+    method: isNonParametric ? "Wilcoxon Signed-Rank" : "Paired t-tests",
     correction: "Holm-Bonferroni",
-    note: "Post-hoc comparisons use paired t-tests (appropriate for repeated measures)"
+    note: isNonParametric 
+      ? "Post-hoc comparisons use Wilcoxon signed-rank test (nonparametric, rank-based)" 
+      : "Post-hoc comparisons use paired t-tests (appropriate for repeated measures)"
   };
 }
 
@@ -966,7 +997,7 @@ function buildDependentBundle(headers, rows, spec) {
   // For k-plus mode, perform repeated measures ANOVA
   if (compareMode === "k-plus" && selectedColumns.length >= 3) {
     console.log("Computing k-plus (3+ timepoints) analysis");
-    const rmResults = computeRepeatedMeasuresANOVA(headers, rows, selectedColumns);
+    const rmResults = computeRepeatedMeasuresANOVA(headers, rows, selectedColumns, primaryFramework);
     return {
       setup: {
         mode,
