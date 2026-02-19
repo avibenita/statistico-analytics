@@ -2734,18 +2734,13 @@
         });
       }
       
-      // Keep existing summary statistics code below...
-      const tbody_old = document.getElementById("corrMatrixBody");
-      if (!tbody_old) return;
-      tbody_old.innerHTML = '';
-      
-      // Calculate summary statistics
-      
-      // Populate summary
-      setText("corrAvgR", corrMatrix.avgR.toFixed(3));
-      setText("corrRange", corrMatrix.range.toFixed(3) + " (" + corrMatrix.minR.toFixed(2) + " to " + corrMatrix.maxR.toFixed(2) + ")");
-      setText("corrCompound", corrMatrix.compoundSymmetry);
-      setText("corrInterpretation", corrMatrix.interpretation);
+      // Populate summary statistics
+      if (corrMatrix.avgR !== undefined) {
+        setText("corrAvgR", corrMatrix.avgR.toFixed(3));
+        setText("corrRange", corrMatrix.range.toFixed(3) + " (" + corrMatrix.minR.toFixed(2) + " to " + corrMatrix.maxR.toFixed(2) + ")");
+        setText("corrCompound", corrMatrix.compoundSymmetry);
+        setText("corrInterpretation", corrMatrix.interpretation);
+      }
     }
     
     // === Event Handlers for Correlation Controls ===
