@@ -35,7 +35,7 @@ function showPanel(show) {
 function getDialogsBaseUrl() {
   const href = window.location.href;
   if (href.includes("/taskpane/")) return `${href.split("/taskpane/")[0]}/dialogs/views/`;
-  return `${window.location.origin}/statistico-analytics/dialogs/views/`;
+  return `${window.location.origin}/dialogs/views/`;
 }
 
 function openDependentBuilder() {

@@ -76,7 +76,11 @@ function getDialogsBaseUrl() {
   if (currentUrl.includes('127.0.0.1') || currentUrl.includes('localhost')) {
     return 'http://127.0.0.1:8080/dialogs/views/';
   }
-  return 'https://www.statistico.live/statistico-analytics/dialogs/views/';
+  // Extract base URL dynamically for production
+  if (currentUrl.includes('/taskpane/')) {
+    return `${currentUrl.split('/taskpane/')[0]}/dialogs/views/`;
+  }
+  return `${window.location.origin}/dialogs/views/`;
 }
 
 /**
