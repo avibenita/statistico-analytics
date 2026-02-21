@@ -179,6 +179,63 @@
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.7);z-index:1000;backdrop-filter:blur(3px);}
 .normality-button:hover{background:linear-gradient(to right,rgb(255,160,160),rgb(255,192,192));transform:translateY(-2px);}
 
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .wrap { padding: 2px 4px 8px; }
+  .card { min-height: auto; }
+  .hero-section { padding: 8px 10px; }
+  .hero-title { font-size: 0.95rem; }
+  .hero-action-btn { padding: 5px 8px; font-size: 10px; }
+  .tab-navigation { gap: 8px; }
+  .tab-button { font-size: 10px; padding: 0 2px; }
+  .view-container { padding: 8px 10px; }
+  
+  /* Make stats container stack on small screens */
+  .stats-container { grid-template-columns: 1fr !important; gap: 8px; }
+  
+  /* Power cards - 2 columns on mobile */
+  #tab-power .stats-container { grid-template-columns: 1fr 1fr !important; }
+  
+  /* Tables */
+  .analysis-table { font-size: 10px; }
+  .analysis-table th, .analysis-table td { padding: 4px; }
+  
+  /* Settings */
+  .settings-grid { grid-template-columns: 1fr !important; gap: 4px; }
+  .inference-row { flex-direction: column; align-items: stretch; }
+  .radio-button-group { flex-direction: column; }
+  .radio-button-label { min-width: auto; width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .hero-content { flex-direction: column; align-items: stretch; gap: 6px; }
+  .hero-controls { justify-content: space-between; width: 100%; }
+  .tab-button { font-size: 9px; gap: 3px; }
+  .stat-panel-heading { font-size: 11px; padding: 6px 8px; }
+  .stat-field { grid-template-columns: 1fr; gap: 4px; }
+  .stat-label { font-size: 11px; }
+  .stat-value { min-width: auto; width: 100%; font-size: 11px; }
+  
+  /* Power cards - single column on very small screens */
+  #tab-power .stats-container { grid-template-columns: 1fr !important; }
+}
+
+/* Responsive grid for power level cards */
+@media (max-width: 900px) {
+  /* 2x2 grid for power cards on medium screens */
+  .view-container > div[style*="grid-template-columns:repeat(4,1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 500px) {
+  /* Single column for power cards on small screens */
+  .view-container > div[style*="grid-template-columns:repeat(4,1fr)"],
+  .view-container > div[style*="grid-template-columns:repeat(2,1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
   </style>
 </head>
 <body>
