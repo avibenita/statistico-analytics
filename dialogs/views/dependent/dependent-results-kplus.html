@@ -3906,7 +3906,7 @@
           reporting: {
             style: "APA",
             alpha: 0.05,
-            decimals: currentDecimalPrecision || 2,
+            decimals: globalDecimalPrecision === "auto" ? 2 : parseInt(globalDecimalPrecision, 10),
             tone: "professional",
             length_words_max: 320
           }
