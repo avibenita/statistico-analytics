@@ -716,85 +716,81 @@
           </div>
         </section>
         <section id="tab-power" class="tab-panel">
-          <div class="power-analysis-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h2 style="margin:0;font-size:1.5em;color:#ff9d5c;"><i class="fa-solid fa-bolt"></i> Power Analysis</h2>
-            <button onclick="refreshPowerAnalysis()" class="refresh-power-btn" style="padding:8px 16px;background:#ff9d5c;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">
-              <i class="fa-solid fa-sync"></i> Refresh Power Analysis
+          <div class="power-analysis-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h2 style="margin:0;font-size:1.3em;color:#ff9d5c;"><i class="fa-solid fa-bolt"></i> Power Analysis</h2>
+            <button onclick="refreshPowerAnalysis()" class="refresh-power-btn" style="padding:6px 12px;background:#ff9d5c;color:white;border:none;border-radius:4px;cursor:pointer;font-size:13px;">
+              <i class="fa-solid fa-sync"></i> Refresh
             </button>
           </div>
           
-          <div class="stats-container" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="stats-container" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <!-- Observed Statistics Panel -->
-            <div class="stat-panel" style="background:#3a3d4a;padding:20px;border-radius:8px;">
-              <div class="stat-panel-heading" style="font-size:1.1em;margin-bottom:16px;color:#9db4ff;">Observed Statistics</div>
+            <div class="stat-panel" style="background:#3a3d4a;padding:14px;border-radius:6px;">
+              <div class="stat-panel-heading" style="font-size:1em;margin-bottom:10px;color:#9db4ff;border-bottom:1px solid rgba(157,180,255,0.2);padding-bottom:6px;">Observed Statistics</div>
               <div class="stat-panel-body">
-                <div class="stat-field" style="margin-bottom:12px;">
-                  <span class="stat-label" style="color:#a0a0a0;font-size:0.85em;text-transform:uppercase;">Observed Power</span>
-                  <span class="stat-value" id="powObserved" style="display:block;font-size:2em;color:#ff9d5c;font-weight:bold;margin-top:4px;">...</span>
+                <div class="stat-field" style="margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
+                  <span class="stat-label" style="color:#a0a0a0;font-size:0.8em;text-transform:uppercase;letter-spacing:0.5px;">Observed Power</span>
+                  <span class="stat-value" id="powObserved" style="font-size:1.6em;color:#ff9d5c;font-weight:bold;text-align:right;">...</span>
                 </div>
-                <div class="stat-field" style="margin-bottom:12px;">
-                  <span class="stat-label" style="color:#a0a0a0;font-size:0.85em;text-transform:uppercase;">Effect Size</span>
-                  <span class="stat-value" id="powEffectSize" style="display:block;font-size:1.8em;color:#ff9d5c;font-weight:bold;margin-top:4px;">...</span>
+                <div class="stat-field" style="margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
+                  <span class="stat-label" style="color:#a0a0a0;font-size:0.8em;text-transform:uppercase;letter-spacing:0.5px;">Effect Size (f)</span>
+                  <span class="stat-value" id="powEffectSize" style="font-size:1.4em;color:#ff9d5c;font-weight:bold;text-align:right;">...</span>
                 </div>
-                <div class="stat-field" style="margin-bottom:12px;">
-                  <span class="stat-label" style="color:#a0a0a0;font-size:0.85em;text-transform:uppercase;">Sample Size</span>
-                  <span class="stat-value" id="powSampleSize" style="display:block;font-size:1.8em;color:#ff9d5c;font-weight:bold;margin-top:4px;">...</span>
+                <div class="stat-field" style="display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
+                  <span class="stat-label" style="color:#a0a0a0;font-size:0.8em;text-transform:uppercase;letter-spacing:0.5px;">Sample Size</span>
+                  <span class="stat-value" id="powSampleSize" style="font-size:1.4em;color:#ff9d5c;font-weight:bold;text-align:right;">...</span>
                 </div>
               </div>
             </div>
             
             <!-- Target Power Scenario Panel -->
-            <div class="stat-panel" style="background:#3a3d4a;padding:20px;border-radius:8px;">
-              <div class="stat-panel-heading" style="font-size:1.1em;margin-bottom:16px;color:#9db4ff;">Target Power Scenario</div>
+            <div class="stat-panel" style="background:#3a3d4a;padding:14px;border-radius:6px;">
+              <div class="stat-panel-heading" style="font-size:1em;margin-bottom:10px;color:#9db4ff;border-bottom:1px solid rgba(157,180,255,0.2);padding-bottom:6px;">Target Power (80%)</div>
               <div class="stat-panel-body">
-                <div class="stat-field" style="margin-bottom:12px;">
-                  <span class="stat-label" style="color:#a0a0a0;font-size:0.85em;text-transform:uppercase;">Power to Achieve</span>
-                  <span class="stat-value" id="powTarget" style="display:block;font-size:1.5em;color:white;font-weight:500;margin-top:4px;">0.80</span>
+                <div class="stat-field" style="margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
+                  <span class="stat-label" style="color:#a0a0a0;font-size:0.8em;text-transform:uppercase;letter-spacing:0.5px;">Required N</span>
+                  <span class="stat-value" id="powRequired" style="font-size:1.6em;color:#ff9d5c;font-weight:bold;text-align:right;">...</span>
                 </div>
-                <div class="stat-field" style="margin-bottom:16px;">
-                  <span class="stat-label" style="color:#a0a0a0;font-size:0.85em;text-transform:uppercase;">Required Sample Size</span>
-                  <span class="stat-value" id="powRequired" style="display:block;font-size:1.8em;color:#ff9d5c;font-weight:bold;margin-top:4px;">...</span>
+                <div class="stat-field" style="margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
+                  <span class="stat-label" style="color:#a0a0a0;font-size:0.8em;text-transform:uppercase;letter-spacing:0.5px;">Alpha</span>
+                  <span class="stat-value" id="powAlpha" style="font-size:1.1em;color:white;text-align:right;">0.050</span>
                 </div>
-                <div class="stat-field" style="margin-bottom:12px;">
-                  <span class="stat-label" style="color:#a0a0a0;font-size:0.85em;text-transform:uppercase;">Alpha</span>
-                  <span class="stat-value" id="powAlpha" style="display:block;font-size:1.2em;color:white;margin-top:4px;">0.050</span>
-                </div>
-                <div class="stat-field" style="margin-bottom:12px;">
-                  <span class="stat-label" style="color:#a0a0a0;font-size:0.85em;text-transform:uppercase;">Cohen's D</span>
-                  <span class="stat-value" id="powCohenD" style="display:block;font-size:1.2em;color:white;margin-top:4px;">...</span>
+                <div class="stat-field" style="display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
+                  <span class="stat-label" style="color:#a0a0a0;font-size:0.8em;text-transform:uppercase;letter-spacing:0.5px;">Partial η²</span>
+                  <span class="stat-value" id="powPartialEta" style="font-size:1.1em;color:white;text-align:right;">...</span>
                 </div>
               </div>
             </div>
           </div>
           
           <!-- Power Status Message -->
-          <div id="powStatusMessage" style="margin-top:16px;padding:12px;background:#2d5f3f;border-radius:4px;color:#7fdb9f;text-align:center;font-size:0.95em;">
-            Current sample size is sufficient for the target power level.
+          <div id="powStatusMessage" style="margin-top:10px;padding:10px;background:#2d5f3f;border-radius:4px;color:#7fdb9f;text-align:center;font-size:0.9em;">
+            Calculating power analysis...
           </div>
           
           <!-- Alternative Power Levels -->
-          <div class="stat-panel" style="margin-top:16px;background:#3a3d4a;padding:16px;border-radius:8px;">
-            <div class="stat-panel-heading" style="font-size:1em;margin-bottom:12px;color:#9db4ff;">Sample Size Requirements for Different Power Levels</div>
+          <div class="stat-panel" style="margin-top:10px;background:#3a3d4a;padding:12px;border-radius:6px;">
+            <div class="stat-panel-heading" style="font-size:0.9em;margin-bottom:8px;color:#9db4ff;">Required Sample Size for Different Power Levels</div>
             <div class="stat-panel-body">
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-                <div style="text-align:center;">
-                  <div style="color:#a0a0a0;font-size:0.85em;margin-bottom:4px;">80% Power</div>
-                  <div id="powReq80" style="font-size:1.3em;color:#ff9d5c;font-weight:bold;">...</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+                <div style="text-align:center;padding:8px;background:rgba(0,0,0,0.2);border-radius:4px;">
+                  <div style="color:#a0a0a0;font-size:0.8em;margin-bottom:3px;">80% Power</div>
+                  <div id="powReq80" style="font-size:1.2em;color:#ff9d5c;font-weight:bold;">...</div>
                 </div>
-                <div style="text-align:center;">
-                  <div style="color:#a0a0a0;font-size:0.85em;margin-bottom:4px;">90% Power</div>
-                  <div id="powReq90" style="font-size:1.3em;color:#ff9d5c;font-weight:bold;">...</div>
+                <div style="text-align:center;padding:8px;background:rgba(0,0,0,0.2);border-radius:4px;">
+                  <div style="color:#a0a0a0;font-size:0.8em;margin-bottom:3px;">90% Power</div>
+                  <div id="powReq90" style="font-size:1.2em;color:#ff9d5c;font-weight:bold;">...</div>
                 </div>
-                <div style="text-align:center;">
-                  <div style="color:#a0a0a0;font-size:0.85em;margin-bottom:4px;">95% Power</div>
-                  <div id="powReq95" style="font-size:1.3em;color:#ff9d5c;font-weight:bold;">...</div>
+                <div style="text-align:center;padding:8px;background:rgba(0,0,0,0.2);border-radius:4px;">
+                  <div style="color:#a0a0a0;font-size:0.8em;margin-bottom:3px;">95% Power</div>
+                  <div id="powReq95" style="font-size:1.2em;color:#ff9d5c;font-weight:bold;">...</div>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="section-note" style="margin-top:16px;padding:12px;background:#2a2d38;border-radius:4px;color:#b0b0b0;font-size:0.9em;">
-            <i class="fa-solid fa-info-circle"></i> Power calculations use non-central F distribution via Python cloud function. Effect size based on Cohen's f derived from partial eta squared.
+          <div class="section-note" style="margin-top:10px;padding:8px;background:#2a2d38;border-radius:4px;color:#b0b0b0;font-size:0.85em;">
+            <i class="fa-solid fa-info-circle"></i> Power via non-central F distribution (cloud/local). Effect size: Cohen's f from partial η².
           </div>
         </section>
         <section id="tab-report" class="tab-panel">
@@ -2403,6 +2399,8 @@
     
     async function calculatePowerAnalysis(omnibus, setup) {
       console.log("🔋 Calculating power analysis...");
+      console.log("Omnibus data:", omnibus);
+      console.log("Setup data:", setup);
       
       const fStat = parseMaybeNumber(omnibus.anovaF);
       const df1 = parseMaybeNumber(omnibus.anovaDf1);
@@ -2413,14 +2411,27 @@
       const k = (setup.selectedColumns || []).length;
       const alpha = 1 - parseMaybeNumber(setup.confidence || 0.95);
       
-      if (!fStat || !df1 || !df2 || !n || !k || k < 3) {
-        console.warn("⚠ Insufficient data for power analysis");
-        updatePowerUI({ error: true });
+      console.log("Parsed values:", { fStat, df1, df2, partialEta, cohenF, n, k, alpha });
+      
+      if (!fStat || fStat <= 0 || !df1 || !df2 || !n || n < 2 || !k || k < 2) {
+        console.warn("⚠ Insufficient data for power analysis", { fStat, df1, df2, n, k });
+        // Use local approximation with available data
+        if (fStat > 0 && df1 > 0 && df2 > 0 && n > 1) {
+          const localPower = calculateLocalPowerApproximation(fStat, df1, df2, n);
+          updatePowerUI({ 
+            observed_power: localPower,
+            effect_size_cohen_f: cohenF || 0,
+            partial_eta_squared: partialEta || 0,
+            local: true 
+          }, n, alpha, partialEta);
+        } else {
+          updatePowerUI({ error: true }, n, alpha, partialEta);
+        }
         return;
       }
       
+      // Try cloud function first
       try {
-        // Call cloud function for observed power
         const response = await fetch(CLOUD_FUNCTION_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2433,7 +2444,8 @@
             k: k,
             partial_eta_squared: partialEta,
             alpha: alpha || 0.05
-          })
+          }),
+          timeout: 5000
         });
         
         if (!response.ok) {
@@ -2445,21 +2457,32 @@
         
         if (data.ok && data.results) {
           powerAnalysisData = data.results;
-          updatePowerUI(data.results, n, alpha);
+          updatePowerUI(data.results, n, alpha, partialEta);
+          return;
         } else {
           throw new Error(data.error || "Unknown error");
         }
         
       } catch (error) {
-        console.error("❌ Power analysis error:", error);
-        // Fallback to local approximation if cloud function fails
-        const localPower = calculateLocalPowerApproximation(fStat, df1, df2, n);
-        updatePowerUI({ 
-          observed_power: localPower,
-          effect_size_cohen_f: cohenF || 0,
-          fallback: true 
-        }, n, alpha);
+        console.warn("⚠ Cloud function unavailable, using local approximation:", error);
       }
+      
+      // Fallback to local approximation
+      const localPower = calculateLocalPowerApproximation(fStat, df1, df2, n);
+      const effectF = cohenF || Math.sqrt(fStat * df1 / n);
+      
+      // Calculate required sample sizes locally
+      const req80 = estimateRequiredN(effectF, k, 0.80, alpha);
+      const req90 = estimateRequiredN(effectF, k, 0.90, alpha);
+      
+      updatePowerUI({ 
+        observed_power: localPower,
+        effect_size_cohen_f: effectF,
+        partial_eta_squared: partialEta || 0,
+        required_for_80pct: req80,
+        required_for_90pct: req90,
+        fallback: true 
+      }, n, alpha, partialEta);
     }
     
     function calculateLocalPowerApproximation(fStat, df1, df2, n) {
@@ -2467,7 +2490,7 @@
       // Power ≈ 1 - Φ(z_critical - sqrt(λ))
       // where λ = n * f² * df1
       
-      if (!fStat || fStat <= 0 || !df1 || !n) return 0;
+      if (!fStat || fStat <= 0 || !df1 || !n || n < 2) return 0;
       
       const effectSizeF = Math.sqrt(fStat * df1 / n);
       const ncp = n * effectSizeF * effectSizeF * df1;
@@ -2477,13 +2500,43 @@
       return Math.max(0, Math.min(1, power));
     }
     
-    function updatePowerUI(results, currentN, alpha) {
+    function estimateRequiredN(effectF, k, targetPower, alpha) {
+      // Binary search for required N
+      if (!effectF || effectF <= 0 || !k || k < 2) return 0;
+      
+      const df1 = k - 1;
+      let nMin = 2, nMax = 500;
+      
+      for (let iter = 0; iter < 50; iter++) {
+        const n = Math.floor((nMin + nMax) / 2);
+        const df2 = (n - 1) * df1;
+        const ncp = n * effectF * effectF * df1;
+        
+        // Approximate power
+        const zCrit = alpha <= 0.05 ? 1.96 : 1.645;
+        const power = 1 - normalCdf(zCrit - Math.sqrt(ncp));
+        
+        if (Math.abs(power - targetPower) < 0.01) return n;
+        
+        if (power < targetPower) {
+          nMin = n + 1;
+        } else {
+          nMax = n - 1;
+        }
+      }
+      
+      return nMax;
+    }
+    
+    function updatePowerUI(results, currentN, alpha, partialEta) {
       const { 
         observed_power, 
         effect_size_cohen_f, 
+        partial_eta_squared,
         required_for_80pct,
         required_for_90pct,
         fallback,
+        local,
         error
       } = results;
       
@@ -2495,7 +2548,7 @@
         setText("powReq80", "N/A");
         setText("powReq90", "N/A");
         setText("powReq95", "N/A");
-        setText("powCohenD", "N/A");
+        setText("powPartialEta", "N/A");
         updatePowerStatus("⚠ Insufficient data for power analysis", "warning");
         return;
       }
@@ -2503,10 +2556,10 @@
       // Observed statistics
       const powerPct = (observed_power * 100).toFixed(1) + "%";
       setText("powObserved", powerPct);
-      setText("powEffectSize", effect_size_cohen_f ? effect_size_cohen_f.toFixed(4) : "N/A");
+      setText("powEffectSize", effect_size_cohen_f ? effect_size_cohen_f.toFixed(3) : "N/A");
       setText("powSampleSize", currentN || "N/A");
       setText("powAlpha", (alpha || 0.05).toFixed(3));
-      setText("powCohenD", effect_size_cohen_f ? effect_size_cohen_f.toFixed(4) : "N/A");
+      setText("powPartialEta", (partial_eta_squared || partialEta || 0).toFixed(3));
       
       // Required sample sizes
       if (required_for_80pct) {
@@ -2520,7 +2573,7 @@
       if (required_for_90pct) {
         setText("powReq90", required_for_90pct);
         // Calculate 95% power requirement (approximate)
-        const req95 = Math.ceil(required_for_90pct * 1.25);
+        const req95 = Math.ceil(required_for_90pct * 1.2);
         setText("powReq95", req95);
       } else {
         setText("powReq90", "N/A");
@@ -2530,18 +2583,18 @@
       // Status message
       let statusMsg, statusType;
       if (observed_power >= 0.80) {
-        statusMsg = `✓ Current sample size (n=${currentN}) provides excellent power (${powerPct}) for detecting this effect.`;
+        statusMsg = `✓ Excellent power (${powerPct}) with n=${currentN}. Effect detected reliably.`;
         statusType = "success";
       } else if (observed_power >= 0.60) {
-        statusMsg = `⚠ Current sample size (n=${currentN}) provides moderate power (${powerPct}). Consider n≥${required_for_80pct || 'N/A'} for 80% power.`;
+        statusMsg = `⚠ Moderate power (${powerPct}) with n=${currentN}. Recommend n≥${required_for_80pct || 'N/A'} for 80% power.`;
         statusType = "warning";
       } else {
-        statusMsg = `⚠ Current sample size (n=${currentN}) provides low power (${powerPct}). You need n≥${required_for_80pct || 'N/A'} for adequate power.`;
+        statusMsg = `⚠ Low power (${powerPct}) with n=${currentN}. Need n≥${required_for_80pct || 'N/A'} for adequate detection.`;
         statusType = "error";
       }
       
-      if (fallback) {
-        statusMsg += " (Using local approximation - cloud function unavailable)";
+      if (fallback || local) {
+        statusMsg += " (Local approximation)";
       }
       
       updatePowerStatus(statusMsg, statusType);
