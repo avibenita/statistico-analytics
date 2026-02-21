@@ -2672,9 +2672,13 @@
       }
       
       try {
-        // Get data from the current analysis
-        const omnibus = window.omnibusData || {};
-        const setup = (lastBundle && lastBundle.setup) || {};
+        // Get data from lastBundle
+        if (!lastBundle || !lastBundle.results || !lastBundle.results.omnibus) {
+          throw new Error('No analysis data available. Please run an analysis first.');
+        }
+        
+        const omnibus = lastBundle.results.omnibus;
+        const setup = lastBundle.setup || {};
         const alpha = 0.05;
         
         // Extract required values from omnibus
@@ -2692,6 +2696,12 @@
             console.log("📊 Calculated n from df for custom power:", n);
           }
         }
+        
+        console.log("🔍 Custom power data check:", { 
+          fStat, df1, df2, partialEtaSq, n, k, 
+          hasOmnibus: !!omnibus,
+          omnibusKeys: Object.keys(omnibus || {})
+        });
         
         // Validate data
         if (!fStat || !df1 || !df2 || !partialEtaSq || isNaN(partialEtaSq) || !n || !k) {
