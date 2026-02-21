@@ -2395,7 +2395,7 @@
     // ===== POWER ANALYSIS FUNCTIONS =====
     
     let powerAnalysisData = null;
-    const CLOUD_FUNCTION_URL = 'PASTE-YOUR-TRIGGER-URL-HERE';  // Replace with your actual URL
+    const DEPENDENT_MODULE_URL = 'PASTE-YOUR-TRIGGER-URL-HERE';  // Replace with your deployed URL
     
     async function calculatePowerAnalysis(omnibus, setup) {
       console.log("🔋 Calculating power analysis...");
@@ -2432,10 +2432,11 @@
       
       // Try cloud function first
       try {
-        const response = await fetch(CLOUD_FUNCTION_URL, {
+        const response = await fetch(DEPENDENT_MODULE_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            operation: 'power',  // ✅ NEW: Specify operation
             mode: 'observed',
             f_statistic: fStat,
             df_between: df1,
