@@ -2407,9 +2407,18 @@
       const df2 = parseMaybeNumber(omnibus.anovaDf2);
       const partialEta = parseMaybeNumber(omnibus.partialEtaSquared);
       const cohenF = parseMaybeNumber(omnibus.cohenF);
-      const n = parseMaybeNumber(omnibus.n);
+      let n = parseMaybeNumber(omnibus.n);
       const k = (setup.selectedColumns || []).length;
       const alpha = 1 - parseMaybeNumber(setup.confidence || 0.95);
+      
+      // Calculate n from degrees of freedom if not provided
+      // df2 = (n-1)(k-1), so n = (df2 / (k-1)) + 1
+      if (!n || isNaN(n)) {
+        if (df1 && df2 && k > 1) {
+          n = Math.round((df2 / df1) + 1);
+          console.log("📊 Calculated n from df:", n);
+        }
+      }
       
       console.log("Parsed values:", { fStat, df1, df2, partialEta, cohenF, n, k, alpha });
       
