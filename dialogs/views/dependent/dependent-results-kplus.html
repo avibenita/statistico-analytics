@@ -2710,15 +2710,24 @@
           omnibusKeys: Object.keys(omnibus || {})
         });
         
-        // Validate data
-        if (!fStat || !df1 || !df2 || !partialEtaSq || isNaN(partialEtaSq) || !n || !k) {
+        // Validate data - relax k requirement
+        if (!fStat || !df1 || !df2 || !partialEtaSq || isNaN(partialEtaSq)) {
+          console.error("❌ Missing required data:", { fStat, df1, df2, partialEtaSq });
           throw new Error('Insufficient data for power analysis');
         }
+        
+        if (!n) {
+          console.error("❌ Could not determine sample size");
+          throw new Error('Cannot determine sample size from data');
+        }
+        
+        // Use k from degrees of freedom if not available
+        const numMeasurements = k || (df1 + 1);
         
         // Convert effect size
         const cohensF = Math.sqrt(partialEtaSq / (1 - partialEtaSq));
         
-        console.log("🔋 Custom power calculation:", { targetPower, cohensF, k, n, df1, df2 });
+        console.log("🔋 Custom power calculation:", { targetPower, cohensF, numMeasurements, n, df1, df2 });
         
         // Call cloud function for required N
         const response = await fetch(DEPENDENT_MODULE_URL, {
@@ -2729,7 +2738,7 @@
             mode: 'sample_size',
             target_power: targetPower,
             effect_size_cohen_f: cohensF,
-            num_measurements: k,
+            num_measurements: numMeasurements,
             alpha: alpha
           })
         });
