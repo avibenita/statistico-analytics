@@ -718,15 +718,6 @@
         <section id="tab-power" class="tab-panel">
           <div class="power-analysis-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <h2 style="margin:0;font-size:1.2em;color:#ff9d5c;"><i class="fa-solid fa-bolt"></i> Power Analysis</h2>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <input type="number" id="targetPowerInput" min="0.5" max="0.99" step="0.05" value="0.80" 
-                     style="width:60px;padding:4px 8px;background:#2a2d38;color:white;border:1px solid #555;border-radius:4px;font-size:13px;"
-                     title="Target power level">
-              <button onclick="refreshPowerAnalysisWithTarget()" class="refresh-power-btn" 
-                      style="padding:4px 10px;background:#ff9d5c;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;">
-                <i class="fa-solid fa-sync" id="refreshIcon"></i> Refresh
-              </button>
-            </div>
           </div>
           
           <div class="stats-container" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -749,9 +740,9 @@
               </div>
             </div>
             
-            <!-- Target Power Scenario Panel -->
+            <!-- Target Power 80% Panel -->
             <div class="stat-panel" style="background:#3a3d4a;padding:10px;border-radius:4px;">
-              <div class="stat-panel-heading" style="font-size:0.9em;margin-bottom:6px;color:#9db4ff;border-bottom:1px solid rgba(157,180,255,0.2);padding-bottom:4px;">Target Power <span id="targetPowerLabel" style="color:#ff9d5c;">80%</span></div>
+              <div class="stat-panel-heading" style="font-size:0.9em;margin-bottom:6px;color:#9db4ff;border-bottom:1px solid rgba(157,180,255,0.2);padding-bottom:4px;">Target Power (80%)</div>
               <div class="stat-panel-body">
                 <div class="stat-field" style="margin-bottom:6px;display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
                   <span class="stat-label" style="color:#a0a0a0;font-size:0.75em;text-transform:uppercase;letter-spacing:0.3px;">Required N</span>
@@ -776,7 +767,7 @@
           
           <!-- Alternative Power Levels -->
           <div class="stat-panel" style="margin-top:8px;background:#3a3d4a;padding:10px;border-radius:4px;">
-            <div class="stat-panel-heading" style="font-size:0.85em;margin-bottom:6px;color:#9db4ff;">Required N for Different Power Levels</div>
+            <div class="stat-panel-heading" style="font-size:0.85em;margin-bottom:6px;color:#9db4ff;">Required N for Common Power Levels</div>
             <div class="stat-panel-body">
               <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
                 <div style="text-align:center;padding:6px;background:rgba(0,0,0,0.2);border-radius:3px;">
@@ -791,6 +782,39 @@
                   <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:2px;">95% Power</div>
                   <div id="powReq95" style="font-size:1.1em;color:#ff9d5c;font-weight:bold;">...</div>
                 </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Manual Power Calculator Card -->
+          <div class="stat-panel" style="margin-top:8px;background:#3a4a3d;padding:12px;border-radius:4px;border:1px solid #5a7a5d;">
+            <div class="stat-panel-heading" style="font-size:0.9em;margin-bottom:8px;color:#9dffb4;display:flex;align-items:center;justify-content:space-between;">
+              <span><i class="fa-solid fa-calculator"></i> Custom Power Calculator</span>
+              <button onclick="calculateCustomPower()" class="refresh-power-btn" 
+                      style="padding:4px 10px;background:#5fad72;color:white;border:none;border-radius:3px;cursor:pointer;font-size:11px;">
+                <i class="fa-solid fa-sync" id="customPowerIcon"></i> Calculate
+              </button>
+            </div>
+            <div class="stat-panel-body">
+              <div style="background:rgba(0,0,0,0.2);padding:8px;border-radius:3px;margin-bottom:8px;">
+                <div style="color:#b5d4bd;font-size:0.8em;margin-bottom:6px;">
+                  <i class="fa-solid fa-info-circle"></i> <strong>Instructions:</strong> Enter your desired power level (0.50 to 0.99) and click Calculate to find the required sample size for that power.
+                </div>
+                <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;">
+                  <div>
+                    <label style="color:#a0a0a0;font-size:0.75em;display:block;margin-bottom:3px;">TARGET POWER LEVEL</label>
+                    <input type="number" id="customPowerInput" min="0.5" max="0.99" step="0.01" value="0.85" 
+                           style="width:100%;padding:6px 10px;background:#2a2d38;color:white;border:1px solid #5a7a5d;border-radius:3px;font-size:14px;font-weight:bold;"
+                           placeholder="0.85">
+                  </div>
+                  <div style="text-align:center;padding-top:18px;">
+                    <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:3px;">REQUIRED N</div>
+                    <div id="customRequiredN" style="font-size:1.8em;color:#7fdb9f;font-weight:bold;min-width:50px;">--</div>
+                  </div>
+                </div>
+              </div>
+              <div id="customPowerStatus" style="padding:6px;background:rgba(0,0,0,0.3);border-radius:3px;color:#b5d4bd;text-align:center;font-size:0.8em;display:none;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Calculating via Google Cloud...
               </div>
             </div>
           </div>
@@ -2636,6 +2660,107 @@
       } else if (type === "error") {
         statusEl.style.background = "#5f2d2d";
         statusEl.style.color = "#db7f7f";
+      }
+    }
+    
+    async function calculateCustomPower() {
+      const customPowerInput = document.getElementById('customPowerInput');
+      const customRequiredN = document.getElementById('customRequiredN');
+      const customPowerStatus = document.getElementById('customPowerStatus');
+      const customPowerIcon = document.getElementById('customPowerIcon');
+      
+      const targetPower = parseFloat(customPowerInput.value);
+      
+      // Validate input
+      if (isNaN(targetPower) || targetPower < 0.5 || targetPower > 0.99) {
+        customRequiredN.textContent = 'Invalid';
+        customRequiredN.style.color = '#ff6b6b';
+        return;
+      }
+      
+      // Show spinner
+      if (customPowerIcon) {
+        customPowerIcon.classList.add('fa-spin');
+      }
+      if (customPowerStatus) {
+        customPowerStatus.style.display = 'block';
+      }
+      
+      try {
+        // Get data from the current analysis
+        const omnibus = window.omnibusData || {};
+        const setup = (lastBundle && lastBundle.setup) || {};
+        const alpha = 0.05;
+        
+        // Extract required values from omnibus
+        const fStat = parseMaybeNumber(omnibus.anovaF);
+        const df1 = parseMaybeNumber(omnibus.anovaDf1);
+        const df2 = parseMaybeNumber(omnibus.anovaDf2);
+        const partialEtaSq = parseMaybeNumber(omnibus.partialEtaSquared);
+        let n = parseMaybeNumber(omnibus.n);
+        const k = (setup.selectedColumns || []).length;
+        
+        // Calculate n from degrees of freedom if missing
+        if (!n || isNaN(n)) {
+          if (df1 && df2 && k > 1) {
+            n = Math.round((df2 / df1) + 1);
+            console.log("📊 Calculated n from df for custom power:", n);
+          }
+        }
+        
+        // Validate data
+        if (!fStat || !df1 || !df2 || !partialEtaSq || isNaN(partialEtaSq) || !n || !k) {
+          throw new Error('Insufficient data for power analysis');
+        }
+        
+        // Convert effect size
+        const cohensF = Math.sqrt(partialEtaSq / (1 - partialEtaSq));
+        
+        console.log("🔋 Custom power calculation:", { targetPower, cohensF, k, n, df1, df2 });
+        
+        // Call cloud function for required N
+        const response = await fetch(DEPENDENT_MODULE_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            operation: 'power',
+            mode: 'sample_size',
+            target_power: targetPower,
+            effect_size_cohen_f: cohensF,
+            num_measurements: k,
+            alpha: alpha
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Cloud function error: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log("✅ Custom power result:", result);
+        
+        if (result.ok && result.results && result.results.required_n) {
+          customRequiredN.textContent = result.results.required_n;
+          customRequiredN.style.color = '#7fdb9f';
+        } else if (result.required_n) {
+          customRequiredN.textContent = result.required_n;
+          customRequiredN.style.color = '#7fdb9f';
+        } else {
+          throw new Error(result.error || 'Failed to calculate required N');
+        }
+        
+      } catch (error) {
+        console.error('❌ Custom power calculation error:', error);
+        customRequiredN.textContent = 'Error';
+        customRequiredN.style.color = '#ff6b6b';
+      } finally {
+        // Hide spinner
+        if (customPowerIcon) {
+          customPowerIcon.classList.remove('fa-spin');
+        }
+        if (customPowerStatus) {
+          customPowerStatus.style.display = 'none';
+        }
       }
     }
     
