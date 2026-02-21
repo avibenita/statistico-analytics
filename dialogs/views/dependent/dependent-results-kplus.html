@@ -180,6 +180,84 @@
 .normality-button:hover{background:linear-gradient(to right,rgb(255,160,160),rgb(255,192,192));transform:translateY(-2px);}
 
 /* ===== RESPONSIVE DESIGN ===== */
+
+/* Very narrow containers (Excel task pane) */
+@media (max-width: 400px) {
+  .wrap { padding: 1px 2px 4px; }
+  .view-container { padding: 4px 6px; }
+  
+  /* Header */
+  .hero-section { padding: 6px 8px; }
+  .hero-title { font-size: 0.8rem; }
+  .hero-action-btn { padding: 4px 6px; font-size: 9px; }
+  
+  /* Tabs */
+  .tab-button { font-size: 8px; height: 26px; padding: 0 2px; }
+  .tab-decimal-select { font-size: 9px; height: 26px; }
+  
+  /* Stats panels - force single column */
+  .stats-container { 
+    grid-template-columns: 1fr !important; 
+    gap: 6px !important; 
+  }
+  
+  /* Panel content */
+  .stat-panel-heading { font-size: 10px; padding: 5px 6px; }
+  .stat-panel-body { padding: 4px 6px; }
+  .stat-field { 
+    grid-template-columns: 1fr; 
+    gap: 3px; 
+    padding: 4px 0;
+  }
+  .stat-label { font-size: 9px; }
+  .stat-value { 
+    min-width: auto; 
+    width: 100%; 
+    font-size: 10px;
+    padding: 4px 6px;
+  }
+  
+  /* Power cards - single column with compact spacing */
+  .view-container > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+  
+  /* Custom power input */
+  #customPowerInput { width: 50px !important; font-size: 11px !important; }
+  
+  /* Tables */
+  .table-container { font-size: 9px; }
+  .analysis-table th, .analysis-table td { 
+    padding: 3px; 
+    font-size: 9px; 
+  }
+  
+  /* Settings */
+  .settings-bar { padding: 4px 6px; }
+  .settings-panel-title { font-size: 9px; }
+  .settings-grid { gap: 3px; }
+  .settings-grid label { font-size: 9px; }
+  .settings-grid select, .settings-grid input { 
+    height: 24px; 
+    font-size: 9px; 
+  }
+  
+  /* Radio buttons */
+  .radio-button-label { 
+    padding: 8px 10px; 
+    min-width: auto;
+  }
+  .radio-text { font-size: 11px; }
+  .radio-text small { font-size: 9px; }
+  
+  /* Sections */
+  .section-note { font-size: 9px; padding: 5px; }
+  
+  /* Status message */
+  #powStatusMessage { font-size: 10px !important; padding: 6px !important; }
+}
+
 @media (max-width: 768px) {
   .wrap { padding: 2px 4px 8px; }
   .card { min-height: auto; }
