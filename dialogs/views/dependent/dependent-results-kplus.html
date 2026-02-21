@@ -11,8 +11,8 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
   <script>
     // AI API Key configuration (Groq)
-    // You can set this via localStorage: localStorage.setItem('GROQ_API_KEY', 'your-key-here')
-    window.AI_API_KEY = localStorage.getItem('GROQ_API_KEY') || '';
+    // You can override via localStorage: localStorage.setItem('GROQ_API_KEY', 'your-key-here')
+    window.AI_API_KEY = localStorage.getItem('GROQ_API_KEY') || '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';
     console.log('🔑 AI API Key set:', window.AI_API_KEY && window.AI_API_KEY !== '' ? 'YES (***' + window.AI_API_KEY.slice(-4) + ')' : 'NO - Key not configured');
   </script>
   <style>
@@ -4055,9 +4055,12 @@
           })
         });
         
+        console.log('🌐 API Response Status:', response.status, response.statusText);
+        
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error?.message || `API error: ${response.status}`);
+          const errorData = await response.json().catch(() => ({ error: { message: `HTTP ${response.status}` } }));
+          console.error('❌ API Error Response:', errorData);
+          throw new Error(errorData.error?.message || `API returned ${response.status}: ${response.statusText}`);
         }
         
         const result = await response.json();
