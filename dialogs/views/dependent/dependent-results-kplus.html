@@ -2735,10 +2735,10 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             operation: 'power',
-            mode: 'sample_size',
+            mode: 'required',
             target_power: targetPower,
-            effect_size_cohen_f: cohensF,
-            num_measurements: numMeasurements,
+            effect_size_f: cohensF,
+            k: numMeasurements,
             alpha: alpha
           })
         });
@@ -2761,12 +2761,16 @@
         // Check different possible response structures
         let requiredN = null;
         
-        if (result.ok && result.results && result.results.required_n) {
+        if (result.ok && result.results && result.results.required_sample_size) {
+          requiredN = result.results.required_sample_size;
+        } else if (result.results && result.results.required_n) {
           requiredN = result.results.required_n;
         } else if (result.results && result.results.required_for_target) {
           requiredN = result.results.required_for_target;
         } else if (result.required_n) {
           requiredN = result.required_n;
+        } else if (result.required_sample_size) {
+          requiredN = result.required_sample_size;
         } else if (result.results && typeof result.results === 'number') {
           requiredN = result.results;
         }
