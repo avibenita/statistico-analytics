@@ -767,10 +767,10 @@
           
           <!-- Required N for Power Levels (4 cards in a row) -->
           <div style="margin-top:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
-            <!-- 80% Power Card -->
+            <!-- 85% Power Card -->
             <div style="background:#3a3d4a;padding:10px;border-radius:4px;text-align:center;">
-              <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:4px;text-transform:uppercase;">80% Power</div>
-              <div id="powReq80" style="font-size:1.6em;color:#ff9d5c;font-weight:bold;">...</div>
+              <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:4px;text-transform:uppercase;">85% Power</div>
+              <div id="powReq85" style="font-size:1.6em;color:#ff9d5c;font-weight:bold;">...</div>
             </div>
             
             <!-- 90% Power Card -->
@@ -2570,7 +2570,7 @@
         setText("powEffectSize", "N/A");
         setText("powSampleSize", "N/A");
         setText("powRequired", "N/A");
-        setText("powReq80", "N/A");
+        setText("powReq85", "N/A");
         setText("powReq90", "N/A");
         setText("powReq95", "N/A");
         setText("powPartialEta", "N/A");
@@ -2586,13 +2586,20 @@
       setText("powAlpha", (alpha || 0.05).toFixed(3));
       setText("powPartialEta", (partial_eta_squared || partialEta || 0).toFixed(3));
       
-      // Required sample sizes
-      if (required_for_80pct) {
-        setText("powRequired", required_for_80pct);
-        setText("powReq80", required_for_80pct);
+      // Required sample sizes - calculate 85% from 80% and 90%
+      if (required_for_80pct && required_for_90pct) {
+        // Interpolate between 80% and 90% to get 85%
+        const req85 = Math.round(required_for_80pct + (required_for_90pct - required_for_80pct) * 0.5);
+        setText("powRequired", req85);
+        setText("powReq85", req85);
+      } else if (required_for_80pct) {
+        // Approximate 85% as ~10% more than 80%
+        const req85 = Math.ceil(required_for_80pct * 1.05);
+        setText("powRequired", req85);
+        setText("powReq85", req85);
       } else {
         setText("powRequired", "N/A");
-        setText("powReq80", "N/A");
+        setText("powReq85", "N/A");
       }
       
       if (required_for_90pct) {
