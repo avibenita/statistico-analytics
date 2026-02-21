@@ -2749,15 +2749,34 @@
         
         const result = await response.json();
         console.log("✅ Custom power result:", result);
+        console.log("✅ Result structure:", {
+          hasOk: 'ok' in result,
+          ok: result.ok,
+          hasResults: 'results' in result,
+          hasRequiredN: 'required_n' in result,
+          resultsKeys: result.results ? Object.keys(result.results) : null,
+          fullResult: JSON.stringify(result)
+        });
+        
+        // Check different possible response structures
+        let requiredN = null;
         
         if (result.ok && result.results && result.results.required_n) {
-          customRequiredN.textContent = result.results.required_n;
-          customRequiredN.style.color = '#7fdb9f';
+          requiredN = result.results.required_n;
+        } else if (result.results && result.results.required_for_target) {
+          requiredN = result.results.required_for_target;
         } else if (result.required_n) {
-          customRequiredN.textContent = result.required_n;
+          requiredN = result.required_n;
+        } else if (result.results && typeof result.results === 'number') {
+          requiredN = result.results;
+        }
+        
+        if (requiredN) {
+          customRequiredN.textContent = requiredN;
           customRequiredN.style.color = '#7fdb9f';
         } else {
-          throw new Error(result.error || 'Failed to calculate required N');
+          console.error("❌ Could not find required_n in response:", result);
+          throw new Error(result.error || 'Failed to calculate required N - unexpected response format');
         }
         
       } catch (error) {
