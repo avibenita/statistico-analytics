@@ -976,6 +976,14 @@
                   <i class="fa-solid fa-trash"></i>
                 </button>
               </div>
+              <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+                <label style="font-size:11px;color:#93c5fd;white-space:nowrap;"><i class="fa-solid fa-robot"></i> Model:</label>
+                <select id="aiModelSelect" onchange="saveModelPreference()" 
+                        style="flex:1;padding:6px 10px;background:#1e293b;color:white;border:1px solid #3b82f6;border-radius:4px;font-size:11px;cursor:pointer;">
+                  <option value="mixtral-8x7b-32768">Mixtral-8x7b (Best quality, ~$0.0004/call)</option>
+                  <option value="gpt-oss-20b">GPT OSS 20B (Faster, 2x cheaper, ~$0.0002/call)</option>
+                </select>
+              </div>
               <div style="margin-top:6px;font-size:10px;color:#93c5fd;">
                 <i class="fa-solid fa-info-circle"></i> Get your free API key at <a href="https://console.groq.com" target="_blank" style="color:#60a5fa;">console.groq.com</a>
               </div>
@@ -3081,6 +3089,9 @@
       }, 1500);
       
       Office.onReady(function(){
+        // Load saved model preference
+        loadModelPreference();
+        
         // Close modal when clicking outside
         document.addEventListener('click', function(event) {
           const modal = document.getElementById('normality-modal');
@@ -3839,6 +3850,22 @@
       console.log('🔑 API key saved');
     }
     
+    function saveModelPreference() {
+      const modelSelect = document.getElementById('aiModelSelect');
+      const selectedModel = modelSelect.value;
+      localStorage.setItem('AI_MODEL_PREFERENCE', selectedModel);
+      console.log('🤖 Model preference saved:', selectedModel);
+    }
+    
+    function loadModelPreference() {
+      const savedModel = localStorage.getItem('AI_MODEL_PREFERENCE') || 'mixtral-8x7b-32768';
+      const modelSelect = document.getElementById('aiModelSelect');
+      if (modelSelect) {
+        modelSelect.value = savedModel;
+      }
+      return savedModel;
+    }
+    
     function clearApiKey() {
       if (confirm('Are you sure you want to clear the API key?')) {
         localStorage.removeItem('GROQ_API_KEY');
@@ -4055,6 +4082,17 @@
           throw new Error('Please configure your Groq API key using the configuration panel above.');
         }
         
+        // Get selected model
+        const selectedModel = document.getElementById('aiModelSelect')?.value || 'mixtral-8x7b-32768';
+        console.log('🤖 Using model:', selectedModel);
+        
+        // Map model identifiers to Groq API model names
+        const modelMapping = {
+          'mixtral-8x7b-32768': 'mixtral-8x7b-32768',
+          'gpt-oss-20b': 'openai/gpt-oss-20b'  // Groq's actual model name format
+        };
+        const apiModelName = modelMapping[selectedModel] || selectedModel;
+        
         // Call Groq API
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
@@ -4063,7 +4101,7 @@
             'Authorization': `Bearer ${window.AI_API_KEY}`
           },
           body: JSON.stringify({
-            model: 'mixtral-8x7b-32768',
+            model: apiModelName,
             messages: [
               {
                 role: 'system',
