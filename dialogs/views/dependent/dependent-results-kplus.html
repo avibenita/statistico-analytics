@@ -564,11 +564,7 @@
                   This reveals patterns of change, individual variability, and potential outliers.
                 </p>
                 <div style="padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
-                  <svg id="profilePlot" width="100%" height="320" style="background:#1a2332;border-radius:4px;"></svg>
-                  <div style="margin-top:10px;display:flex;gap:20px;font-size:11px;color:var(--text-muted);justify-content:center;">
-                    <span><span style="width:24px;height:2px;background:#4fc3f7;display:inline-block;vertical-align:middle;"></span> Individual Subjects (n subjects)</span>
-                    <span><span style="width:24px;height:3px;background:#ff9800;display:inline-block;vertical-align:middle;"></span> Group Mean Trajectory</span>
-                  </div>
+                  <div id="profilePlot" style="width:100%;height:400px;"></div>
                   <div style="margin-top:10px;padding:8px;background:rgba(120,200,255,.08);border-left:3px solid var(--accent-2);border-radius:4px;font-size:11px;">
                     <strong>Interpretation:</strong>
                     <ul style="margin:6px 0 0 0;padding-left:20px;color:var(--text-secondary);">
@@ -3269,7 +3265,179 @@
         g.appendChild(gridLine);
       });
       
-      svg.appendChild(g);
+    // === Profile Plot Function (Highcharts) ===
+    function populateProfilePlot(e, ob) {
+      const container = document.getElementById("profilePlot");
+      if (!container) return;
+      
+      // Get timepoint means and raw data
+      const groupDescriptives = ob.groupDescriptives || [];
+      if (groupDescriptives.length === 0) return;
+      
+      const k = groupDescriptives.length;
+      const means = groupDescriptives.map(g => g.mean);
+      const labels = groupDescriptives.map(g => g.name);
+      
+      // Get individual subject data from lastBundle if available
+      let subjectData = [];
+      if (window.dependentRangeData && lastBundle.setup && lastBundle.setup.selectedColumns) {
+        const headers = window.dependentRangeData[0] || [];
+        const dataRows = window.dependentRangeData.slice(1);
+        const selectedCols = lastBundle.setup.selectedColumns;
+        
+        // Extract complete cases
+        dataRows.forEach(row => {
+          const values = selectedCols.map(col => {
+            const idx = headers.indexOf(col);
+            return idx >= 0 ? parseFloat(row[idx]) : NaN;
+          });
+          if (values.every(v => isFinite(v))) {
+            subjectData.push(values);
+          }
+        });
+      }
+      
+      console.log(`📊 Plotting ${subjectData.length} individual subject trajectories`);
+      
+      // Prepare series data
+      const series = [];
+      
+      // Add individual subject lines
+      subjectData.forEach((subject, idx) => {
+        series.push({
+          name: `Subject ${idx + 1}`,
+          data: subject,
+          type: 'line',
+          color: 'rgba(79, 195, 247, 0.3)',
+          lineWidth: 1,
+          marker: {
+            enabled: false
+          },
+          enableMouseTracking: true,
+          showInLegend: false,
+          states: {
+            hover: {
+              lineWidth: 2,
+              color: 'rgba(79, 195, 247, 0.8)'
+            }
+          }
+        });
+      });
+      
+      // Add group mean line
+      series.push({
+        name: 'Group Mean',
+        data: means,
+        type: 'line',
+        color: '#ff9800',
+        lineWidth: 4,
+        marker: {
+          enabled: true,
+          radius: 6,
+          fillColor: '#ff9800',
+          lineColor: '#1a2332',
+          lineWidth: 2
+        },
+        zIndex: 10,
+        showInLegend: true
+      });
+      
+      // Create Highcharts chart
+      Highcharts.chart('profilePlot', {
+        chart: {
+          backgroundColor: '#1a2332',
+          borderRadius: 4,
+          style: {
+            fontFamily: 'Segoe UI, Tahoma, sans-serif'
+          }
+        },
+        title: {
+          text: null
+        },
+        credits: {
+          enabled: false
+        },
+        xAxis: {
+          categories: labels,
+          labels: {
+            style: {
+              color: '#b0b0b0',
+              fontSize: '11px',
+              fontWeight: '600'
+            }
+          },
+          gridLineColor: '#2d3748',
+          gridLineWidth: 1,
+          lineColor: '#4a5568',
+          tickColor: '#4a5568'
+        },
+        yAxis: {
+          title: {
+            text: 'Value',
+            style: {
+              color: '#b0b0b0',
+              fontSize: '12px',
+              fontWeight: '700'
+            }
+          },
+          labels: {
+            style: {
+              color: '#b0b0b0',
+              fontSize: '11px'
+            }
+          },
+          gridLineColor: '#2d3748',
+          gridLineWidth: 1
+        },
+        tooltip: {
+          shared: false,
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          borderColor: '#4fc3f7',
+          borderRadius: 8,
+          style: {
+            color: '#fff',
+            fontSize: '12px'
+          },
+          formatter: function() {
+            const isGroupMean = this.series.name === 'Group Mean';
+            return `<b>${this.series.name}</b><br/>
+                    <b>${this.x}:</b> ${this.y.toFixed(2)}${isGroupMean ? '<br/><span style="color:#ff9800">●</span> Group average' : ''}`;
+          }
+        },
+        legend: {
+          enabled: true,
+          align: 'center',
+          verticalAlign: 'bottom',
+          itemStyle: {
+            color: '#b0b0b0',
+            fontSize: '11px',
+            fontWeight: '600'
+          },
+          itemHoverStyle: {
+            color: '#fff'
+          },
+          symbolRadius: 0,
+          symbolHeight: 3,
+          symbolWidth: 24,
+          margin: 15
+        },
+        plotOptions: {
+          line: {
+            animation: {
+              duration: 800
+            }
+          },
+          series: {
+            lineWidth: 1,
+            states: {
+              inactive: {
+                opacity: 0.15
+              }
+            }
+          }
+        },
+        series: series
+      });
     }
     
     // === Correlation Matrix Function ===
