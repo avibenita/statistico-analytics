@@ -765,56 +765,41 @@
             Calculating power analysis...
           </div>
           
-          <!-- Alternative Power Levels -->
-          <div class="stat-panel" style="margin-top:8px;background:#3a3d4a;padding:10px;border-radius:4px;">
-            <div class="stat-panel-heading" style="font-size:0.85em;margin-bottom:6px;color:#9db4ff;">Required N for Common Power Levels</div>
-            <div class="stat-panel-body">
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-                <div style="text-align:center;padding:6px;background:rgba(0,0,0,0.2);border-radius:3px;">
-                  <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:2px;">80% Power</div>
-                  <div id="powReq80" style="font-size:1.1em;color:#ff9d5c;font-weight:bold;">...</div>
-                </div>
-                <div style="text-align:center;padding:6px;background:rgba(0,0,0,0.2);border-radius:3px;">
-                  <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:2px;">90% Power</div>
-                  <div id="powReq90" style="font-size:1.1em;color:#ff9d5c;font-weight:bold;">...</div>
-                </div>
-                <div style="text-align:center;padding:6px;background:rgba(0,0,0,0.2);border-radius:3px;">
-                  <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:2px;">95% Power</div>
-                  <div id="powReq95" style="font-size:1.1em;color:#ff9d5c;font-weight:bold;">...</div>
-                </div>
-              </div>
+          <!-- Required N for Power Levels (4 cards in a row) -->
+          <div style="margin-top:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+            <!-- 80% Power Card -->
+            <div style="background:#3a3d4a;padding:10px;border-radius:4px;text-align:center;">
+              <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:4px;text-transform:uppercase;">80% Power</div>
+              <div id="powReq80" style="font-size:1.6em;color:#ff9d5c;font-weight:bold;">...</div>
             </div>
-          </div>
-          
-          <!-- Manual Power Calculator Card -->
-          <div class="stat-panel" style="margin-top:8px;background:#3a4a3d;padding:12px;border-radius:4px;border:1px solid #5a7a5d;">
-            <div class="stat-panel-heading" style="font-size:0.9em;margin-bottom:8px;color:#9dffb4;display:flex;align-items:center;justify-content:space-between;">
-              <span><i class="fa-solid fa-calculator"></i> Custom Power Calculator</span>
-              <button onclick="calculateCustomPower()" class="refresh-power-btn" 
-                      style="padding:4px 10px;background:#5fad72;color:white;border:none;border-radius:3px;cursor:pointer;font-size:11px;">
-                <i class="fa-solid fa-sync" id="customPowerIcon"></i> Calculate
-              </button>
+            
+            <!-- 90% Power Card -->
+            <div style="background:#3a3d4a;padding:10px;border-radius:4px;text-align:center;">
+              <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:4px;text-transform:uppercase;">90% Power</div>
+              <div id="powReq90" style="font-size:1.6em;color:#ff9d5c;font-weight:bold;">...</div>
             </div>
-            <div class="stat-panel-body">
-              <div style="background:rgba(0,0,0,0.2);padding:8px;border-radius:3px;margin-bottom:8px;">
-                <div style="color:#b5d4bd;font-size:0.8em;margin-bottom:6px;">
-                  <i class="fa-solid fa-info-circle"></i> <strong>Instructions:</strong> Enter your desired power level (0.50 to 0.99) and click Calculate to find the required sample size for that power.
-                </div>
-                <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;">
-                  <div>
-                    <label style="color:#a0a0a0;font-size:0.75em;display:block;margin-bottom:3px;">TARGET POWER LEVEL</label>
-                    <input type="number" id="customPowerInput" min="0.5" max="0.99" step="0.01" value="0.85" 
-                           style="width:100%;padding:6px 10px;background:#2a2d38;color:white;border:1px solid #5a7a5d;border-radius:3px;font-size:14px;font-weight:bold;"
-                           placeholder="0.85">
-                  </div>
-                  <div style="text-align:center;padding-top:18px;">
-                    <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:3px;">REQUIRED N</div>
-                    <div id="customRequiredN" style="font-size:1.8em;color:#7fdb9f;font-weight:bold;min-width:50px;">--</div>
-                  </div>
-                </div>
+            
+            <!-- 95% Power Card -->
+            <div style="background:#3a3d4a;padding:10px;border-radius:4px;text-align:center;">
+              <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:4px;text-transform:uppercase;">95% Power</div>
+              <div id="powReq95" style="font-size:1.6em;color:#ff9d5c;font-weight:bold;">...</div>
+            </div>
+            
+            <!-- Custom Power Calculator Card -->
+            <div style="background:#3a4a3d;padding:10px;border-radius:4px;border:1px solid #5a7a5d;text-align:center;">
+              <div style="color:#9dffb4;font-size:0.75em;margin-bottom:4px;text-transform:uppercase;">Custom Power...</div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:4px;">
+                <input type="number" id="customPowerInput" min="0.5" max="0.99" step="0.01" value="0.85" 
+                       style="width:65px;padding:4px 6px;background:#2a2d38;color:white;border:1px solid #5a7a5d;border-radius:3px;font-size:13px;font-weight:bold;text-align:center;"
+                       placeholder="0.85">
+                <button onclick="calculateCustomPower()" 
+                        style="padding:4px 8px;background:#5fad72;color:white;border:none;border-radius:3px;cursor:pointer;font-size:11px;">
+                  <i class="fa-solid fa-sync" id="customPowerIcon"></i>
+                </button>
               </div>
-              <div id="customPowerStatus" style="padding:6px;background:rgba(0,0,0,0.3);border-radius:3px;color:#b5d4bd;text-align:center;font-size:0.8em;display:none;">
-                <i class="fa-solid fa-spinner fa-spin"></i> Calculating via Google Cloud...
+              <div id="customRequiredN" style="font-size:1.6em;color:#7fdb9f;font-weight:bold;">--</div>
+              <div id="customPowerStatus" style="margin-top:4px;color:#b5d4bd;font-size:0.7em;display:none;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Calculating...
               </div>
             </div>
           </div>
