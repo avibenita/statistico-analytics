@@ -4028,38 +4028,50 @@
       };
       
       // Post-hoc with detailed rows
-      const pairwiseData = results.pairwise || [];
+      // Check multiple possible locations for pairwise data
+      const pairwiseData = results.pairwise || results.pairwiseComparisons || 
+                          lastBundle.pairwise || lastBundle.posthoc || [];
+      
+      console.log('🔍 Post-hoc data check:', {
+        'results.pairwise': results.pairwise,
+        'pairwiseData.length': pairwiseData.length,
+        'sample': pairwiseData[0]
+      });
+      
       const posthocData = {
         enabled: pairwiseData.length > 0,
         family: "paired",
         method: "paired_t_tests",
-        p_adjust: pairwiseData[0]?.adjustment || "Holm",
+        p_adjust: pairwiseData[0]?.adjustment || pairwiseData[0]?.correctionMethod || "Holm",
         rows: pairwiseData.slice(0, 6).map(pw => ({
-          comparison: `${pw.group1} vs ${pw.group2}`,
+          comparison: `${pw.group1 || pw.groupA || pw.name || 'A'} vs ${pw.group2 || pw.groupB || pw.name2 || 'B'}`,
           estimate: { 
             type: "mean_difference", 
-            value: pw.meanDiff 
+            value: pw.meanDiff || pw.diff || pw.estimate || 0
           },
           ci95: { 
-            low: pw.ciLow, 
-            high: pw.ciHigh 
+            low: pw.ciLow || pw.ci_lower || pw.lower || 0, 
+            high: pw.ciHigh || pw.ci_upper || pw.upper || 0
           },
           statistic: { 
             type: "t", 
-            df: pw.df, 
-            value: pw.tStat 
+            df: pw.df || 0, 
+            value: pw.tStat || pw.t || pw.statistic || 0
           },
-          raw_p: pw.pRaw,
-          adj_p: pw.p,
+          raw_p: pw.pRaw || pw.p_raw || pw.pValue || 0,
+          adj_p: pw.p || pw.p_adj || pw.pAdjusted || 0,
           effect_size: { 
             name: "dz", 
-            value: pw.cohenDz 
+            value: pw.cohenDz || pw.dz || pw.effectSize || 0
           },
-          significant: pw.p < 0.05
+          significant: (pw.p || pw.p_adj || pw.pAdjusted || 1) < 0.05
         })),
         display_rules: {
           nonparametric_note: "If posthoc method is Wilcoxon/Conover/Nemenyi, do not report mean-difference CI unless Hodges–Lehmann CI is provided."
-        }
+        },
+        note: pairwiseData.length === 0 ? 
+          "Post-hoc comparisons can be performed using the Pairwise tab in the results dialog." : 
+          `${pairwiseData.filter(p => (p.p || p.p_adj || 1) < 0.05).length} of ${pairwiseData.length} comparisons significant after ${pairwiseData[0]?.adjustment || 'Holm'} correction.`
       };
       
       // Power with cautions
@@ -4178,17 +4190,18 @@ STRUCTURE (integrate naturally, don't use section headers):
 1. Design & Sample: Briefly describe the repeated measures design, sample size, and timepoints
 2. Assumptions: State sphericity test result and any corrections applied
 3. Omnibus Test: Report primary RM-ANOVA with F-statistic, df, p-value, and nonparametric confirmation
-4. Effect Size: Interpret the practical significance using partial η² or Cohen's f
-5. Post-hoc: Mention pairwise comparisons and correction method (if available)
-6. Power: State observed power and sample size recommendation for future studies
+4. Effect Size: Interpret the practical significance using partial η² or Cohen's f with benchmarks
+5. Post-hoc: If posthoc.enabled is true and rows exist, report specific comparisons. If false, mention "pairwise comparisons could be conducted" as suggestion for future analysis
+6. Power: State observed power and sample size recommendation for future studies with cautions
 7. Conclusion: One clear sentence summarizing the finding
 
 STATISTICAL REPORTING:
-- Use proper formatting: F(df1, df2) = value, p = .xxx
+- Use proper formatting: F(df1, df2) = value, p = .xxx or p < .001
 - For p < .001, write "p < .001" not "p = .0001"
 - Report exact df values
-- Include effect sizes with interpretation (small/medium/large)
+- Include effect sizes with interpretation using provided benchmarks (e.g., "partial η² = 0.86, a large effect exceeding the .14 benchmark")
 - Be precise with numbers but explain their meaning
+- If post-hoc rows are empty, do NOT say tests were performed - instead say they "were not conducted" or "could be explored"
 
 TONE: Professional, precise, but accessible to researchers in applied fields.`
               },
