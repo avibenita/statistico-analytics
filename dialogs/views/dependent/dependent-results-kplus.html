@@ -340,16 +340,16 @@
   background: rgba(0,0,0,0.75);
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 10px;
 }
 
 .scatter-modal-content {
   background: var(--surface-1);
   border: 2px solid var(--border);
-  border-radius: 12px;
-  width: 90%;
-  max-width: 800px;
-  max-height: 85vh;
+  border-radius: 8px;
+  width: 95%;
+  max-width: 900px;
+  max-height: 92vh;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0,0,0,0.7);
   display: flex;
@@ -357,24 +357,26 @@
 }
 
 .scatter-modal-header {
-  padding: 12px 16px;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border);
   color: var(--accent-1);
   font-weight: 700;
-  font-size: 15px;
+  font-size: 14px;
+  flex-shrink: 0;
 }
 
 .scatter-modal-body {
-  padding: 14px 16px;
+  padding: 8px 12px;
   overflow: auto;
+  flex: 1;
 }
 
 .scatter-close {
   cursor: pointer;
-  font-size: 24px;
+  font-size: 20px;
   color: var(--text-secondary);
   line-height: 1;
   transition: color 0.2s;
@@ -386,13 +388,13 @@
 
 .scatter-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
-  padding: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px;
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .scatter-stat {
@@ -400,25 +402,120 @@
 }
 
 .scatter-stat-value {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--accent-2);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .scatter-stat-label {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .scatter-chart {
   width: 100%;
-  height: 400px;
+  height: 280px;
   background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.scatter-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.scatter-panel {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.scatter-panel-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-2);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.scatter-panel-title i {
+  font-size: 10px;
+}
+
+.scatter-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.scatter-btn {
+  padding: 5px 6px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.scatter-btn:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: var(--accent-2);
+}
+
+.scatter-btn.active {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: #000;
+}
+
+.scatter-axis-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.fit-equation {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 4px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 3px;
+  min-height: 20px;
+}
+
+/* Responsive adjustments for scatter modal */
+@media (max-width: 600px) {
+  .scatter-modal-content {
+    width: 98%;
+    max-height: 95vh;
+  }
+  
+  .scatter-chart {
+    height: 220px;
+  }
+  
+  .scatter-controls {
+    grid-template-columns: 1fr;
+  }
+  
+  .scatter-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
   </style>
@@ -3846,6 +3943,17 @@
     }
     
     // === Scatter Plot Modal Functions ===
+    let scatterState = {
+      rawPoints: [],
+      xVar: '',
+      yVar: '',
+      xTransform: 'none',
+      yTransform: 'none',
+      fitType: 'none',
+      activeTransformAxis: 'x',
+      chart: null
+    };
+    
     function openCorrScatterPlot(timeIdx1, timeIdx2, rValue) {
       if (!window.dependentRangeData || !lastBundle?.setup?.selectedColumns) {
         console.warn("No data available for scatter plot");
@@ -3887,22 +3995,21 @@
       const titleEl = document.getElementById('scatterTitle');
       titleEl.textContent = `Scatter Plot: ${col1Name} vs ${col2Name}`;
       
-      // Calculate statistics
-      const n = points.length;
-      const xs = points.map(p => p[0]);
-      const ys = points.map(p => p[1]);
-      const r = calculatePearsonCorr(xs, ys);
-      const r2 = r * r;
-      const p = calculateCorrPValue(r, n);
+      // Initialize scatter state
+      scatterState.rawPoints = points;
+      scatterState.xVar = col1Name;
+      scatterState.yVar = col2Name;
+      scatterState.xTransform = 'none';
+      scatterState.yTransform = 'none';
+      scatterState.fitType = 'none';
+      scatterState.activeTransformAxis = 'x';
+      scatterState.chart = null;
       
-      // Update stat values
-      document.getElementById('scatterN').textContent = n;
-      document.getElementById('scatterR').textContent = isFinite(r) ? r.toFixed(4) : '--';
-      document.getElementById('scatterP').textContent = isFinite(p) ? (p < 0.0001 ? '<0.0001' : p.toExponential(3)) : '--';
-      document.getElementById('scatterR2').textContent = isFinite(r2) ? r2.toFixed(4) : '--';
+      // Reset controls
+      resetScatterControls();
       
-      // Render scatter chart with Highcharts
-      renderScatterChart(points, col1Name, col2Name, r);
+      // Calculate and display statistics and chart
+      refreshScatterPlot();
       
       // Show modal
       modal.style.display = 'flex';
@@ -3913,6 +4020,68 @@
       const modal = document.getElementById('corrScatterModal');
       modal.style.display = 'none';
       modal.setAttribute('aria-hidden', 'true');
+      if (scatterState.chart) {
+        scatterState.chart.destroy();
+        scatterState.chart = null;
+      }
+    }
+    
+    function resetScatterControls() {
+      document.getElementById('fit-none').classList.add('active');
+      ['fit-linear','fit-polynomial','fit-exponential','fit-logarithmic','fit-power'].forEach(id => {
+        document.getElementById(id).classList.remove('active');
+      });
+      setScatterTransformAxis('x');
+      ['transform-none','transform-ln','transform-inverse','transform-sqrt','transform-square'].forEach(id => {
+        document.getElementById(id).classList.remove('active');
+      });
+      document.getElementById('transform-none').classList.add('active');
+    }
+    
+    function refreshScatterPlot() {
+      const points = getTransformedScatterPoints();
+      renderScatterChart(points);
+      updateScatterStats(points);
+      applyScatterFit(scatterState.fitType, points);
+    }
+    
+    function getTransformedScatterPoints() {
+      return scatterState.rawPoints
+        .map(([x, y]) => [
+          transformScatterValue(x, scatterState.xTransform),
+          transformScatterValue(y, scatterState.yTransform)
+        ])
+        .filter(([x, y]) => x !== null && y !== null && isFinite(x) && isFinite(y));
+    }
+    
+    function transformScatterValue(value, type) {
+      if (!isFinite(value)) return null;
+      switch (type) {
+        case 'ln':
+          return value > 0 ? Math.log(value) : null;
+        case 'inverse':
+          return value !== 0 ? 1 / value : null;
+        case 'sqrt':
+          return value >= 0 ? Math.sqrt(value) : null;
+        case 'square':
+          return value * value;
+        default:
+          return value;
+      }
+    }
+    
+    function updateScatterStats(points) {
+      const n = points.length;
+      const xs = points.map(p => p[0]);
+      const ys = points.map(p => p[1]);
+      const r = calculatePearsonCorr(xs, ys);
+      const r2 = r * r;
+      const p = calculateCorrPValue(r, n);
+      
+      document.getElementById('scatterN').textContent = n;
+      document.getElementById('scatterR').textContent = isFinite(r) ? r.toFixed(4) : '--';
+      document.getElementById('scatterP').textContent = isFinite(p) ? (p < 0.0001 ? '<0.0001' : p.toExponential(3)) : '--';
+      document.getElementById('scatterR2').textContent = isFinite(r2) ? r2.toFixed(4) : '--';
     }
     
     function calculatePearsonCorr(x, y) {
@@ -3937,91 +4106,344 @@
       return approximateTTestP(t, n - 2);
     }
     
-    function renderScatterChart(points, xLabel, yLabel, r) {
+    function renderScatterChart(points) {
       const chartContainer = document.getElementById('scatterChart');
       if (!chartContainer) return;
       
-      // Calculate linear regression for trend line
-      const xs = points.map(p => p[0]);
-      const ys = points.map(p => p[1]);
-      const meanX = xs.reduce((a, b) => a + b, 0) / xs.length;
-      const meanY = ys.reduce((a, b) => a + b, 0) / ys.length;
+      // Group overlapping points
+      const pointGroups = new Map();
+      points.forEach(([x, y]) => {
+        const key = `${x.toFixed(6)},${y.toFixed(6)}`;
+        pointGroups.set(key, (pointGroups.get(key) || 0) + 1);
+      });
       
-      let num = 0, den = 0;
-      for (let i = 0; i < xs.length; i++) {
-        num += (xs[i] - meanX) * (ys[i] - meanY);
-        den += (xs[i] - meanX) * (xs[i] - meanX);
+      // Create data with marker sizes based on count
+      const chartData = Array.from(pointGroups.entries()).map(([key, count]) => {
+        const [x, y] = key.split(',').map(parseFloat);
+        return {
+          x: x,
+          y: y,
+          marker: {
+            radius: Math.min(4 + count * 1.5, 12),
+            fillColor: count > 1 ? 'rgba(255,165,120,0.8)' : 'rgba(120,200,255,0.7)',
+            lineColor: '#fff',
+            lineWidth: 1
+          },
+          count: count
+        };
+      });
+      
+      const xLabel = scatterState.xTransform !== 'none' 
+        ? `${scatterState.xTransform}(${scatterState.xVar})` 
+        : scatterState.xVar;
+      const yLabel = scatterState.yTransform !== 'none' 
+        ? `${scatterState.yTransform}(${scatterState.yVar})` 
+        : scatterState.yVar;
+      
+      if (scatterState.chart) {
+        scatterState.chart.destroy();
       }
-      const slope = den !== 0 ? num / den : 0;
-      const intercept = meanY - slope * meanX;
       
-      const minX = Math.min(...xs);
-      const maxX = Math.max(...xs);
-      const trendLine = [
-        [minX, slope * minX + intercept],
-        [maxX, slope * maxX + intercept]
-      ];
-      
-      Highcharts.chart(chartContainer, {
+      scatterState.chart = Highcharts.chart(chartContainer, {
         chart: {
           type: 'scatter',
           backgroundColor: 'transparent',
           zoomType: 'xy',
-          height: 400
+          height: 280
         },
         title: { text: '' },
         xAxis: {
-          title: { text: xLabel, style: { color: '#a0a0a0' } },
+          title: { text: xLabel, style: { color: '#a0a0a0', fontSize: '11px' } },
           gridLineColor: 'rgba(255,255,255,0.08)',
-          labels: { style: { color: '#e0e0e0' } },
+          labels: { style: { color: '#e0e0e0', fontSize: '10px' } },
           lineColor: '#555',
           tickColor: '#555'
         },
         yAxis: {
-          title: { text: yLabel, style: { color: '#a0a0a0' } },
+          title: { text: yLabel, style: { color: '#a0a0a0', fontSize: '11px' } },
           gridLineColor: 'rgba(255,255,255,0.08)',
-          labels: { style: { color: '#e0e0e0' } },
+          labels: { style: { color: '#e0e0e0', fontSize: '10px' } },
           lineColor: '#555',
           tickColor: '#555'
         },
         legend: {
-          enabled: true,
-          itemStyle: { color: '#e0e0e0' },
-          itemHoverStyle: { color: '#ffffff' }
+          enabled: false
         },
         credits: { enabled: false },
         tooltip: {
-          shared: false,
           backgroundColor: 'rgba(30,30,30,0.9)',
           borderColor: '#555',
-          style: { color: '#ffffff' },
+          style: { color: '#ffffff', fontSize: '11px' },
           formatter: function() {
-            return `<b>${xLabel}:</b> ${this.x.toFixed(2)}<br/><b>${yLabel}:</b> ${this.y.toFixed(2)}`;
+            let html = `<b>${xLabel}:</b> ${this.x.toFixed(3)}<br/><b>${yLabel}:</b> ${this.y.toFixed(3)}`;
+            if (this.point.count > 1) {
+              html += `<br/><b>Overlapping points:</b> ${this.point.count}`;
+            }
+            return html;
           }
         },
-        series: [
-          {
-            name: 'Observations',
-            data: points,
-            color: 'rgba(120,200,255,0.7)',
+        plotOptions: {
+          scatter: {
             marker: {
-              radius: 5,
-              fillColor: 'rgba(120,200,255,0.7)',
-              lineColor: '#fff',
-              lineWidth: 1
+              states: {
+                hover: {
+                  lineWidthPlus: 2
+                }
+              }
             }
-          },
-          {
-            name: `Trend Line (r=${r.toFixed(3)})`,
-            type: 'line',
-            data: trendLine,
-            color: 'rgba(255,165,120,0.9)',
-            lineWidth: 2,
-            marker: { enabled: false },
-            enableMouseTracking: false
           }
-        ]
+        },
+        series: [{
+          name: 'Observations',
+          data: chartData,
+          color: 'rgba(120,200,255,0.7)'
+        }]
       });
+    }
+    
+    function setScatterTransformAxis(axis) {
+      scatterState.activeTransformAxis = axis;
+      document.getElementById('transform-x-tab').classList.toggle('active', axis === 'x');
+      document.getElementById('transform-y-tab').classList.toggle('active', axis === 'y');
+      updateScatterTransformButtons();
+    }
+    
+    function applyScatterTransformation(type) {
+      if (scatterState.activeTransformAxis === 'x') {
+        scatterState.xTransform = type;
+      } else {
+        scatterState.yTransform = type;
+      }
+      updateScatterTransformButtons();
+      refreshScatterPlot();
+    }
+    
+    function updateScatterTransformButtons() {
+      const activeType = scatterState.activeTransformAxis === 'x'
+        ? scatterState.xTransform
+        : scatterState.yTransform;
+      ['transform-none','transform-ln','transform-inverse','transform-sqrt','transform-square'].forEach(id => {
+        document.getElementById(id).classList.remove('active');
+      });
+      document.getElementById(`transform-${activeType}`).classList.add('active');
+    }
+    
+    function applyScatterFit(type, pointsOverride = null) {
+      scatterState.fitType = type;
+      ['fit-none','fit-linear','fit-polynomial','fit-exponential','fit-logarithmic','fit-power'].forEach(id => {
+        document.getElementById(id).classList.remove('active');
+      });
+      document.getElementById(`fit-${type}`).classList.add('active');
+      
+      if (!scatterState.chart) return;
+      
+      const points = pointsOverride || getTransformedScatterPoints();
+      const fitResult = buildScatterFitSeries(points, type);
+      
+      // Remove existing fit series
+      const existing = scatterState.chart.series.find(s => s.name === 'Fit');
+      if (existing) {
+        existing.remove(false);
+      }
+      
+      // Add new fit series
+      if (fitResult && fitResult.series) {
+        scatterState.chart.addSeries(fitResult.series, false);
+      }
+      
+      updateFitEquation(type, fitResult ? fitResult.equation : null);
+      scatterState.chart.redraw();
+    }
+    
+    function buildScatterFitSeries(points, type) {
+      if (type === 'none' || points.length < 2) {
+        return null;
+      }
+      
+      let model = null;
+      let equation = '';
+      
+      try {
+        if (type === 'linear') {
+          model = simpleLinearRegression(points);
+          equation = `y = ${model.slope.toFixed(3)}x + ${model.intercept.toFixed(3)}`;
+        } else if (type === 'polynomial') {
+          model = polynomialRegression(points, 2);
+          if (model) {
+            const [a, b, c] = model.coefficients;
+            equation = `y = ${a.toFixed(3)}x² + ${b.toFixed(3)}x + ${c.toFixed(3)}`;
+          }
+        } else if (type === 'exponential') {
+          model = exponentialRegression(points);
+          if (model) {
+            equation = `y = ${model.a.toFixed(3)} × e^(${model.b.toFixed(3)}x)`;
+          }
+        } else if (type === 'logarithmic') {
+          model = logarithmicRegression(points);
+          if (model) {
+            equation = `y = ${model.a.toFixed(3)} + ${model.b.toFixed(3)} × ln(x)`;
+          }
+        } else if (type === 'power') {
+          model = powerRegression(points);
+          if (model) {
+            equation = `y = ${model.a.toFixed(3)} × x^${model.b.toFixed(3)}`;
+          }
+        }
+      } catch (e) {
+        console.warn('Fit calculation failed:', e);
+        return null;
+      }
+      
+      if (!model || !model.predict) return null;
+      
+      // Generate fit line
+      const xs = points.map(p => p[0]);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const steps = 50;
+      const line = [];
+      
+      for (let i = 0; i <= steps; i++) {
+        const x = minX + (maxX - minX) * (i / steps);
+        const y = model.predict(x);
+        if (isFinite(y)) {
+          line.push([x, y]);
+        }
+      }
+      
+      return {
+        series: {
+          name: 'Fit',
+          type: 'line',
+          data: line,
+          color: 'rgba(255,165,120,0.9)',
+          marker: { enabled: false },
+          lineWidth: 2,
+          enableMouseTracking: false
+        },
+        equation: equation
+      };
+    }
+    
+    function simpleLinearRegression(points) {
+      const n = points.length;
+      const xs = points.map(p => p[0]);
+      const ys = points.map(p => p[1]);
+      const meanX = xs.reduce((a, b) => a + b, 0) / n;
+      const meanY = ys.reduce((a, b) => a + b, 0) / n;
+      
+      let num = 0, den = 0;
+      for (let i = 0; i < n; i++) {
+        num += (xs[i] - meanX) * (ys[i] - meanY);
+        den += (xs[i] - meanX) * (xs[i] - meanX);
+      }
+      
+      const slope = den !== 0 ? num / den : 0;
+      const intercept = meanY - slope * meanX;
+      
+      return {
+        slope,
+        intercept,
+        predict: (x) => slope * x + intercept
+      };
+    }
+    
+    function polynomialRegression(points, order) {
+      // Simple quadratic regression for order = 2
+      if (order !== 2 || points.length < 3) return null;
+      
+      const n = points.length;
+      const xs = points.map(p => p[0]);
+      const ys = points.map(p => p[1]);
+      
+      // Build design matrix for quadratic fit
+      let sumX = 0, sumX2 = 0, sumX3 = 0, sumX4 = 0;
+      let sumY = 0, sumXY = 0, sumX2Y = 0;
+      
+      for (let i = 0; i < n; i++) {
+        const x = xs[i];
+        const y = ys[i];
+        sumX += x;
+        sumX2 += x * x;
+        sumX3 += x * x * x;
+        sumX4 += x * x * x * x;
+        sumY += y;
+        sumXY += x * y;
+        sumX2Y += x * x * y;
+      }
+      
+      // Solve using Cramer's rule (simplified for 3x3)
+      const det = n * (sumX2 * sumX4 - sumX3 * sumX3) - sumX * (sumX * sumX4 - sumX2 * sumX3) + sumX2 * (sumX * sumX3 - sumX2 * sumX2);
+      
+      if (Math.abs(det) < 1e-10) return null;
+      
+      const a = ((sumY * (sumX2 * sumX4 - sumX3 * sumX3) - sumXY * (sumX * sumX4 - sumX2 * sumX3) + sumX2Y * (sumX * sumX3 - sumX2 * sumX2)) / det);
+      const b = ((n * (sumXY * sumX4 - sumX2Y * sumX3) - sumY * (sumX * sumX4 - sumX2 * sumX3) + sumX2Y * (sumX * sumX2 - n * sumX3)) / det);
+      const c = ((n * (sumX2 * sumX2Y - sumX3 * sumXY) - sumX * (sumX * sumX2Y - sumX2 * sumXY) + sumY * (sumX * sumX3 - sumX2 * sumX2)) / det);
+      
+      return {
+        coefficients: [a, b, c],
+        predict: (x) => a * x * x + b * x + c
+      };
+    }
+    
+    function exponentialRegression(points) {
+      // Transform to linear: ln(y) = ln(a) + b*x
+      const validPoints = points.filter(p => p[1] > 0);
+      if (validPoints.length < 2) return null;
+      
+      const lnPoints = validPoints.map(([x, y]) => [x, Math.log(y)]);
+      const linear = simpleLinearRegression(lnPoints);
+      
+      const a = Math.exp(linear.intercept);
+      const b = linear.slope;
+      
+      return {
+        a, b,
+        predict: (x) => a * Math.exp(b * x)
+      };
+    }
+    
+    function logarithmicRegression(points) {
+      // y = a + b*ln(x)
+      const validPoints = points.filter(p => p[0] > 0);
+      if (validPoints.length < 2) return null;
+      
+      const lnPoints = validPoints.map(([x, y]) => [Math.log(x), y]);
+      const linear = simpleLinearRegression(lnPoints);
+      
+      return {
+        a: linear.intercept,
+        b: linear.slope,
+        predict: (x) => x > 0 ? linear.intercept + linear.slope * Math.log(x) : NaN
+      };
+    }
+    
+    function powerRegression(points) {
+      // y = a * x^b => ln(y) = ln(a) + b*ln(x)
+      const validPoints = points.filter(p => p[0] > 0 && p[1] > 0);
+      if (validPoints.length < 2) return null;
+      
+      const lnPoints = validPoints.map(([x, y]) => [Math.log(x), Math.log(y)]);
+      const linear = simpleLinearRegression(lnPoints);
+      
+      const a = Math.exp(linear.intercept);
+      const b = linear.slope;
+      
+      return {
+        a, b,
+        predict: (x) => x > 0 ? a * Math.pow(x, b) : NaN
+      };
+    }
+    
+    function updateFitEquation(type, equation) {
+      const el = document.getElementById('fitEquation');
+      if (!el) return;
+      if (type === 'none' || !equation) {
+        el.textContent = 'Equation: —';
+      } else {
+        el.textContent = `Equation: ${equation}`;
+      }
     }
     
     function switchCorrType(type) {
@@ -4796,11 +5218,11 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
         <div class="scatter-stats">
           <div class="scatter-stat">
             <div class="scatter-stat-value" id="scatterN">--</div>
-            <div class="scatter-stat-label">Observations</div>
+            <div class="scatter-stat-label">N</div>
           </div>
           <div class="scatter-stat">
             <div class="scatter-stat-value" id="scatterR">--</div>
-            <div class="scatter-stat-label">Correlation (R)</div>
+            <div class="scatter-stat-label">R</div>
           </div>
           <div class="scatter-stat">
             <div class="scatter-stat-value" id="scatterP">--</div>
@@ -4812,6 +5234,34 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
           </div>
         </div>
         <div id="scatterChart" class="scatter-chart"></div>
+        <div class="scatter-controls">
+          <div class="scatter-panel">
+            <div class="scatter-panel-title"><i class="fa-solid fa-chart-line"></i> Curve Fitting</div>
+            <div class="scatter-buttons">
+              <button class="scatter-btn active" id="fit-none" onclick="applyScatterFit('none')">None</button>
+              <button class="scatter-btn" id="fit-linear" onclick="applyScatterFit('linear')">Linear</button>
+              <button class="scatter-btn" id="fit-polynomial" onclick="applyScatterFit('polynomial')">Poly</button>
+              <button class="scatter-btn" id="fit-exponential" onclick="applyScatterFit('exponential')">Exp</button>
+              <button class="scatter-btn" id="fit-logarithmic" onclick="applyScatterFit('logarithmic')">Log</button>
+              <button class="scatter-btn" id="fit-power" onclick="applyScatterFit('power')">Power</button>
+            </div>
+            <div class="fit-equation" id="fitEquation">Equation: —</div>
+          </div>
+          <div class="scatter-panel">
+            <div class="scatter-panel-title"><i class="fa-solid fa-arrows-alt"></i> Axis Transform</div>
+            <div class="scatter-axis-toggle">
+              <button class="scatter-btn active" id="transform-x-tab" onclick="setScatterTransformAxis('x')">X</button>
+              <button class="scatter-btn" id="transform-y-tab" onclick="setScatterTransformAxis('y')">Y</button>
+            </div>
+            <div class="scatter-buttons">
+              <button class="scatter-btn active" id="transform-none" onclick="applyScatterTransformation('none')">None</button>
+              <button class="scatter-btn" id="transform-ln" onclick="applyScatterTransformation('ln')">ln</button>
+              <button class="scatter-btn" id="transform-inverse" onclick="applyScatterTransformation('inverse')">1/x</button>
+              <button class="scatter-btn" id="transform-sqrt" onclick="applyScatterTransformation('sqrt')">√</button>
+              <button class="scatter-btn" id="transform-square" onclick="applyScatterTransformation('square')">x²</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
