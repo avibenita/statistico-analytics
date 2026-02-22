@@ -5571,6 +5571,13 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
     
     function toggleMissingRows() {
       populateListwiseDataTable();
+      
+      // Update copy button label
+      const showMissing = document.getElementById('showMissingToggle')?.checked || false;
+      const copyLabel = document.getElementById('copyListwiseLabel');
+      if (copyLabel) {
+        copyLabel.textContent = showMissing ? 'Copy All Data' : 'Copy Complete Cases';
+      }
     }
     
     function copyListwiseData() {
@@ -5582,16 +5589,28 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
       const dataRows = window.dependentRangeData.slice(1);
       const selectedCols = lastBundle.setup.selectedColumns;
       const colIndices = selectedCols.map(col => headers.indexOf(col));
+      const showMissing = document.getElementById('showMissingToggle')?.checked || false;
       
       // Create tab-separated values
       let text = 'Row\t' + selectedCols.join('\t') + '\n';
+      let rowCount = 0;
       
       dataRows.forEach((row, idx) => {
         const values = colIndices.map(colIdx => {
           const val = parseFloat(row[colIdx]);
           return isFinite(val) ? val.toFixed(4) : '';
         });
+        
+        // Check if row has all values
+        const hasAll = values.every(v => v !== '');
+        
+        // Skip missing rows if toggle is off
+        if (!hasAll && !showMissing) {
+          return;
+        }
+        
         text += `${idx + 1}\t${values.join('\t')}\n`;
+        rowCount++;
       });
       
       // Copy to clipboard
@@ -5599,8 +5618,9 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
         const btn = event.currentTarget;
         const originalHTML = btn.innerHTML;
         
-        // Show success feedback
-        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        // Show success feedback with row count
+        const label = showMissing ? 'all rows' : 'complete cases';
+        btn.innerHTML = `<i class="fa-solid fa-check"></i> Copied ${rowCount} ${label}!`;
         btn.style.background = 'rgba(76,175,80,0.3)';
         btn.style.borderColor = '#4caf50';
         btn.style.color = '#4caf50';
@@ -5610,7 +5630,7 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
           btn.style.background = '';
           btn.style.borderColor = '';
           btn.style.color = '';
-        }, 1500);
+        }, 2000);
       }).catch(err => {
         console.error('Failed to copy:', err);
         alert('Failed to copy data to clipboard');
@@ -5728,8 +5748,8 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
             <div class="scatter-stat-label">Excluded (Missing)</div>
           </div>
           <div class="scatter-stat" style="justify-self: end; display: flex; flex-direction: column; gap: 4px;">
-            <button class="scatter-copy-btn" onclick="copyListwiseData()" style="margin: 0; padding: 6px 12px; font-size: 10px;">
-              <i class="fa-solid fa-copy"></i> Copy All Data
+            <button class="scatter-copy-btn" id="copyListwiseBtn" onclick="copyListwiseData()" style="margin: 0; padding: 6px 12px; font-size: 10px;">
+              <i class="fa-solid fa-copy"></i> <span id="copyListwiseLabel">Copy Complete Cases</span>
             </button>
             <label style="display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-secondary); cursor: pointer; user-select: none;">
               <input type="checkbox" id="showMissingToggle" onchange="toggleMissingRows()" 
