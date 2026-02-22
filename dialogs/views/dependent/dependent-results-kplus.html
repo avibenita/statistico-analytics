@@ -3167,17 +3167,24 @@
           name: `Subject ${idx + 1}`,
           data: subject,
           type: 'line',
-          color: 'rgba(79, 195, 247, 0.3)',
-          lineWidth: 1,
+          color: 'rgba(79, 195, 247, 0.5)',  // Increased from 0.3 to 0.5 for better visibility
+          lineWidth: 1.5,  // Increased from 1 to 1.5
           marker: {
-            enabled: false
+            enabled: true,  // Changed from false to true
+            radius: 2,  // Small markers to show individual data points
+            fillColor: 'rgba(79, 195, 247, 0.6)',
+            lineColor: 'rgba(79, 195, 247, 0.8)',
+            lineWidth: 1
           },
           enableMouseTracking: true,
           showInLegend: false,
           states: {
             hover: {
-              lineWidth: 2,
-              color: 'rgba(79, 195, 247, 0.8)'
+              lineWidth: 3,  // Increased from 2 to 3
+              color: 'rgba(79, 195, 247, 1)',  // Full opacity on hover
+              marker: {
+                radius: 4  // Larger marker on hover
+              }
             }
           }
         });
