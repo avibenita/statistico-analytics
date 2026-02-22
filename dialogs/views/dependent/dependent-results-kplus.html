@@ -556,8 +556,13 @@
               
               <!-- Profile Plot (Spaghetti + Mean Line) -->
               <div style="margin-bottom:24px;">
-                <div style="font-weight:700;margin-bottom:8px;color:var(--accent-1);font-size:14px;">
-                  <i class="fa-solid fa-chart-line"></i> Profile Plot
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <div style="font-weight:700;color:var(--accent-1);font-size:14px;">
+                    <i class="fa-solid fa-chart-line"></i> Profile Plot
+                  </div>
+                  <button onclick="toggleSDChart()" style="padding:4px 10px;background:#5c6bc0;color:white;border:none;border-radius:4px;cursor:pointer;font-size:10px;font-weight:600;">
+                    <i class="fa-solid fa-chart-bar"></i> <span id="sdChartBtnText">Show SD Chart</span>
+                  </button>
                 </div>
                 <p style="margin:0 0 12px 0;color:var(--text-muted);font-size:11px;line-height:1.5;">
                   <strong>Purpose:</strong> Visualize individual subject trajectories (spaghetti lines) and the group mean trajectory. 
@@ -565,6 +570,10 @@
                 </p>
                 <div style="padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
                   <div id="profilePlot" style="width:100%;height:400px;"></div>
+                  <div style="margin-top:8px;padding:6px 10px;background:rgba(255,193,7,0.12);border-left:3px solid #ffc107;border-radius:4px;font-size:10px;color:#ffd54f;">
+                    <i class="fa-solid fa-info-circle"></i> <strong>Note:</strong> Individual lines may overlap when subjects have similar values at a timepoint. 
+                    Hover over any line to highlight individual trajectories. Lines spread out at timepoints with higher variability.
+                  </div>
                   <div style="margin-top:10px;padding:8px;background:rgba(120,200,255,.08);border-left:3px solid var(--accent-2);border-radius:4px;font-size:11px;">
                     <strong>Interpretation:</strong>
                     <ul style="margin:6px 0 0 0;padding-left:20px;color:var(--text-secondary);">
@@ -573,6 +582,18 @@
                       <li><strong>Steep slopes:</strong> Large changes across timepoints</li>
                       <li><strong>Flat lines:</strong> Minimal change over time</li>
                     </ul>
+                  </div>
+                </div>
+                
+                <!-- SD Chart (Hidden by default) -->
+                <div id="sdChartContainer" style="display:none;margin-top:12px;padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
+                  <div style="font-weight:700;margin-bottom:8px;color:#9c27b0;font-size:13px;">
+                    <i class="fa-solid fa-chart-column"></i> Standard Deviation by Timepoint
+                  </div>
+                  <div id="sdPlot" style="width:100%;height:300px;"></div>
+                  <div style="margin-top:8px;padding:6px 10px;background:rgba(156,39,176,0.12);border-left:3px solid #9c27b0;border-radius:4px;font-size:10px;color:#ce93d8;">
+                    <i class="fa-solid fa-info-circle"></i> <strong>Purpose:</strong> Shows the spread (variability) of values at each timepoint. 
+                    Higher SD indicates more variability among subjects.
                   </div>
                 </div>
               </div>
@@ -3123,6 +3144,135 @@
         }
       });
     });
+    
+    // === Toggle SD Chart ===
+    function toggleSDChart() {
+      const container = document.getElementById('sdChartContainer');
+      const btnText = document.getElementById('sdChartBtnText');
+      if (container.style.display === 'none') {
+        container.style.display = 'block';
+        btnText.textContent = 'Hide SD Chart';
+        // Generate chart if not already done
+        if (!window.sdChartGenerated && lastBundle) {
+          populateSDChart(lastBundle.results?.omnibus);
+          window.sdChartGenerated = true;
+        }
+      } else {
+        container.style.display = 'none';
+        btnText.textContent = 'Show SD Chart';
+      }
+    }
+    
+    // === SD Chart Function (Highcharts) ===
+    function populateSDChart(omnibus) {
+      const container = document.getElementById('sdPlot');
+      if (!container || !omnibus) return;
+      
+      const groupDescriptives = omnibus.groupDescriptives || [];
+      if (groupDescriptives.length === 0) return;
+      
+      const labels = groupDescriptives.map(g => g.name);
+      const sdData = groupDescriptives.map(g => g.sd);
+      const meanData = groupDescriptives.map(g => g.mean);
+      
+      // Calculate coefficient of variation (CV) for each timepoint
+      const cvData = groupDescriptives.map(g => (g.sd / g.mean * 100).toFixed(1));
+      
+      Highcharts.chart(container, {
+        chart: {
+          type: 'column',
+          backgroundColor: '#1a2332',
+          height: 300,
+          style: {
+            fontFamily: 'Segoe UI, Tahoma, sans-serif',
+            color: '#e0e0e0'
+          }
+        },
+        title: {
+          text: null
+        },
+        credits: {
+          enabled: false
+        },
+        xAxis: {
+          categories: labels,
+          labels: {
+            style: {
+              color: '#e0e0e0',
+              fontSize: '11px',
+              fontWeight: '600'
+            }
+          },
+          lineColor: '#555',
+          tickColor: '#555'
+        },
+        yAxis: {
+          title: {
+            text: 'Standard Deviation',
+            style: { color: '#a0a0a0' }
+          },
+          labels: {
+            style: { color: '#e0e0e0' }
+          },
+          gridLineColor: '#333',
+          min: 0
+        },
+        legend: {
+          enabled: false
+        },
+        tooltip: {
+          shared: false,
+          backgroundColor: 'rgba(30,30,30,0.9)',
+          borderColor: '#555',
+          style: {
+            color: '#ffffff'
+          },
+          formatter: function() {
+            const idx = this.point.index;
+            return `<b>${this.x}</b><br/>` +
+                   `SD: <b>${this.y.toFixed(2)}</b><br/>` +
+                   `Mean: <b>${meanData[idx].toFixed(2)}</b><br/>` +
+                   `CV: <b>${cvData[idx]}%</b>`;
+          }
+        },
+        plotOptions: {
+          column: {
+            animation: {
+              duration: 600
+            },
+            dataLabels: {
+              enabled: true,
+              format: '{y:.2f}',
+              style: {
+                color: '#fff',
+                fontSize: '10px',
+                fontWeight: '600',
+                textOutline: 'none'
+              }
+            },
+            color: {
+              linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+              stops: [
+                [0, '#9c27b0'],
+                [1, '#6a1b9a']
+              ]
+            },
+            borderRadius: 3
+          }
+        },
+        series: [{
+          name: 'Standard Deviation',
+          data: sdData,
+          color: {
+            linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+            stops: [
+              [0, '#9c27b0'],
+              [1, '#6a1b9a']
+            ]
+          }
+        }]
+      });
+    }
     
     // === Profile Plot Function (Highcharts) ===
     function populateProfilePlot(e, ob) {
