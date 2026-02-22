@@ -3991,15 +3991,26 @@
       const powerData = {
         type: "prospective_and_observed",
         observed: {
-          reported: power.observedPower != null,
-          power: power.observedPower,
+          reported: powerAnalysisData?.observed_power != null,
+          power: powerAnalysisData?.observed_power,
           alpha: 0.05
         },
         planning: {
-          target_power: 0.80,
-          required_n: power.requiredN80,
+          target_power_80: powerAnalysisData?.required_n_80,
+          target_power_85: powerAnalysisData?.required_n_85,
+          target_power_90: powerAnalysisData?.required_n_90,
           effect_size_basis: "cohens_f"
         }
+      };
+      
+      // Post-hoc (if available)
+      const posthocData = {
+        enabled: results.pairwise && results.pairwise.length > 0,
+        method: "Pairwise comparisons",
+        p_adjust: results.pairwise?.[0]?.adjustment || "Bonferroni",
+        summary: results.pairwise && results.pairwise.length > 0 ? 
+          `${results.pairwise.filter(p => p.p < 0.05).length} out of ${results.pairwise.length} pairwise comparisons were significant after correction.` :
+          "Post-hoc tests pending or not available."
       };
       
       return {
@@ -4013,7 +4024,7 @@
             alpha: 0.05,
             decimals: globalDecimalPrecision === "auto" ? 2 : parseInt(globalDecimalPrecision, 10),
             tone: "professional",
-            length_words_max: 320
+            length_words_max: 350
           }
         },
         design,
@@ -4026,37 +4037,13 @@
           omnibus_conclusion: {
             significant: primaryTest.statistic.p < 0.05,
             plain_language: primaryTest.statistic.p < 0.05 ? 
-              "At least one timepoint differs." : 
-              "No significant differences detected."
+              "At least one timepoint differs significantly." : 
+              "No significant differences were detected among timepoints."
           }
         },
+        posthoc: posthocData,
         effect_sizes: effectSizes,
-        power: powerData,
-        narrative_instructions: {
-          goal: "Produce one cohesive narrative that integrates design, assumptions, omnibus result, post-hoc, effect sizes, and power.",
-          must_include: [
-            "Design summary (within-subjects, number of timepoints, N, missing handling)",
-            "Assumption summary (sphericity + whether correction applied)",
-            "Primary omnibus result with statistic + p-value",
-            "Post-hoc highlight(s) with correction method",
-            "Effect size meaning in plain language",
-            "Power: observed (with caution) + planning recommendation"
-          ],
-          must_not: [
-            "Do not claim causality.",
-            "Do not invent statistics that are missing.",
-            "Do not describe nonparametric estimates/CI unless provided."
-          ],
-          ordering: [
-            "Design",
-            "Assumptions",
-            "Omnibus",
-            "Post-hoc",
-            "Effect sizes",
-            "Power",
-            "One-sentence conclusion"
-          ]
-        }
+        power: powerData
       };
     }
     
@@ -4105,15 +4092,40 @@
             messages: [
               {
                 role: 'system',
-                content: 'You are a statistical expert who writes clear, professional APA-style interpretations of repeated measures analyses. Generate a cohesive narrative that integrates all components of the analysis. Be precise with statistics but write in accessible language.'
+                content: `You are a statistical consultant writing professional APA-style interpretations for academic publications.
+
+FORMATTING RULES:
+- Write in clear paragraphs, NOT bullet points or sections with ** markers
+- Use proper paragraph breaks (double line breaks) between major sections
+- Integrate all components into a flowing narrative
+- DO NOT use markdown formatting (no **, no headers, no bullets)
+- Write as a single cohesive text suitable for a Results section
+
+STRUCTURE (integrate naturally, don't use section headers):
+1. Design & Sample: Briefly describe the repeated measures design, sample size, and timepoints
+2. Assumptions: State sphericity test result and any corrections applied
+3. Omnibus Test: Report primary RM-ANOVA with F-statistic, df, p-value, and nonparametric confirmation
+4. Effect Size: Interpret the practical significance using partial η² or Cohen's f
+5. Post-hoc: Mention pairwise comparisons and correction method (if available)
+6. Power: State observed power and sample size recommendation for future studies
+7. Conclusion: One clear sentence summarizing the finding
+
+STATISTICAL REPORTING:
+- Use proper formatting: F(df1, df2) = value, p = .xxx
+- For p < .001, write "p < .001" not "p = .0001"
+- Report exact df values
+- Include effect sizes with interpretation (small/medium/large)
+- Be precise with numbers but explain their meaning
+
+TONE: Professional, precise, but accessible to researchers in applied fields.`
               },
               {
                 role: 'user',
-                content: `Generate a comprehensive APA-style interpretation for this repeated measures analysis. Follow the narrative instructions in the data package:\n\n${JSON.stringify(dataPackage, null, 2)}`
+                content: `Generate a comprehensive APA-style interpretation for this repeated measures analysis. Write it as a flowing narrative suitable for a Results section in an academic paper. Do not use markdown formatting or section headers - integrate everything naturally:\n\n${JSON.stringify(dataPackage, null, 2)}`
               }
             ],
-            temperature: 0.7,
-            max_tokens: 800
+            temperature: 0.6,
+            max_tokens: 1000
           })
         });
         
@@ -4126,18 +4138,25 @@
         }
         
         const result = await response.json();
-        const interpretation = result.choices[0]?.message?.content || 'No interpretation generated';
+        let interpretation = result.choices[0]?.message?.content || 'No interpretation generated';
+        
+        // Clean up any remaining markdown artifacts
+        interpretation = interpretation
+          .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove bold markers
+          .replace(/^\s*#+\s+/gm, '')          // Remove headers
+          .replace(/^\s*[-*]\s+/gm, '')        // Remove bullet points
+          .trim();
         
         // Display the interpretation
         content.innerHTML = `
-          <div style="background:#1e1b4b;padding:15px;border-radius:6px;border-left:4px solid #7c3aed;">
-            <div style="font-size:12px;color:#a78bfa;margin-bottom:10px;font-weight:600;">
-              <i class="fa-solid fa-sparkles"></i> AI-Generated Interpretation
+          <div style="background:#1e1b4b;padding:20px;border-radius:6px;border-left:4px solid #7c3aed;">
+            <div style="font-size:12px;color:#a78bfa;margin-bottom:12px;font-weight:600;display:flex;align-items:center;gap:6px;">
+              <i class="fa-solid fa-sparkles"></i> AI-Generated Interpretation (${selectedModel === 'gpt-oss-20b' ? 'GPT OSS 20B' : 'Mixtral-8x7b'})
             </div>
-            <div style="line-height:1.7;color:#e5e7eb;white-space:pre-wrap;">${interpretation}</div>
+            <div style="line-height:1.8;color:#e5e7eb;white-space:pre-wrap;font-size:13.5px;">${interpretation}</div>
           </div>
-          <div style="margin-top:10px;padding:8px;background:rgba(124,58,237,0.1);border-radius:4px;font-size:11px;color:#a78bfa;">
-            <i class="fa-solid fa-info-circle"></i> This interpretation was generated using AI and should be reviewed by a qualified researcher before publication.
+          <div style="margin-top:12px;padding:10px 12px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.3);border-radius:4px;font-size:11px;color:#c4b5fd;line-height:1.5;">
+            <i class="fa-solid fa-info-circle"></i> This interpretation was generated using AI (${selectedModel === 'gpt-oss-20b' ? 'GPT OSS 20B' : 'Mixtral-8x7b'}) and should be reviewed by a qualified researcher before publication. Verify all statistical values against your raw results.
           </div>
         `;
         
