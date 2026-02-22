@@ -663,6 +663,9 @@
         <div class="hero-content">
           <div class="hero-title"><span>Repeated Measures Module (3+ Timepoints)</span></div>
           <div class="hero-controls">
+            <button class="hero-action-btn" onclick="openListwiseDataModal()" title="View complete listwise data for all timepoints">
+              <i class="fa-solid fa-table"></i> View Data
+            </button>
             <button class="hero-action-btn" onclick="saveCurrentModel()" title="Save model configuration to Excel workbook">
               <i class="fa-solid fa-floppy-disk"></i> Model
             </button>
@@ -5471,6 +5474,130 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
       }
     }
     
+    // === Complete Listwise Data Modal Functions ===
+    function openListwiseDataModal() {
+      if (!window.dependentRangeData || !lastBundle?.setup?.selectedColumns) {
+        alert("No data available. Please run the analysis first.");
+        return;
+      }
+      
+      const modal = document.getElementById('listwiseDataModal');
+      populateListwiseDataTable();
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden', 'false');
+    }
+    
+    function closeListwiseDataModal() {
+      const modal = document.getElementById('listwiseDataModal');
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    
+    function populateListwiseDataTable() {
+      const headers = window.dependentRangeData[0] || [];
+      const dataRows = window.dependentRangeData.slice(1);
+      const selectedCols = lastBundle.setup.selectedColumns;
+      
+      // Build table header
+      const thead = document.getElementById('listwiseTableHeader');
+      thead.innerHTML = '<th>#</th>';
+      selectedCols.forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col;
+        thead.appendChild(th);
+      });
+      
+      // Get column indices
+      const colIndices = selectedCols.map(col => headers.indexOf(col));
+      
+      // Build table body
+      const tbody = document.getElementById('listwiseTableBody');
+      tbody.innerHTML = '';
+      
+      let completeCount = 0;
+      let missingCount = 0;
+      
+      dataRows.forEach((row, idx) => {
+        const values = colIndices.map(colIdx => parseFloat(row[colIdx]));
+        const hasAll = values.every(v => isFinite(v));
+        
+        if (hasAll) {
+          completeCount++;
+        } else {
+          missingCount++;
+        }
+        
+        const tr = document.createElement('tr');
+        if (!hasAll) {
+          tr.style.opacity = '0.4';
+          tr.style.textDecoration = 'line-through';
+        }
+        
+        // Row number
+        const tdNum = document.createElement('td');
+        tdNum.textContent = idx + 1;
+        tr.appendChild(tdNum);
+        
+        // Data values
+        values.forEach(val => {
+          const td = document.createElement('td');
+          td.textContent = isFinite(val) ? val.toFixed(4) : '—';
+          tr.appendChild(td);
+        });
+        
+        tbody.appendChild(tr);
+      });
+      
+      // Update stats
+      document.getElementById('listwiseN').textContent = completeCount;
+      document.getElementById('listwiseVars').textContent = selectedCols.length;
+      document.getElementById('listwiseMissing').textContent = missingCount;
+    }
+    
+    function copyListwiseData() {
+      if (!window.dependentRangeData || !lastBundle?.setup?.selectedColumns) {
+        return;
+      }
+      
+      const headers = window.dependentRangeData[0] || [];
+      const dataRows = window.dependentRangeData.slice(1);
+      const selectedCols = lastBundle.setup.selectedColumns;
+      const colIndices = selectedCols.map(col => headers.indexOf(col));
+      
+      // Create tab-separated values
+      let text = 'Row\t' + selectedCols.join('\t') + '\n';
+      
+      dataRows.forEach((row, idx) => {
+        const values = colIndices.map(colIdx => {
+          const val = parseFloat(row[colIdx]);
+          return isFinite(val) ? val.toFixed(4) : '';
+        });
+        text += `${idx + 1}\t${values.join('\t')}\n`;
+      });
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.currentTarget;
+        const originalHTML = btn.innerHTML;
+        
+        // Show success feedback
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        btn.style.background = 'rgba(76,175,80,0.3)';
+        btn.style.borderColor = '#4caf50';
+        btn.style.color = '#4caf50';
+        
+        setTimeout(() => {
+          btn.innerHTML = originalHTML;
+          btn.style.background = '';
+          btn.style.borderColor = '';
+          btn.style.color = '';
+        }, 1500);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy data to clipboard');
+      });
+    }
+    
   </script>
   
   <!-- Scatter Plot Modal -->
@@ -5555,6 +5682,48 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
               </table>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Listwise Data Modal -->
+  <div id="listwiseDataModal" class="scatter-modal" role="dialog" aria-hidden="true">
+    <div class="scatter-modal-content" style="max-width: 95%; width: 1200px;">
+      <div class="scatter-modal-header">
+        <span><i class="fa-solid fa-table"></i> Listwise Data - All Timepoints</span>
+        <span class="scatter-close" onclick="closeListwiseDataModal()">&times;</span>
+      </div>
+      <div class="scatter-modal-body">
+        <div class="scatter-stats" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+          <div class="scatter-stat">
+            <div class="scatter-stat-value" id="listwiseN">--</div>
+            <div class="scatter-stat-label">Complete Cases</div>
+          </div>
+          <div class="scatter-stat">
+            <div class="scatter-stat-value" id="listwiseVars">--</div>
+            <div class="scatter-stat-label">Timepoints</div>
+          </div>
+          <div class="scatter-stat">
+            <div class="scatter-stat-value" id="listwiseMissing">--</div>
+            <div class="scatter-stat-label">Excluded (Missing)</div>
+          </div>
+          <div class="scatter-stat" style="justify-self: end;">
+            <button class="scatter-copy-btn" onclick="copyListwiseData()" style="margin: 0; padding: 6px 12px; font-size: 10px;">
+              <i class="fa-solid fa-copy"></i> Copy All Data
+            </button>
+          </div>
+        </div>
+        <div class="scatter-data-table-container" style="max-height: 60vh;">
+          <table id="listwiseDataTable" class="scatter-data-table">
+            <thead>
+              <tr id="listwiseTableHeader">
+                <th>#</th>
+              </tr>
+            </thead>
+            <tbody id="listwiseTableBody">
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
