@@ -328,6 +328,99 @@
   }
 }
 
+/* ===== SCATTER PLOT MODAL ===== */
+.scatter-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.75);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.scatter-modal-content {
+  background: var(--surface-1);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 85vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+  display: flex;
+  flex-direction: column;
+}
+
+.scatter-modal-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  color: var(--accent-1);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.scatter-modal-body {
+  padding: 14px 16px;
+  overflow: auto;
+}
+
+.scatter-close {
+  cursor: pointer;
+  font-size: 24px;
+  color: var(--text-secondary);
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.scatter-close:hover {
+  color: var(--accent-1);
+}
+
+.scatter-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.scatter-stat {
+  text-align: center;
+}
+
+.scatter-stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent-2);
+  margin-bottom: 4px;
+}
+
+.scatter-stat-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scatter-chart {
+  width: 100%;
+  height: 400px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
   </style>
 </head>
 <body>
@@ -3530,17 +3623,17 @@
       // Get sample size from first correlation or omnibus
       const sampleSize = lastBundle?.results?.omnibus?.N || correlations[0]?.n || 0;
       
-      // Fill diagonal with 1.0
+      // Fill diagonal with 1.0 (marked as diagonal)
       for (let i = 0; i < n; i++) {
-        corrGrid[i][i] = {r: 1.0, p: 0, n: sampleSize};
+        corrGrid[i][i] = {r: 1.0, p: 0, n: sampleSize, isDiagonal: true};
       }
       
       // Fill from correlations array
       correlations.forEach(corr => {
         const i = corr.time1 || 0;
         const j = corr.time2 || 0;
-        corrGrid[i][j] = {r: corr.r, p: corr.p || 0, n: sampleSize};
-        corrGrid[j][i] = {r: corr.r, p: corr.p || 0, n: sampleSize}; // Symmetric
+        corrGrid[i][j] = {r: corr.r, p: corr.p || 0, n: sampleSize, isDiagonal: false};
+        corrGrid[j][i] = {r: corr.r, p: corr.p || 0, n: sampleSize, isDiagonal: false}; // Symmetric
       });
       
       // Render Heatmap
@@ -3561,21 +3654,32 @@
           timepoints.forEach((_, j) => {
             const cell = corrGrid[i][j];
             if (cell) {
+              const isDiag = cell.isDiagonal;
               const absR = Math.abs(cell.r);
-              const intensity = absR * 255;
-              const bgColor = cell.r >= 0 
-                ? `rgb(${255-intensity}, ${200 + intensity*0.2}, ${255-intensity*0.7})` // Blue for positive
-                : `rgb(${200 + intensity*0.2}, ${255-intensity*0.8}, ${255-intensity})`;  // Red for negative
               
-              const textColor = absR > 0.5 ? '#fff' : '#263238';
-              const showPVal = document.getElementById('showCorrPValue')?.checked !== false;
-              const showN = document.getElementById('showCorrN')?.checked !== false;
-              
-              html += `<td style="padding:8px;border:1px solid rgba(255,255,255,.1);background:${bgColor};color:${textColor};text-align:center;font-weight:700;cursor:help;" title="r = ${cell.r.toFixed(3)}, p = ${cell.p.toFixed(4)}, n = ${cell.n}">`;
-              html += `<div style="font-size:13px;">${cell.r.toFixed(3)}</div>`;
-              if (showPVal) html += `<div style="font-size:9px;opacity:0.8;">p = ${cell.p < 0.001 ? '<0.001' : cell.p.toFixed(3)}</div>`;
-              if (showN) html += `<div style="font-size:9px;opacity:0.7;">N = ${cell.n}</div>`;
-              html += '</td>';
+              // Diagonal gets special styling
+              if (isDiag) {
+                html += `<td style="padding:8px;border:1px solid rgba(255,255,255,.15);background:#2a3a4a;color:#8899aa;text-align:center;font-weight:600;font-style:italic;">`;
+                html += `<div style="font-size:13px;">1.000</div>`;
+                html += '</td>';
+              } else {
+                const intensity = absR * 255;
+                const bgColor = cell.r >= 0 
+                  ? `rgb(${255-intensity}, ${200 + intensity*0.2}, ${255-intensity*0.7})` // Blue for positive
+                  : `rgb(${200 + intensity*0.2}, ${255-intensity*0.8}, ${255-intensity})`;  // Red for negative
+                
+                const textColor = absR > 0.5 ? '#fff' : '#263238';
+                const showPVal = document.getElementById('showCorrPValue')?.checked !== false;
+                const showN = document.getElementById('showCorrN')?.checked !== false;
+                
+                html += `<td style="padding:8px;border:1px solid rgba(255,255,255,.1);background:${bgColor};color:${textColor};text-align:center;font-weight:700;cursor:pointer;" 
+                  onclick="openCorrScatterPlot(${i}, ${j}, ${cell.r})" 
+                  title="r = ${cell.r.toFixed(3)}, p = ${cell.p.toFixed(4)}, n = ${cell.n}. Click to view scatter plot.">`;
+                html += `<div style="font-size:13px;">${cell.r.toFixed(3)}</div>`;
+                if (showPVal) html += `<div style="font-size:9px;opacity:0.8;">p = ${cell.p < 0.001 ? '<0.001' : cell.p.toFixed(3)}</div>`;
+                if (showN) html += `<div style="font-size:9px;opacity:0.7;">N = ${cell.n}</div>`;
+                html += '</td>';
+              }
             } else {
               html += '<td style="padding:8px;border:1px solid rgba(255,255,255,.1);background:#333;"></td>';
             }
@@ -3625,38 +3729,57 @@
             const td = document.createElement('td');
             const cell = corrGrid[i][j];
             if (cell) {
-              // Create container div for multi-line content
-              const container = document.createElement('div');
+              const isDiag = cell.isDiagonal;
               
-              // R value (always shown)
-              const rDiv = document.createElement('div');
-              rDiv.textContent = cell.r.toFixed(3);
-              rDiv.style.fontWeight = '700';
-              rDiv.style.fontSize = '13px';
-              rDiv.style.color = cell.r > 0.7 ? '#4caf50' : cell.r > 0.4 ? '#ff9800' : cell.r < -0.3 ? '#f44336' : 'inherit';
-              container.appendChild(rDiv);
-              
-              // P-value (conditional)
-              if (showPVal) {
-                const pDiv = document.createElement('div');
-                pDiv.textContent = `p = ${cell.p < 0.001 ? '<0.001' : cell.p.toFixed(3)}`;
-                pDiv.style.fontSize = '9px';
-                pDiv.style.opacity = '0.7';
-                pDiv.style.marginTop = '2px';
-                container.appendChild(pDiv);
+              // Diagonal cells get special styling
+              if (isDiag) {
+                td.style.background = '#2a3a4a';
+                td.style.color = '#8899aa';
+                td.style.fontWeight = '600';
+                td.style.fontStyle = 'italic';
+                const rDiv = document.createElement('div');
+                rDiv.textContent = '1.000';
+                rDiv.style.fontSize = '13px';
+                td.appendChild(rDiv);
+              } else {
+                // Non-diagonal cells are clickable
+                td.style.cursor = 'pointer';
+                td.setAttribute('title', `r = ${cell.r.toFixed(3)}, p = ${cell.p.toFixed(4)}, n = ${cell.n}. Click to view scatter plot.`);
+                td.onclick = () => openCorrScatterPlot(i, j, cell.r);
+                
+                // Create container div for multi-line content
+                const container = document.createElement('div');
+                
+                // R value (always shown)
+                const rDiv = document.createElement('div');
+                rDiv.textContent = cell.r.toFixed(3);
+                rDiv.style.fontWeight = '700';
+                rDiv.style.fontSize = '13px';
+                rDiv.style.color = cell.r > 0.7 ? '#4caf50' : cell.r > 0.4 ? '#ff9800' : cell.r < -0.3 ? '#f44336' : 'inherit';
+                container.appendChild(rDiv);
+                
+                // P-value (conditional)
+                if (showPVal) {
+                  const pDiv = document.createElement('div');
+                  pDiv.textContent = `p = ${cell.p < 0.001 ? '<0.001' : cell.p.toFixed(3)}`;
+                  pDiv.style.fontSize = '9px';
+                  pDiv.style.opacity = '0.7';
+                  pDiv.style.marginTop = '2px';
+                  container.appendChild(pDiv);
+                }
+                
+                // N value (conditional) - skip for diagonal
+                if (showN) {
+                  const nDiv = document.createElement('div');
+                  nDiv.textContent = `N = ${cell.n}`;
+                  nDiv.style.fontSize = '9px';
+                  nDiv.style.opacity = '0.6';
+                  nDiv.style.marginTop = '2px';
+                  container.appendChild(nDiv);
+                }
+                
+                td.appendChild(container);
               }
-              
-              // N value (conditional)
-              if (showN) {
-                const nDiv = document.createElement('div');
-                nDiv.textContent = `N = ${cell.n}`;
-                nDiv.style.fontSize = '9px';
-                nDiv.style.opacity = '0.6';
-                nDiv.style.marginTop = '2px';
-                container.appendChild(nDiv);
-              }
-              
-              td.appendChild(container);
             }
             td.style.padding = '6px 8px';
             td.style.border = '1px solid rgba(255,255,255,.18)';
@@ -3718,6 +3841,186 @@
       if (lastBundle && lastBundle.explore) {
         populateCorrelationMatrix(lastBundle.explore);
       }
+    }
+    
+    // === Scatter Plot Modal Functions ===
+    function openCorrScatterPlot(timeIdx1, timeIdx2, rValue) {
+      if (!window.dependentRangeData || !lastBundle?.setup?.selectedColumns) {
+        console.warn("No data available for scatter plot");
+        return;
+      }
+      
+      const headers = window.dependentRangeData[0] || [];
+      const dataRows = window.dependentRangeData.slice(1);
+      const selectedCols = lastBundle.setup.selectedColumns;
+      
+      const col1Name = selectedCols[timeIdx1];
+      const col2Name = selectedCols[timeIdx2];
+      
+      // Extract data points
+      const col1Idx = headers.indexOf(col1Name);
+      const col2Idx = headers.indexOf(col2Name);
+      
+      if (col1Idx < 0 || col2Idx < 0) {
+        console.error("Column indices not found for scatter plot");
+        return;
+      }
+      
+      const points = [];
+      dataRows.forEach(row => {
+        const x = parseFloat(row[col1Idx]);
+        const y = parseFloat(row[col2Idx]);
+        if (isFinite(x) && isFinite(y)) {
+          points.push([x, y]);
+        }
+      });
+      
+      if (points.length === 0) {
+        console.warn("No valid data points for scatter plot");
+        return;
+      }
+      
+      // Update modal content
+      const modal = document.getElementById('corrScatterModal');
+      const titleEl = document.getElementById('scatterTitle');
+      titleEl.textContent = `Scatter Plot: ${col1Name} vs ${col2Name}`;
+      
+      // Calculate statistics
+      const n = points.length;
+      const xs = points.map(p => p[0]);
+      const ys = points.map(p => p[1]);
+      const r = calculatePearsonCorr(xs, ys);
+      const r2 = r * r;
+      const p = calculateCorrPValue(r, n);
+      
+      // Update stat values
+      document.getElementById('scatterN').textContent = n;
+      document.getElementById('scatterR').textContent = isFinite(r) ? r.toFixed(4) : '--';
+      document.getElementById('scatterP').textContent = isFinite(p) ? (p < 0.0001 ? '<0.0001' : p.toExponential(3)) : '--';
+      document.getElementById('scatterR2').textContent = isFinite(r2) ? r2.toFixed(4) : '--';
+      
+      // Render scatter chart with Highcharts
+      renderScatterChart(points, col1Name, col2Name, r);
+      
+      // Show modal
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden', 'false');
+    }
+    
+    function closeCorrScatterModal() {
+      const modal = document.getElementById('corrScatterModal');
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    
+    function calculatePearsonCorr(x, y) {
+      if (x.length < 2) return NaN;
+      const n = x.length;
+      const meanX = x.reduce((a, b) => a + b, 0) / n;
+      const meanY = y.reduce((a, b) => a + b, 0) / n;
+      let num = 0, denX = 0, denY = 0;
+      for (let i = 0; i < n; i++) {
+        const dx = x[i] - meanX;
+        const dy = y[i] - meanY;
+        num += dx * dy;
+        denX += dx * dx;
+        denY += dy * dy;
+      }
+      return denX === 0 || denY === 0 ? NaN : num / Math.sqrt(denX * denY);
+    }
+    
+    function calculateCorrPValue(r, n) {
+      if (!isFinite(r) || n < 3) return NaN;
+      const t = r * Math.sqrt((n - 2) / (1 - r * r));
+      // Use t-distribution approximation
+      return 2 * tDistributionCDF(-Math.abs(t), n - 2);
+    }
+    
+    function renderScatterChart(points, xLabel, yLabel, r) {
+      const chartContainer = document.getElementById('scatterChart');
+      if (!chartContainer) return;
+      
+      // Calculate linear regression for trend line
+      const xs = points.map(p => p[0]);
+      const ys = points.map(p => p[1]);
+      const meanX = xs.reduce((a, b) => a + b, 0) / xs.length;
+      const meanY = ys.reduce((a, b) => a + b, 0) / ys.length;
+      
+      let num = 0, den = 0;
+      for (let i = 0; i < xs.length; i++) {
+        num += (xs[i] - meanX) * (ys[i] - meanY);
+        den += (xs[i] - meanX) * (xs[i] - meanX);
+      }
+      const slope = den !== 0 ? num / den : 0;
+      const intercept = meanY - slope * meanX;
+      
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const trendLine = [
+        [minX, slope * minX + intercept],
+        [maxX, slope * maxX + intercept]
+      ];
+      
+      Highcharts.chart(chartContainer, {
+        chart: {
+          type: 'scatter',
+          backgroundColor: 'transparent',
+          zoomType: 'xy',
+          height: 400
+        },
+        title: { text: '' },
+        xAxis: {
+          title: { text: xLabel, style: { color: '#a0a0a0' } },
+          gridLineColor: 'rgba(255,255,255,0.08)',
+          labels: { style: { color: '#e0e0e0' } },
+          lineColor: '#555',
+          tickColor: '#555'
+        },
+        yAxis: {
+          title: { text: yLabel, style: { color: '#a0a0a0' } },
+          gridLineColor: 'rgba(255,255,255,0.08)',
+          labels: { style: { color: '#e0e0e0' } },
+          lineColor: '#555',
+          tickColor: '#555'
+        },
+        legend: {
+          enabled: true,
+          itemStyle: { color: '#e0e0e0' },
+          itemHoverStyle: { color: '#ffffff' }
+        },
+        credits: { enabled: false },
+        tooltip: {
+          shared: false,
+          backgroundColor: 'rgba(30,30,30,0.9)',
+          borderColor: '#555',
+          style: { color: '#ffffff' },
+          formatter: function() {
+            return `<b>${xLabel}:</b> ${this.x.toFixed(2)}<br/><b>${yLabel}:</b> ${this.y.toFixed(2)}`;
+          }
+        },
+        series: [
+          {
+            name: 'Observations',
+            data: points,
+            color: 'rgba(120,200,255,0.7)',
+            marker: {
+              radius: 5,
+              fillColor: 'rgba(120,200,255,0.7)',
+              lineColor: '#fff',
+              lineWidth: 1
+            }
+          },
+          {
+            name: `Trend Line (r=${r.toFixed(3)})`,
+            type: 'line',
+            data: trendLine,
+            color: 'rgba(255,165,120,0.9)',
+            lineWidth: 2,
+            marker: { enabled: false },
+            enableMouseTracking: false
+          }
+        ]
+      });
     }
     
     function switchCorrType(type) {
@@ -4480,5 +4783,37 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
     }
     
   </script>
+  
+  <!-- Scatter Plot Modal -->
+  <div id="corrScatterModal" class="scatter-modal" role="dialog" aria-hidden="true">
+    <div class="scatter-modal-content">
+      <div class="scatter-modal-header">
+        <span id="scatterTitle">Scatter Plot</span>
+        <span class="scatter-close" onclick="closeCorrScatterModal()">&times;</span>
+      </div>
+      <div class="scatter-modal-body">
+        <div class="scatter-stats">
+          <div class="scatter-stat">
+            <div class="scatter-stat-value" id="scatterN">--</div>
+            <div class="scatter-stat-label">Observations</div>
+          </div>
+          <div class="scatter-stat">
+            <div class="scatter-stat-value" id="scatterR">--</div>
+            <div class="scatter-stat-label">Correlation (R)</div>
+          </div>
+          <div class="scatter-stat">
+            <div class="scatter-stat-value" id="scatterP">--</div>
+            <div class="scatter-stat-label">p-value</div>
+          </div>
+          <div class="scatter-stat">
+            <div class="scatter-stat-value" id="scatterR2">--</div>
+            <div class="scatter-stat-label">R²</div>
+          </div>
+        </div>
+        <div id="scatterChart" class="scatter-chart"></div>
+      </div>
+    </div>
+  </div>
+  
 </body>
 </html>
