@@ -3911,6 +3911,18 @@
       const power = lastBundle.power || {};
       const omnibus = results.omnibus || {};
       
+      // COMPREHENSIVE LOGGING for debugging
+      console.log('📦 Full lastBundle structure:', lastBundle);
+      console.log('📋 Bundle keys:', Object.keys(lastBundle));
+      console.log('🔬 Results keys:', Object.keys(results));
+      console.log('🧪 Looking for pairwise data in:', {
+        'results.pairwise': results.pairwise,
+        'results.pairwiseComparisons': results.pairwiseComparisons,
+        'lastBundle.pairwise': lastBundle.pairwise,
+        'lastBundle.posthoc': lastBundle.posthoc,
+        'lastBundle.pairwiseResults': lastBundle.pairwiseResults
+      });
+      
       // Extract descriptives with direction hint
       const descriptiveStats = (setup.selectedColumns || []).map((col, idx) => {
         const colStat = (explore.selectedColumnStats || [])[idx] || {};
@@ -4191,7 +4203,10 @@ STRUCTURE (integrate naturally, don't use section headers):
 2. Assumptions: State sphericity test result and any corrections applied
 3. Omnibus Test: Report primary RM-ANOVA with F-statistic, df, p-value, and nonparametric confirmation
 4. Effect Size: Interpret the practical significance using partial η² or Cohen's f with benchmarks
-5. Post-hoc: If posthoc.enabled is true and rows exist, report specific comparisons. If false, mention "pairwise comparisons could be conducted" as suggestion for future analysis
+5. Post-hoc: Check posthoc.enabled and posthoc.rows carefully:
+   - If enabled=false OR rows is empty/undefined: Say "Further pairwise comparisons using paired t-tests with Holm-Bonferroni correction could explore specific differences between timepoints"
+   - If enabled=true AND rows exist with data: Report the specific significant comparisons found
+   - NEVER say "post-hoc tests were not performed" or "were not enabled" - instead focus forward on what could be done
 6. Power: State observed power and sample size recommendation for future studies with cautions
 7. Conclusion: One clear sentence summarizing the finding
 
