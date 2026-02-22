@@ -4057,30 +4057,36 @@
         enabled: posthocBundle.enabled !== false && pairwiseData.length > 0,
         family: "paired",
         method: posthocBundle.method || "paired_t_tests",
-        p_adjust: posthocBundle.correction || pairwiseData[0]?.adjustment || pairwiseData[0]?.correctionMethod || "Holm",
-        rows: pairwiseData.slice(0, 6).map(pw => ({
-          comparison: `${pw.group1 || pw.groupA || pw.name || 'A'} vs ${pw.group2 || pw.groupB || pw.name2 || 'B'}`,
-          estimate: { 
-            type: "mean_difference", 
-            value: pw.meanDiff || pw.diff || pw.estimate || 0
-          },
-          ci95: { 
-            low: pw.ciLow || pw.ci_lower || pw.lower || 0, 
-            high: pw.ciHigh || pw.ci_upper || pw.upper || 0
-          },
-          statistic: { 
-            type: "t", 
-            df: pw.df || 0, 
-            value: pw.tStat || pw.t || pw.statistic || 0
-          },
-          raw_p: pw.pRaw || pw.p_raw || pw.pValue || 0,
-          adj_p: pw.p || pw.p_adj || pw.pAdjusted || 0,
-          effect_size: { 
-            name: "dz", 
-            value: pw.cohenDz || pw.dz || pw.effectSize || 0
-          },
-          significant: (pw.p || pw.p_adj || pw.pAdjusted || 1) < 0.05
-        })),
+        p_adjust: posthocBundle.correction || "Holm",
+        rows: pairwiseData.slice(0, 6).map(pw => {
+          // Map actual field names to schema format
+          const rawP = pw.rawP || pw.pRaw || pw.p_raw || pw.pValue || 0;
+          const adjP = pw.adjP || pw.p || pw.p_adj || pw.pAdjusted || rawP;
+          
+          return {
+            comparison: pw.comparison || `${pw.group1 || pw.groupA || 'A'} vs ${pw.group2 || pw.groupB || 'B'}`,
+            estimate: { 
+              type: "mean_difference", 
+              value: pw.estimate || pw.meanDiff || pw.diff || 0
+            },
+            ci95: { 
+              low: pw.ciLow || pw.ci_lower || pw.lower || 0, 
+              high: pw.ciHigh || pw.ci_upper || pw.upper || 0
+            },
+            statistic: { 
+              type: "t", 
+              df: pw.df || 0, 
+              value: pw.statistic || pw.tStat || pw.t || 0
+            },
+            raw_p: rawP,
+            adj_p: adjP,
+            effect_size: { 
+              name: "dz", 
+              value: pw.cohenDz || pw.dz || pw.effectSize || 0
+            },
+            significant: adjP < 0.05
+          };
+        }),
         display_rules: {
           nonparametric_note: "If posthoc method is Wilcoxon/Conover/Nemenyi, do not report mean-difference CI unless Hodges–Lehmann CI is provided."
         },
@@ -4207,9 +4213,11 @@ STRUCTURE (integrate naturally, don't use section headers):
 3. Omnibus Test: Report primary RM-ANOVA with F-statistic, df, p-value, and nonparametric confirmation
 4. Effect Size: Interpret the practical significance using partial η² or Cohen's f with benchmarks
 5. Post-hoc: Check posthoc.enabled and posthoc.rows carefully:
-   - If enabled=false OR rows is empty/undefined: Say "Further pairwise comparisons using paired t-tests with Holm-Bonferroni correction could explore specific differences between timepoints"
-   - If enabled=true AND rows exist with data: Report the specific significant comparisons found
-   - NEVER say "post-hoc tests were not performed" or "were not enabled" - instead focus forward on what could be done
+   - If enabled=false OR rows is empty: Say "Further pairwise comparisons using paired t-tests with [p_adjust] correction could explore specific differences between timepoints"
+   - If enabled=true AND rows exist: Count how many have significant=true, then report ONLY those significant comparisons with their statistics
+   - For each significant comparison, report: comparison name, adjusted p-value (adj_p), mean difference (estimate.value), 95% CI, and effect size
+   - IMPORTANT: Use adj_p field for significance, NOT raw_p
+   - If no rows have significant=true, say "Pairwise comparisons were conducted but none reached significance after [p_adjust] correction"
 6. Power: State observed power and sample size recommendation for future studies with cautions
 7. Conclusion: One clear sentence summarizing the finding
 
