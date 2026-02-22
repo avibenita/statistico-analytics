@@ -3911,30 +3911,56 @@
       const power = lastBundle.power || {};
       const omnibus = results.omnibus || {};
       
-      // Extract descriptives
+      // Extract descriptives with direction hint
+      const descriptiveStats = (setup.selectedColumns || []).map((col, idx) => {
+        const colStat = (explore.selectedColumnStats || [])[idx] || {};
+        return {
+          level: col,
+          n: colStat.n,
+          mean: colStat.mean,
+          sd: colStat.sd
+        };
+      });
+      
+      // Determine direction hint
+      let directionHint = "varied";
+      if (descriptiveStats.length >= 2) {
+        const means = descriptiveStats.map(d => d.mean);
+        const increasing = means.every((m, i) => i === 0 || m >= means[i-1]);
+        const decreasing = means.every((m, i) => i === 0 || m <= means[i-1]);
+        if (increasing) directionHint = "increasing";
+        else if (decreasing) directionHint = "decreasing";
+        else if (means.length >= 3) {
+          const maxIdx = means.indexOf(Math.max(...means));
+          if (maxIdx > 0 && maxIdx < means.length - 1) {
+            directionHint = "increase_then_decline";
+          }
+        }
+      }
+      
       const descriptives = {
-        by_level: (setup.selectedColumns || []).map((col, idx) => {
-          const colStat = (explore.selectedColumnStats || [])[idx] || {};
-          return {
-            level: col,
-            n: colStat.n,
-            mean: colStat.mean,
-            sd: colStat.sd
-          };
-        })
+        by_level: descriptiveStats,
+        direction_hint: directionHint
       };
       
-      // Design info
+      // Design info with missing data handling
       const design = {
         type: "within_subjects",
         factor: { 
           name: setup.groupColumn || "Time", 
           levels: setup.selectedColumns || []
         },
-        n_subjects: omnibus.n || descriptives.by_level[0]?.n || 0
+        n_subjects: omnibus.n || descriptives.by_level[0]?.n || 0,
+        missing: {
+          exists: false,
+          handling: "listwise_deletion",
+          complete_cases_n: omnibus.n || descriptives.by_level[0]?.n || 0,
+          excluded_subjects_n: 0,
+          notes: ""
+        }
       };
       
-      // Assumptions
+      // Assumptions with notes
       const assumptionsData = {
         sphericity: {
           test: "Mauchly",
@@ -3946,10 +3972,14 @@
             HF: omnibus.hfEpsilon
           },
           correction_applied: omnibus.mauchlyP < 0.05 ? "GG or HF recommended" : "none"
-        }
+        },
+        notes_for_user: [
+          "If sphericity is violated, report GG/HF-corrected results.",
+          "If missing data exists, consider a mixed model."
+        ]
       };
       
-      // Primary test
+      // Primary test with sphericity reporting
       const primaryTest = {
         name: "RM-ANOVA",
         statistic: {
@@ -3958,6 +3988,11 @@
           df2: omnibus.anovaDf2,
           value: omnibus.anovaF,
           p: omnibus.anovaP
+        },
+        sphericity_reporting: {
+          reported_as: omnibus.mauchlyP < 0.05 ? "corrected" : "uncorrected",
+          gg_corrected: omnibus.mauchlyP < 0.05 ? omnibus.anovaFGG : null,
+          hf_corrected: omnibus.mauchlyP < 0.05 ? omnibus.anovaFHF : null
         }
       };
       
@@ -3979,38 +4014,76 @@
         }
       };
       
-      // Effect sizes
+      // Effect sizes with interpretation hints
       const effectSizes = {
         primary: [
           { name: "partial_eta2", value: omnibus.partialEtaSquared },
           { name: "cohens_f", value: omnibus.cohenF }
-        ]
+        ],
+        interpretation_hints: {
+          partial_eta2: { small: 0.01, medium: 0.06, large: 0.14 },
+          cohens_f: { small: 0.10, medium: 0.25, large: 0.40 },
+          kendalls_W: { small: 0.10, medium: 0.30, large: 0.50 }
+        }
       };
       
-      // Power
+      // Post-hoc with detailed rows
+      const pairwiseData = results.pairwise || [];
+      const posthocData = {
+        enabled: pairwiseData.length > 0,
+        family: "paired",
+        method: "paired_t_tests",
+        p_adjust: pairwiseData[0]?.adjustment || "Holm",
+        rows: pairwiseData.slice(0, 6).map(pw => ({
+          comparison: `${pw.group1} vs ${pw.group2}`,
+          estimate: { 
+            type: "mean_difference", 
+            value: pw.meanDiff 
+          },
+          ci95: { 
+            low: pw.ciLow, 
+            high: pw.ciHigh 
+          },
+          statistic: { 
+            type: "t", 
+            df: pw.df, 
+            value: pw.tStat 
+          },
+          raw_p: pw.pRaw,
+          adj_p: pw.p,
+          effect_size: { 
+            name: "dz", 
+            value: pw.cohenDz 
+          },
+          significant: pw.p < 0.05
+        })),
+        display_rules: {
+          nonparametric_note: "If posthoc method is Wilcoxon/Conover/Nemenyi, do not report mean-difference CI unless Hodges–Lehmann CI is provided."
+        }
+      };
+      
+      // Power with cautions
       const powerData = {
         type: "prospective_and_observed",
         observed: {
           reported: powerAnalysisData?.observed_power != null,
           power: powerAnalysisData?.observed_power,
-          alpha: 0.05
+          alpha: 0.05,
+          effect_size_source: "observed"
         },
         planning: {
           target_power_80: powerAnalysisData?.required_n_80,
           target_power_85: powerAnalysisData?.required_n_85,
           target_power_90: powerAnalysisData?.required_n_90,
-          effect_size_basis: "cohens_f"
-        }
-      };
-      
-      // Post-hoc (if available)
-      const posthocData = {
-        enabled: results.pairwise && results.pairwise.length > 0,
-        method: "Pairwise comparisons",
-        p_adjust: results.pairwise?.[0]?.adjustment || "Bonferroni",
-        summary: results.pairwise && results.pairwise.length > 0 ? 
-          `${results.pairwise.filter(p => p.p < 0.05).length} out of ${results.pairwise.length} pairwise comparisons were significant after correction.` :
-          "Post-hoc tests pending or not available."
+          assumptions: { 
+            alpha: 0.05, 
+            effect_size_basis: "cohens_f" 
+          }
+        },
+        cautions: [
+          "Observed power is descriptive; planning power is recommended for study design.",
+          "If effect size is estimated from the same dataset, required_n may be optimistic."
+        ]
       };
       
       return {
