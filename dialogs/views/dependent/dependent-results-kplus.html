@@ -565,22 +565,23 @@
                   </button>
                 </div>
                 <p style="margin:0 0 12px 0;color:var(--text-muted);font-size:11px;line-height:1.5;">
-                  <strong>Purpose:</strong> Visualize individual subject trajectories (spaghetti lines) and the group mean trajectory. 
-                  This reveals patterns of change, individual variability, and potential outliers.
+                  <strong>Purpose:</strong> Visualize the group mean trajectory with a shaded envelope showing typical variability (Mean ± 1 SD). 
+                  This reveals patterns of change and where variability is highest across timepoints.
                 </p>
                 <div style="padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
                   <div id="profilePlot" style="width:100%;height:400px;"></div>
-                  <div style="margin-top:8px;padding:6px 10px;background:rgba(255,193,7,0.12);border-left:3px solid #ffc107;border-radius:4px;font-size:10px;color:#ffd54f;">
-                    <i class="fa-solid fa-info-circle"></i> <strong>Note:</strong> Individual lines may overlap when subjects have similar values at a timepoint. 
-                    Hover over any line to highlight individual trajectories. Lines spread out at timepoints with higher variability.
+                  <div style="margin-top:8px;padding:6px 10px;background:rgba(79,195,247,0.12);border-left:3px solid #4fc3f7;border-radius:4px;font-size:10px;color:#81d4fa;">
+                    <i class="fa-solid fa-info-circle"></i> <strong>Note:</strong> The blue shaded area represents Mean ± 1 Standard Deviation, 
+                    showing where ~68% of individual values fall. Wider areas indicate higher variability at that timepoint.
                   </div>
                   <div style="margin-top:10px;padding:8px;background:rgba(120,200,255,.08);border-left:3px solid var(--accent-2);border-radius:4px;font-size:11px;">
                     <strong>Interpretation:</strong>
                     <ul style="margin:6px 0 0 0;padding-left:20px;color:var(--text-secondary);">
-                      <li><strong>Parallel lines:</strong> Consistent individual trajectories (low variability)</li>
-                      <li><strong>Crossing lines:</strong> Individual differences in response patterns</li>
-                      <li><strong>Steep slopes:</strong> Large changes across timepoints</li>
-                      <li><strong>Flat lines:</strong> Minimal change over time</li>
+                      <li><strong>Orange line:</strong> Group mean trajectory showing average pattern of change</li>
+                      <li><strong>Blue shaded area:</strong> Typical variability range (Mean ± 1 SD)</li>
+                      <li><strong>Narrow envelope:</strong> Subjects respond consistently</li>
+                      <li><strong>Wide envelope:</strong> High individual variability at that timepoint</li>
+                      <li><strong>Steep slopes:</strong> Rapid changes between timepoints</li>
                     </ul>
                   </div>
                 </div>
@@ -3285,59 +3286,33 @@
       
       const k = groupDescriptives.length;
       const means = groupDescriptives.map(g => g.mean);
+      const sds = groupDescriptives.map(g => g.sd);
       const labels = groupDescriptives.map(g => g.name);
       
-      // Get individual subject data from lastBundle if available
-      let subjectData = [];
-      if (window.dependentRangeData && lastBundle.setup && lastBundle.setup.selectedColumns) {
-        const headers = window.dependentRangeData[0] || [];
-        const dataRows = window.dependentRangeData.slice(1);
-        const selectedCols = lastBundle.setup.selectedColumns;
-        
-        // Extract complete cases
-        dataRows.forEach(row => {
-          const values = selectedCols.map(col => {
-            const idx = headers.indexOf(col);
-            return idx >= 0 ? parseFloat(row[idx]) : NaN;
-          });
-          if (values.every(v => isFinite(v))) {
-            subjectData.push(values);
-          }
-        });
-      }
+      // Calculate Mean ± 1 SD for area range
+      const areaRangeData = means.map((mean, i) => [mean - sds[i], mean + sds[i]]);
       
-      console.log(`📊 Plotting ${subjectData.length} individual subject trajectories`);
+      console.log(`📊 Plotting mean trajectory with ±1 SD envelope`);
       
       // Prepare series data
       const series = [];
       
-      // Add individual subject lines
-      subjectData.forEach((subject, idx) => {
-        series.push({
-          name: `Subject ${idx + 1}`,
-          data: subject,
-          type: 'line',
-          color: 'rgba(79, 195, 247, 0.5)',  // Increased from 0.3 to 0.5 for better visibility
-          lineWidth: 1.5,  // Increased from 1 to 1.5
-          marker: {
-            enabled: true,  // Changed from false to true
-            radius: 2,  // Small markers to show individual data points
-            fillColor: 'rgba(79, 195, 247, 0.6)',
-            lineColor: 'rgba(79, 195, 247, 0.8)',
-            lineWidth: 1
-          },
-          enableMouseTracking: true,
-          showInLegend: false,
-          states: {
-            hover: {
-              lineWidth: 3,  // Increased from 2 to 3
-              color: 'rgba(79, 195, 247, 1)',  // Full opacity on hover
-              marker: {
-                radius: 4  // Larger marker on hover
-              }
-            }
-          }
-        });
+      // Add area range (Mean ± 1 SD)
+      series.push({
+        name: 'Mean ± 1 SD',
+        data: areaRangeData,
+        type: 'arearange',
+        lineWidth: 0,
+        color: 'rgba(79, 195, 247, 0.3)',
+        fillOpacity: 0.3,
+        zIndex: 0,
+        marker: {
+          enabled: false
+        },
+        enableMouseTracking: true,
+        tooltip: {
+          pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.low:.2f} - {point.high:.2f}</b><br/>'
+        }
       });
       
       // Add group mean line
