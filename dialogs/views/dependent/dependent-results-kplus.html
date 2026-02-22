@@ -4049,7 +4049,8 @@
         'results.posthoc': results.posthoc,
         'posthocBundle.enabled': posthocBundle.enabled,
         'pairwiseData.length': pairwiseData.length,
-        'sample': pairwiseData[0]
+        'first_comparison_raw': pairwiseData[0],
+        'all_field_names': pairwiseData[0] ? Object.keys(pairwiseData[0]) : []
       });
       
       const posthocData = {
