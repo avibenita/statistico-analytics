@@ -5482,6 +5482,8 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
       }
       
       const modal = document.getElementById('listwiseDataModal');
+      const toggle = document.getElementById('showMissingToggle');
+      if (toggle) toggle.checked = false; // Default to showing only complete cases
       populateListwiseDataTable();
       modal.style.display = 'flex';
       modal.setAttribute('aria-hidden', 'false');
@@ -5497,6 +5499,7 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
       const headers = window.dependentRangeData[0] || [];
       const dataRows = window.dependentRangeData.slice(1);
       const selectedCols = lastBundle.setup.selectedColumns;
+      const showMissing = document.getElementById('showMissingToggle')?.checked || false;
       
       // Build table header
       const thead = document.getElementById('listwiseTableHeader');
@@ -5527,10 +5530,16 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
           missingCount++;
         }
         
+        // Skip missing rows if toggle is off
+        if (!hasAll && !showMissing) {
+          return;
+        }
+        
         const tr = document.createElement('tr');
         if (!hasAll) {
-          tr.style.opacity = '0.4';
-          tr.style.textDecoration = 'line-through';
+          tr.classList.add('listwise-missing-row');
+          tr.style.opacity = '0.5';
+          tr.style.background = 'rgba(255,165,120,0.1)';
         }
         
         // Row number
@@ -5541,7 +5550,13 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
         // Data values
         values.forEach(val => {
           const td = document.createElement('td');
-          td.textContent = isFinite(val) ? val.toFixed(4) : '—';
+          if (isFinite(val)) {
+            td.textContent = val.toFixed(4);
+          } else {
+            td.textContent = '—';
+            td.style.color = 'var(--accent-1)';
+            td.style.fontWeight = '700';
+          }
           tr.appendChild(td);
         });
         
@@ -5552,6 +5567,10 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
       document.getElementById('listwiseN').textContent = completeCount;
       document.getElementById('listwiseVars').textContent = selectedCols.length;
       document.getElementById('listwiseMissing').textContent = missingCount;
+    }
+    
+    function toggleMissingRows() {
+      populateListwiseDataTable();
     }
     
     function copyListwiseData() {
@@ -5708,10 +5727,15 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
             <div class="scatter-stat-value" id="listwiseMissing">--</div>
             <div class="scatter-stat-label">Excluded (Missing)</div>
           </div>
-          <div class="scatter-stat" style="justify-self: end;">
+          <div class="scatter-stat" style="justify-self: end; display: flex; flex-direction: column; gap: 4px;">
             <button class="scatter-copy-btn" onclick="copyListwiseData()" style="margin: 0; padding: 6px 12px; font-size: 10px;">
               <i class="fa-solid fa-copy"></i> Copy All Data
             </button>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-secondary); cursor: pointer; user-select: none;">
+              <input type="checkbox" id="showMissingToggle" onchange="toggleMissingRows()" 
+                     style="cursor: pointer; width: 14px; height: 14px; accent-color: var(--accent-2);">
+              <span>Show rows with missing data</span>
+            </label>
           </div>
         </div>
         <div class="scatter-data-table-container" style="max-height: 60vh;">
