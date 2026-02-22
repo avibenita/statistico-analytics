@@ -4040,21 +4040,23 @@
       };
       
       // Post-hoc with detailed rows
-      // Check multiple possible locations for pairwise data
-      const pairwiseData = results.pairwise || results.pairwiseComparisons || 
-                          lastBundle.pairwise || lastBundle.posthoc || [];
+      // CORRECTED: Post-hoc data is at results.posthoc, not results.pairwise
+      const posthocBundle = results.posthoc || results.postHoc || {};
+      const pairwiseData = posthocBundle.rows || posthocBundle.pairwise || 
+                          results.pairwise || lastBundle.pairwise || [];
       
       console.log('🔍 Post-hoc data check:', {
-        'results.pairwise': results.pairwise,
+        'results.posthoc': results.posthoc,
+        'posthocBundle.enabled': posthocBundle.enabled,
         'pairwiseData.length': pairwiseData.length,
         'sample': pairwiseData[0]
       });
       
       const posthocData = {
-        enabled: pairwiseData.length > 0,
+        enabled: posthocBundle.enabled !== false && pairwiseData.length > 0,
         family: "paired",
-        method: "paired_t_tests",
-        p_adjust: pairwiseData[0]?.adjustment || pairwiseData[0]?.correctionMethod || "Holm",
+        method: posthocBundle.method || "paired_t_tests",
+        p_adjust: posthocBundle.correction || pairwiseData[0]?.adjustment || pairwiseData[0]?.correctionMethod || "Holm",
         rows: pairwiseData.slice(0, 6).map(pw => ({
           comparison: `${pw.group1 || pw.groupA || pw.name || 'A'} vs ${pw.group2 || pw.groupB || pw.name2 || 'B'}`,
           estimate: { 
