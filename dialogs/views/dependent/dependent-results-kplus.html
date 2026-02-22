@@ -865,95 +865,95 @@
           </div>
         </section>
         <section id="tab-power" class="tab-panel">
-          <div class="power-analysis-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <h2 style="margin:0;font-size:1.2em;color:#ff9d5c;"><i class="fa-solid fa-bolt"></i> Power Analysis</h2>
+          <div class="power-analysis-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <h2 style="margin:0;font-size:1em;color:#ff9d5c;"><i class="fa-solid fa-bolt"></i> Power Analysis</h2>
           </div>
           
-          <div class="stats-container" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="stats-container" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
             <!-- Observed Statistics Panel -->
-            <div class="stat-panel" style="background:#3a3d4a;padding:10px;border-radius:4px;">
-              <div class="stat-panel-heading" style="font-size:0.9em;margin-bottom:6px;color:#9db4ff;border-bottom:1px solid rgba(157,180,255,0.2);padding-bottom:4px;">Observed Statistics</div>
+            <div class="stat-panel" style="background:#3a3d4a;padding:6px 8px;border-radius:4px;">
+              <div class="stat-panel-heading" style="font-size:0.8em;margin-bottom:3px;color:#9db4ff;border-bottom:1px solid rgba(157,180,255,0.2);padding-bottom:2px;">Observed Statistics</div>
               <div class="stat-panel-body">
-                <div class="stat-field" style="margin-bottom:6px;display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
-                  <span class="stat-label" style="color:#a0a0a0;font-size:0.75em;text-transform:uppercase;letter-spacing:0.3px;">Observed Power</span>
-                  <span class="stat-value" id="powObserved" style="font-size:1.4em;color:#ff9d5c;font-weight:bold;text-align:right;">...</span>
+                <div class="stat-field" style="margin-bottom:3px;display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
+                  <span class="stat-label" style="color:#a0a0a0;font-size:0.65em;text-transform:uppercase;letter-spacing:0.2px;">Observed Power</span>
+                  <span class="stat-value" id="powObserved" style="font-size:1.2em;color:#ff9d5c;font-weight:bold;text-align:right;">...</span>
                 </div>
-                <div class="stat-field" style="margin-bottom:6px;display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
-                  <span class="stat-label" style="color:#a0a0a0;font-size:0.75em;text-transform:uppercase;letter-spacing:0.3px;">Effect Size (f)</span>
-                  <span class="stat-value" id="powEffectSize" style="font-size:1.2em;color:#ff9d5c;font-weight:bold;text-align:right;">...</span>
+                <div class="stat-field" style="margin-bottom:3px;display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
+                  <span class="stat-label" style="color:#a0a0a0;font-size:0.65em;text-transform:uppercase;letter-spacing:0.2px;">Effect Size (f)</span>
+                  <span class="stat-value" id="powEffectSize" style="font-size:1em;color:#ff9d5c;font-weight:bold;text-align:right;">...</span>
                 </div>
                 <div class="stat-field" style="display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
-                  <span class="stat-label" style="color:#a0a0a0;font-size:0.75em;text-transform:uppercase;letter-spacing:0.3px;">Sample Size</span>
-                  <span class="stat-value" id="powSampleSize" style="font-size:1.2em;color:#ff9d5c;font-weight:bold;text-align:right;">...</span>
+                  <span class="stat-label" style="color:#a0a0a0;font-size:0.65em;text-transform:uppercase;letter-spacing:0.2px;">Sample Size</span>
+                  <span class="stat-value" id="powSampleSize" style="font-size:1em;color:#ff9d5c;font-weight:bold;text-align:right;">...</span>
                 </div>
               </div>
             </div>
             
             <!-- Target Power 80% Panel -->
-            <div class="stat-panel" style="background:#3a3d4a;padding:10px;border-radius:4px;">
-              <div class="stat-panel-heading" style="font-size:0.9em;margin-bottom:6px;color:#9db4ff;border-bottom:1px solid rgba(157,180,255,0.2);padding-bottom:4px;">Target Power (80%)</div>
+            <div class="stat-panel" style="background:#3a3d4a;padding:6px 8px;border-radius:4px;">
+              <div class="stat-panel-heading" style="font-size:0.8em;margin-bottom:3px;color:#9db4ff;border-bottom:1px solid rgba(157,180,255,0.2);padding-bottom:2px;">Target Power (80%)</div>
               <div class="stat-panel-body">
-                <div class="stat-field" style="margin-bottom:6px;display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
-                  <span class="stat-label" style="color:#a0a0a0;font-size:0.75em;text-transform:uppercase;letter-spacing:0.3px;">Required N</span>
-                  <span class="stat-value" id="powRequired" style="font-size:1.4em;color:#ff9d5c;font-weight:bold;text-align:right;">...</span>
+                <div class="stat-field" style="margin-bottom:3px;display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
+                  <span class="stat-label" style="color:#a0a0a0;font-size:0.65em;text-transform:uppercase;letter-spacing:0.2px;">Required N</span>
+                  <span class="stat-value" id="powRequired" style="font-size:1.2em;color:#ff9d5c;font-weight:bold;text-align:right;">...</span>
                 </div>
-                <div class="stat-field" style="margin-bottom:6px;display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
-                  <span class="stat-label" style="color:#a0a0a0;font-size:0.75em;text-transform:uppercase;letter-spacing:0.3px;">Alpha</span>
-                  <span class="stat-value" id="powAlpha" style="font-size:1em;color:white;text-align:right;">0.050</span>
+                <div class="stat-field" style="margin-bottom:3px;display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
+                  <span class="stat-label" style="color:#a0a0a0;font-size:0.65em;text-transform:uppercase;letter-spacing:0.2px;">Alpha</span>
+                  <span class="stat-value" id="powAlpha" style="font-size:0.9em;color:white;text-align:right;">0.050</span>
                 </div>
                 <div class="stat-field" style="display:grid;grid-template-columns:1fr 1fr;align-items:baseline;">
-                  <span class="stat-label" style="color:#a0a0a0;font-size:0.75em;text-transform:uppercase;letter-spacing:0.3px;">Partial η²</span>
-                  <span class="stat-value" id="powPartialEta" style="font-size:1em;color:white;text-align:right;">...</span>
+                  <span class="stat-label" style="color:#a0a0a0;font-size:0.65em;text-transform:uppercase;letter-spacing:0.2px;">Partial η²</span>
+                  <span class="stat-value" id="powPartialEta" style="font-size:0.9em;color:white;text-align:right;">...</span>
                 </div>
               </div>
             </div>
           </div>
           
           <!-- Power Status Message -->
-          <div id="powStatusMessage" style="margin-top:8px;padding:8px;background:#2d5f3f;border-radius:4px;color:#7fdb9f;text-align:center;font-size:0.85em;">
+          <div id="powStatusMessage" style="margin-top:4px;padding:4px 6px;background:#2d5f3f;border-radius:3px;color:#7fdb9f;text-align:center;font-size:0.75em;">
             Calculating power analysis...
           </div>
           
           <!-- Required N for Power Levels (4 cards in a row) -->
-          <div style="margin-top:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+          <div style="margin-top:6px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
             <!-- 85% Power Card -->
-            <div style="background:#3a3d4a;padding:10px;border-radius:4px;text-align:center;">
-              <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:4px;text-transform:uppercase;">85% Power</div>
-              <div id="powReq85" style="font-size:1.6em;color:#ff9d5c;font-weight:bold;">...</div>
+            <div style="background:#3a3d4a;padding:6px;border-radius:3px;text-align:center;">
+              <div style="color:#a0a0a0;font-size:0.65em;margin-bottom:2px;text-transform:uppercase;">85% Power</div>
+              <div id="powReq85" style="font-size:1.3em;color:#ff9d5c;font-weight:bold;">...</div>
             </div>
             
             <!-- 90% Power Card -->
-            <div style="background:#3a3d4a;padding:10px;border-radius:4px;text-align:center;">
-              <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:4px;text-transform:uppercase;">90% Power</div>
-              <div id="powReq90" style="font-size:1.6em;color:#ff9d5c;font-weight:bold;">...</div>
+            <div style="background:#3a3d4a;padding:6px;border-radius:3px;text-align:center;">
+              <div style="color:#a0a0a0;font-size:0.65em;margin-bottom:2px;text-transform:uppercase;">90% Power</div>
+              <div id="powReq90" style="font-size:1.3em;color:#ff9d5c;font-weight:bold;">...</div>
             </div>
             
             <!-- 95% Power Card -->
-            <div style="background:#3a3d4a;padding:10px;border-radius:4px;text-align:center;">
-              <div style="color:#a0a0a0;font-size:0.75em;margin-bottom:4px;text-transform:uppercase;">95% Power</div>
-              <div id="powReq95" style="font-size:1.6em;color:#ff9d5c;font-weight:bold;">...</div>
+            <div style="background:#3a3d4a;padding:6px;border-radius:3px;text-align:center;">
+              <div style="color:#a0a0a0;font-size:0.65em;margin-bottom:2px;text-transform:uppercase;">95% Power</div>
+              <div id="powReq95" style="font-size:1.3em;color:#ff9d5c;font-weight:bold;">...</div>
             </div>
             
             <!-- Custom Power Calculator Card -->
-            <div style="background:#3a4a3d;padding:10px;border-radius:4px;border:1px solid #5a7a5d;text-align:center;">
-              <div style="color:#9dffb4;font-size:0.75em;margin-bottom:4px;text-transform:uppercase;">Custom Power...</div>
-              <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:4px;">
+            <div style="background:#3a4a3d;padding:6px;border-radius:3px;border:1px solid #5a7a5d;text-align:center;">
+              <div style="color:#9dffb4;font-size:0.65em;margin-bottom:2px;text-transform:uppercase;">Custom Power...</div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:2px;">
                 <input type="number" id="customPowerInput" min="0.5" max="0.99" step="0.01" value="0.85" 
-                       style="width:65px;padding:4px 6px;background:#2a2d38;color:white;border:1px solid #5a7a5d;border-radius:3px;font-size:13px;font-weight:bold;text-align:center;"
+                       style="width:50px;padding:2px 4px;background:#2a2d38;color:white;border:1px solid #5a7a5d;border-radius:2px;font-size:11px;font-weight:bold;text-align:center;"
                        placeholder="0.85">
                 <button onclick="calculateCustomPower()" 
-                        style="padding:4px 8px;background:#5fad72;color:white;border:none;border-radius:3px;cursor:pointer;font-size:11px;">
+                        style="padding:3px 6px;background:#5fad72;color:white;border:none;border-radius:2px;cursor:pointer;font-size:10px;">
                   <i class="fa-solid fa-sync" id="customPowerIcon"></i>
                 </button>
               </div>
-              <div id="customRequiredN" style="font-size:1.6em;color:#7fdb9f;font-weight:bold;">--</div>
-              <div id="customPowerStatus" style="margin-top:4px;color:#b5d4bd;font-size:0.7em;display:none;">
+              <div id="customRequiredN" style="font-size:1.3em;color:#7fdb9f;font-weight:bold;">--</div>
+              <div id="customPowerStatus" style="margin-top:2px;color:#b5d4bd;font-size:0.6em;display:none;">
                 <i class="fa-solid fa-spinner fa-spin"></i> Calculating...
               </div>
             </div>
           </div>
           
-          <div class="section-note" style="margin-top:8px;padding:6px;background:#2a2d38;border-radius:4px;color:#b0b0b0;font-size:0.8em;">
+          <div class="section-note" style="margin-top:4px;padding:4px;background:#2a2d38;border-radius:3px;color:#b0b0b0;font-size:0.7em;">
             <i class="fa-solid fa-cloud"></i> <span id="powEngineNote">Power calculated via Python Google Cloud Functions using non-central F distribution. Effect size: Cohen's f from partial η².</span>
           </div>
         </section>
