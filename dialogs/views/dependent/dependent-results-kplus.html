@@ -498,6 +498,142 @@
   min-height: 20px;
 }
 
+/* Scatter data section */
+.scatter-data-section {
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.02);
+  overflow: hidden;
+}
+
+.scatter-data-header {
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.05);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.scatter-data-header:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.scatter-data-header i.fa-chevron-right {
+  font-size: 10px;
+  transition: transform 0.2s;
+  margin-right: 6px;
+}
+
+.scatter-data-header i.fa-chevron-right.expanded {
+  transform: rotate(90deg);
+}
+
+.scatter-data-header strong {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.scatter-data-header #scatterDataCount {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+.scatter-copy-btn {
+  padding: 3px 8px;
+  background: rgba(120,200,255,0.2);
+  border: 1px solid var(--accent-2);
+  border-radius: 4px;
+  color: var(--accent-2);
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.scatter-copy-btn:hover {
+  background: var(--accent-2);
+  color: #000;
+}
+
+.scatter-copy-btn i {
+  font-size: 9px;
+}
+
+.scatter-data-content {
+  padding: 8px;
+}
+
+.scatter-data-excluded {
+  padding: 6px 8px;
+  background: rgba(255,165,120,0.15);
+  border: 1px solid rgba(255,165,120,0.3);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--accent-1);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scatter-data-table-container {
+  max-height: 200px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.scatter-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+
+.scatter-data-table th {
+  position: sticky;
+  top: 0;
+  background: #003366;
+  color: #fff;
+  padding: 6px 8px;
+  text-align: left;
+  font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.2);
+  z-index: 1;
+}
+
+.scatter-data-table th:first-child {
+  text-align: center;
+  width: 40px;
+}
+
+.scatter-data-table td {
+  padding: 5px 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-secondary);
+}
+
+.scatter-data-table td:first-child {
+  text-align: center;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.scatter-data-table tbody tr:nth-child(even) {
+  background: rgba(255,255,255,0.03);
+}
+
+.scatter-data-table tbody tr:hover {
+  background: rgba(120,200,255,0.1);
+}
+
 /* Responsive adjustments for scatter modal */
 @media (max-width: 600px) {
   .scatter-modal-content {
@@ -3945,6 +4081,7 @@
     // === Scatter Plot Modal Functions ===
     let scatterState = {
       rawPoints: [],
+      rawData: [],  // Store raw data with row info
       xVar: '',
       yVar: '',
       xTransform: 'none',
@@ -3977,9 +4114,11 @@
       }
       
       const points = [];
-      dataRows.forEach(row => {
+      const rawData = [];
+      dataRows.forEach((row, idx) => {
         const x = parseFloat(row[col1Idx]);
         const y = parseFloat(row[col2Idx]);
+        rawData.push({ rowNum: idx + 1, x, y, valid: isFinite(x) && isFinite(y) });
         if (isFinite(x) && isFinite(y)) {
           points.push([x, y]);
         }
@@ -3997,6 +4136,7 @@
       
       // Initialize scatter state
       scatterState.rawPoints = points;
+      scatterState.rawData = rawData;
       scatterState.xVar = col1Name;
       scatterState.yVar = col2Name;
       scatterState.xTransform = 'none';
@@ -4010,6 +4150,9 @@
       
       // Calculate and display statistics and chart
       refreshScatterPlot();
+      
+      // Populate listwise data table
+      populateScatterDataTable();
       
       // Show modal
       modal.style.display = 'flex';
@@ -4216,6 +4359,7 @@
       }
       updateScatterTransformButtons();
       refreshScatterPlot();
+      populateScatterDataTable(); // Update data table with transformed values
     }
     
     function updateScatterTransformButtons() {
@@ -4444,6 +4588,128 @@
       } else {
         el.textContent = `Equation: ${equation}`;
       }
+    }
+    
+    // === Listwise Data Table Functions ===
+    function populateScatterDataTable() {
+      const tbody = document.getElementById('scatterDataTableBody');
+      const colXHeader = document.getElementById('scatterDataColX');
+      const colYHeader = document.getElementById('scatterDataColY');
+      const dataCount = document.getElementById('scatterDataCount');
+      const excludedDiv = document.getElementById('scatterDataExcluded');
+      const excludedText = document.getElementById('scatterExcludedText');
+      
+      if (!tbody) return;
+      
+      // Update column headers
+      const xLabel = scatterState.xTransform !== 'none' 
+        ? `${scatterState.xTransform}(${scatterState.xVar})` 
+        : scatterState.xVar;
+      const yLabel = scatterState.yTransform !== 'none' 
+        ? `${scatterState.yTransform}(${scatterState.yVar})` 
+        : scatterState.yVar;
+      
+      colXHeader.textContent = xLabel;
+      colYHeader.textContent = yLabel;
+      
+      // Count valid and excluded
+      const validData = scatterState.rawData.filter(d => d.valid);
+      const excludedCount = scatterState.rawData.length - validData.length;
+      
+      // Update count
+      dataCount.textContent = `(n=${validData.length})`;
+      
+      // Show/hide excluded message
+      if (excludedCount > 0) {
+        excludedDiv.style.display = 'flex';
+        excludedText.textContent = `Excluded: ${excludedCount} row${excludedCount > 1 ? 's' : ''} with missing data`;
+      } else {
+        excludedDiv.style.display = 'none';
+      }
+      
+      // Populate table
+      tbody.innerHTML = '';
+      validData.forEach(item => {
+        const tr = document.createElement('tr');
+        
+        // Row number
+        const tdNum = document.createElement('td');
+        tdNum.textContent = item.rowNum;
+        tr.appendChild(tdNum);
+        
+        // X value (transformed if applicable)
+        const tdX = document.createElement('td');
+        const xTransformed = transformScatterValue(item.x, scatterState.xTransform);
+        tdX.textContent = xTransformed !== null && isFinite(xTransformed) ? xTransformed.toFixed(4) : '—';
+        tr.appendChild(tdX);
+        
+        // Y value (transformed if applicable)
+        const tdY = document.createElement('td');
+        const yTransformed = transformScatterValue(item.y, scatterState.yTransform);
+        tdY.textContent = yTransformed !== null && isFinite(yTransformed) ? yTransformed.toFixed(4) : '—';
+        tr.appendChild(tdY);
+        
+        tbody.appendChild(tr);
+      });
+    }
+    
+    function toggleScatterData() {
+      const content = document.getElementById('scatterDataContent');
+      const toggle = document.getElementById('scatterDataToggle');
+      
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        toggle.classList.add('expanded');
+      } else {
+        content.style.display = 'none';
+        toggle.classList.remove('expanded');
+      }
+    }
+    
+    function copyScatterData(event) {
+      event.stopPropagation(); // Prevent toggling when clicking copy
+      
+      const validData = scatterState.rawData.filter(d => d.valid);
+      
+      const xLabel = scatterState.xTransform !== 'none' 
+        ? `${scatterState.xTransform}(${scatterState.xVar})` 
+        : scatterState.xVar;
+      const yLabel = scatterState.yTransform !== 'none' 
+        ? `${scatterState.yTransform}(${scatterState.yVar})` 
+        : scatterState.yVar;
+      
+      // Create tab-separated values
+      let text = `Row\t${xLabel}\t${yLabel}\n`;
+      validData.forEach(item => {
+        const xTransformed = transformScatterValue(item.x, scatterState.xTransform);
+        const yTransformed = transformScatterValue(item.y, scatterState.yTransform);
+        const xVal = xTransformed !== null && isFinite(xTransformed) ? xTransformed.toFixed(4) : '';
+        const yVal = yTransformed !== null && isFinite(yTransformed) ? yTransformed.toFixed(4) : '';
+        text += `${item.rowNum}\t${xVal}\t${yVal}\n`;
+      });
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.currentTarget;
+        const icon = btn.querySelector('i');
+        const originalHTML = btn.innerHTML;
+        
+        // Show success feedback
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        btn.style.background = 'rgba(76,175,80,0.3)';
+        btn.style.borderColor = '#4caf50';
+        btn.style.color = '#4caf50';
+        
+        setTimeout(() => {
+          btn.innerHTML = originalHTML;
+          btn.style.background = '';
+          btn.style.borderColor = '';
+          btn.style.color = '';
+        }, 1500);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy data to clipboard');
+      });
     }
     
     function switchCorrType(type) {
@@ -5259,6 +5525,34 @@ TONE: Professional, precise, but accessible to researchers in applied fields.`
               <button class="scatter-btn" id="transform-inverse" onclick="applyScatterTransformation('inverse')">1/x</button>
               <button class="scatter-btn" id="transform-sqrt" onclick="applyScatterTransformation('sqrt')">√</button>
               <button class="scatter-btn" id="transform-square" onclick="applyScatterTransformation('square')">x²</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Listwise Data Section -->
+        <div class="scatter-data-section">
+          <div class="scatter-data-header" onclick="toggleScatterData()">
+            <span><i class="fa-solid fa-chevron-right" id="scatterDataToggle"></i> <strong>Listwise Data</strong> <span id="scatterDataCount">(n=0)</span></span>
+            <button class="scatter-copy-btn" onclick="copyScatterData(event)" title="Copy to clipboard">
+              <i class="fa-solid fa-copy"></i> Copy
+            </button>
+          </div>
+          <div id="scatterDataContent" class="scatter-data-content" style="display:none;">
+            <div id="scatterDataExcluded" class="scatter-data-excluded" style="display:none;">
+              <i class="fa-solid fa-info-circle"></i> <span id="scatterExcludedText"></span>
+            </div>
+            <div class="scatter-data-table-container">
+              <table id="scatterDataTable" class="scatter-data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th id="scatterDataColX">X</th>
+                    <th id="scatterDataColY">Y</th>
+                  </tr>
+                </thead>
+                <tbody id="scatterDataTableBody">
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
