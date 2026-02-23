@@ -5175,8 +5175,12 @@
         ]
       };
       
-      // Primary test with sphericity reporting
-      const primaryTest = {
+      // Detect which framework is selected
+      const isNonparametric = document.getElementById('fwNonparametric')?.checked || false;
+      const selectedFramework = isNonparametric ? "nonparametric" : "parametric";
+      
+      // Primary test (RM-ANOVA or Friedman based on selection)
+      const parametricTest = {
         name: "RM-ANOVA",
         statistic: {
           type: "F",
@@ -5192,17 +5196,14 @@
         }
       };
       
-      // Robust alternative
-      const robustTest = {
-        included: true,
-        test: {
-          name: "Friedman",
-          statistic: {
-            type: "chi_square",
-            df: omnibus.anovaDf1,
-            value: omnibus.friedmanChiSquare || omnibus.kwH,
-            p: omnibus.kwP || omnibus.friedmanP
-          }
+      // Robust alternative (Friedman or RM-ANOVA based on selection)
+      const nonparametricTest = {
+        name: "Friedman",
+        statistic: {
+          type: "chi_square",
+          df: omnibus.anovaDf1,
+          value: omnibus.friedmanChiSquare || omnibus.kwH,
+          p: omnibus.kwP || omnibus.friedmanP
         },
         effect_size: {
           name: "Kendalls_W",
@@ -5210,16 +5211,26 @@
         }
       };
       
-      // Effect sizes with interpretation hints
+      // Assign primary and alternative based on selected framework
+      const primaryTest = isNonparametric ? nonparametricTest.statistic : parametricTest;
+      const robustTest = isNonparametric ? 
+        { included: true, test: parametricTest, note: "Parametric alternative for reference" } :
+        { included: true, test: nonparametricTest, effect_size: nonparametricTest.effect_size };
+      
+      // Effect sizes with interpretation hints (prioritize based on framework)
       const effectSizes = {
-        primary: [
+        primary: isNonparametric ? [
+          { name: "kendalls_W", value: omnibus.kendallW },
+          { name: "epsilon_squared", value: omnibus.epsilonSquared }
+        ] : [
           { name: "partial_eta2", value: omnibus.partialEtaSquared },
           { name: "cohens_f", value: omnibus.cohenF }
         ],
         interpretation_hints: {
           partial_eta2: { small: 0.01, medium: 0.06, large: 0.14 },
           cohens_f: { small: 0.10, medium: 0.25, large: 0.40 },
-          kendalls_W: { small: 0.10, medium: 0.30, large: 0.50 }
+          kendalls_W: { small: 0.10, medium: 0.30, large: 0.50 },
+          epsilon_squared: { small: 0.01, medium: 0.06, large: 0.14 }
         }
       };
       
@@ -5240,7 +5251,7 @@
       const posthocData = {
         enabled: posthocBundle.enabled !== false && pairwiseData.length > 0,
         family: "paired",
-        method: posthocBundle.method || "paired_t_tests",
+        method: isNonparametric ? "wilcoxon_signed_rank" : "paired_t_tests",
         p_adjust: posthocBundle.correction || "Holm",
         rows: pairwiseData.slice(0, 6).map(pw => {
           // Map actual field names to schema format
@@ -5250,7 +5261,7 @@
           return {
             comparison: pw.comparison || `${pw.group1 || pw.groupA || 'A'} vs ${pw.group2 || pw.groupB || 'B'}`,
             estimate: { 
-              type: "mean_difference", 
+              type: isNonparametric ? "median_difference" : "mean_difference", 
               value: pw.estimate || pw.meanDiff || pw.diff || 0
             },
             ci95: { 
@@ -5258,15 +5269,15 @@
               high: pw.ciHigh || pw.ci_upper || pw.upper || 0
             },
             statistic: { 
-              type: "t", 
-              df: pw.df || 0, 
-              value: pw.statistic || pw.tStat || pw.t || 0
+              type: isNonparametric ? "W" : "t", 
+              df: isNonparametric ? null : (pw.df || 0), 
+              value: pw.statistic || pw.tStat || pw.t || pw.W || 0
             },
             raw_p: rawP,
             adj_p: adjP,
             effect_size: { 
-              name: "dz", 
-              value: pw.cohenDz || pw.dz || pw.effectSize || 0
+              name: isNonparametric ? "rank_biserial" : "dz", 
+              value: pw.cohenDz || pw.dz || pw.effectSize || pw.rankBiserial || 0
             },
             significant: adjP < 0.05
           };
@@ -5321,12 +5332,15 @@
         descriptives,
         assumptions: assumptionsData,
         model_and_results: {
-          primary_framework: "parametric",
-          primary_test: primaryTest,
+          primary_framework: selectedFramework,
+          primary_test: isNonparametric ? {
+            name: nonparametricTest.name,
+            statistic: nonparametricTest.statistic
+          } : primaryTest,
           robust_or_alternative: robustTest,
           omnibus_conclusion: {
-            significant: primaryTest.statistic.p < 0.05,
-            plain_language: primaryTest.statistic.p < 0.05 ? 
+            significant: (isNonparametric ? nonparametricTest.statistic.p : primaryTest.statistic.p) < 0.05,
+            plain_language: (isNonparametric ? nonparametricTest.statistic.p : primaryTest.statistic.p) < 0.05 ? 
               "At least one timepoint differs significantly." : 
               "No significant differences were detected among timepoints."
           }
