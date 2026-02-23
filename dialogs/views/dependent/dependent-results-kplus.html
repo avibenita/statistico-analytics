@@ -883,112 +883,100 @@
             <div class="stat-panel-heading">Trajectory Analysis</div>
             <div class="stat-panel-body" style="padding:12px;">
               
-              <!-- Profile Plot (Spaghetti + Mean Line) -->
-              <div style="margin-bottom:24px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                  <div style="font-weight:700;color:var(--accent-1);font-size:14px;">
-                    <i class="fa-solid fa-chart-line"></i> <span id="profilePlotTitle">Profile Plot</span>
-                  </div>
-                  <div style="display:flex;gap:6px;">
-                    <button onclick="switchProfileView('trajectory')" id="btnTrajectory" class="profile-view-btn active" style="padding:4px 10px;background:#ff9800;color:white;border:none;border-radius:4px;cursor:pointer;font-size:10px;font-weight:600;">
-                      <i class="fa-solid fa-chart-line"></i> Trajectory
-                    </button>
-                    <button onclick="switchProfileView('sd')" id="btnSD" class="profile-view-btn" style="padding:4px 10px;background:transparent;color:#9c27b0;border:2px solid #9c27b0;border-radius:4px;cursor:pointer;font-size:10px;font-weight:600;">
-                      <i class="fa-solid fa-chart-bar"></i> Variability (SD)
-                    </button>
-                  </div>
-                </div>
-                <p style="margin:0 0 12px 0;color:var(--text-muted);font-size:11px;line-height:1.5;">
-                  <strong>Purpose:</strong> <span id="profilePurpose">Visualize the group mean trajectory with a shaded envelope showing the full range of individual values (Min-Max). 
-                  This reveals patterns of change and where variability is highest across timepoints.</span>
-                </p>
-                <div style="padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
-                  <div id="profilePlot" style="width:100%;height:400px;"></div>
-                  <div id="profileNote" style="margin-top:8px;padding:6px 10px;background:rgba(79,195,247,0.12);border-left:3px solid #4fc3f7;border-radius:4px;font-size:10px;color:#81d4fa;">
-                    <i class="fa-solid fa-info-circle"></i> <strong>Note:</strong> The blue shaded area represents the full range of individual values (Min-Max), 
-                    showing the complete spread at each timepoint. Wider areas indicate higher variability.
-                  </div>
-                  <div style="margin-top:10px;padding:8px;background:rgba(120,200,255,.08);border-left:3px solid var(--accent-2);border-radius:4px;font-size:11px;">
-                    <strong>Interpretation:</strong>
-                    <ul id="profileInterpretation" style="margin:6px 0 0 0;padding-left:20px;color:var(--text-secondary);">
-                      <li><strong>Orange line:</strong> Group mean trajectory showing average pattern of change</li>
-                      <li><strong>Blue shaded area:</strong> Full range of individual values (Min to Max)</li>
-                      <li><strong>Narrow envelope:</strong> Subjects respond consistently</li>
-                      <li><strong>Wide envelope:</strong> High individual variability at that timepoint</li>
-                      <li><strong>Steep slopes:</strong> Rapid changes between timepoints</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Correlation Matrix with Heatmap -->
-              <div>
-                <div style="font-weight:700;margin-bottom:8px;color:var(--accent-1);font-size:14px;">
-                  <i class="fa-solid fa-grip"></i> Within-Subject Correlation Matrix & Heatmap
-                </div>
-                <p style="margin:0 0 12px 0;color:var(--text-muted);font-size:11px;line-height:1.5;">
-                  <strong>Purpose:</strong> Visualize pairwise correlations between timepoints. 
-                  Darker colors indicate stronger correlations. Hover for details.
-                </p>
+              <!-- Two-column layout for side-by-side panels -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
                 
-                <!-- Interactive Controls -->
-                <div style="padding:12px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;margin-bottom:12px;">
-                  <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-                    <div style="flex:0 0 auto;">
-                      <label style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:4px;display:block;">Correlation Type:</label>
-                      <div style="display:flex;gap:8px;">
-                        <button class="corr-type-btn active" data-type="pearson" onclick="switchCorrType('pearson')" style="padding:6px 12px;font-size:11px;border:2px solid #5c6bc0;background:#5c6bc0;color:#fff;border-radius:4px;cursor:pointer;font-weight:600;">Pearson</button>
-                        <button class="corr-type-btn" data-type="spearman" onclick="switchCorrType('spearman')" style="padding:6px 12px;font-size:11px;border:2px solid #5c6bc0;background:transparent;color:#5c6bc0;border-radius:4px;cursor:pointer;font-weight:600;">Spearman</button>
-                        <button class="corr-type-btn" data-type="kendall" onclick="switchCorrType('kendall')" style="padding:6px 12px;font-size:11px;border:2px solid #5c6bc0;background:transparent;color:#5c6bc0;border-radius:4px;cursor:pointer;font-weight:600;">Kendall</button>
-                      </div>
+                <!-- LEFT: Profile Plot (Spaghetti + Mean Line) -->
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <div style="font-weight:700;color:var(--accent-1);font-size:13px;">
+                      <i class="fa-solid fa-chart-line"></i> <span id="profilePlotTitle">Profile Plot</span>
                     </div>
-                    
-                    <div style="flex:0 0 auto;">
-                      <label style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:4px;display:block;">View:</label>
-                      <div style="display:flex;gap:8px;">
-                        <button class="corr-view-btn active" data-view="table" onclick="switchCorrView('table')" style="padding:6px 12px;font-size:11px;border:2px solid #f57c00;background:#f57c00;color:#fff;border-radius:4px;cursor:pointer;font-weight:600;">Table</button>
-                        <button class="corr-view-btn" data-view="heatmap" onclick="switchCorrView('heatmap')" style="padding:6px 12px;font-size:11px;border:2px solid #f57c00;background:transparent;color:#f57c00;border-radius:4px;cursor:pointer;font-weight:600;">Heatmap</button>
-                      </div>
+                    <div style="display:flex;gap:4px;">
+                      <button onclick="switchProfileView('trajectory')" id="btnTrajectory" class="profile-view-btn active" style="padding:3px 8px;background:#ff9800;color:white;border:none;border-radius:4px;cursor:pointer;font-size:9px;font-weight:600;">
+                        <i class="fa-solid fa-chart-line"></i> Trajectory
+                      </button>
+                      <button onclick="switchProfileView('sd')" id="btnSD" class="profile-view-btn" style="padding:3px 8px;background:transparent;color:#9c27b0;border:2px solid #9c27b0;border-radius:4px;cursor:pointer;font-size:9px;font-weight:600;">
+                        <i class="fa-solid fa-chart-bar"></i> SD
+                      </button>
                     </div>
-                    
-                    <div style="flex:1 1 auto;display:flex;align-items:center;gap:12px;justify-content:flex-end;">
-                      <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;">
-                        <input type="checkbox" id="showCorrPValue" onchange="toggleCorrColumns()">
-                        <span style="color:var(--text-secondary);font-weight:600;">Show p-value</span>
-                      </label>
-                      <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;">
-                        <input type="checkbox" id="showCorrN" onchange="toggleCorrColumns()">
-                        <span style="color:var(--text-secondary);font-weight:600;">Show n</span>
-                      </label>
+                  </div>
+                  <p style="margin:0 0 8px 0;color:var(--text-muted);font-size:10px;line-height:1.4;">
+                    <strong>Purpose:</strong> <span id="profilePurpose">Group mean trajectory with Min-Max range envelope.</span>
+                  </p>
+                  <div style="padding:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
+                    <div id="profilePlot" style="width:100%;height:320px;"></div>
+                    <div id="profileNote" style="margin-top:6px;padding:4px 8px;background:rgba(79,195,247,0.12);border-left:3px solid #4fc3f7;border-radius:3px;font-size:9px;color:#81d4fa;">
+                      <i class="fa-solid fa-info-circle"></i> Blue shaded area = Min-Max range at each timepoint.
                     </div>
                   </div>
                 </div>
+                
+                <!-- RIGHT: Correlation Matrix with Heatmap -->
+                <div>
+                  <div style="font-weight:700;margin-bottom:8px;color:var(--accent-1);font-size:13px;">
+                    <i class="fa-solid fa-grip"></i> Correlation Matrix
+                  </div>
+                  <p style="margin:0 0 8px 0;color:var(--text-muted);font-size:10px;line-height:1.4;">
+                    <strong>Purpose:</strong> Pairwise correlations between timepoints (click cells for scatter plots).
+                  </p>
+                  
+                  <!-- Interactive Controls (Compact) -->
+                  <div style="padding:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;">
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:10px;">
+                      <div style="flex:0 0 auto;">
+                        <label style="font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:3px;display:block;">Type:</label>
+                        <div style="display:flex;gap:4px;">
+                          <button class="corr-type-btn active" data-type="pearson" onclick="switchCorrType('pearson')" style="padding:4px 8px;font-size:9px;border:2px solid #5c6bc0;background:#5c6bc0;color:#fff;border-radius:3px;cursor:pointer;font-weight:600;">Pearson</button>
+                          <button class="corr-type-btn" data-type="spearman" onclick="switchCorrType('spearman')" style="padding:4px 8px;font-size:9px;border:2px solid #5c6bc0;background:transparent;color:#5c6bc0;border-radius:3px;cursor:pointer;font-weight:600;">Spearman</button>
+                          <button class="corr-type-btn" data-type="kendall" onclick="switchCorrType('kendall')" style="padding:4px 8px;font-size:9px;border:2px solid #5c6bc0;background:transparent;color:#5c6bc0;border-radius:3px;cursor:pointer;font-weight:600;">Kendall</button>
+                        </div>
+                      </div>
+                      
+                      <div style="flex:0 0 auto;">
+                        <label style="font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:3px;display:block;">View:</label>
+                        <div style="display:flex;gap:4px;">
+                          <button class="corr-view-btn active" data-view="table" onclick="switchCorrView('table')" style="padding:4px 8px;font-size:9px;border:2px solid #f57c00;background:#f57c00;color:#fff;border-radius:3px;cursor:pointer;font-weight:600;">Table</button>
+                          <button class="corr-view-btn" data-view="heatmap" onclick="switchCorrView('heatmap')" style="padding:4px 8px;font-size:9px;border:2px solid #f57c00;background:transparent;color:#f57c00;border-radius:3px;cursor:pointer;font-weight:600;">Heatmap</button>
+                        </div>
+                      </div>
+                      
+                      <div style="flex:1 1 auto;display:flex;align-items:center;gap:8px;justify-content:flex-end;font-size:9px;">
+                        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;">
+                          <input type="checkbox" id="showCorrPValue" onchange="toggleCorrColumns()" style="width:12px;height:12px;">
+                          <span style="color:var(--text-secondary);font-weight:600;">p-value</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;">
+                          <input type="checkbox" id="showCorrN" onchange="toggleCorrColumns()" style="width:12px;height:12px;">
+                          <span style="color:var(--text-secondary);font-weight:600;">n</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
                 
                 <!-- Correlation Heatmap/Table -->
-                <div id="correlationMatrixContainer" style="padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
-                  <div id="correlationHeatmap" style="display:none;"></div>
-                  <table id="correlationTable" style="width:100%;border-collapse:collapse;font-size:11px;">
-                    <thead>
-                      <tr id="corrTableHeader" style="background:#003366cc;"></tr>
-                    </thead>
-                    <tbody id="corrTableBody"></tbody>
-                  </table>
+                <div id="correlationMatrixContainer" style="padding:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;">
+                  <div id="correlationHeatmap" style="display:none;overflow-x:auto;"></div>
+                  <div style="overflow-x:auto;max-height:320px;">
+                    <table id="correlationTable" style="width:100%;border-collapse:collapse;font-size:10px;">
+                      <thead>
+                        <tr id="corrTableHeader" style="background:#003366cc;"></tr>
+                      </thead>
+                      <tbody id="corrTableBody"></tbody>
+                    </table>
+                  </div>
+                  
+                  <!-- Summary Statistics (Compact) -->
+                  <div id="corrSummary" style="margin-top:8px;padding:6px 8px;background:rgba(120,200,255,.08);border-left:3px solid var(--accent-2);border-radius:3px;font-size:9px;">
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                      <span><strong>Avg r:</strong> <span id="corrAvgR" style="color:var(--accent-2);font-weight:700;">...</span></span>
+                      <span><strong>Range:</strong> <span id="corrRange" style="color:var(--accent-2);font-weight:700;">...</span></span>
+                      <span><strong>Symmetry:</strong> <span id="corrCompound" style="color:var(--accent-2);font-weight:700;">...</span></span>
+                    </div>
+                  </div>
                 </div>
                 
-                <!-- Summary Statistics -->
-                <div id="corrSummary" style="margin-top:12px;padding:8px 10px;background:rgba(120,200,255,.08);border-left:3px solid var(--accent-2);border-radius:4px;font-size:11px;">
-                  <div style="color:var(--text-secondary);margin-bottom:6px;"><strong>Summary Statistics:</strong></div>
-                  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
-                    <span><strong>Avg r:</strong> <span id="corrAvgR" style="color:var(--accent-2);font-weight:700;">...</span></span>
-                    <span><strong>Range:</strong> <span id="corrRange" style="color:var(--accent-2);font-weight:700;">...</span></span>
-                    <span><strong>Compound Symmetry:</strong> <span id="corrCompound" style="color:var(--accent-2);font-weight:700;">...</span></span>
-                  </div>
-                  <div style="padding-top:8px;border-top:1px solid rgba(255,255,255,.15);">
-                    <strong style="color:var(--text-secondary);">Interpretation:</strong>
-                    <div style="margin-top:4px;color:var(--text-muted);font-style:italic;" id="corrInterpretation">...</div>
-                  </div>
-                </div>
-              </div>
+              </div><!-- End of two-column grid -->
               
             </div>
           </div>
