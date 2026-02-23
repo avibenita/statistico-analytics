@@ -1434,6 +1434,12 @@
       updatePosthocOptions();
       refreshHypothesisFrames();
       
+      // Recalculate power analysis with new framework
+      if (lastBundle && lastBundle.results && lastBundle.results.omnibus && lastBundle.setup) {
+        console.log("🔄 Framework changed, recalculating power analysis...");
+        calculatePowerAnalysis(lastBundle.results.omnibus, lastBundle.setup);
+      }
+      
       // Trigger recalculation
       notifySettingsChanged();
     }
@@ -2943,14 +2949,32 @@
       console.log("Omnibus data:", omnibus);
       console.log("Setup data:", setup);
       
+      // Detect which framework is selected
+      const isNonparametric = document.getElementById('fwNonparametric')?.checked || false;
+      console.log("📊 Framework selected:", isNonparametric ? "NON-PARAMETRIC" : "PARAMETRIC");
+      
       const fStat = parseMaybeNumber(omnibus.anovaF);
       const df1 = parseMaybeNumber(omnibus.anovaDf1);
       const df2 = parseMaybeNumber(omnibus.anovaDf2);
-      const partialEta = parseMaybeNumber(omnibus.partialEtaSquared);
-      const cohenF = parseMaybeNumber(omnibus.cohenF);
+      let partialEta = parseMaybeNumber(omnibus.partialEtaSquared);
+      let cohenF = parseMaybeNumber(omnibus.cohenF);
       let n = parseMaybeNumber(omnibus.n);
       const k = (setup.selectedColumns || []).length;
       const alpha = 1 - parseMaybeNumber(setup.confidence || 0.95);
+      
+      // If NON-PARAMETRIC is selected, approximate effect sizes from Kendall's W
+      let effectSizeSource = "parametric";
+      if (isNonparametric) {
+        const kendallW = parseMaybeNumber(omnibus.kendallW || omnibus.friedmanW);
+        if (kendallW && kendallW > 0 && kendallW < 1) {
+          // Convert Kendall's W to approximate Cohen's f: f = sqrt(W / (1 - W))
+          cohenF = Math.sqrt(kendallW / (1 - kendallW));
+          // Convert Cohen's f to partial eta squared: η² = f² / (1 + f²)
+          partialEta = (cohenF * cohenF) / (1 + cohenF * cohenF);
+          effectSizeSource = `nonparametric (W=${kendallW.toFixed(3)} → f≈${cohenF.toFixed(3)})`;
+          console.log(`🔄 Converted Kendall's W (${kendallW.toFixed(3)}) → Cohen's f (${cohenF.toFixed(3)}) for power analysis`);
+        }
+      }
       
       // Calculate n from degrees of freedom if not provided
       // df2 = (n-1)(k-1), so n = (df2 / (k-1)) + 1
@@ -2961,7 +2985,7 @@
         }
       }
       
-      console.log("Parsed values:", { fStat, df1, df2, partialEta, cohenF, n, k, alpha });
+      console.log("Parsed values:", { fStat, df1, df2, partialEta, cohenF, n, k, alpha, effectSizeSource });
       
       if (!fStat || fStat <= 0 || !df1 || !df2 || !n || n < 2 || !k || k < 2) {
         console.warn("⚠ Insufficient data for power analysis", { fStat, df1, df2, n, k });
@@ -2973,9 +2997,9 @@
             effect_size_cohen_f: cohenF || 0,
             partial_eta_squared: partialEta || 0,
             local: true 
-          }, n, alpha, partialEta);
+          }, n, alpha, partialEta, effectSizeSource);
         } else {
-          updatePowerUI({ error: true }, n, alpha, partialEta);
+          updatePowerUI({ error: true }, n, alpha, partialEta, effectSizeSource);
         }
         return;
       }
@@ -3008,7 +3032,7 @@
         
         if (data.ok && data.results) {
           powerAnalysisData = data.results;
-          updatePowerUI(data.results, n, alpha, partialEta);
+          updatePowerUI(data.results, n, alpha, partialEta, effectSizeSource);
           return;
         } else {
           throw new Error(data.error || "Unknown error");
@@ -3033,7 +3057,7 @@
         required_for_80pct: req80,
         required_for_90pct: req90,
         fallback: true 
-      }, n, alpha, partialEta);
+      }, n, alpha, partialEta, effectSizeSource);
     }
     
     function calculateLocalPowerApproximation(fStat, df1, df2, n) {
@@ -3079,7 +3103,7 @@
       return nMax;
     }
     
-    function updatePowerUI(results, currentN, alpha, partialEta) {
+    function updatePowerUI(results, currentN, alpha, partialEta, effectSizeSource = "parametric") {
       const { 
         observed_power, 
         effect_size_cohen_f, 
@@ -3151,12 +3175,26 @@
         statusType = "error";
       }
       
-      // Indicate calculation method without "local" wording
-      if (fallback || local) {
-        const engineNote = document.getElementById('powEngineNote');
-        if (engineNote) {
-          engineNote.innerHTML = '<i class="fa-solid fa-calculator"></i> Power calculated using statistical approximation (cloud function unavailable). Effect size: Cohen\'s f from partial η².';
+      // Update footer note based on calculation method and effect size source
+      const engineNote = document.getElementById('powEngineNote');
+      if (engineNote) {
+        let noteText = '';
+        
+        // Determine calculation method
+        if (fallback || local) {
+          noteText = '<i class="fa-solid fa-calculator"></i> Power calculated using statistical approximation (cloud function unavailable).';
+        } else {
+          noteText = '<i class="fa-solid fa-cloud"></i> Power calculated via Python Google Cloud Functions using non-central F distribution.';
         }
+        
+        // Add effect size source note
+        if (effectSizeSource.startsWith('nonparametric')) {
+          noteText += ' <strong>Effect size approximated from Kendall\'s W for non-parametric analysis.</strong>';
+        } else {
+          noteText += ' Effect size: Cohen\'s f from partial η².';
+        }
+        
+        engineNote.innerHTML = noteText;
       }
       
       updatePowerStatus(statusMsg, statusType);
