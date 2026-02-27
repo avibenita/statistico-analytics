@@ -457,6 +457,22 @@ function applyTransform(data, transform) {
 /**
  * Calculate descriptive statistics
  */
+function getDialogsBaseUrl() {
+    const { origin, pathname, href } = window.location;
+
+    if (href.includes('127.0.0.1') || href.includes('localhost')) {
+        return 'http://127.0.0.1:8080/dialogs/views/';
+    }
+
+    const taskpaneMarker = '/taskpane/';
+    const taskpaneIndex = pathname.indexOf(taskpaneMarker);
+    if (taskpaneIndex !== -1) {
+        const basePath = pathname.slice(0, taskpaneIndex);
+        return `${origin}${basePath}/dialogs/views/`;
+    }
+
+    return `${origin}/dialogs/views/`;
+}
 function calculateStatistics(data, address, transform) {
     const n = data.length;
     const sorted = [...data].sort((a, b) => a - b);
@@ -540,9 +556,11 @@ let currentResults = null; // Store results globally for view switching
 function setResultsTheme(theme) {
     localStorage.setItem('resultsTheme', theme);
     
-    // Update UI
-    document.getElementById('themeLight').classList.toggle('active', theme === 'light');
-    document.getElementById('themeDark').classList.toggle('active', theme === 'dark');
+    // Update UI only if elements exist (they may not be present in every taskpane)
+    const themeLight = document.getElementById('themeLight');
+    const themeDark  = document.getElementById('themeDark');
+    if (themeLight) themeLight.classList.toggle('active', theme === 'light');
+    if (themeDark)  themeDark.classList.toggle('active', theme === 'dark');
 }
 
 // Initialize theme on load
@@ -720,7 +738,7 @@ function openResultsDialog(results) {
     lockTaskpaneUI();
     
     // Use standalone histogram instead of full results dialog
-    const dialogUrl = `${window.location.origin}/dialogs/views/univariate/histogram-standalone.html`;
+    const dialogUrl = `${getDialogsBaseUrl()}univariate/histogram-standalone.html`;
     
     Office.context.ui.displayDialogAsync(
         dialogUrl,
